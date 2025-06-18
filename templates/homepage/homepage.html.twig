@@ -7,3 +7,10 @@
 {% block content %}
 <p>AnaSayfa</p>
 {% endblock %}
+{% block body %}
+    <h1>{{ pimcore_input('pageTitle', { 'width': 600 }) }}</h1>
+
+    <div class="lead">
+        {{ pimcore_wysiwyg('mainContent', { 'height': 300 }) }}
+    </div>
+{% endblock %}
