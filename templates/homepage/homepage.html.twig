@@ -8,11 +8,26 @@
 {% endblock %}
 
 {% block content %}
-    <h1>{{ pimcore_input('pageTitle', { 'width': 600 }) }}</h1>
+    <h1>{{ pimcore_input('pageTitle', { 'width': 600, 'placeholder': 'Sayfa Başlığı' }) }}</h1>
     <div class="lead">
-        {{ pimcore_wysiwyg('mainContent', { 'height': 300 }) }}
+        {{ pimcore_wysiwyg('mainContent', { 'height': 300, 'placeholder': 'Ana İçerik' }) }}
     </div>
 
-    <p>Bu sayfa ana sayfadır.</p>
+    <hr> 
+    <h3>Öne Çıkan Kullanıcı</h3>
+    {{ pimcore_relation('featured_user', {
+        'types': ['object'],                 {# Sadece Nesne (Object) seçilebilsin #}
+        'subtypes': ['object'],              {# Sadece Nesne (Object) seçilebilsin #}
+        'classes': ['User'],                 {# Sadece "User" sınıfındaki nesneler seçilebilsin #}
+        'reload': true                       {# Nesne seçilince sayfa yenilensin #}
+    }) }}
+    <h3>İlişkili Ürünler</h3>
+    {{ pimcore_relations('related_products', {
+        'types': ['object'],
+        'subtypes': ['object'],
+        'classes': ['Product'],              {# Sadece "Product" sınıfındaki nesneler seçilebilsin #}
+        'height': 250,
+        'width': 500
+    }) }}
 
 {% endblock %}
