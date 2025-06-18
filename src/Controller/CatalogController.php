@@ -7,12 +7,12 @@ use Symfony\Component\Routing\Annotation\Route;
 use Pimcore\Model\Document;
 use Symfony\Component\HttpFoundation\Request;
 
-class HomePageController extends AbstractController
+class CatalogController extends AbstractController
 {
-    #[Route('/', name: 'homepage')]
+    #[Route('/', name: 'catalog')]
     public function index(): Response
     {
-        return $this->render('homepage/homepage.html.twig'); 
+        return $this->render('catalog/catalog.html.twig'); 
     }
 
 }
