@@ -19,16 +19,23 @@ use Symfony\Component\HttpFoundation\Response;
 
 class DefaultController extends FrontendController
 {
-    public function defaultAction(Request $request): Response
+    #[Route('/', name: 'homepage')]
+    public function homepage(): Response
     {
-        return $this->render('default/default.html.twig');
+        return $this->render('homepage/homepage.html.twig'); 
     }
+
+
+    // public function defaultAction(Request $request): Response
+    // {
+    //     return $this->render('default/default.html.twig');
+    // }
 
     /**
      * Forwards the request to admin login
      */
-    public function loginAction(): Response
-    {
-        return $this->forward(LoginController::class.'::loginCheckAction');
-    }
+    // public function loginAction(): Response
+    // {
+    //     return $this->forward(LoginController::class.'::loginCheckAction');
+    // }
 }
