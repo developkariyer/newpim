@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 class CatalogController extends AbstractController
 {
     #[Route('/', name: 'catalog')]
-    public function index(): Response
+    public function catalog(): Response
     {
         return $this->render('catalog/catalog.html.twig'); 
     }
