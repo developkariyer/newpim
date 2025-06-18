@@ -17,7 +17,7 @@
     {% set featuredObject = pimcore_relation('featured_object', {
         'types': ['object'],                 
         'subtypes': {'object': ['object', 'folder']},
-        'classes': null,                     {# Tüm sınıfları kapsar #}
+        'classes': null,                     
         'reload': true                       
     }) %}
     
@@ -54,7 +54,7 @@
     {% set relatedObjects = pimcore_relations('related_objects', {
         'types': ['object'],
         'subtypes': {'object': ['object', 'folder']},
-        'classes': null,            {# Tüm sınıfları kapsar #}
+        'classes': null,            
         'height': 250,
         'width': 500
     }) %}
