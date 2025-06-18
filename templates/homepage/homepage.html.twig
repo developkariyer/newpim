@@ -16,16 +16,16 @@
     <hr> 
     <h3>Öne Çıkan Kullanıcı</h3>
     {{ pimcore_relation('featured_user', {
-        'types': ['object'],                 {# Sadece Nesne (Object) seçilebilsin #}
-        'subtypes': ['object'],              {# Sadece Nesne (Object) seçilebilsin #}
-        'classes': ['User'],                 {# Sadece "User" sınıfındaki nesneler seçilebilsin #}
-        'reload': true                       {# Nesne seçilince sayfa yenilensin #}
+        'types': ['object'],                 
+        'subtypes': ['object'],              
+        'classes': ['User'],                
+        'reload': true                       
     }) }}
     <h3>İlişkili Ürünler</h3>
     {{ pimcore_relations('related_products', {
         'types': ['object'],
         'subtypes': ['object'],
-        'classes': ['Product'],              {# Sadece "Product" sınıfındaki nesneler seçilebilsin #}
+        'classes': ['Product'],            
         'height': 250,
         'width': 500
     }) }}
