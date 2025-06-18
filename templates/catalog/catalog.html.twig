@@ -4,7 +4,26 @@
     {{ parent() }}
 {% endblock %}
 
+{% block title %}Ürün Kataloğu{% endblock %}
+
 {% block content %}
-   
+    <h1>Ürün Kataloğumuz</h1>
+
+    {% if products is not empty %}
+        <div class="product-grid">
+            {% for product in products %}
+                <div class="product-card">
+                    <h2>
+                        <a href="{{ pimcore_url({'id': product.getId(), 'name': product.getKey()}) }}">
+                            {{ product.getName() }}
+                        </a>
+                    </h2>
+                    
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>Gösterilecek ürün bulunamadı.</p>
+    {% endif %}
 
 {% endblock %}
