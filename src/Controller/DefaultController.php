@@ -16,6 +16,7 @@ use Pimcore\Bundle\AdminBundle\Controller\Admin\LoginController;
 use Pimcore\Controller\FrontendController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class DefaultController extends AbstractController
 {
