@@ -2,6 +2,26 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    <style>
+        .object-field-selector {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+        }
+        .field-list {
+            margin-top: 10px;
+        }
+        .object-display {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+        .field-value {
+            margin-bottom: 5px;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -10,54 +30,150 @@
         {{ pimcore_wysiwyg('mainContent', { 'height': 300, 'placeholder': 'Ana İçerik' }) }}
     </div>
 
-    <hr> 
+    <hr>
     
-    <div class="editmode-panel">
-        <h3>Öne Çıkan İçerikler</h3>
+    <div class="object-selector-panel">
+        <h3>Obje Seçimi</h3>
         
-        <div class="editable-selector">
-            <label>Öne Çıkan Nesne:</label>
-            {{ pimcore_relation("featuredObject", {
+        <div class="object-selector">
+            <label>Görüntülenecek Obje:</label>
+            {{ pimcore_relation("selectedObject", {
                 "types": ["object"],
                 "subtypes": {
                     "object": ["object"]
                 },
                 "classes": [],
-                "width": 500
+                "width": 500,
+                "reload": true
             }) }}
         </div>
         
         {% if editmode %}
-            <div class="editmode-info">
-                <p><i>Düzenleme modundasınız. Yukarıdan bir nesne seçin.</i></p>
+            <div class="object-field-selector">
+                <h4>Görüntülenecek Alanlar</h4>
+                <p><small>Görüntülemek istediğiniz alanları seçin:</small></p>
+                
+                {# Temel alanları her zaman göster #}
+                {{ pimcore_checkbox("showId") }} <label>ID</label><br>
+                {{ pimcore_checkbox("showKey") }} <label>Key</label><br>
+                {{ pimcore_checkbox("showClassName") }} <label>Class Name</label><br>
+                
+                {# Tüm objeler için yaygın alanlar #}
+                {{ pimcore_checkbox("showName") }} <label>Name/Title</label><br>
+                {{ pimcore_checkbox("showDescription") }} <label>Description</label><br>
+                
+                {# Product sınıfı için alanlar #}
+                {{ pimcore_checkbox("showProductName") }} <label>Product Name</label><br>
+                {{ pimcore_checkbox("showPrice") }} <label>Price</label><br>
+                {{ pimcore_checkbox("showSku") }} <label>SKU</label><br>
+                {{ pimcore_checkbox("showImage") }} <label>Image</label><br>
+                
+                {# User sınıfı için alanlar #}
+                {{ pimcore_checkbox("showFirstName") }} <label>First Name</label><br>
+                {{ pimcore_checkbox("showLastName") }} <label>Last Name</label><br>
+                {{ pimcore_checkbox("showEmail") }} <label>Email</label><br>
+                
+                {# Category sınıfı için alanlar #}
+                {{ pimcore_checkbox("showCategoryName") }} <label>Category Name</label><br>
             </div>
         {% endif %}
     </div>
 
     {# Seçilen nesneyi görüntüle #}
     {% if not editmode %}
-        {% set featuredObj = pimcore_relation("featuredObject").getElement() %}
-        {% if featuredObj %}
-            <div class="featured-item">
-                <h4>{{ featuredObj.getKey() }}</h4>
+        {% set selectedObj = pimcore_relation("selectedObject").getElement() %}
+        {% if selectedObj %}
+            <div class="object-display">
+                <h3>Seçilen Obje Detayları</h3>
                 
-                {% if featuredObj.getClassName() == "Product" %}
-                    <p><strong>Ürün Adı:</strong> {{ featuredObj.getProductName() }}</p>
-                    <p><strong>Fiyat:</strong> {{ featuredObj.getPrice() }}</p>
-                    {% if featuredObj.getImage() %}
-                        <img src="{{ featuredObj.getImage().getThumbnail('content').getPath() }}" alt="{{ featuredObj.getProductName() }}">
+                {# Temel alanlar #}
+                {% if pimcore_checkbox("showId").isChecked() %}
+                    <div class="field-value"><strong>ID:</strong> {{ selectedObj.getId() }}</div>
+                {% endif %}
+                
+                {% if pimcore_checkbox("showKey").isChecked() %}
+                    <div class="field-value"><strong>Key:</strong> {{ selectedObj.getKey() }}</div>
+                {% endif %}
+                
+                {% if pimcore_checkbox("showClassName").isChecked() %}
+                    <div class="field-value"><strong>Class Name:</strong> {{ selectedObj.getClassName() }}</div>
+                {% endif %}
+                
+                {# Sınıf bazlı alanlar #}
+                {% if selectedObj.getClassName() == "Product" %}
+                    {% if pimcore_checkbox("showProductName").isChecked() %}
+                        <div class="field-value"><strong>Product Name:</strong> {{ selectedObj.getProductName() }}</div>
                     {% endif %}
-                
-                {% elseif featuredObj.getClassName() == "User" %}
-                    <p><strong>Ad Soyad:</strong> {{ featuredObj.getFirstname() }} {{ featuredObj.getLastname() }}</p>
-                    <p><strong>E-posta:</strong> {{ featuredObj.getEmail() }}</p>
-                
-                {% elseif featuredObj.getClassName() == "Category" %}
-                    <p><strong>Kategori Adı:</strong> {{ featuredObj.getName() }}</p>
+                    
+                    {% if pimcore_checkbox("showPrice").isChecked() %}
+                        <div class="field-value"><strong>Price:</strong> {{ selectedObj.getPrice() }}</div>
+                    {% endif %}
+                    
+                    {% if pimcore_checkbox("showSku").isChecked() %}
+                        <div class="field-value"><strong>SKU:</strong> {{ selectedObj.getSku() }}</div>
+                    {% endif %}
+                    
+                    {% if pimcore_checkbox("showImage").isChecked() and selectedObj.getImage() %}
+                        <div class="field-value">
+                            <strong>Image:</strong><br>
+                            <img src="{{ selectedObj.getImage().getThumbnail('content').getPath() }}" alt="{{ selectedObj.getProductName() }}">
+                        </div>
+                    {% endif %}
+                    
+                {% elseif selectedObj.getClassName() == "User" %}
+                    {% if pimcore_checkbox("showFirstName").isChecked() %}
+                        <div class="field-value"><strong>First Name:</strong> {{ selectedObj.getFirstname() }}</div>
+                    {% endif %}
+                    
+                    {% if pimcore_checkbox("showLastName").isChecked() %}
+                        <div class="field-value"><strong>Last Name:</strong> {{ selectedObj.getLastname() }}</div>
+                    {% endif %}
+                    
+                    {% if pimcore_checkbox("showEmail").isChecked() %}
+                        <div class="field-value"><strong>Email:</strong> {{ selectedObj.getEmail() }}</div>
+                    {% endif %}
+                    
+                {% elseif selectedObj.getClassName() == "Category" %}
+                    {% if pimcore_checkbox("showCategoryName").isChecked() %}
+                        <div class="field-value"><strong>Category Name:</strong> {{ selectedObj.getName() }}</div>
+                    {% endif %}
+                    
+                    {% if pimcore_checkbox("showDescription").isChecked() %}
+                        <div class="field-value"><strong>Description:</strong> {{ selectedObj.getDescription() }}</div>
+                    {% endif %}
                     
                 {% else %}
-                    <p><strong>Nesne ID:</strong> {{ featuredObj.getId() }}</p>
-                    <p><strong>Nesne Türü:</strong> {{ featuredObj.getClassName() }}</p>
+                    {# Diğer nesne türleri için genel gösterim #}
+                    {% if pimcore_checkbox("showName").isChecked() %}
+                        <div class="field-value"><strong>Name:</strong> 
+                            {% if selectedObj.getName() is defined %}
+                                {{ selectedObj.getName() }}
+                            {% elseif selectedObj.getTitle() is defined %}
+                                {{ selectedObj.getTitle() }}
+                            {% else %}
+                                <i>Ad alanı bulunamadı</i>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    
+                    {% if pimcore_checkbox("showDescription").isChecked() %}
+                        <div class="field-value"><strong>Description:</strong> 
+                            {% if selectedObj.getDescription() is defined %}
+                                {{ selectedObj.getDescription() }}
+                            {% else %}
+                                <i>Açıklama alanı bulunamadı</i>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endif %}
+                
+                {# Tüm alanları listeleyen debug seçeneği #}
+                {{ pimcore_checkbox("showAllFields") }} <label>Tüm Alanları Göster (Debug)</label>
+                {% if pimcore_checkbox("showAllFields").isChecked() %}
+                    <div class="all-fields">
+                        <h4>Tüm Nesne Alanları</h4>
+                        <pre>{{ dump(selectedObj) }}</pre>
+                    </div>
                 {% endif %}
             </div>
         {% else %}
@@ -66,13 +182,13 @@
     {% endif %}
     
     <hr>
-    
-    <div class="editmode-panel">
-        <h3>İlişkili Nesneler</h3>
+
+    {# Çoklu nesne seçimi ve gösterimi #}
+    <div class="multiple-objects-panel">
+        <h3>Çoklu Nesne Seçimi</h3>
         
-        <div class="editable-selector">
-            <label>İlişkili Nesneler:</label>
-            {{ pimcore_relations("relatedObjects", {
+        <div class="objects-selector">
+            {{ pimcore_relations("multipleObjects", {
                 "types": ["object"],
                 "subtypes": {
                     "object": ["object"]
@@ -84,41 +200,69 @@
         </div>
         
         {% if editmode %}
-            <div class="editmode-info">
-                <p><i>Düzenleme modundasınız. Yukarıdan ilişkili nesneleri seçin.</i></p>
+            <div class="object-field-selector">
+                <h4>Listede Görüntülenecek Alanlar</h4>
+                {{ pimcore_checkbox("listShowId") }} <label>ID</label><br>
+                {{ pimcore_checkbox("listShowKey") }} <label>Key</label><br>
+                {{ pimcore_checkbox("listShowClassName") }} <label>Class Name</label><br>
+                {{ pimcore_checkbox("listShowMainField") }} <label>Ana Alan (Name, Title, vb.)</label><br>
+                {{ pimcore_checkbox("listShowImage") }} <label>Görsel (varsa)</label><br>
             </div>
         {% endif %}
     </div>
 
-    {# İlişkili nesneleri görüntüle #}
+    {# Çoklu nesneleri görüntüle #}
     {% if not editmode %}
-        {% set relatedObjs = pimcore_relations("relatedObjects").getElements() %}
-        {% if relatedObjs|length > 0 %}
-            <div class="related-items">
-                <ul>
-                    {% for obj in relatedObjs %}
-                        <li>
-                            <h5>{{ obj.getKey() }} ({{ obj.getClassName() }})</h5>
+        {% set multipleObjs = pimcore_relations("multipleObjects").getElements() %}
+        {% if multipleObjs|length > 0 %}
+            <div class="object-list">
+                <h3>Seçilen Nesneler</h3>
+                <ul class="objects-list">
+                    {% for obj in multipleObjs %}
+                        <li class="object-item">
+                            {% if pimcore_checkbox("listShowId").isChecked() %}
+                                <div><strong>ID:</strong> {{ obj.getId() }}</div>
+                            {% endif %}
                             
-                            {% if obj.getClassName() == "Product" %}
-                                <p><strong>Ürün Adı:</strong> {{ obj.getProductName() }}</p>
-                                <p><strong>Fiyat:</strong> {{ obj.getPrice() }}</p>
-                                
-                            {% elseif obj.getClassName() == "User" %}
-                                <p><strong>Ad Soyad:</strong> {{ obj.getFirstname() }} {{ obj.getLastname() }}</p>
-                                
-                            {% elseif obj.getClassName() == "Category" %}
-                                <p><strong>Kategori Adı:</strong> {{ obj.getName() }}</p>
-                                
-                            {% else %}
-                                <p><strong>Nesne ID:</strong> {{ obj.getId() }}</p>
+                            {% if pimcore_checkbox("listShowKey").isChecked() %}
+                                <div><strong>Key:</strong> {{ obj.getKey() }}</div>
+                            {% endif %}
+                            
+                            {% if pimcore_checkbox("listShowClassName").isChecked() %}
+                                <div><strong>Class:</strong> {{ obj.getClassName() }}</div>
+                            {% endif %}
+                            
+                            {% if pimcore_checkbox("listShowMainField").isChecked() %}
+                                <div><strong>Ana Alan:</strong> 
+                                    {% if obj.getClassName() == "Product" and obj.getProductName() is defined %}
+                                        {{ obj.getProductName() }}
+                                    {% elseif obj.getClassName() == "User" %}
+                                        {{ obj.getFirstname() }} {{ obj.getLastname() }}
+                                    {% elseif obj.getClassName() == "Category" and obj.getName() is defined %}
+                                        {{ obj.getName() }}
+                                    {% elseif obj.getName() is defined %}
+                                        {{ obj.getName() }}
+                                    {% elseif obj.getTitle() is defined %}
+                                        {{ obj.getTitle() }}
+                                    {% else %}
+                                        <i>Ana alan bulunamadı</i>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            
+                            {% if pimcore_checkbox("listShowImage").isChecked() %}
+                                {% if obj.getClassName() == "Product" and obj.getImage() %}
+                                    <div class="object-image">
+                                        <img src="{{ obj.getImage().getThumbnail('content').getPath() }}" alt="Product Image">
+                                    </div>
+                                {% endif %}
                             {% endif %}
                         </li>
                     {% endfor %}
                 </ul>
             </div>
         {% else %}
-            <p>Henüz ilişkili nesne seçilmemiş.</p>
+            <p>Henüz çoklu nesne seçilmemiş.</p>
         {% endif %}
     {% endif %}
 {% endblock %}
