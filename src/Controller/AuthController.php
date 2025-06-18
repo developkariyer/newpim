@@ -13,7 +13,7 @@ class AuthController extends AbstractController
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
         if ($this->getUser()) {
-            return $this->redirectToRoute('default');
+            return $this->redirectToRoute('homepage');
         }
         $error = $authenticationUtils->getLastAuthenticationError();
         $lastUsername = $authenticationUtils->getLastUsername();
@@ -38,7 +38,7 @@ class AuthController extends AbstractController
     #[Route('/favicon.ico', name: 'favicon')]
     public function favicon(): Response
     {
-        return $this->redirectToRoute('default');
+        return $this->redirectToRoute('homepage');
     }
 
 }
