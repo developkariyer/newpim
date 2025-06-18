@@ -1,3 +1,6 @@
+{# Pimcore'un bu şablonu tanıması için bu sihirli yorum satırını eklemek en iyi pratiktir. #}
+{# pimcore_template_name Standart Sayfa #}
+
 {% extends 'base.html.twig' %}
 
 {% block stylesheets %}
@@ -5,12 +8,11 @@
 {% endblock %}
 
 {% block content %}
-<p>AnaSayfa</p>
-{% endblock %}
-{% block body %}
     <h1>{{ pimcore_input('pageTitle', { 'width': 600 }) }}</h1>
-
     <div class="lead">
         {{ pimcore_wysiwyg('mainContent', { 'height': 300 }) }}
     </div>
+
+    <p>Bu sayfa ana sayfadır.</p>
+
 {% endblock %}

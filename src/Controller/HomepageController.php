@@ -18,7 +18,9 @@ class HomePageController extends AbstractController
     #[Route('/test', name: 'test')]
     public function test(Document $document, Request $request): Response
     {
-        return $this->render($document->getTemplate());
+        return $this->render($document->getTemplate(), [
+            'document' => $document
+        ]);
     }
 
 }
