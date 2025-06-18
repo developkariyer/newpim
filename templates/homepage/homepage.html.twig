@@ -146,9 +146,11 @@
                                         {% for field in classDefinition.getFieldDefinitions() %}
                                             {% if pimcore_checkbox('field_' ~ field.getName()).isChecked() %}
                                                 <td>
-                                                    {% set getter = 'get' ~ field.getName()|capitalize %}
-                                                    {% if object[getter] is defined %}
-                                                        {% set value = attribute(object, getter)() %}
+                                                    {% set fieldName = field.getName() %}
+                                                    {% set getter = 'get' ~ fieldName|first|upper ~ fieldName|slice(1) %}
+                                                    
+                                                    {% if method_exists(object, getter) %}
+                                                        {% set value = attribute(object, getter) %}
                                                         
                                                         {# Alan türüne göre özel gösterim #}
                                                         {% if field.getFieldType() == 'image' and value %}
