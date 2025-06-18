@@ -1,29 +1,52 @@
 {% extends 'base.html.twig' %}
 
-{% block stylesheets %}
-    {{ parent() }}
-{% endblock %}
-
 {% block title %}Ürün Kataloğu{% endblock %}
 
 {% block content %}
     <h1>Ürün Kataloğumuz</h1>
-
-    {% if products is not empty %}
-        <div class="product-grid">
-            {% for product in products %}
-                <div class="product-card">
-                    <h2>
-                        <a href="{{ pimcore_url({'id': product.getId(), 'name': product.getKey()}) }}">
-                            {{ product.getName() }}
-                        </a>
-                    </h2>
-                    
-                </div>
+    <div class="catalog-filters">
+        <ul class="nav nav-tabs mb-3">
+            <li class="nav-item">
+                <a class="nav-link {% if not currentCategoryId %}active{% endif %}" 
+                   href="{{ path('catalog', {search: currentSearchTerm}) }}">Tüm Ürünler</a>
+            </li>
+            {% for category in categories %}
+                <li class="nav-item">
+                    <a class="nav-link {% if category.getId() == currentCategoryId %}active{% endif %}" 
+                       href="{{ path('catalog', {category: category.getId(), search: currentSearchTerm}) }}">
+                       {{ category.getName() }}
+                    </a>
+                </li>
             {% endfor %}
-        </div>
-    {% else %}
-        <p>Gösterilecek ürün bulunamadı.</p>
-    {% endif %}
+        </ul>
+
+        <form action="{{ path('catalog') }}" method="get" class="mb-4">
+            <div class="input-group">
+                <input type="text" name="search" class="form-control" placeholder="Ürün adı veya açıklamasıyla ara..." value="{{ currentSearchTerm }}">
+                <input type="hidden" name="category" value="{{ currentCategoryId }}">
+                <button class="btn btn-primary" type="submit">Ara</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="product-grid">
+        {% for product in paginator %}
+            <div class="product-card">
+                <h2>{{ product.getName() }}</h2>
+                <p>Fiyat: {{ product.getPrice() }}</p>
+            </div>
+        {% else %}
+             <p class="w-100">Bu kriterlere uygun ürün bulunamadı.</p>
+        {% endfor %}
+    </div>
+
+    <div class="mt-4">
+        {{ pimcore_render_paginator(paginator, 'default', {
+            'url_prefix': path('catalog', {
+                category: currentCategoryId,
+                search: currentSearchTerm
+            })
+        }) }}
+    </div>
 
 {% endblock %}
