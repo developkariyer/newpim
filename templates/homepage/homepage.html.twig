@@ -6,28 +6,27 @@
 {% block stylesheets %}
     {{ parent() }}
 {% endblock %}
-
 {% block content %}
     <h1>{{ pimcore_input('pageTitle', { 'width': 600, 'placeholder': 'Sayfa Başlığı' }) }}</h1>
     <div class="lead">
         {{ pimcore_wysiwyg('mainContent', { 'height': 300, 'placeholder': 'Ana İçerik' }) }}
     </div>
 
-    <hr> 
+    <hr>
     <h3>Öne Çıkan Kullanıcı</h3>
     {{ pimcore_relation('featured_user', {
         'types': ['object'],                 
         'subtypes': ['object'],              
-        'classes': ['User'],                
+        'classes': ['User'],
         'reload': true                       
     }) }}
+    
     <h3>İlişkili Ürünler</h3>
     {{ pimcore_relations('related_products', {
-        'types': ['object'],
-        'subtypes': ['object'],
-        'classes': ['Product'],            
-        'height': 250,
-        'width': 500
+        'types': ['object'],                
+        'subtypes': ['object'],             
+        'classes': ['Product'],             
+        'height': 250,                      
+        'width': 500                        
     }) }}
-
 {% endblock %}
