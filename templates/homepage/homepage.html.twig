@@ -1,32 +1,91 @@
-{# Pimcore'un bu şablonu tanıması için bu sihirli yorum satırını eklemek en iyi pratiktir. #}
-{# pimcore_template_name Standart Sayfa #}
-
 {% extends 'base.html.twig' %}
 
 {% block stylesheets %}
     {{ parent() }}
 {% endblock %}
+
 {% block content %}
     <h1>{{ pimcore_input('pageTitle', { 'width': 600, 'placeholder': 'Sayfa Başlığı' }) }}</h1>
     <div class="lead">
         {{ pimcore_wysiwyg('mainContent', { 'height': 300, 'placeholder': 'Ana İçerik' }) }}
     </div>
 
-    <hr>
-    <h3>Öne Çıkan Kullanıcı</h3>
-    {{ pimcore_relation('featured_user', {
-        'types': ['object'],                 
-        'subtypes': ['object'],              
-        'classes': ['User'],
-        'reload': true                       
-    }) }}
+    <hr> 
     
-    <h3>İlişkili Ürünler</h3>
-    {{ pimcore_relations('related_products', {
-        'types': ['object'],                
-        'subtypes': ['object'],             
-        'classes': ['Product'],             
-        'height': 250,                      
-        'width': 500                        
-    }) }}
+    <h3>Öne Çıkan İçerikler</h3>
+
+    {% set featuredObject = pimcore_relation('featured_object', {
+        'types': ['object'],                 
+        'subtypes': {'object': ['object', 'folder']},
+        'classes': null,                     {# Tüm sınıfları kapsar #}
+        'reload': true                       
+    }) %}
+    
+    {# Seçilen objeyi göster #}
+    {% if featuredObject.getElement() %}
+        {% set object = featuredObject.getElement() %}
+        <div class="featured-object">
+            <h4>{{ object.getKey() }}</h4>
+            
+            {# Nesne türüne göre dinamik alan gösterimi #}
+            {% if object.getClassName() == 'User' %}
+                <p>Ad: {{ object.getFirstname() }} {{ object.getLastname() }}</p>
+                <p>E-posta: {{ object.getEmail() }}</p>
+                
+            {% elseif object.getClassName() == 'Product' %}
+                <p>Ürün adı: {{ object.getProductName() }}</p>
+                <p>Fiyat: {{ object.getPrice() }}</p>
+                {% if object.getImage() %}
+                    <img src="{{ object.getImage().getThumbnail('content').getPath() }}" alt="{{ object.getProductName() }}">
+                {% endif %}
+                
+            {% else %}
+                <p>Nesne ID: {{ object.getId() }}</p>
+                <p>Nesne Türü: {{ object.getClassName() }}</p>
+            {% endif %}
+        </div>
+    {% else %}
+        <p>Henüz bir nesne seçilmedi.</p>
+    {% endif %}
+    
+    <hr>
+    
+    <h3>İlişkili Nesneler</h3>
+    {% set relatedObjects = pimcore_relations('related_objects', {
+        'types': ['object'],
+        'subtypes': {'object': ['object', 'folder']},
+        'classes': null,            {# Tüm sınıfları kapsar #}
+        'height': 250,
+        'width': 500
+    }) %}
+
+    {% if relatedObjects.getElements() %}
+        <div class="related-objects">
+            <ul>
+                {% for object in relatedObjects.getElements() %}
+                    <li class="object-item" data-type="{{ object.getClassName() }}">
+                        <h5>{{ object.getKey() }} ({{ object.getClassName() }})</h5>
+                        
+                        {# Nesne türüne göre dinamik alan gösterimi #}
+                        {% if object.getClassName() == 'User' %}
+                            <p>Ad: {{ object.getFirstname() }} {{ object.getLastname() }}</p>
+                            
+                        {% elseif object.getClassName() == 'Product' %}
+                            <p>Ürün adı: {{ object.getProductName() }}</p>
+                            <p>Fiyat: {{ object.getPrice() }}</p>
+                            
+                        {% elseif object.getClassName() == 'Category' %}
+                            <p>Kategori adı: {{ object.getName() }}</p>
+                            
+                        {% else %}
+                            <p>Nesne ID: {{ object.getId() }}</p>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <p>Henüz ilişkili nesne seçilmedi.</p>
+    {% endif %}
+
 {% endblock %}
