@@ -16,15 +16,14 @@ use Pimcore\Bundle\AdminBundle\Controller\Admin\LoginController;
 use Pimcore\Controller\FrontendController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-class DefaultController extends AbstractController
+class DefaultController extends FrontendController
 {
-    #[Route('/', name: 'homepage')]
-    public function homepage(): Response
-    {
-        return $this->render('homepage/homepage.html.twig'); 
-    }
+    // #[Route('/', name: 'homepage')]
+    // public function homepage(): Response
+    // {
+    //     return $this->render('homepage/homepage.html.twig'); 
+    // }
 
 
     // public function defaultAction(Request $request): Response
