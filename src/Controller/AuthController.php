@@ -12,9 +12,8 @@ class AuthController extends AbstractController
     #[Route('/loginIwapim', name: 'app_frontend_login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
-
         if ($this->getUser()) {
-            return $this->redirectToRoute('default_homepage');
+            return $this->redirectToRoute('default');
         }
         $error = $authenticationUtils->getLastAuthenticationError();
         $lastUsername = $authenticationUtils->getLastUsername();
@@ -39,7 +38,7 @@ class AuthController extends AbstractController
     #[Route('/favicon.ico', name: 'favicon')]
     public function favicon(): Response
     {
-        return $this->redirectToRoute('default_homepage');
+        return $this->redirectToRoute('default');
     }
 
 }
