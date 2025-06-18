@@ -17,7 +17,7 @@ use Pimcore\Controller\FrontendController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class DefaultController extends FrontendController
+class DefaultController extends AbstractController
 {
     #[Route('/', name: 'homepage')]
     public function homepage(): Response
