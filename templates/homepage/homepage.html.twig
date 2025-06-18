@@ -149,8 +149,9 @@
                                                     {% set fieldName = field.getName() %}
                                                     {% set getter = 'get' ~ fieldName|first|upper ~ fieldName|slice(1) %}
                                                     
-                                                    {% if method_exists(object, getter) %}
-                                                        {% set value = attribute(object, getter) %}
+                                                    {# Twig güvenli bir şekilde metodu çağırmayı dene #}
+                                                    {% try %}
+                                                        {% set value = attribute(object, getter)() %}
                                                         
                                                         {# Alan türüne göre özel gösterim #}
                                                         {% if field.getFieldType() == 'image' and value %}
@@ -174,9 +175,10 @@
                                                         {% else %}
                                                             {{ value }}
                                                         {% endif %}
-                                                    {% else %}
+                                                    
+                                                    {% catch %}
                                                         <em>-</em>
-                                                    {% endif %}
+                                                    {% endtry %}
                                                 </td>
                                             {% endif %}
                                         {% endfor %}
