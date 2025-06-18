@@ -12,80 +12,113 @@
 
     <hr> 
     
-    <h3>Öne Çıkan İçerikler</h3>
-
-    {% set featuredObject = pimcore_relation('featured_object', {
-        'types': ['object'],                 
-        'subtypes': {'object': ['object', 'folder']},
-        'classes': null,                     
-        'reload': true                       
-    }) %}
-    
-    {# Seçilen objeyi göster #}
-    {% if featuredObject.getElement() %}
-        {% set object = featuredObject.getElement() %}
-        <div class="featured-object">
-            <h4>{{ object.getKey() }}</h4>
-            
-            {# Nesne türüne göre dinamik alan gösterimi #}
-            {% if object.getClassName() == 'User' %}
-                <p>Ad: {{ object.getFirstname() }} {{ object.getLastname() }}</p>
-                <p>E-posta: {{ object.getEmail() }}</p>
-                
-            {% elseif object.getClassName() == 'Product' %}
-                <p>Ürün adı: {{ object.getProductName() }}</p>
-                <p>Fiyat: {{ object.getPrice() }}</p>
-                {% if object.getImage() %}
-                    <img src="{{ object.getImage().getThumbnail('content').getPath() }}" alt="{{ object.getProductName() }}">
-                {% endif %}
-                
-            {% else %}
-                <p>Nesne ID: {{ object.getId() }}</p>
-                <p>Nesne Türü: {{ object.getClassName() }}</p>
-            {% endif %}
+    <div class="editmode-panel">
+        <h3>Öne Çıkan İçerikler</h3>
+        
+        <div class="editable-selector">
+            <label>Öne Çıkan Nesne:</label>
+            {{ pimcore_relation("featuredObject", {
+                "types": ["object"],
+                "subtypes": {
+                    "object": ["object"]
+                },
+                "classes": [],
+                "width": 500
+            }) }}
         </div>
-    {% else %}
-        <p>Henüz bir nesne seçilmedi.</p>
+        
+        {% if editmode %}
+            <div class="editmode-info">
+                <p><i>Düzenleme modundasınız. Yukarıdan bir nesne seçin.</i></p>
+            </div>
+        {% endif %}
+    </div>
+
+    {# Seçilen nesneyi görüntüle #}
+    {% if not editmode %}
+        {% set featuredObj = pimcore_relation("featuredObject").getElement() %}
+        {% if featuredObj %}
+            <div class="featured-item">
+                <h4>{{ featuredObj.getKey() }}</h4>
+                
+                {% if featuredObj.getClassName() == "Product" %}
+                    <p><strong>Ürün Adı:</strong> {{ featuredObj.getProductName() }}</p>
+                    <p><strong>Fiyat:</strong> {{ featuredObj.getPrice() }}</p>
+                    {% if featuredObj.getImage() %}
+                        <img src="{{ featuredObj.getImage().getThumbnail('content').getPath() }}" alt="{{ featuredObj.getProductName() }}">
+                    {% endif %}
+                
+                {% elseif featuredObj.getClassName() == "User" %}
+                    <p><strong>Ad Soyad:</strong> {{ featuredObj.getFirstname() }} {{ featuredObj.getLastname() }}</p>
+                    <p><strong>E-posta:</strong> {{ featuredObj.getEmail() }}</p>
+                
+                {% elseif featuredObj.getClassName() == "Category" %}
+                    <p><strong>Kategori Adı:</strong> {{ featuredObj.getName() }}</p>
+                    
+                {% else %}
+                    <p><strong>Nesne ID:</strong> {{ featuredObj.getId() }}</p>
+                    <p><strong>Nesne Türü:</strong> {{ featuredObj.getClassName() }}</p>
+                {% endif %}
+            </div>
+        {% else %}
+            <p>Henüz bir nesne seçilmemiş.</p>
+        {% endif %}
     {% endif %}
     
     <hr>
     
-    <h3>İlişkili Nesneler</h3>
-    {% set relatedObjects = pimcore_relations('related_objects', {
-        'types': ['object'],
-        'subtypes': {'object': ['object', 'folder']},
-        'classes': null,            
-        'height': 250,
-        'width': 500
-    }) %}
-
-    {% if relatedObjects.getElements() %}
-        <div class="related-objects">
-            <ul>
-                {% for object in relatedObjects.getElements() %}
-                    <li class="object-item" data-type="{{ object.getClassName() }}">
-                        <h5>{{ object.getKey() }} ({{ object.getClassName() }})</h5>
-                        
-                        {# Nesne türüne göre dinamik alan gösterimi #}
-                        {% if object.getClassName() == 'User' %}
-                            <p>Ad: {{ object.getFirstname() }} {{ object.getLastname() }}</p>
-                            
-                        {% elseif object.getClassName() == 'Product' %}
-                            <p>Ürün adı: {{ object.getProductName() }}</p>
-                            <p>Fiyat: {{ object.getPrice() }}</p>
-                            
-                        {% elseif object.getClassName() == 'Category' %}
-                            <p>Kategori adı: {{ object.getName() }}</p>
-                            
-                        {% else %}
-                            <p>Nesne ID: {{ object.getId() }}</p>
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
+    <div class="editmode-panel">
+        <h3>İlişkili Nesneler</h3>
+        
+        <div class="editable-selector">
+            <label>İlişkili Nesneler:</label>
+            {{ pimcore_relations("relatedObjects", {
+                "types": ["object"],
+                "subtypes": {
+                    "object": ["object"]
+                },
+                "classes": [],
+                "width": 500,
+                "height": 200
+            }) }}
         </div>
-    {% else %}
-        <p>Henüz ilişkili nesne seçilmedi.</p>
-    {% endif %}
+        
+        {% if editmode %}
+            <div class="editmode-info">
+                <p><i>Düzenleme modundasınız. Yukarıdan ilişkili nesneleri seçin.</i></p>
+            </div>
+        {% endif %}
+    </div>
 
+    {# İlişkili nesneleri görüntüle #}
+    {% if not editmode %}
+        {% set relatedObjs = pimcore_relations("relatedObjects").getElements() %}
+        {% if relatedObjs|length > 0 %}
+            <div class="related-items">
+                <ul>
+                    {% for obj in relatedObjs %}
+                        <li>
+                            <h5>{{ obj.getKey() }} ({{ obj.getClassName() }})</h5>
+                            
+                            {% if obj.getClassName() == "Product" %}
+                                <p><strong>Ürün Adı:</strong> {{ obj.getProductName() }}</p>
+                                <p><strong>Fiyat:</strong> {{ obj.getPrice() }}</p>
+                                
+                            {% elseif obj.getClassName() == "User" %}
+                                <p><strong>Ad Soyad:</strong> {{ obj.getFirstname() }} {{ obj.getLastname() }}</p>
+                                
+                            {% elseif obj.getClassName() == "Category" %}
+                                <p><strong>Kategori Adı:</strong> {{ obj.getName() }}</p>
+                                
+                            {% else %}
+                                <p><strong>Nesne ID:</strong> {{ obj.getId() }}</p>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% else %}
+            <p>Henüz ilişkili nesne seçilmemiş.</p>
+        {% endif %}
+    {% endif %}
 {% endblock %}
