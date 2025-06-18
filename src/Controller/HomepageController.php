@@ -15,4 +15,10 @@ class HomePageController extends AbstractController
         return $this->render('homepage/homepage.html.twig'); 
     }
 
+    #[Route('/test', name: 'test')]
+    public function test(Document $document, Request $request): Response
+    {
+        return $this->render($document->getTemplate());
+    }
+
 }
