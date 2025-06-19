@@ -47,7 +47,6 @@ class CurrencyCommand extends AbstractCommand
                     $output->writeln("❌ Missing currency name or code for date: {$date->format('Y-m-d')}");
                     continue;
                 }
-                $output->writeln("Processing currency: $currencyName ($currencyCode) for date: {$date->format('Y-m-d')}");
                 $rate = $currency['ForexBuying'] ?? $currency['ExchangeRate'] ?? null;
                 if ($rate === null) {
                     $output->writeln("❌ Missing rate for currency: $currencyName ($currencyCode)");
@@ -59,20 +58,9 @@ class CurrencyCommand extends AbstractCommand
                     continue;
                 } 
                 $rate = $rate / $currenyUnit;
-                $output->writeln("✅ Rate for $currencyName ($currencyCode): $rate on {$date}");
+                $output->writeln("✅ Rate for $currencyName ($currencyCode): $rate on {$date->format('Y-m-d')}");
             }
         }
-
-
-        // $urlExtra = "https://www.tcmb.gov.tr/bilgiamackur/today.xml";
-        // $xmlExtra = simplexml_load_file($urlExtra);
-        // $jsonExtra = json_encode($xmlExtra  );
-        // $arrayExtra = json_decode($jsonExtra, TRUE);
-       
-        
-        // print_r($arrayExtra);
-
-
 
         return Command::SUCCESS;
     }
