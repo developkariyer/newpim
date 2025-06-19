@@ -59,7 +59,7 @@ class CurrencyCommand extends AbstractCommand
                     $output->writeln("❌ Error calculating rate for: $currencyName ($currencyCode): {$e->getMessage()}");
                     continue;
                 }
-                $currencyObject = $this->getCurrencyObject($currencyCode);
+                $currencyObject = Currency::getByCurrencyCode(currencyCode, ['limit' => 1,'unpublished' => true]);
                 if (!$currencyObject) {
                     $output->writeln("❌ No existing currency object found for: $currencyName ($currencyCode), creating new one.");
                     $currencyObject = new Currency();
