@@ -21,8 +21,6 @@ use App\Service\DatabaseService;
 class CurrencyCommand extends AbstractCommand
 {
     private $logger;
-    
-    private DatabaseService $databaseService;
 
     private const URLS = [
         'https://www.tcmb.gov.tr/kurlar/today.xml',
@@ -33,60 +31,58 @@ class CurrencyCommand extends AbstractCommand
     {
         parent::__construct();
         $this->setDescription('Retrieve and update currency rates from TCMB XML feeds.');
-       // $this->logger = LoggerFactory::create('Command', 'CurrencyCommand');
-        $this->databaseService = $databaseService;
+        $this->logger = LoggerFactory::create('Command', 'CurrencyCommand');
     }
     
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->test();
-        // foreach (self::URLS as $url) {
-        //     $array = $this->loadXmlAsArray($url);
-        //     if ($array === null) {
-        //         $this->logger->error("[" . __METHOD__ . "] ❌ Failed to load XML from: $url");
-        //         return Command::FAILURE;
-        //     }
-        //     $this->logger->info("[" . __METHOD__ . "] ✅ Successfully loaded XML from: $url");
-        //     $date = Carbon::createFromFormat('m/d/Y', $array['@attributes']['Date']);
-        //     foreach ($array['Currency'] as $currency) {
-        //         $currencyName = $currency['CurrencyName'] ?? '';
-        //         $currencyCode = $currency['@attributes']['CurrencyCode'] ?? '';
-        //         if (empty($currencyName) || empty($currencyCode)) {
-        //             $this->logger->error("[" . __METHOD__ . "] ❌ Missing currency name or code for date: {$date->format('Y-m-d')}");
-        //             continue;
-        //         }
-        //         $rate = $currency['ForexBuying'] ?? $currency['ExchangeRate'] ?? null;
-        //         if ($rate === null) {
-        //             $this->logger->error("[" . __METHOD__ . "] ❌ Missing rate for currency: $currencyName ($currencyCode) on {$date->format('Y-m-d')}");
-        //             continue;
-        //         }
-        //         $currenyUnit = $currency['Unit'] ?? 0;
-        //         if ($currenyUnit <= 0) {
-        //             $this->logger->error("[" . __METHOD__ . "] ❌ Invalid currency unit for: $currencyName ($currencyCode) on {$date->format('Y-m-d')}");
-        //             continue;
-        //         } 
-        //         try {
-        //             $rate = $rate / $currenyUnit;
-        //             $this->logger->info("[" . __METHOD__ . "] ✅ Rate calculated for: $currencyName ($currencyCode) - Rate: $rate on {$date->format('Y-m-d')}");
-        //         } catch (\Throwable $e) {
-        //             $this->logger->error("[" . __METHOD__ . "] ❌ Error calculating rate for: $currencyName ($currencyCode) - {$e->getMessage()}");
-        //             continue;
-        //         }
-        //         $currencyObject = Currency::getByCurrencyCode($currencyCode, ['limit' => 1,'unpublished' => true]);
-        //         if (!$currencyObject) {
-        //             $this->logger->info("[" . __METHOD__ . "] ❌ No existing currency object found for: $currencyName ($currencyCode), creating new one.");
-        //             $currencyObject = new Currency();
-        //             $currencyObject->setParent(Folder::getByPath('/Ayarlar/Sabitler/Döviz-Kurları'));
-        //             $currencyObject->setKey(trim($currencyName));
-        //             $currencyObject->setCurrencyCode(strtoupper($currencyCode));
-        //             $currencyObject->setCurrencyName($currencyName);
-        //         } 
-        //         $currencyObject->setRate($rate);
-        //         $currencyObject->setDate($date);
-        //         $currencyObject->save();
-        //         $this->logger->info("[" . __METHOD__ . "] ✅ Currency object saved for: $currencyName ($currencyCode) with rate: $rate on {$date->format('Y-m-d')}");
-        //     }
-        // }
+        foreach (self::URLS as $url) {
+            $array = $this->loadXmlAsArray($url);
+            if ($array === null) {
+                $this->logger->error("[" . __METHOD__ . "] ❌ Failed to load XML from: $url");
+                return Command::FAILURE;
+            }
+            $this->logger->info("[" . __METHOD__ . "] ✅ Successfully loaded XML from: $url");
+            $date = Carbon::createFromFormat('m/d/Y', $array['@attributes']['Date']);
+            foreach ($array['Currency'] as $currency) {
+                $currencyName = $currency['CurrencyName'] ?? '';
+                $currencyCode = $currency['@attributes']['CurrencyCode'] ?? '';
+                if (empty($currencyName) || empty($currencyCode)) {
+                    $this->logger->error("[" . __METHOD__ . "] ❌ Missing currency name or code for date: {$date->format('Y-m-d')}");
+                    continue;
+                }
+                $rate = $currency['ForexBuying'] ?? $currency['ExchangeRate'] ?? null;
+                if ($rate === null) {
+                    $this->logger->error("[" . __METHOD__ . "] ❌ Missing rate for currency: $currencyName ($currencyCode) on {$date->format('Y-m-d')}");
+                    continue;
+                }
+                $currenyUnit = $currency['Unit'] ?? 0;
+                if ($currenyUnit <= 0) {
+                    $this->logger->error("[" . __METHOD__ . "] ❌ Invalid currency unit for: $currencyName ($currencyCode) on {$date->format('Y-m-d')}");
+                    continue;
+                } 
+                try {
+                    $rate = $rate / $currenyUnit;
+                    $this->logger->info("[" . __METHOD__ . "] ✅ Rate calculated for: $currencyName ($currencyCode) - Rate: $rate on {$date->format('Y-m-d')}");
+                } catch (\Throwable $e) {
+                    $this->logger->error("[" . __METHOD__ . "] ❌ Error calculating rate for: $currencyName ($currencyCode) - {$e->getMessage()}");
+                    continue;
+                }
+                $currencyObject = Currency::getByCurrencyCode($currencyCode, ['limit' => 1,'unpublished' => true]);
+                if (!$currencyObject) {
+                    $this->logger->info("[" . __METHOD__ . "] ❌ No existing currency object found for: $currencyName ($currencyCode), creating new one.");
+                    $currencyObject = new Currency();
+                    $currencyObject->setParent(Folder::getByPath('/Ayarlar/Sabitler/Döviz-Kurları'));
+                    $currencyObject->setKey(trim($currencyName));
+                    $currencyObject->setCurrencyCode(strtoupper($currencyCode));
+                    $currencyObject->setCurrencyName($currencyName);
+                } 
+                $currencyObject->setRate($rate);
+                $currencyObject->setDate($date);
+                $currencyObject->save();
+                $this->logger->info("[" . __METHOD__ . "] ✅ Currency object saved for: $currencyName ($currencyCode) with rate: $rate on {$date->format('Y-m-d')}");
+            }
+        }
         return Command::SUCCESS;
     }
 
@@ -99,12 +95,6 @@ class CurrencyCommand extends AbstractCommand
         }
         $json = json_encode($xml);
         return json_decode($json, true);
-    }
-
-    public function test () 
-    {
-        $sql = "select * from object_store_brand";
-        print_r($this->databaseService->fetchAllSql($sql));
     }
 
 }
