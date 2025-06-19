@@ -24,10 +24,16 @@ class CurrencyCommand extends AbstractCommand
         'https://www.tcmb.gov.tr/kurlar/today.xml',
         'https://www.tcmb.gov.tr/bilgiamackur/today.xml',
     ];
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->setDescription('Retrieve and update currency rates from TCMB XML feeds.');
+        $this->logger = LoggerFactory::create('Command', 'CurrencyCommand');
+    }
     
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->logger = LoggerFactory::create('Command', 'CurrencyCommand');
         foreach (self::URLS as $url) {
             $array = $this->loadXmlAsArray($url);
             if ($array === null) {

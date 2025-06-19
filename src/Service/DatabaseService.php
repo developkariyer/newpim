@@ -40,9 +40,21 @@ class DatabaseService
     {
         try {
             $db = Db::get();
-            return $db->fetchAllAssociative($sql, $params);
+            $result =  $db->fetchAllAssociative($sql, $params);
+            $this->logger->info("[" . __METHOD__ . "] ✅ SQL Query Executed Successfully", [
+                'sql' => $sql,
+                'params' => $params,
+                'row_count' => count($result)
+            ]);
+            return $result;
         } catch (\Exception $e) {
-            echo "Fetch From SQL Error: " . $sql . "\n" . $e->getMessage() . "\n";
+            this->logger->error("[" . __METHOD__ . "] ❌ SQL Query Error: {$e->getMessage()}", [
+                'sql' => $sql,
+                'params' => $params,
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw new PDOException("Database query error occurred: " . $e->getMessage(), (int)$e->getCode(), $e);
         }
     }
 
