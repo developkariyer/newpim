@@ -64,18 +64,16 @@ class CurrencyCommand extends AbstractCommand
                     $output->writeln("❌ Error calculating rate for: $currencyName ($currencyCode): {$e->getMessage()}");
                     continue;
                 }
-                try {
-                    $listing = new \Pimcore\Model\DataObject\Currency\Listing();
-                    $listing->setCondition("currencyCode = ?", [$currencyCode]);
-                    $listing->setLimit(1);
-                    $currencies = $listing->load();
-                    if (!empty($currencies)) {
-                        $currencyObject = $currencies[0];
-                        $output->writeln("✅ Found currency object for: $currencyName ($currencyCode)");
-                    }
-                    else {
-                        $output->writeln("❌ No currency object found for: $currencyName ($currencyCode), creating new one.");
-                    }
+                $listing = new \Pimcore\Model\DataObject\Currency\Listing();
+                $listing->setCondition("currencyCode = ?", [$currencyCode]);
+                $listing->setLimit(1);
+                $currencies = $listing->load();
+                if (!empty($currencies)) {
+                    $currencyObject = $currencies[0];
+                    $output->writeln("✅ Found currency object for: $currencyName ($currencyCode)");
+                }
+                else {
+                    $output->writeln("❌ No currency object found for: $currencyName ($currencyCode), creating new one.");
                 }
             }
         }
