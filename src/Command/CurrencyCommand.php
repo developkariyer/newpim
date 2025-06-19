@@ -82,6 +82,7 @@ class CurrencyCommand extends AbstractCommand
     {
         $listing = new \Pimcore\Model\DataObject\Currency\Listing();
         $listing->setCondition("currencyCode = ?", [$currencyCode]);
+        $listing->setUnpublished(true);
         $listing->setLimit(1);
         $currencies = $listing->load();
         return !empty($currencies) ? $currencies[0] : null;
