@@ -74,18 +74,7 @@ class CurrencyCommand extends AbstractCommand
                 $output->writeln("✅ Currency object saved for: $currencyName ($currencyCode)");
             }
         }
-
         return Command::SUCCESS;
-    }
-
-    private function getCurrencyObject(string $currencyCode): ?Currency
-    {
-        $listing = new \Pimcore\Model\DataObject\Currency\Listing();
-        $listing->setCondition("currencyCode = ?", [$currencyCode]);
-        $listing->setUnpublished(true);
-        $listing->setLimit(1);
-        $currencies = $listing->load();
-        return !empty($currencies) ? $currencies[0] : null;
     }
 
     private function loadXmlAsArray(string $url): ?array
