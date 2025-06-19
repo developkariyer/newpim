@@ -24,11 +24,6 @@ class CurrencyCommand extends AbstractCommand
         'https://www.tcmb.gov.tr/bilgiamackur/today.xml',
     ];
     
-    protected function configure()
-    {
-        
-    }
-
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
 
@@ -64,24 +59,35 @@ class CurrencyCommand extends AbstractCommand
                     $output->writeln("❌ Error calculating rate for: $currencyName ($currencyCode): {$e->getMessage()}");
                     continue;
                 }
-                $listing = new \Pimcore\Model\DataObject\Currency\Listing();
-                $listing->setCondition("currencyCode = ?", [$currencyCode]);
-                $listing->setLimit(1);
-                $currencies = $listing->load();
-                if (!empty($currencies)) {
-                    $currencyObject = $currencies[0];
-                    $output->writeln("✅ Found currency object for: $currencyName ($currencyCode)");
-                }
-                else {
-                    $output->writeln("❌ No currency object found for: $currencyName ($currencyCode), creating new one.");
-                }
+                $currencyObject = $this->getCurrencyObject($currencyCode);
+                if (!$currencyObject) {
+                    $output->writeln("❌ No existing currency object found for: $currencyName ($currencyCode), creating new one.");
+                    $currencyObject = new Currency();
+                    $currencyObject->setParent(Folder::getByPath('/Ayarlar/Sabitler/Döviz-Kurları'));
+                    $currencyObject->setKey($currencyName);
+                    $currencyObject->setCurrencyCode(strtoupper($currencyCode));
+                    $currencyObject->setCurrencyName($currencyName);
+                } 
+                $currencyObject->setRate($rate);
+                $currencyObject->setDate($date);
+                $currencyObject->save();
+                $output->writeln("✅ Currency object saved for: $currencyName ($currencyCode)");
             }
         }
 
         return Command::SUCCESS;
     }
 
-    function loadXmlAsArray(string $url): ?array
+    private function getCurrencyObject(string $currencyCode): ?Currency
+    {
+        $listing = new \Pimcore\Model\DataObject\Currency\Listing();
+        $listing->setCondition("currencyCode = ?", [$currencyCode]);
+        $listing->setLimit(1);
+        $currencies = $listing->load();
+        return !empty($currencies) ? $currencies[0] : null;
+    }
+
+    private function loadXmlAsArray(string $url): ?array
     {
         $xml = @simplexml_load_file($url);
         if (!$xml) {
