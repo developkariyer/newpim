@@ -18,16 +18,38 @@ use Pimcore\Model\DataObject\Folder;
 )]
 class CurrencyCommand extends AbstractCommand
 {
+
+    private const URLS = [
+        'https://www.tcmb.gov.tr/kurlar/today.xml',
+        'https://www.tcmb.gov.tr/bilgiamackur/today.xml',
+    ];
     
     protected function configure()
     {
         $this
-            ->addArgument('marketplace', InputOption::VALUE_OPTIONAL, 'The marketplace to import from.')
-            ->addOption('download', null, InputOption::VALUE_NONE, 'If set, Shopify listing data will always be downloaded.');
+            ->setDescription('Retrieve Currency from TCMB')
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+
+        // foreach (self::URLS as $url) {
+        //     $array = $this->loadXmlAsArray($url);
+        //     if ($array === null) {
+        //         $output->writeln("❌ Failed to load XML from: $url");
+        //         return Command::FAILURE;
+        //     }
+        //     $output->writeln("✅ Successfully loaded XML from: $url");
+        //     $date = Carbon::createFromFormat('d/m/Y', $array['@attributes']['Date']);
+        //     foreach ($array['Currency'] as $currency) {
+        //         $currencyName = $currency['CurrencyName'] ?? '';
+        //         $currencyCode = $currency['@attributes']['CurrencyCode'] ?? '';
+        //     }
+
+
+        // }
+
+
         $urlExtra = "https://www.tcmb.gov.tr/bilgiamackur/today.xml";
         $xmlExtra = simplexml_load_file($urlExtra);
         $jsonExtra = json_encode($xmlExtra  );
@@ -40,11 +62,30 @@ class CurrencyCommand extends AbstractCommand
         echo "TCMP Date: ".$array['@attributes']['Date']."\n";
         list($month, $day, $year) = explode('/', $array['@attributes']['Date']);
         $date = sprintf('%4d-%02d-%02d', $year, $month, $day);
-        print_r($array);
+        foreach ($array['Currency'] as $currency) {
+            $rate = $currency['ForexBuying'] ?? $currency['ExchangeRate'] ?? 0;
+            $rate = $rate/$currency['Unit'];
+            $currencyName = $currency['CurrencyName']
+            $tcmbDate = $array['@attributes']['Date']."\n";
+        
+        }
+        
+        print_r($arrayExtra);
 
 
 
         return Command::SUCCESS;
+    }
+
+    function loadXmlAsArray(string $url): ?array
+    {
+        $xml = @simplexml_load_file($url);
+        if (!$xml) {
+            error_log("❌ XML Loaded Error Url: $url");
+            return null;
+        }
+        $json = json_encode($xml);
+        return json_decode($json, true);
     }
 
 }
