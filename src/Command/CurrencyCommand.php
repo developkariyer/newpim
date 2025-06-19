@@ -82,7 +82,7 @@ class CurrencyCommand extends AbstractCommand
     {
         $xml = @simplexml_load_file($url);
         if (!$xml) {
-            error_log("❌ XML Loaded Error Url: $url");
+            $this->logger->error("[" . __METHOD__ . "] ❌ XML Loaded Error Url: $url");
             return null;
         }
         $json = json_encode($xml);
