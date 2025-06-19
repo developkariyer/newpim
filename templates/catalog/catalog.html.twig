@@ -107,6 +107,42 @@
             font-weight: 500;
         }
         
+        .variants-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #f8f9fa;
+        }
+        
+        .variants-title {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .variant-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-left: 3px solid #3498db;
+        }
+        
+        .variant-name {
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        
+        .variant-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 0.8em;
+            color: #666;
+        }
+        
         .no-products {
             text-align: center;
             padding: 60px 20px;
@@ -122,6 +158,10 @@
             
             .catalog-container {
                 padding: 15px;
+            }
+            
+            .variant-details {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -179,6 +219,25 @@
                                 </div>
                             {% endif %}
                         </div>
+
+                        {# Variantları göster #}
+                        {% set children = product.getChildren() %}
+                        {% if children is not empty %}
+                            <div class="variants-section">
+                                <div class="variants-title">Varyantlar ({{ children|length }})</div>
+                                {% for variant in children %}
+                                    <div class="variant-item">
+                                        <div class="variant-name">
+                                            {{ variant.getName() ?: variant.getKey() ?: 'Varyant ' ~ loop.index }}
+                                        </div>
+                                        <div class="variant-details">
+                                            <div><strong>IWASKU:</strong> {{ variant.getIwasku() ?: '-' }}</div>
+                                            <div><strong>Kod:</strong> {{ variant.getProductIdentifier() ?: '-' }}</div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                 {% endfor %}
             </div>
