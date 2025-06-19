@@ -59,7 +59,7 @@ class CurrencyCommand extends AbstractCommand
                     continue;
                 } 
                 $rate = $rate / $currenyUnit;
-                $output->writeln("✅ Rate for $currencyName ($currencyCode): $rate");
+                $output->writeln("✅ Rate for $currencyName ($currencyCode): $rate on {$date}");
             }
         }
 
