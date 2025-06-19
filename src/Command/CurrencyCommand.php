@@ -65,7 +65,7 @@ class CurrencyCommand extends AbstractCommand
                     continue;
                 }
                 try {
-                    $currencyObject = Currency::getCurrencyCode($currencyCode);
+                    $currencyObject = Currency::getByCurrencyCode($currencyCode);
                 } catch (\Throwable $e) {
                     $output->writeln("❌ Error saving currency: $currencyName ($currencyCode): {$e->getMessage()}");
                     continue;
