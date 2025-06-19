@@ -11,6 +11,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Pimcore\Model\DataObject\Currency;
 use Symfony\Component\Console\Input\InputOption;
 use Pimcore\Model\DataObject\Folder;
+use App\Logger\LoggerFactory;
 
 #[AsCommand(
     name: 'app:currency',
@@ -26,42 +27,42 @@ class CurrencyCommand extends AbstractCommand
     
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-
+        $this->logger = LoggerFactory::create('Command', 'CurrencyCommand');
         foreach (self::URLS as $url) {
             $array = $this->loadXmlAsArray($url);
             if ($array === null) {
-                $output->writeln("❌ Failed to load XML from: $url");
+                $this->logger->error("[" . __METHOD__ . "] ❌ Failed to load XML from: $url");
                 return Command::FAILURE;
             }
-            $output->writeln("✅ Successfully loaded XML from: $url");
+            $this->logger->info("[" . __METHOD__ . "] ✅ Successfully loaded XML from: $url");
             $date = Carbon::createFromFormat('m/d/Y', $array['@attributes']['Date']);
             foreach ($array['Currency'] as $currency) {
                 $currencyName = $currency['CurrencyName'] ?? '';
                 $currencyCode = $currency['@attributes']['CurrencyCode'] ?? '';
                 if (empty($currencyName) || empty($currencyCode)) {
-                    $output->writeln("❌ Missing currency name or code for date: {$date->format('Y-m-d')}");
+                    $this->logger->error("❌ Missing currency name or code for date: {$date->format('Y-m-d')}");
                     continue;
                 }
                 $rate = $currency['ForexBuying'] ?? $currency['ExchangeRate'] ?? null;
                 if ($rate === null) {
-                    $output->writeln("❌ Missing rate for currency: $currencyName ($currencyCode)");
+                    $this->logger->error("❌ Missing rate for currency: $currencyName ($currencyCode) on {$date->format('Y-m-d')}");
                     continue;
                 }
                 $currenyUnit = $currency['Unit'] ?? 0;
                 if ($currenyUnit <= 0) {
-                    $output->writeln("❌ Invalid currency unit for: $currencyName ($currencyCode)");
+                    $this->logger->error("❌ Invalid currency unit for: $currencyName ($currencyCode) on {$date->format('Y-m-d')}");
                     continue;
                 } 
                 try {
                     $rate = $rate / $currenyUnit;
-                    $output->writeln("✅ Rate for $currencyName ($currencyCode): $rate on {$date->format('Y-m-d')}");
+                    $this->logger->info("✅ Rate calculated for: $currencyName ($currencyCode) - Rate: $rate on {$date->format('Y-m-d')}");
                 } catch (\Throwable $e) {
-                    $output->writeln("❌ Error calculating rate for: $currencyName ($currencyCode): {$e->getMessage()}");
+                    $this->logger->error("❌ Error calculating rate for: $currencyName ($currencyCode) - {$e->getMessage()}");
                     continue;
                 }
                 $currencyObject = Currency::getByCurrencyCode($currencyCode, ['limit' => 1,'unpublished' => true]);
                 if (!$currencyObject) {
-                    $output->writeln("❌ No existing currency object found for: $currencyName ($currencyCode), creating new one.");
+                    $this->logger->info("❌ No existing currency object found for: $currencyName ($currencyCode), creating new one.");
                     $currencyObject = new Currency();
                     $currencyObject->setParent(Folder::getByPath('/Ayarlar/Sabitler/Döviz-Kurları'));
                     $currencyObject->setKey(trim($currencyName));
@@ -71,7 +72,7 @@ class CurrencyCommand extends AbstractCommand
                 $currencyObject->setRate($rate);
                 $currencyObject->setDate($date);
                 $currencyObject->save();
-                $output->writeln("✅ Currency object saved for: $currencyName ($currencyCode)");
+                $this->logger->info("✅ Currency object saved for: $currencyName ($currencyCode) with rate: $rate on {$date->format('Y-m-d')}");
             }
         }
         return Command::SUCCESS;
