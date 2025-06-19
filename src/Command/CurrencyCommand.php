@@ -64,7 +64,7 @@ class CurrencyCommand extends AbstractCommand
                     $output->writeln("❌ No existing currency object found for: $currencyName ($currencyCode), creating new one.");
                     $currencyObject = new Currency();
                     $currencyObject->setParent(Folder::getByPath('/Ayarlar/Sabitler/Döviz-Kurları'));
-                    $currencyObject->setKey($currencyName);
+                    $currencyObject->setKey(trim($currencyName));
                     $currencyObject->setCurrencyCode(strtoupper($currencyCode));
                     $currencyObject->setCurrencyName($currencyName);
                 } 
