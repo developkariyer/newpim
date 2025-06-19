@@ -65,13 +65,17 @@ class CurrencyCommand extends AbstractCommand
                     continue;
                 }
                 try {
-                    $currencyObject = Currency::getByCurrencyCode($currencyCode);
-                } catch (\Throwable $e) {
-                    $output->writeln("❌ Error saving currency: $currencyName ($currencyCode): {$e->getMessage()}");
-                    continue;
-                }
-                if (!$currencyObject) {
-                    $output->writeln("❌ Currency object not found for: $currencyName ($currencyCode)");
+                    $listing = new \Pimcore\Model\DataObject\Currency\Listing();
+                    $listing->setCondition("currencyCode = ?", [$currencyCode]);
+                    $listing->setLimit(1);
+                    $currencies = $listing->load();
+                    if (!empty($currencies)) {
+                        $currencyObject = $currencies[0];
+                        $output->writeln("✅ Found currency object for: $currencyName ($currencyCode)");
+                    }
+                    else {
+                        $output->writeln("❌ No currency object found for: $currencyName ($currencyCode), creating new one.");
+                    }
                 }
             }
         }
