@@ -53,21 +53,7 @@ class CurrencyCommand extends AbstractCommand
         $xmlExtra = simplexml_load_file($urlExtra);
         $jsonExtra = json_encode($xmlExtra  );
         $arrayExtra = json_decode($jsonExtra, TRUE);
-        $url = "https://www.tcmb.gov.tr/kurlar/today.xml";
-        $xml = simplexml_load_file($url);
-        $json = json_encode($xml);
-        $array = json_decode($json, TRUE);
-        echo "Current Date: ".date('m/d/Y')."\n";
-        echo "TCMP Date: ".$array['@attributes']['Date']."\n";
-        list($month, $day, $year) = explode('/', $array['@attributes']['Date']);
-        $date = sprintf('%4d-%02d-%02d', $year, $month, $day);
-        foreach ($array['Currency'] as $currency) {
-            $rate = $currency['ForexBuying'] ?? $currency['ExchangeRate'] ?? 0;
-            $rate = $rate/$currency['Unit'];
-            $currencyName = $currency['CurrencyName']
-            $tcmbDate = $array['@attributes']['Date']."\n";
-        
-        }
+       
         
         print_r($arrayExtra);
 
