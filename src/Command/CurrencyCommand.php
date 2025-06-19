@@ -104,7 +104,7 @@ class CurrencyCommand extends AbstractCommand
     public function test () 
     {
         $sql = "select * from object_store_brand";
-        print_r($this->databaseService->fefetchAllSql($sql));
+        print_r($this->databaseService->fetchAllSql($sql));
     }
 
 }
