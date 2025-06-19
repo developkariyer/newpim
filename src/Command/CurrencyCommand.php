@@ -57,8 +57,13 @@ class CurrencyCommand extends AbstractCommand
                     $output->writeln("❌ Invalid currency unit for: $currencyName ($currencyCode)");
                     continue;
                 } 
-                $rate = $rate / $currenyUnit;
-                $output->writeln("✅ Rate for $currencyName ($currencyCode): $rate on {$date->format('Y-m-d')}");
+                try {
+                    $rate = $rate / $currenyUnit;
+                    $output->writeln("✅ Rate for $currencyName ($currencyCode): $rate on {$date->format('Y-m-d')}");
+                } catch (\Throwable $e) {
+                    $output->writeln("❌ Error calculating rate for: $currencyName ($currencyCode): {$e->getMessage()}");
+                    continue;
+                }
             }
         }
 
