@@ -40,7 +40,7 @@ class CurrencyCommand extends AbstractCommand
         echo "TCMP Date: ".$array['@attributes']['Date']."\n";
         list($month, $day, $year) = explode('/', $array['@attributes']['Date']);
         $date = sprintf('%4d-%02d-%02d', $year, $month, $day);
-        print($array);
+        print_r($array);
 
 
 
