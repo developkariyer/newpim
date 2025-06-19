@@ -39,7 +39,7 @@ class CurrencyCommand extends AbstractCommand
                 return Command::FAILURE;
             }
             $output->writeln("✅ Successfully loaded XML from: $url");
-            $date = Carbon::createFromFormat('d/m/Y', $array['@attributes']['Date']);
+            $date = Carbon::createFromFormat('m/d/Y', $array['@attributes']['Date']);
             foreach ($array['Currency'] as $currency) {
                 $currencyName = $currency['CurrencyName'] ?? '';
                 $currencyCode = $currency['@attributes']['CurrencyCode'] ?? '';
