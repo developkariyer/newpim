@@ -95,4 +95,9 @@ class CurrencyCommand extends AbstractCommand
         return json_decode($json, true);
     }
 
+    public function test () 
+    {
+        
+    }
+
 }
