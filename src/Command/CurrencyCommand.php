@@ -32,30 +32,45 @@ class CurrencyCommand extends AbstractCommand
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
 
-        // foreach (self::URLS as $url) {
-        //     $array = $this->loadXmlAsArray($url);
-        //     if ($array === null) {
-        //         $output->writeln("❌ Failed to load XML from: $url");
-        //         return Command::FAILURE;
-        //     }
-        //     $output->writeln("✅ Successfully loaded XML from: $url");
-        //     $date = Carbon::createFromFormat('d/m/Y', $array['@attributes']['Date']);
-        //     foreach ($array['Currency'] as $currency) {
-        //         $currencyName = $currency['CurrencyName'] ?? '';
-        //         $currencyCode = $currency['@attributes']['CurrencyCode'] ?? '';
-        //     }
+        foreach (self::URLS as $url) {
+            $array = $this->loadXmlAsArray($url);
+            if ($array === null) {
+                $output->writeln("❌ Failed to load XML from: $url");
+                return Command::FAILURE;
+            }
+            $output->writeln("✅ Successfully loaded XML from: $url");
+            $date = Carbon::createFromFormat('d/m/Y', $array['@attributes']['Date']);
+            foreach ($array['Currency'] as $currency) {
+                $currencyName = $currency['CurrencyName'] ?? '';
+                $currencyCode = $currency['@attributes']['CurrencyCode'] ?? '';
+                if (empty($currencyName) || empty($currencyCode)) {
+                    $output->writeln("❌ Missing currency name or code for date: {$date->format('Y-m-d')}");
+                    continue;
+                }
+                $output->writeln("Processing currency: $currencyName ($currencyCode) for date: {$date->format('Y-m-d')}");
+                $rate = $currency['ForexBuying'] ?? $currency['ExchangeRate'] ?? null;
+                if ($rate === null) {
+                    $output->writeln("❌ Missing rate for currency: $currencyName ($currencyCode)");
+                    continue;
+                }
+                $currenyUnit = $currency['Unit'] ?? 0;
+                if ($currenyUnit <= 0) {
+                    $output->writeln("❌ Invalid currency unit for: $currencyName ($currencyCode)");
+                    continue;
+                } 
+                $rate = $rate / $currenyUnit;
+                $output->writeln("✅ Rate for $currencyName ($currencyCode): $rate");
+            }
+        }
 
 
-        // }
-
-
-        $urlExtra = "https://www.tcmb.gov.tr/bilgiamackur/today.xml";
-        $xmlExtra = simplexml_load_file($urlExtra);
-        $jsonExtra = json_encode($xmlExtra  );
-        $arrayExtra = json_decode($jsonExtra, TRUE);
+        // $urlExtra = "https://www.tcmb.gov.tr/bilgiamackur/today.xml";
+        // $xmlExtra = simplexml_load_file($urlExtra);
+        // $jsonExtra = json_encode($xmlExtra  );
+        // $arrayExtra = json_decode($jsonExtra, TRUE);
        
         
-        print_r($arrayExtra);
+        // print_r($arrayExtra);
 
 
 
