@@ -22,6 +22,8 @@ class CurrencyCommand extends AbstractCommand
 {
     private $logger;
 
+    private DatabaseService $databaseService;
+
     private const URLS = [
         'https://www.tcmb.gov.tr/kurlar/today.xml',
         'https://www.tcmb.gov.tr/bilgiamackur/today.xml',
@@ -32,6 +34,7 @@ class CurrencyCommand extends AbstractCommand
         parent::__construct();
         $this->setDescription('Retrieve and update currency rates from TCMB XML feeds.');
         $this->logger = LoggerFactory::create('Command', 'CurrencyCommand');
+        $this->databaseService = $databaseService;
     }
     
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -95,6 +98,19 @@ class CurrencyCommand extends AbstractCommand
         }
         $json = json_encode($xml);
         return json_decode($json, true);
+    }
+
+    private function updateCurrencyHistoryTable($currencyCode, $rate, $date): void
+    {
+        $sql = "
+            INSERT INTO iwa_currency_history (date, currency, value) 
+            VALUES (:date, :currency, :value)
+            ON DUPLICATE KEY UPDATE value = :value, date = :date";
+        $this->databaseService->executeSql($sql, [
+            'date' => $date,
+            'currency' => $currencyCode,
+            'value' => $rate
+        ]);
     }
 
 }
