@@ -64,7 +64,12 @@ class CurrencyCommand extends AbstractCommand
                     $output->writeln("❌ Error calculating rate for: $currencyName ($currencyCode): {$e->getMessage()}");
                     continue;
                 }
-                $currencyObject = Currency::getByCurrencyCode($currencyCode);
+                try {
+                    $currencyObject = Currency::getCurrencyCode($currencyCode);
+                } catch (\Throwable $e) {
+                    $output->writeln("❌ Error saving currency: $currencyName ($currencyCode): {$e->getMessage()}");
+                    continue;
+                }
                 if (!$currencyObject) {
                     $output->writeln("❌ Currency object not found for: $currencyName ($currencyCode)");
                 }
