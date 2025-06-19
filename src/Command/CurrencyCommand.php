@@ -26,8 +26,7 @@ class CurrencyCommand extends AbstractCommand
     
     protected function configure()
     {
-        $this
-            ->setDescription('Retrieve Currency from TCMB')
+        
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
