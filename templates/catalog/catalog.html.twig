@@ -161,7 +161,7 @@
                                 <span class="info-label">Kategori:</span>
                                 <span class="info-value">
                                     {% if product.getCategory() %}
-                                        <span class="category-badge">{{ product.getCategory().getName() }}</span>
+                                        <span class="category-badge">{{ product.getCategory().getCategory() }}</span>
                                     {% else %}
                                         <span>Kategori Yok</span>
                                     {% endif %}
@@ -173,7 +173,7 @@
                                     <span class="info-label">ASIN:</span>
                                     <div class="asin-list">
                                         {% for asin in product.getAsin() %}
-                                            <span class="asin-tag">{{ asin.getCode() ?: asin.getName() }}</span>
+                                            <span class="asin-tag">{{ asin.getCode() ?: asin.getAsin() }}</span>
                                         {% endfor %}
                                     </div>
                                 </div>
