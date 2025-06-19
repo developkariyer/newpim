@@ -19,4 +19,15 @@ class LoggerFactory
         $logger->pushHandler(new StreamHandler($filePath, Logger::DEBUG));
         return $logger;
     }
+
+    public static function createWithCustomPath(string $filePath): LoggerInterface
+    {
+        $logger = new Logger(basename($filePath, '.log'));
+        $logDir = dirname($filePath);
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0777, true);
+        }
+        $logger->pushHandler(new StreamHandler($filePath, Logger::DEBUG));
+        return $logger;
+    }
 }
