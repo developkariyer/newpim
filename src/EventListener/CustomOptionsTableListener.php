@@ -26,14 +26,20 @@ class CustomOptionsTableListener implements EventSubscriberInterface
             return;
         }
 
-        $objectName = $object->getKey();
-        $classDefinition = $object->getClass();
-        $customOptionsField = $classDefinition->getFieldDefinition('customOptions');
-        
-        if ($customOptionsField instanceof Table) {
-            $columnConfig = $objectName . "|" . $objectName . "|text";
-            $customOptionsField->setColumnsConfiguration($columnConfig);
-            $classDefinition->save();
+        $objectName = $object->getKey(); 
+        $customOptionsTable = $object->getCustomOptions();
+        if (!$customOptionsTable) {
+            return; 
         }
+        if (is_array($customOptionsTable)) {
+            foreach ($customOptionsTable as &$row) {
+                if (is_array($row) && isset($row['label'])) {
+                    $row['label'] = $objectName;
+                }
+            }
+            $object->setCustomOptions($customOptionsTable);
+            $object->save();
+        }
+    
     }
 }
