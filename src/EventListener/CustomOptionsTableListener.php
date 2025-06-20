@@ -21,24 +21,29 @@ class CustomOptionsTableListener implements EventSubscriberInterface
     public function onDataObjectPostAdd(DataObjectEvent $event): void
     {
         $object = $event->getObject();
-        
         if (!$object instanceof CustomChart) {
             return;
         }
-
         $objectName = $object->getKey(); 
-        $customOptionsTable = $object->getCustomOptions();
-        if (!$customOptionsTable) {
-            return; 
+        $classDefinition = ClassDefinition::getByName('CustomChart');
+        if (!$classDefinition) {
+            return;
         }
-        if (is_array($customOptionsTable)) {
-            foreach ($customOptionsTable as &$row) {
-                if (is_array($row) && isset($row['label'])) {
-                    $row['label'] = $objectName;
+        $customOptionsField = $classDefinition->getFieldDefinition('customOptions');
+        if (!$customOptionsField instanceof Table) {
+            return;
+        }
+        $columns = $customOptionsField->getCols();
+        if ($columns) {
+            foreach ($columns as &$column) {
+                if (isset($column['key']) && $column['key'] === 'label') {
+                    $column['label'] = $objectName;
+                    break;
                 }
             }
-            $object->setCustomOptions($customOptionsTable);
-            $object->save();
+            // Set updated columns
+            $customOptionsField->setCols($columns);
+            $classDefinition->save();
         }
     }
 }
