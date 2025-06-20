@@ -7,7 +7,7 @@ use Pimcore\Model\DataObject\VariationColor;
 use Pimcore\Model\DataObject\VariationSize;
 use Pimcore\Model\DataObject\VariationColorChart;
 use Pimcore\Model\DataObject\VariationSizeChart;
-use Pimcore\Model\DataObject\Product;
+use App\Model\DataObject\Product;
 use Psr\Log\LoggerInterface;
 
 class ProductSaveListener
@@ -28,7 +28,7 @@ class ProductSaveListener
         error_log('Product ID: ' . $product->getId());
         error_log('Product Class: ' . get_class($product));
         
-        if (!$product instanceof Product) {
+        if (!$product instanceof \Pimcore\Model\DataObject\Product) {
             error_log('Product instance değil');
             return;
         }
