@@ -12,31 +12,28 @@ class VariationSize implements SelectOptionsProviderInterface
     public function getOptions(array $context, Data $fieldDefinition = null): array
     {
         $options = [];
+        error_log('Context keys: ' . implode(', ', array_keys($context)));
         if (isset($context['object']) && $context['object'] instanceof Product) {
             $currentObject = $context['object'];
+            error_log('Current object ID: ' . $currentObject->getId());
             $variantSizeTemplate = $currentObject->getVariantSizeTemplate();
+            error_log('Variant size template: ' . ($variantSizeTemplate ? $variantSizeTemplate->getId() : 'NULL'));
             if ($variantSizeTemplate instanceof VariationSizeChart) {
-                $sizeOptionsData = $variantSizeTemplate->getSizeOptions();
-                if (is_array($sizeOptionsData) && !empty($sizeOptionsData)) {
-                    foreach ($sizeOptionsData as $index => $sizeOption) {
-                        if (is_array($sizeOption)) {
-                            $value = $sizeOption['key'] ?? $sizeOption['size'] ?? $sizeOption['value'] ?? 
-                                    $sizeOption['code'] ?? $sizeOption['name'] ?? null;
-                            $label = $sizeOption['label'] ?? $sizeOption['description'] ?? 
-                                    $sizeOption['display'] ?? $sizeOption['text'] ?? $value;
-                            if ($value !== null) { 
-                                $options[] = [
-                                    'key'   => $label, 
-                                    'value' => $value  
-                                ];
-                            }
-                        }
-                    }
-                }
+                $sizeOptionsData = $variantSizeTemplate->get('sizeOptions');
+                error_log('Direct get sizeOptions: ' . print_r($sizeOptionsData, true));
+                $sizeOptionsGetter = $variantSizeTemplate->getSizeOptions();
+                error_log('Getter sizeOptions: ' . print_r($sizeOptionsGetter, true));
+                $options[] = [
+                    'key' => 'Test Size',
+                    'value' => 'test'
+                ];
+            } else {
+                error_log('variantSizeTemplate is not VariationSizeChart instance');
             }
+        } else {
+            error_log('Object is not Product instance or not set');
         }
-
-        error_log('Final options: ' . print_r($options, true));
+        error_log('Final options count: ' . count($options));
         return $options;
     }
 
