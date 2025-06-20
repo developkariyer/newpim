@@ -19,7 +19,7 @@ class ProductAdminStyle extends AdminStyle
         if ($element instanceof \App\Model\DataObject\Product) {
             DataObject\Service::useInheritedValues(true, function () use ($element) {
                 if ($element->getObjectType() == 'virtual') {
-                    $this->elementIcon = '/bundles/pimcoreadmin/img/twemoji/1f697.svg';
+                    $this->elementIcon = '/bundles/pimcoreadmin/img/flat-color-icons/star.svg';
                 }
             });
         }
