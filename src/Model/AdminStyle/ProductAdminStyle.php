@@ -18,7 +18,7 @@ class ProductAdminStyle extends AdminStyle
 
         if ($element instanceof \Pimcore\Model\DataObject\Product) {
             DataObject\Service::useInheritedValues(true, function () use ($element) {
-                if ($element->getObjectType() == 'virtual') {
+                if ($element->getObjectType() == 'actual') {
                     $this->elementIcon = '/bundles/pimcoreadmin/img/flat-color-icons/star.svg';
                 }
             });
