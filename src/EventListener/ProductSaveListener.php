@@ -3,11 +3,11 @@
 namespace App\EventListener;
 
 use Pimcore\Event\Model\DataObjectEvent;
-use Pimcore\Model\DataObject\VariationColor;
-use Pimcore\Model\DataObject\VariationSize;
-use Pimcore\Model\DataObject\VariationColorChart;
-use Pimcore\Model\DataObject\VariationSizeChart;
-use App\Model\DataObject\Product;
+// use Pimcore\Model\DataObject\VariationColor;
+// use Pimcore\Model\DataObject\VariationSize;
+// use Pimcore\Model\DataObject\VariationColorChart;
+// use Pimcore\Model\DataObject\VariationSizeChart;
+// use App\Model\DataObject\Product;
 use Psr\Log\LoggerInterface;
 
 class ProductSaveListener
@@ -24,22 +24,22 @@ class ProductSaveListener
         error_log('=== ProductSaveListener ÇALIŞTI ===');
         $this->logger->info('ProductSaveListener tetiklendi');
         
-        $product = $event->getObject();
-        error_log('Product ID: ' . $product->getId());
-        error_log('Product Class: ' . get_class($product));
+        // $product = $event->getObject();
+        // error_log('Product ID: ' . $product->getId());
+        // error_log('Product Class: ' . get_class($product));
         
-        if (!$product instanceof Product) {
-            error_log('Product instance değil');
-            return;
-        }
-        error_log('Product ObjectType: ' . $product->getObjectType());
+        // if (!$product instanceof Product) {
+        //     error_log('Product instance değil');
+        //     return;
+        // }
+        // error_log('Product ObjectType: ' . $product->getObjectType());
         
-        if ($product->getObjectType() !== 'virtual') {
-            error_log('ObjectType virtual değil: ' . $product->getObjectType());
-            return;
-        }
+        // if ($product->getObjectType() !== 'virtual') {
+        //     error_log('ObjectType virtual değil: ' . $product->getObjectType());
+        //     return;
+        // }
 
-        error_log('Virtual ürün bulundu, işlem devam ediyor...');
+        // error_log('Virtual ürün bulundu, işlem devam ediyor...');
 
         
 
