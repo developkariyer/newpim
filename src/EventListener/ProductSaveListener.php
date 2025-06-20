@@ -28,7 +28,7 @@ class ProductSaveListener
         error_log('Product ID: ' . $product->getId());
         error_log('Product Class: ' . get_class($product));
         
-        if (!$product instanceof \Pimcore\Model\DataObject\Product) {
+        if (!$product instanceof Product) {
             error_log('Product instance değil');
             return;
         }
