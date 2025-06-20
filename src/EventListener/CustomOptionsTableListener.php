@@ -4,7 +4,7 @@ namespace App\EventListener;
 
 use Pimcore\Event\Model\DataObjectEvent;
 use Pimcore\Event\DataObjectEvents;
-use Pimcore\Model\DataObject\Product;
+use Pimcore\Model\DataObject\CustomChart;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Pimcore\Model\DataObject\ClassDefinition;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Table;
@@ -22,7 +22,7 @@ class CustomOptionsTableListener implements EventSubscriberInterface
     {
         $object = $event->getObject();
         
-        if (!$object instanceof Product) {
+        if (!$object instanceof CustomChart) {
             return;
         }
 
