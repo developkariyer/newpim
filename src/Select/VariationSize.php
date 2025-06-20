@@ -26,7 +26,7 @@ class VariationSize implements SelectOptionsProviderInterface
                             $measurement1 = $sizeOption[1];    
                             $measurement2 = $sizeOption[2];    
                             $measurement3 = $sizeOption[3];    
-                            $label = $sizeName . " (" . $measurement1 . "x" . $measurement2 . ")";
+                            $label = $sizeName . " (" . $measurement1 . "x" . $measurement2 . "x" . $measurement3 . ")";
                             $options[] = [
                                 'key' => $label,
                                 'value' => $sizeName
