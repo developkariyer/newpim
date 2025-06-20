@@ -34,7 +34,7 @@ class VariationSize implements SelectOptionsProviderInterface
             }
         }
 
-        return $options;
+        return $sizeOptionsData;
     }
 
     public function hasStaticOptions(array $context, Data $fieldDefinition): bool
