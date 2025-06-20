@@ -12,8 +12,8 @@ class PimcoreAdminListener
     public function onResolveElementAdminStyle(ElementAdminStyleEvent $event): void
     {
         $element = $event->getElement();
-        if ($element instanceof \App\Model\Product\Car) {
-            $event->setAdminStyle(new \App\Model\Product\AdminStyle\Car($element));
+        if ($element instanceof \App\Model\DataObject\Product) {
+            $event->setAdminStyle(new \App\Model\AdminStyle\ProductAdminStyle($element));
         }
     }
 }
