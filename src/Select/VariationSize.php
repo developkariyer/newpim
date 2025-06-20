@@ -15,14 +15,20 @@ class VariationSize implements SelectOptionsProviderInterface
         if (isset($context['object']) && $context['object'] instanceof Product) {
             $currentObject = $context['object'];
             $variantSizeTemplate = $currentObject->getVariantSizeTemplate();
-            if ($variantSizeTemplate instanceof VariationSizeChart) {
-                $sizeOptionsData = $variantSizeTemplate->getSizeOptions();
-                if (is_array($sizeOptionsData)) {
-                    foreach ($sizeOptionsData as $sizeOption) {
-                        $value = null;
-                        $label = null;
-                        $value = $sizeOption['key'] ?? $sizeOption['size'] ?? $sizeOption['value'] ?? null;
-                        $label = $sizeOption['label'] ?? $sizeOption['name'] ?? $value;
+            if (is_array($sizeOptionsData) && !empty($sizeOptionsData)) {
+                foreach ($sizeOptionsData as $index => $sizeOption) {
+                    error_log("Row $index: " . print_r($sizeOption, true));
+                    
+                    if (is_array($sizeOption)) {
+                        // Mevcut key'leri göster
+                        error_log("Available keys: " . implode(', ', array_keys($sizeOption)));
+                        
+                        // Tüm olası key kombinasyonlarını dene
+                        $value = $sizeOption['key'] ?? $sizeOption['size'] ?? $sizeOption['value'] ?? 
+                                $sizeOption['code'] ?? $sizeOption['name'] ?? null;
+                        $label = $sizeOption['label'] ?? $sizeOption['description'] ?? 
+                                $sizeOption['display'] ?? $sizeOption['text'] ?? $value;
+                        
                         if ($value !== null) { 
                             $options[] = [
                                 'key'   => $label, 
@@ -34,7 +40,7 @@ class VariationSize implements SelectOptionsProviderInterface
             }
         }
 
-        return $sizeOptionsData;
+        return $options;
     }
 
     public function hasStaticOptions(array $context, Data $fieldDefinition): bool
