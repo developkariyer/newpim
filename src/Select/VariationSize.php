@@ -16,18 +16,19 @@ class VariationSize implements SelectOptionsProviderInterface
             $currentObject = $context['object'];
             $variantSizeTemplate = $currentObject->getVariantSizeTemplate();
             if ($variantSizeTemplate instanceof VariationSizeChart) {
-                $sizeOptionsTable = $variantSizeTemplate->getSizeOptions();
-                $sizeOptionsData = $sizeOptionsTable->getData();
-                foreach ($sizeOptionsData as $sizeOption) {
-                    $value = null;
-                    $label = null;
-                    $value = $sizeOption['key'] ?? $sizeOption['size'] ?? $sizeOption['value'] ?? null;
-                    $label = $sizeOption['label'] ?? $sizeOption['name'] ?? $value;
-                    if ($value !== null) { 
-                        $options[] = [
-                            'key'   => $label, 
-                            'value' => $value  
-                        ];
+                $sizeOptionsData = $variantSizeTemplate->getSizeOptions();
+                if (is_array($sizeOptionsData)) {
+                    foreach ($sizeOptionsData as $sizeOption) {
+                        $value = null;
+                        $label = null;
+                        $value = $sizeOption['key'] ?? $sizeOption['size'] ?? $sizeOption['value'] ?? null;
+                        $label = $sizeOption['label'] ?? $sizeOption['name'] ?? $value;
+                        if ($value !== null) { 
+                            $options[] = [
+                                'key'   => $label, 
+                                'value' => $value  
+                            ];
+                        }
                     }
                 }
             }
