@@ -7,7 +7,7 @@ use Pimcore\Model\DataObject\VariationColor;
 use Pimcore\Model\DataObject\VariationSize;
 use Pimcore\Model\DataObject\VariationColorChart;
 use Pimcore\Model\DataObject\VariationSizeChart;
-use App\Model\DataObject\Product;
+use Pimcore\Model\DataObject\Product;
 use App\Logger\LoggerFactory;
 
 class ProductSaveListener
