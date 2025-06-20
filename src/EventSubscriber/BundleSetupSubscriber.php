@@ -28,6 +28,7 @@ class BundleSetupSubscriber implements EventSubscriberInterface
             InstallEvents::EVENT_BUNDLE_SETUP => [
                 ['bundleSetup'],
             ],
+            'pimcore.admin.resolve.element.admin.style' => 'onResolveElementAdminStyle'
         ];
     }
 
@@ -47,6 +48,14 @@ class BundleSetupSubscriber implements EventSubscriberInterface
                 PimcoreQuillBundle::class,
                 true
             );
+        }
+    }
+
+    public function onResolveElementAdminStyle(ElementAdminStyleEvent $event): void
+    {
+        $element = $event->getElement();
+        if ($element instanceof \App\Model\DataObject\Product) {
+            $event->setAdminStyle(new \App\Model\AdminStyle\ProductAdminStyle($element));
         }
     }
 }
