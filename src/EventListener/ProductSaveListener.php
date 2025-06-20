@@ -8,31 +8,38 @@ use Pimcore\Model\DataObject\VariationSize;
 use Pimcore\Model\DataObject\VariationColorChart;
 use Pimcore\Model\DataObject\VariationSizeChart;
 use Pimcore\Model\DataObject\Product;
-use App\Logger\LoggerFactory;
+use Psr\Log\LoggerInterface;
 
 class ProductSaveListener
 {
-    private $logger;
+    private LoggerInterface $logger;
 
-    public function __construct()
+    public function __construct(LoggerInterface $logger)
     {
-        $this->logger = LoggerFactory::create('Listener', 'ProductSaveListener');
+        $this->logger = $logger;
     }
 
     public function onProductPostSave(DataObjectEvent $event): void
     {
+        error_log('=== ProductSaveListener ÇALIŞTI ===');
+        $this->logger->info('ProductSaveListener tetiklendi');
+        
         $product = $event->getObject();
-        $this->logger->info('Event tetiklendi!', [
-            'product_id' => $product->getId(),
-            'product_name' => $product->getKey(),
-            'product_class' => get_class($product)
-        ]);
+        error_log('Product ID: ' . $product->getId());
+        error_log('Product Class: ' . get_class($product));
+        
         if (!$product instanceof Product) {
+            error_log('Product instance değil');
             return;
         }
+        error_log('Product ObjectType: ' . $product->getObjectType());
+        
         if ($product->getObjectType() !== 'virtual') {
+            error_log('ObjectType virtual değil: ' . $product->getObjectType());
             return;
         }
+
+        error_log('Virtual ürün bulundu, işlem devam ediyor...');
 
         
 
