@@ -3,7 +3,6 @@
 namespace App\EventListener;
 
 use Pimcore\Event\Model\DataObjectEvent;
-use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\VariationColor;
 use Pimcore\Model\DataObject\VariationSize;
 use Pimcore\Model\DataObject\VariationColorChart;
@@ -22,10 +21,10 @@ class ProductSaveListener
     public function onProductPostSave(DataObjectEvent $event): void
     {
         $product = $event->getObject();
-        if (!$product instanceof Product) {
+        if (!$product instanceof \Pimcore\Model\DataObject\Product) {
             return;
         }
-        if ($product->getObjectType() !== Product::OBJECT_TYPE_VIRTUAL) {
+        if ($product->getObjectType() !== 'virtual') {
             return;
         }
 
