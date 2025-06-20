@@ -22,9 +22,10 @@ class ProductSaveListener
     public function onProductPostSave(DataObjectEvent $event): void
     {
         $product = $event->getObject();
-        $this->logger->info('Ana ürün kaydedildi, variant kontrolü başlıyor', [
+        $this->logger->info('Event tetiklendi!', [
             'product_id' => $product->getId(),
-            'product_name' => $product->getKey()
+            'product_name' => $product->getKey(),
+            'product_class' => get_class($product)
         ]);
         if (!$product instanceof Product) {
             return;
