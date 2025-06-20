@@ -7,6 +7,7 @@ use Pimcore\Model\DataObject\VariationColor;
 use Pimcore\Model\DataObject\VariationSize;
 use Pimcore\Model\DataObject\VariationColorChart;
 use Pimcore\Model\DataObject\VariationSizeChart;
+use App\Model\DataObject\Product;
 use Psr\Log\LoggerInterface;
 
 class ProductSaveListener
@@ -21,7 +22,7 @@ class ProductSaveListener
     public function onProductPostSave(DataObjectEvent $event): void
     {
         $product = $event->getObject();
-        if (!$product instanceof \Pimcore\Model\DataObject\Product) {
+        if (!$product instanceof Product) {
             return;
         }
         if ($product->getObjectType() !== 'virtual') {
