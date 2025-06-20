@@ -8,15 +8,15 @@ use Pimcore\Model\DataObject\VariationSize;
 use Pimcore\Model\DataObject\VariationColorChart;
 use Pimcore\Model\DataObject\VariationSizeChart;
 use App\Model\DataObject\Product;
-use Psr\Log\LoggerInterface;
+use App\Logger\LoggerFactory;
 
 class ProductSaveListener
 {
-    private LoggerInterface $logger;
+    private $logger;
 
-    public function __construct(LoggerInterface $logger)
+    public function __construct()
     {
-        $this->logger = $logger;
+        $this->logger = LoggerFactory::create('Listener', 'ProductSaveListener');
     }
 
     public function onProductPostSave(DataObjectEvent $event): void
