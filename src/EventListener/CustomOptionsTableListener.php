@@ -40,6 +40,5 @@ class CustomOptionsTableListener implements EventSubscriberInterface
             $object->setCustomOptions($customOptionsTable);
             $object->save();
         }
-    
     }
 }
