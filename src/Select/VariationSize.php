@@ -35,7 +35,7 @@ class VariationSize implements SelectOptionsProviderInterface
                     }
                 }
             }
-        }
+        } 
         return $options;
     }
 
