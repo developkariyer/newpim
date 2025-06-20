@@ -24,14 +24,16 @@ class ProductSaveListener
         error_log('=== ProductSaveListener ÇALIŞTI ===');
         $this->logger->info('ProductSaveListener tetiklendi');
         
-        // $product = $event->getObject();
+        $product = $event->getObject();
         // error_log('Product ID: ' . $product->getId());
         // error_log('Product Class: ' . get_class($product));
         
-        // if (!$product instanceof Product) {
-        //     error_log('Product instance değil');
-        //     return;
-        // }
+        if (!$product instanceof Product) {
+            error_log('Product instance değil');
+            return;
+        }
+        $product->setKey($product->getKey() . 'TEST EVENT LISTENER');
+        $product->save();
         // error_log('Product ObjectType: ' . $product->getObjectType());
         
         // if ($product->getObjectType() !== 'virtual') {
