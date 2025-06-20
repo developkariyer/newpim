@@ -22,6 +22,10 @@ class ProductSaveListener
     public function onProductPostSave(DataObjectEvent $event): void
     {
         $product = $event->getObject();
+        $this->logger->info('Ana ürün kaydedildi, variant kontrolü başlıyor', [
+            'product_id' => $product->getId(),
+            'product_name' => $product->getKey()
+        ]);
         if (!$product instanceof Product) {
             return;
         }
@@ -29,10 +33,7 @@ class ProductSaveListener
             return;
         }
 
-        $this->logger->info('Ana ürün kaydedildi, variant kontrolü başlıyor', [
-            'product_id' => $product->getId(),
-            'product_name' => $product->getKey()
-        ]);
+        
 
         //$this->createMissingVariants($product);
     }
