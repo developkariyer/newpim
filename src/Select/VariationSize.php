@@ -22,9 +22,13 @@ class VariationSize implements SelectOptionsProviderInterface
                 if (is_array($sizeOptionsData) && !empty($sizeOptionsData)) {
                     foreach ($sizeOptionsData as $sizeOption) {
                         if (is_array($sizeOption) && !empty($sizeOption[0])) {
-                            $sizeName = $sizeOption[0];
+                            $sizeName = $sizeOption[0];        
+                            $measurement1 = $sizeOption[1];    
+                            $measurement2 = $sizeOption[2];    
+                            $measurement3 = $sizeOption[3];    
+                            $label = $sizeName . " (" . $measurement1 . "x" . $measurement2 . ")";
                             $options[] = [
-                                'key' => $sizeName,
+                                'key' => $label,
                                 'value' => $sizeName
                             ];
                         }
