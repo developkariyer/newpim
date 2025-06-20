@@ -21,7 +21,7 @@ class PimcoreAdminListener
         $this->logger->info('Listener tetiklendi!');
         $element = $event->getElement();
          $this->logger->info('Element tipi: ' . get_class($element));
-        if ($element instanceof \App\Model\DataObject\Product) {
+        if ($element instanceof \Pimcore\Model\DataObject\Product) {
             $this->logger->info('Product bulundu!');
             $this->logger->info('ObjectType: ' . $element->getObjectType());
             $event->setAdminStyle(new \App\Model\AdminStyle\ProductAdminStyle($element));
