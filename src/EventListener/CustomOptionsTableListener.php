@@ -33,8 +33,8 @@ class CustomOptionsTableListener implements EventSubscriberInterface
         }
         if (is_array($customOptionsTable)) {
             foreach ($customOptionsTable as &$row) {
-                if (is_array($row) && isset($row['label'])) {
-                    $row['label'] = $objectName;
+                if (is_array($row) && isset($row[0])) {
+                    $row[0] = $objectName;
                 }
             }
             $object->setCustomOptions($customOptionsTable);
