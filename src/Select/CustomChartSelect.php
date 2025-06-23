@@ -21,7 +21,7 @@ class CustomChartSelect implements SelectOptionsProviderInterface
                 
                 if (is_array($customOptionsData) && !empty($customOptionsData)) {
                     $dataRows = array_slice($customOptionsData, 1);
-                    foreach ($customOptionsData as $customOption) {
+                    foreach ($dataRows as $customOption) {
                         if (is_array($customOption) && !empty($customOption[0])) {
                             $optionValue = $customOption[0];
                             $options[] = [
