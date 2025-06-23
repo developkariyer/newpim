@@ -6,6 +6,9 @@ use Pimcore\Model\DataObject\Concrete;
 use Pimcore\Model\DataObject\ClassDefinition\CalculatorClassInterface;
 use Pimcore\Model\DataObject\Data\CalculatedValue;
 use Pimcore\Model\DataObject\Currency;
+use function bcadd;
+use function bcdiv;
+use function bcmul;
 
 class UnitCostCalculator implements CalculatorClassInterface
 {
