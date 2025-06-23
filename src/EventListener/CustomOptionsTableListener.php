@@ -7,7 +7,7 @@ use Pimcore\Event\DataObjectEvents;
 use Pimcore\Model\DataObject\CustomChart;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Pimcore\Model\DataObject\ClassDefinition;
-use Pimcore\Model\DataObject\ClassDefinition\Data\Table;
+use Pimcore\Model\DataObject\Data\Table;
 
 class CustomOptionsTableListener implements EventSubscriberInterface
 {
@@ -23,8 +23,16 @@ class CustomOptionsTableListener implements EventSubscriberInterface
         error_log('=== Adım 1 & 2: Başarılı. Listener çalışıyor ve nesne bir CustomChart. ===');
         $object = $event->getObject();
         error_log('>>> Adım 3.1: "customOptions" alanı alınıyor...');
-        $tableField = $object->getCustomOptions();
-        $data = $tableField ? $tableField->getData() : [];
+        $customOptionsValue = $object->getCustomOptions();
+        $data = []; 
+        if ($customOptionsValue instanceof Table) {
+            $data = $customOptionsValue->getData();
+            error_log('>>> "customOptions" bir Table nesnesi olarak geldi. Veri alındı.');
+        } elseif (is_array($customOptionsValue)) {
+            $data = $customOptionsValue;
+            error_log('>>> "customOptions" bir DİZİ olarak geldi. Doğrudan kullanılıyor.');
+        }
+        
         $rowCount = count($data);
         error_log(">>> Mevcut satır sayısı: " . $rowCount);
         if (empty($data)) {
@@ -34,6 +42,7 @@ class CustomOptionsTableListener implements EventSubscriberInterface
             $newRow = [
                 $objectKey
             ];
+            
             $data[] = $newRow;
             error_log(">>> Yeni satır veri dizisine eklendi.");
             $object->setCustomOptions($data);
@@ -48,7 +57,6 @@ class CustomOptionsTableListener implements EventSubscriberInterface
             } catch (\Exception $e) {
                 error_log('!!! HATA: Nesne kaydedilirken bir sorun oluştu: ' . $e->getMessage());
             }
-
         } else {
             error_log('--- Adım 3.2: Tablo zaten dolu. Herhangi bir işlem yapılmadı. ---');
         }
