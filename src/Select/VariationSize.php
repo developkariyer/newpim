@@ -15,18 +15,25 @@ class VariationSize implements SelectOptionsProviderInterface
         if (isset($context['object']) && $context['object'] instanceof Product) {
             $currentObject = $context['object'];
             $variantSizeTemplate = $currentObject->getVariantSizeTemplate();
+            if (!$variantSizeTemplate && $currentObject->getParent() instanceof Product) {
+                $parentObject = $currentObject->getParent();
+                $variantSizeTemplate = $parentObject->getVariantSizeTemplate();
+            }
             
             if ($variantSizeTemplate instanceof VariationSizeChart) {
                 $sizeOptionsData = $variantSizeTemplate->getSizeOptions();
-                
                 if (is_array($sizeOptionsData) && !empty($sizeOptionsData)) {
-                    foreach ($sizeOptionsData as $sizeOption) {
+                    $dataRows = array_slice($sizeOptionsData, 1);
+                    foreach ($dataRows as $sizeOption) {
                         if (is_array($sizeOption) && !empty($sizeOption[0])) {
-                            $sizeName = $sizeOption[0];        
-                            $measurement1 = $sizeOption[1];    
-                            $measurement2 = $sizeOption[2];    
-                            $measurement3 = $sizeOption[3];    
-                            $label = $sizeName . " (" . $measurement1 . "x" . $measurement2 . "x" . $measurement3 . ")";
+                            $sizeName = isset($sizeOption[0]) ? $sizeOption[0] : '';        
+                            $measurement1 = isset($sizeOption[1]) ? $sizeOption[1] : '';    
+                            $measurement2 = isset($sizeOption[2]) ? $sizeOption[2] : '';    
+                            $measurement3 = isset($sizeOption[3]) ? $sizeOption[3] : '';    
+                            $label = $sizeName;
+                            if (!empty($measurement1) || !empty($measurement2) || !empty($measurement3)) {
+                                $label .= " (" . $measurement1 . "x" . $measurement2 . "x" . $measurement3 . ")";
+                            }
                             $options[] = [
                                 'key' => $label,
                                 'value' => $sizeName
