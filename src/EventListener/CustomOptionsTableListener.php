@@ -20,18 +20,38 @@ class CustomOptionsTableListener implements EventSubscriberInterface
 
     public function onDataObjectPostAdd(DataObjectEvent $event): void
     {
-        error_log('=== CustomOptionsTableListener: Başladı ===');
+        error_log('=== Adım 1 & 2: Başarılı. Listener çalışıyor ve nesne bir CustomChart. ===');
         $object = $event->getObject();
-        if (!$object) {
-            error_log('!!! HATA: event->getObject() bir nesne döndürmedi!');
-            return;
+        error_log('>>> Adım 3.1: "customOptions" alanı alınıyor...');
+        $tableField = $object->getCustomOptions();
+        $data = $tableField ? $tableField->getData() : [];
+        $rowCount = count($data);
+        error_log(">>> Mevcut satır sayısı: " . $rowCount);
+        if (empty($data)) {
+            error_log('+++ Adım 3.2: Tablo boş. Yeni satır ekleme işlemi başlıyor...');
+            $objectKey = $object->getKey();
+            error_log(">>> Eklenecek anahtar (nesne adı): " . $objectKey);
+            $newRow = [
+                $objectKey
+            ];
+            $data[] = $newRow;
+            error_log(">>> Yeni satır veri dizisine eklendi.");
+            $object->setCustomOptions($data);
+            error_log(">>> Güncel veri nesneye set edildi (setCustomOptions).");
+            error_log(">>> Adım 3.3: Nesne kaydediliyor...");
+            try {
+                $object->save([
+                    'versionNote' => 'Sistem tarafından ilk tablo satırı eklendi.',
+                    'disableEvents' => true
+                ]);
+                error_log('*** BAŞARILI! Nesne yeni tablo verisiyle kaydedildi. ***');
+            } catch (\Exception $e) {
+                error_log('!!! HATA: Nesne kaydedilirken bir sorun oluştu: ' . $e->getMessage());
+            }
+
+        } else {
+            error_log('--- Adım 3.2: Tablo zaten dolu. Herhangi bir işlem yapılmadı. ---');
         }
-        $className = get_class($object);
-        error_log('>>> Gelen nesne sınıfı: ' . $className);
-        if (!$object instanceof CustomChart) {
-            error_log('--- Nesne bir CustomChart DEĞİL. İşlem durduruldu. ---');
-            return;
-        }
-        error_log('+++ Nesne bir CustomChart! İşleme devam ediliyor... +++');
+        error_log('=== CustomOptionsTableListener: Tamamlandı ===');
     }
 }
