@@ -20,7 +20,18 @@ class CustomOptionsTableListener implements EventSubscriberInterface
 
     public function onDataObjectPostAdd(DataObjectEvent $event): void
     {
-        error_log('=== CustomOptionsTableListener ÇALIŞTI ===');
-        error_log('CustomOptionsTableListener tetiklendi');
+        error_log('=== CustomOptionsTableListener: Başladı ===');
+        $object = $event->getObject();
+        if (!$object) {
+            error_log('!!! HATA: event->getObject() bir nesne döndürmedi!');
+            return;
+        }
+        $className = get_class($object);
+        error_log('>>> Gelen nesne sınıfı: ' . $className);
+        if (!$object instanceof \App\Model\DataObject\CustomChart) {
+            error_log('--- Nesne bir CustomChart DEĞİL. İşlem durduruldu. ---');
+            return;
+        }
+        error_log('+++ Nesne bir CustomChart! İşleme devam ediliyor... +++');
     }
 }
