@@ -17,14 +17,12 @@ class ProductAdminStyle extends AdminStyle
         $this->element = $element;
 
         if ($element instanceof \Pimcore\Model\DataObject\Product) {
-            DataObject\Service::useInheritedValues(true, function () use ($element) {
-                if ($element->getObjectType() == 'actual') {
-                    $this->elementIcon = '/bundles/pimcoreadmin/img/flat-color-icons/variant.svg';
-                }
-                if ($element->getObjectType() == 'virtual') {
-                    $this->elementIcon = '/bundles/pimcoreadmin/img/flat-color-icons/object.svg';
-                }
-            });
+            if ($element->getObjectType() == 'actual') {
+                $this->elementIcon = '/bundles/pimcoreadmin/img/flat-color-icons/variant.svg';
+            }
+            if ($element->getObjectType() == 'virtual') {
+                $this->elementIcon = '/bundles/pimcoreadmin/img/flat-color-icons/object.svg';
+            }
         }
     }
 }
