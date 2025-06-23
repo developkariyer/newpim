@@ -14,7 +14,7 @@ class CustomChartSelect implements SelectOptionsProviderInterface
         $options = [];
         if (isset($context['object']) && $context['object'] instanceof Product) {
             $currentObject = $context['object'];
-            if ($currentObject->getType() === 'variant' && $currentObject->getParent() instanceof Product) {
+            if ($currentObject->getObjectType() === 'actual' && $currentObject->getParent() instanceof Product) {
                 $parentObject = $currentObject->getParent();
                 $customSizeTemplate = $parentObject->getCustomVariantTemplate();
             } else {
