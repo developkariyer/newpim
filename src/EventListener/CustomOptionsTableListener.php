@@ -11,10 +11,16 @@ use Pimcore\Model\DataObject\ClassDefinition\Data\Table;
 
 class CustomOptionsTableListener implements EventSubscriberInterface
 {
+    public static function getSubscribedEvents(): array
+    {
+        return [
+            DataObjectEvents::POST_ADD => 'onDataObjectPostAdd',
+        ];
+    }
 
     public function onDataObjectPostAdd(DataObjectEvent $event): void
     {
         error_log('=== CustomOptionsTableListener ÇALIŞTI ===');
-        error_log('DataObjectPostAdd listener tetiklendi');
+        error_log('CustomOptionsTableListener tetiklendi');
     }
 }
