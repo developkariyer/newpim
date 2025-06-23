@@ -11,33 +11,10 @@ use Pimcore\Model\DataObject\ClassDefinition\Data\Table;
 
 class CustomOptionsTableListener implements EventSubscriberInterface
 {
-    public static function getSubscribedEvents(): array
-    {
-        return [
-            DataObjectEvents::POST_ADD => 'onDataObjectPostAdd',
-        ];
-    }
 
     public function onDataObjectPostAdd(DataObjectEvent $event): void
     {
-        $object = $event->getObject();
-        if (!$object instanceof DataObject\CustomChart) {
-            return;
-        }
-        $tableField = $object->getCustomOptions();
-        $data = $tableField ? $tableField->getData() : [];
-        if (empty($data)) {
-            $newRow = [
-                $object->getKey(), 
-                '',                
-                '',                
-            ];
-            $data[] = $newRow;
-            $object->setCustomOptions($data);
-            $object->save([
-                'versionNote' => 'Automatically added initial chart data.',
-                'disableEvents' => true 
-            ]);
-        }
+        error_log('=== CustomOptionsTableListener ÇALIŞTI ===');
+        error_log('DataObjectPostAdd listener tetiklendi');
     }
 }
