@@ -14,11 +14,14 @@ class CustomChartSelect implements SelectOptionsProviderInterface
         $options = [];
         if (isset($context['object']) && $context['object'] instanceof Product) {
             $currentObject = $context['object'];
-            $customSizeTemplate = $currentObject->getCustomVariantTemplate();
-            
+            if ($currentObject->getType() === 'variant' && $currentObject->getParent() instanceof Product) {
+                $parentObject = $currentObject->getParent();
+                $customSizeTemplate = $parentObject->getCustomVariantTemplate();
+            } else {
+                $customSizeTemplate = $currentObject->getCustomVariantTemplate();
+            }
             if ($customSizeTemplate instanceof CustomChart) {
                 $customOptionsData = $customSizeTemplate->getCustomOptions();
-                
                 if (is_array($customOptionsData) && !empty($customOptionsData)) {
                     $dataRows = array_slice($customOptionsData, 1);
                     foreach ($dataRows as $customOption) {
@@ -32,7 +35,7 @@ class CustomChartSelect implements SelectOptionsProviderInterface
                     }
                 }
             }
-        } 
+        }
         return $options;
     }
 
