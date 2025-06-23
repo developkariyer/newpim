@@ -28,7 +28,7 @@ class CustomOptionsTableListener implements EventSubscriberInterface
         }
         $className = get_class($object);
         error_log('>>> Gelen nesne sınıfı: ' . $className);
-        if (!$object instanceof \App\Model\DataObject\CustomChart) {
+        if (!$object instanceof CustomChart) {
             error_log('--- Nesne bir CustomChart DEĞİL. İşlem durduruldu. ---');
             return;
         }
