@@ -22,29 +22,43 @@ class ProductSaveListener
     public function __invoke(DataObjectEvent $event): void
     {
         $object = $event->getObject();
-        if ($object instanceof Product) {
-            error_log('ProductSaveListener triggered for product: ' . $object->getFullPath());
-            
-            $matrixData = $this->variationMatrixService->generateMatrix($object);
-
-            if (empty($matrixData)) {
-                error_log('Variation matrix data is empty for product ' . $object->getId() . '. The table will be empty.');
-                $object->setVariationMatrix(null);
-                return;
-            }
-            $table = new StructuredTable();
-            $table->setColumnKeys(['size', 'color', 'custom', 'isActive']);
-            $table->setColumnLabels(['Size', 'Color', 'Custom', 'Is Active']);
-
-            foreach ($matrixData as $row) {
-                $table->addRow([
-                    $row['size'] ?? '',
-                    $row['color'] ?? '',
-                    $row['custom'] ?? '',
-                    $row['isActive'] ?? false
-                ]);
-            }
-            $object->setVariationMatrix($table);
+        if (!$object instanceof Product) {
+            return;
         }
+        if ($object->getObjectType() !== 'virtual') {
+            return;
+        }
+        error_log('ProductSaveListener triggered for product: ' . $object->getFullPath());
+        $matrixData = $this->variationMatrixService->generateMatrix($object);
+        error_log('Matrix data count: ' . count($matrixData));
+        $variationMatrix = $object->getVariationMatrix();
+        if (!$variationMatrix instanceof StructuredTable) {
+            error_log('Creating new StructuredTable for product ' . $object->getId());
+            $variationMatrix = new StructuredTable();
+            $object->setVariationMatrix($variationMatrix);
+        }
+        
+        if (empty($matrixData)) {
+            error_log('Variation matrix data is empty for product ' . $object->getId() . '. Setting empty data.');
+            $variationMatrix->setData([]);
+            return;
+        }
+        
+        $structuredData = [];
+        $rowIndex = 1;
+        
+        foreach ($matrixData as $row) {
+            $rowKey = 'row' . $rowIndex;
+            $structuredData[$rowKey] = [
+                'size' => $row['size'],
+                'color' => $row['color'], 
+                'custom' => $row['custom'],
+                'isActive' => $row['isActive'] ? '1' : '0'
+            ];
+            $rowIndex++;
+        }
+        
+        $variationMatrix->setData($structuredData);
+        error_log('Set ' . count($structuredData) . ' rows to variation matrix for product ' . $object->getId());
     }
 }
