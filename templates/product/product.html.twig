@@ -85,15 +85,52 @@
         .btn-secondary:hover {
             background-color: #545b62;
         }
+        
+        /* Basit resim yükleme */
+        .image-upload {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .image-preview {
+            width: 80px;
+            height: 80px;
+            border: 2px dashed #dee2e6;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            overflow: hidden;
+        }
+        
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .upload-btn {
+            padding: 0.5rem 1rem;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        
+        .upload-btn:hover {
+            background: #0056b3;
+        }
+        
+        #imageInput {
+            display: none;
+        }
     </style>
 {% endblock %}
 
-{% block javascripts %}
-    {{ parent() }}
-    <script>
-       
-    </script>
-{% endblock %}
 
 {% block title %}Katalog Yeni Ürün Girişi{% endblock %}
 
@@ -113,11 +150,10 @@
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="productSku">SKU *</label>
-                        <input type="text" id="productSku" name="productSku" class="form-control" 
+                        <label for="productIdentifier">Ürün Tanıtıcı Adı *</label>
+                        <input type="text" id="productIdentifier" name="productIdentifier" class="form-control" 
                                placeholder="Örn: PTS-001" required>
                     </div>
-                    
                     <div class="form-group">
                         <label for="productCategory">Kategori</label>
                         <select id="productCategory" name="productCategory" class="form-control">
@@ -133,6 +169,18 @@
                     <label for="productDescription">Açıklama</label>
                     <textarea id="productDescription" name="productDescription" class="form-control" 
                               rows="3" placeholder="Ürün hakkında detaylı açıklama..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Ürün Resmi</label>
+                    <div class="image-upload">
+                        <div class="image-preview" id="imagePreview">
+                            📷
+                        </div>
+                        <button type="button" class="upload-btn" onclick="document.getElementById('imageInput').click()">
+                            Resim Seç
+                        </button>
+                        <input type="file" id="imageInput" accept="image/*">
+                    </div>
                 </div>
             </div>
 
@@ -191,4 +239,26 @@
             </div>
         </form>
     </div>
+{% endblock %}
+
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        //image upload preview
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('imagePreview');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+
+    </script>
 {% endblock %}
