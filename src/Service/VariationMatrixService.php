@@ -27,28 +27,26 @@ class VariationMatrixService
         $existingMatrix = $product->getVariationMatrix();
         error_log("DEBUG: existingMatrix type: " . (is_object($existingMatrix) ? get_class($existingMatrix) : gettype($existingMatrix)));
 
-        if ($existingMatrix instanceof StructuredTable) {
-            $existingData = $existingMatrix->getData();
-            if (!empty($existingData) && is_array($existingData[0])) {
-                error_log("DEBUG: StructuredTable keys: " . implode(', ', array_keys($existingData[0])));
-            }
-            error_log("DEBUG: existingMatrix is StructuredTable, data: " . print_r($existingData, true));
-            $hasRealData = false;
-            if (is_array($existingData)) {
-                foreach ($existingData as $row) {
-                    if (
-                        (!empty($row['size']) || !empty($row['color']) || !empty($row['custom']))
-                        && isset($row['isactive'])
-                    ) {
-                        $hasRealData = true;
-                        break;
-                    }
+        $existingData = $existingMatrix->getData();
+        if (!empty($existingData) && is_array($existingData[0])) {
+            error_log("DEBUG: StructuredTable keys: " . implode(', ', array_keys($existingData[0])));
+        }
+        error_log("DEBUG: existingMatrix is StructuredTable, data: " . print_r($existingData, true));
+        $hasRealData = false;
+        if (is_array($existingData)) {
+            foreach ($existingData as $row) {
+                if (
+                    (!empty($row['size']) || !empty($row['color']) || !empty($row['custom']))
+                    && isset($row['isactive'])
+                ) {
+                    $hasRealData = true;
+                    break;
                 }
             }
-            if ($hasRealData) {
-                error_log("DEBUG: existingMatrix already has real data, returning empty array.");
-                return [];
-            }
+        }
+        if ($hasRealData) {
+            error_log("DEBUG: existingMatrix already has real data, returning empty array.");
+            return [];
         }
 
         $matrix = [];
