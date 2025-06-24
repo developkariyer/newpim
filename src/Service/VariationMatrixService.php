@@ -24,26 +24,17 @@ class VariationMatrixService
             return [];
         }
 
-
-
-
         $existingMatrix = $product->getVariationMatrix();
         if ($existingMatrix instanceof StructuredTable) {
             $existingData = $existingMatrix->getData();
             if (is_array($existingData) && !empty($existingData)) {
                 return [];
             }
-        }
-        elseif (is_array($existingMatrix) && !empty($existingMatrix)) {
+        } elseif (is_array($existingMatrix) && !empty($existingMatrix)) {
             return [];
         }
+
         $matrix = [];
-        $sizes = $this->getSizeOptions($product);
-        $colors = $this->getColorOptions($product);
-        $customs = $this->getCustomOptions($product);
-        if (empty($sizes) || empty($colors)) {
-            return [];
-        }
         foreach ($sizes as $size) {
             foreach ($colors as $color) {
                 if (!empty($customs)) {
