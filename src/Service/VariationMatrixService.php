@@ -2,7 +2,7 @@
 
 namespace App\Service;
 
-use App\Model\DataObject\Product;
+use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\VariationSizeChart;
 use Pimcore\Model\DataObject\CustomChart;
 use Pimcore\Model\DataObject\Data\StructuredTable;
@@ -11,6 +11,9 @@ class VariationMatrixService
 {
     public function generateMatrix(Product $product): array
     {
+        error_log("Product ID: " . $product->getId());
+        error_log("variationSizeTemplate: " . get_class($product->getVariationSizeTemplate()));
+        error_log("variationColors: " . print_r($product->getVariationColors(), true));
         $existingMatrix = $product->getVariationMatrix();
         if ($existingMatrix instanceof StructuredTable) {
             $existingData = $existingMatrix->getData();
@@ -25,9 +28,6 @@ class VariationMatrixService
         $sizes = $this->getSizeOptions($product);
         $colors = $this->getColorOptions($product);
         $customs = $this->getCustomOptions($product);
-        error_log("DEBUG sizes: " . print_r($sizes, true));
-        error_log("DEBUG colors: " . print_r($colors, true));
-        error_log("DEBUG customs: " . print_r($customs, true));
         if (empty($sizes) || empty($colors)) {
             return [];
         }
