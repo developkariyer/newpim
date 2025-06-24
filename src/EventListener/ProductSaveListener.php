@@ -34,6 +34,7 @@ class ProductSaveListener
             }
 
             $object->setVariationMatrix(new StructuredTable($matrixData));
+            $object->save();
         }
     }
 }
