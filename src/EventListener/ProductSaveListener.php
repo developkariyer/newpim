@@ -22,24 +22,17 @@ class ProductSaveListener
     public function __invoke(DataObjectEvent $event): void
     {
         $object = $event->getObject();
-        
         if (!$object instanceof Product) {
             return;
         }
-
         $existingMatrix = $object->getVariationMatrix();
         if ($existingMatrix && !empty($existingMatrix->getData())) {
             return;
         }
-
         $newMatrix = $this->variationMatrixService->generateMatrix($object);
-        
         if (!empty($newMatrix)) {
-            \error_log("Matrix generated for product {$object->getKey()}. Setting it on the object before save.");
-            
             $structuredTable = new StructuredTable();
             $structuredTable->setData($newMatrix);
-            
             $object->setVariationMatrix($structuredTable);
         }
     }
