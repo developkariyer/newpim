@@ -19,8 +19,7 @@ class VariationMatrixService
             error_log("DEBUG: sizes or colors is empty, matrix will not be generated.");
             return [];
         }
-        $existingMatrix = $product->getVariationMatrix();
-
+        
     
 
         $matrix = [];
