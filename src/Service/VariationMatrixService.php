@@ -5,6 +5,7 @@ namespace App\Service;
 use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\VariationSizeChart;
 use Pimcore\Model\DataObject\CustomChart;
+use Pimcore\Model\DataObject\Data\StructuredTable;
 
 class VariationMatrixService
 {
