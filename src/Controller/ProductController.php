@@ -8,6 +8,7 @@ use Pimcore\Model\Document;
 use Symfony\Component\HttpFoundation\Request;
 use Pimcore\Model\DataObject\Product; 
 use Pimcore\Model\DataObject\Category\Listing as CategoryListing;
+use Pimcore\Model\DataObject\VariationSizeChart\Listing as VariationSizeChartListing;
 
 
 class ProductController extends AbstractController
@@ -16,13 +17,38 @@ class ProductController extends AbstractController
     public function index(): Response
     {
         $categories = $this->getCategories();
+        $sizeCharts = $this->getSizeCharts();
         return $this->render('product/product.html.twig', [
-            'categories' => $categories
+            'categories' => $categories,
+            'sizeCharts' => $sizeCharts
         ]);
+    }
+
+    private function getSizeCharts()
+    {
+        /*
+         * This method retrieves all size charts that are published.
+         * It returns an array of size charts with their ID and name.
+         */
+        $sizeCharts = new VariationSizeChartListing();
+        $sizeCharts->setCondition("published = 1");
+        $sizeCharts->load();
+        $sizeChartList = [];
+        foreach ($sizeCharts as $sizeChart) {
+            $sizeChartList[] = [
+                'id' => $sizeChart->getId(),
+                'name' => $sizeChart->getKey(),
+            ];
+        }
+        return $sizeChartList;
     }
 
     private function getCategories()
     {
+        /*
+         * This method retrieves all categories that are published and do not have children.
+         * It returns an array of categories with their ID and name.
+         */
         $categories = new CategoryListing();
         $categories->setCondition("published = 1");
         $categories->load();
