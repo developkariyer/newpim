@@ -192,9 +192,9 @@
                         <label for="sizeTemplate">Beden Şablonu</label>
                         <select id="sizeTemplate" name="sizeTemplate" class="form-control">
                             <option value="">Beden şablonu seçin</option>
-                            <option value="1">Standard Clothing Sizes</option>
-                            <option value="2">EU Shoe Sizes</option>
-                            <option value="3">US Clothing Sizes</option>
+                            {% for size in sizeCharts %}
+                                <option value="{{ size.id }}">{{ size.name }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                     
