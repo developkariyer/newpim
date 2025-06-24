@@ -35,7 +35,7 @@ class VariationMatrixService
                 foreach ($existingData as $row) {
                     if (
                         (!empty($row['size']) || !empty($row['color']) || !empty($row['custom']))
-                        && isset($row['isActive'])
+                        && isset($row['isactive'])
                     ) {
                         $hasRealData = true;
                         break;
