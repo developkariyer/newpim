@@ -32,7 +32,7 @@ class VariationMatrixService
                             'size' => $size['value'],
                             'color' => $color['key'], 
                             'custom' => $custom['value'],
-                            'isactive' => false
+                            'isActive' => false
                         ];
                     }
                 } else {
@@ -40,7 +40,7 @@ class VariationMatrixService
                         'size' => $size['value'],
                         'color' => $color['key'],
                         'custom' => '',
-                        'isactive' => false
+                        'isActive' => false
                     ];
                 }
             }
