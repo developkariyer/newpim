@@ -32,38 +32,13 @@ class ProductSaveListener
                 $object->setVariationMatrix(null);
                 return;
             }
-
-            error_log('Generated variation matrix data for product ' . $object->getId() . ': ' . json_encode($matrixData));
-
-            $table = new StructuredTable();
-            $columnKeys = ['size', 'color', 'custom', 'isActive'];
-            $table->setColumnKeys($columnKeys);
-            $table->setColumnLabels(['Size', 'Color', 'Custom', 'Is Active']);
-
-            error_log('Matrix data: ' . json_encode($matrixData));
-
-            $data = [];
-            foreach ($matrixData as $index => $row) {
-                $rowData = [
-                    $row['size'] ?? '',
-                    $row['color'] ?? '',
-                    $row['custom'] ?? '',
-                    $row['isActive'] ?? false,
-                ];
-
-                if (count($rowData) !== count($columnKeys)) {
-                    error_log("Row $index has invalid column count: " . json_encode($rowData));
-                    continue; 
-                }
-
-                $data[] = $rowData;
+            $variationMatrix = $object->getVariationMatrix();
+            if (!$variationMatrix instanceof StructuredTable) {
+                return;
             }
 
-            $table->setData($data);
+            $variationMatrix->setData($matrixData);
 
-            $object->setVariationMatrix($table);
-
-            error_log('StructuredTable set edildi');
         }
     }
 }
