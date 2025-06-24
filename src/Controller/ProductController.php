@@ -11,7 +11,7 @@ use Pimcore\Model\DataObject\Product;
 
 class ProductController extends AbstractController
 {
-    #[Route('/', name: 'product')]
+    #[Route('/product', name: 'product')]
     public function index(): Response
     {
         return $this->render('product/product.html.twig');
