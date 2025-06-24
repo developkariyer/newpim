@@ -28,6 +28,9 @@ class ProductController extends AbstractController
         $categories->load();
         $categoryList = [];
         foreach ($categories as $category) {
+            if ($category->hasChildren()) {
+                continue; 
+            }
             $categoryList[] = [
                 'id' => $category->getId(),
                 'name' => $category->getKey(),
