@@ -9,7 +9,6 @@ use Pimcore\Model\DataObject\Data\StructuredTable;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 
 #[AsEventListener(event: 'pimcore.dataobject.postUpdate')]
-#[AsEventListener(event: 'pimcore.dataobject.postAdd')]
 class ProductSaveListener
 {
     private VariationMatrixService $variationMatrixService;
