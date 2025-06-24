@@ -245,35 +245,28 @@
 {% block javascripts %}
     {{ parent() }}
     <script>
-        document.getElementById('imageInput').addEventListener('change', function(e) {
-            console.log('File input changed');
-            const file = e.target.files[0];
-            const preview = document.getElementById('imagePreview');
-            if (!file) {
-                console.log('No file selected');
-                return;
-            }
-            console.log('File:', file.name, file.type, file.size); 
-            if (!file.type.startsWith('image/')) {
-                alert('Lütfen bir resim dosyası seçin.');
-                return;
-            }
-            if (file.size > 5 * 1024 * 1024) {
-                alert('Dosya boyutu 5MB\'dan küçük olmalıdır.');
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                console.log('File loaded successfully'); 
-                preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
-            };
-            reader.onerror = function() {
-                console.error('File reading error');
-                alert('Dosya okuma hatası!');
-            };
-            reader.readAsDataURL(file);
-        });
+        document.getElementById('imageInput').addEventListener('change', function(event) {
+            const previewContainer = document.getElementById('imagePreview');
+            const file = event.target.files[0];
 
+            if (file) {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewContainer.innerHTML = '';
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.alt = 'Ürün Resmi Önizlemesi';
+                        previewContainer.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    alert('Lütfen bir resim dosyası seçin.');
+                    event.target.value = '';
+                    previewContainer.innerHTML = '📷';
+                }
+            }
+        });
 
     </script>
 {% endblock %}
