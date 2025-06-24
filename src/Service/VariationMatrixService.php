@@ -11,9 +11,22 @@ class VariationMatrixService
 {
     public function generateMatrix(Product $product): array
     {
-        error_log("Product ID: " . $product->getId());
-        error_log("variationSizeTemplate: " . get_class($product->getVariationSizeTemplate()));
-        error_log("variationColors: " . print_r($product->getVariationColors(), true));
+        $sizes = $this->getSizeOptions($product);
+        $colors = $this->getColorOptions($product);
+        $customs = $this->getCustomOptions($product);
+
+        error_log("DEBUG sizes: " . print_r($sizes, true));
+        error_log("DEBUG colors: " . print_r($colors, true));
+        error_log("DEBUG customs: " . print_r($customs, true));
+
+        if (empty($sizes) || empty($colors)) {
+            error_log("DEBUG: sizes or colors is empty, matrix will not be generated.");
+            return [];
+        }
+
+
+
+
         $existingMatrix = $product->getVariationMatrix();
         if ($existingMatrix instanceof StructuredTable) {
             $existingData = $existingMatrix->getData();
