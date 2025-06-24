@@ -5,7 +5,7 @@ namespace App\EventListener;
 use App\Service\VariationMatrixService;
 use Pimcore\Event\Model\DataObjectEvent;
 use Pimcore\Model\DataObject\Product;
-use Pimcore\Model\DataObject\Data\Table;
+use Pimcore\Model\Document\Editable\Table;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 
 #[AsEventListener(event: 'pimcore.dataobject.preUpdate')]
