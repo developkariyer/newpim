@@ -37,7 +37,7 @@ class ProductSaveListener
                 return;
             }
 
-            $variationMatrix->setData($matrixData);
+            $variationMatrix->setData([$matrixData]);
 
         }
     }
