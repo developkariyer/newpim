@@ -34,7 +34,7 @@ class ProductSaveListener
             $structuredTable->setData($newMatrix);
             
             $object->setVariationMatrix($structuredTable);
-            $object->save();
+            $object->save(['disableEvents' => true]);
         } 
     }
 }
