@@ -57,7 +57,6 @@ class ProductSaveListener
                 \error_log("Product matrix after set: NULL");
             }
             
-            $object->save(['disableEvents' => true]);
             \error_log("Save command executed.");
             
             // Save'den sonra tekrar kontrol et
