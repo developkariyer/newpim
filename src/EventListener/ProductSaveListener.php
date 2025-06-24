@@ -29,7 +29,7 @@ class ProductSaveListener
             if (empty($matrixData)) {
                 error_log('Variation matrix data is empty for product ' . $object->getId() . '. The table will be empty.');
             } else {
-                $error_log('Generated variation matrix data for product ' . $object->getId()
+                error_log('Generated variation matrix data for product ' . $object->getId()
                 . json_encode($matrixData));
             }
 
