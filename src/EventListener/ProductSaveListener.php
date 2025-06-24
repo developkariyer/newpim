@@ -38,10 +38,12 @@ class ProductSaveListener
 
             foreach ($matrixData as $row) {
                 $table->addRow([
-                    $row['size'], $row['color'], $row['custom'], $row['isActive']
+                    $row['size'] ?? '',
+                    $row['color'] ?? '',
+                    $row['custom'] ?? '',
+                    $row['isActive'] ?? false
                 ]);
             }
-
             $object->setVariationMatrix($table);
         }
     }
