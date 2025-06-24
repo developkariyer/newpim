@@ -32,16 +32,17 @@ class ProductSaveListener
                 $object->setVariationMatrix(null);
                 return;
             }
-            $variationMatrix = $object->getVariationMatrix();
-            if (!$variationMatrix instanceof StructuredTable) {
-                return;
-            }
-            $variationMatrix->setData([]);
+            $table = new StructuredTable();
+            $table->setColumnKeys(['size', 'color', 'custom', 'isActive']);
+            $table->setColumnLabels(['Size', 'Color', 'Custom', 'Is Active']);
+
             foreach ($matrixData as $row) {
-                $variationMatrix->addRow([
+                $table->addRow([
                     $row['size'], $row['color'], $row['custom'], $row['isActive']
                 ]);
             }
+
+            $object->setVariationMatrix($table);
         }
     }
 }
