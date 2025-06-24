@@ -6,15 +6,18 @@ use Pimcore\Model\DataObject\ClassDefinition\Data;
 use Pimcore\Model\DataObject\ClassDefinition\DynamicOptionsProvider\SelectOptionsProviderInterface;
 use Pimcore\Model\DataObject\Product;
 use App\Service\VariationMatrixService;
-use Pimcore\Container;
 
 class VariationSelect implements SelectOptionsProviderInterface
 {
+    private VariationMatrixService $variationMatrixService;
 
+    public function __construct()
+    {
+        $this->variationMatrixService = \Pimcore::getContainer()->get(VariationMatrixService::class);
+    }
 
     public function getOptions(array $context, Data $fieldDefinition = null): array
     {
-        $variationMatrixService = VariationMatrixService::getInstance();
         $options = [];
         if (isset($context['object']) && $context['object'] instanceof Product) {
             $currentObject = $context['object'];
