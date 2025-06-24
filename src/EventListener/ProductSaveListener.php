@@ -32,8 +32,6 @@ class ProductSaveListener
         if (!empty($newMatrix)) {
             $structuredTable = new StructuredTable();
             $structuredTable->setData($newMatrix);
-            \error_log("Matrix row count: " . count($newMatrix));
-            \error_log("StructuredTable: " . print_r($structuredTable->getData(), true));
             $object->setVariationMatrix($structuredTable);
             $object->save(['disableEvents' => true]);
         } 

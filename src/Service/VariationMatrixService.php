@@ -15,39 +15,13 @@ class VariationMatrixService
         $colors = $this->getColorOptions($product);
         $customs = $this->getCustomOptions($product);
 
-        error_log("DEBUG sizes: " . print_r($sizes, true));
-        error_log("DEBUG colors: " . print_r($colors, true));
-        error_log("DEBUG customs: " . print_r($customs, true));
-
         if (empty($sizes) || empty($colors)) {
             error_log("DEBUG: sizes or colors is empty, matrix will not be generated.");
             return [];
         }
-
         $existingMatrix = $product->getVariationMatrix();
-        error_log("DEBUG: existingMatrix type: " . (is_object($existingMatrix) ? get_class($existingMatrix) : gettype($existingMatrix)));
 
-        $existingData = $existingMatrix->getData();
-        if (!empty($existingData) && is_array($existingData[0])) {
-            error_log("DEBUG: StructuredTable keys: " . implode(', ', array_keys($existingData[0])));
-        }
-        error_log("DEBUG: existingMatrix is StructuredTable, data: " . print_r($existingData, true));
-        $hasRealData = false;
-        if (is_array($existingData)) {
-            foreach ($existingData as $row) {
-                if (
-                    (!empty($row['size']) || !empty($row['color']) || !empty($row['custom']))
-                    && isset($row['isactive'])
-                ) {
-                    $hasRealData = true;
-                    break;
-                }
-            }
-        }
-        if ($hasRealData) {
-            error_log("DEBUG: existingMatrix already has real data, returning empty array.");
-            return [];
-        }
+    
 
         $matrix = [];
         foreach ($sizes as $size) {
