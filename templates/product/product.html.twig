@@ -158,9 +158,9 @@
                         <label for="productCategory">Kategori</label>
                         <select id="productCategory" name="productCategory" class="form-control">
                             <option value="">Kategori Seçin</option>
-                            <option value="tshirt">T-Shirt</option>
-                            <option value="jeans">Jeans</option>
-                            <option value="shoes">Ayakkabı</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                 </div>
