@@ -30,13 +30,22 @@ class VariationMatrixService
         if ($existingMatrix instanceof StructuredTable) {
             $existingData = $existingMatrix->getData();
             error_log("DEBUG: existingMatrix is StructuredTable, data: " . print_r($existingData, true));
-            if (is_array($existingData) && !empty($existingData)) {
-                error_log("DEBUG: existingMatrix already has data, returning empty array.");
+            $hasRealData = false;
+            if (is_array($existingData)) {
+                foreach ($existingData as $row) {
+                    if (
+                        (!empty($row['size']) || !empty($row['color']) || !empty($row['custom']))
+                        && isset($row['isActive'])
+                    ) {
+                        $hasRealData = true;
+                        break;
+                    }
+                }
+            }
+            if ($hasRealData) {
+                error_log("DEBUG: existingMatrix already has real data, returning empty array.");
                 return [];
             }
-        } elseif (is_array($existingMatrix) && !empty($existingMatrix)) {
-            error_log("DEBUG: existingMatrix is array and not empty, returning empty array.");
-            return [];
         }
 
         $matrix = [];
