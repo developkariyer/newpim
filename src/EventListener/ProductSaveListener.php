@@ -25,16 +25,10 @@ class ProductSaveListener
         if (!$object instanceof Product) {
             return;
         }
-
-        try {
-            $newMatrix = $this->variationMatrixService->generateMatrix($object);
-            if (!empty($newMatrix)) {
-                $object->setVariationMatrix($newMatrix);
-                $object->save();
-            } 
-            
-        } catch (\Exception $e) {
-            \Pimcore\Log\Simple::log('product-save', "Error in ProductSaveListener: " . $e->getMessage());
-        }
+        $newMatrix = $this->variationMatrixService->generateMatrix($object);
+        if (!empty($newMatrix)) {
+            $object->setVariationMatrix($newMatrix);
+            $object->save();
+        } 
     }
 }
