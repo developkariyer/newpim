@@ -44,13 +44,7 @@ class ProductSaveListener
             return;
         }
         
-        $variationMatrix->setCols([
-            ['key' => 'size', 'label' => 'Size', 'type' => 'text'],
-            ['key' => 'color', 'label' => 'Color', 'type' => 'text'],
-            ['key' => 'custom', 'label' => 'Custom', 'type' => 'text'],
-            ['key' => 'isActive', 'label' => 'Active', 'type' => 'bool']
-        ]);
-        
+    
         $structuredData = [];
         foreach ($matrixData as $index => $row) {
             $structuredData[$index] = [
