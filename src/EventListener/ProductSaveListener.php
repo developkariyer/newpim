@@ -44,21 +44,26 @@ class ProductSaveListener
             return;
         }
         
-        $structuredData = [];
-        $rowIndex = 1;
+        $variationMatrix->setCols([
+            ['key' => 'size', 'label' => 'Size', 'type' => 'text'],
+            ['key' => 'color', 'label' => 'Color', 'type' => 'text'],
+            ['key' => 'custom', 'label' => 'Custom', 'type' => 'text'],
+            ['key' => 'isActive', 'label' => 'Active', 'type' => 'bool']
+        ]);
         
-        foreach ($matrixData as $row) {
-            $rowKey = 'row' . $rowIndex;
-            $structuredData[$rowKey] = [
+        $structuredData = [];
+        foreach ($matrixData as $index => $row) {
+            $structuredData[$index] = [
                 'size' => $row['size'],
                 'color' => $row['color'], 
                 'custom' => $row['custom'],
                 'isActive' => $row['isActive'] ? '1' : '0'
             ];
-            $rowIndex++;
         }
         
         $variationMatrix->setData($structuredData);
         error_log('Set ' . count($structuredData) . ' rows to variation matrix for product ' . $object->getId());
+        
+        error_log('StructuredTable data: ' . json_encode($variationMatrix->getData()));
     }
 }
