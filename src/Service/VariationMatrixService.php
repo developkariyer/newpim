@@ -26,19 +26,19 @@ class VariationMatrixService
             foreach ($colors as $color) {
                 if (!empty($customs)) {
                     foreach ($customs as $custom) {
-                        $matrix['datta'][] = [
+                        $matrix[] = [
                             'size' => $size['value'],
                             'color' => $color['key'], 
                             'custom' => $custom['value'],
-                            'isActive' => 0
+                            'isActive' => false
                         ];
                     }
                 } else {
-                    $matrix['datta'][] = [
+                    $matrix[] = [
                         'size' => $size['value'],
                         'color' => $color['key'],
                         'custom' => '',
-                        'isActive' => 0
+                        'isActive' => false
                     ];
                 }
             }
