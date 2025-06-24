@@ -46,17 +46,14 @@ class ProductSaveListener
         
     
         $structuredData = [];
-        $rowIndex = 1;
-        
+    
         foreach ($matrixData as $row) {
-            $rowKey = 'row' . $rowIndex;
-            $structuredData[$rowKey] = [
-                'size' => $row['size'],
-                'color' => $row['color'], 
-                'custom' => $row['custom'],
-                'isactive' => $row['isActive'] ? 'true' : 'false'
+            $structuredData[] = [
+                $row['size'],
+                $row['color'], 
+                $row['custom'],
+                $row['isActive'] ? 'true' : 'false'
             ];
-            $rowIndex++;
         }
         
         $variationMatrix->setData($structuredData);
