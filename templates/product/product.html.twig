@@ -202,9 +202,9 @@
                         <label for="colorTemplate">Renk Şablonu</label>
                         <select id="colorTemplate" name="colorTemplate" class="form-control">
                             <option value="">Renk şablonu seçin</option>
-                            <option value="1">Basic Colors</option>
-                            <option value="2">Fashion Colors 2024</option>
-                            <option value="3">Custom Brand Colors</option>
+                            {% for color in colors %}
+                                <option value="{{ color.id }}">{{ color.name }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                 </div>

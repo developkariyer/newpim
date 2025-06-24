@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Pimcore\Model\DataObject\Product; 
 use Pimcore\Model\DataObject\Category\Listing as CategoryListing;
 use Pimcore\Model\DataObject\VariationSizeChart\Listing as VariationSizeChartListing;
-
+use Pimcore\Model\DataObject\VariationColor\Listing as VariationColorListing;
 
 class ProductController extends AbstractController
 {
@@ -18,9 +18,11 @@ class ProductController extends AbstractController
     {
         $categories = $this->getCategories();
         $sizeCharts = $this->getSizeCharts();
+        $colors = $this->getColors();
         return $this->render('product/product.html.twig', [
             'categories' => $categories,
-            'sizeCharts' => $sizeCharts
+            'sizeCharts' => $sizeCharts,
+            'colors' => $colors
         ]);
     }
 
@@ -63,6 +65,25 @@ class ProductController extends AbstractController
             ];
         }
         return $categoryList;
+    }
+
+    private function getColors()
+    {
+        /*
+         * This method retrieves all colors that are published.
+         * It returns an array of colors with their ID and name.
+         */
+        $colors = new VariationColorListing();
+        $colors->setCondition("published = 1");
+        $colors->load();
+        $colorList = [];
+        foreach ($colors as $color) {
+            $colorList[] = [
+                'id' => $color->getId(),
+                'name' => $color->getKey(),
+            ];
+        }
+        return $colorList;
     }
 
 }
