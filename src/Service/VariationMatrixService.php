@@ -25,9 +25,6 @@ class VariationMatrixService
         $sizes = $this->getSizeOptions($product);
         $colors = $this->getColorOptions($product);
         $customs = $this->getCustomOptions($product);
-        error_log("Sizes: " . print_r($sizes, true));
-        error_log("Colors: " . print_r($colors, true));
-        error_log("Customs: " . print_r($customs, true));
         if (empty($sizes) || empty($colors)) {
             return [];
         }
