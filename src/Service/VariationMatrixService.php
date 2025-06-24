@@ -48,7 +48,7 @@ class VariationMatrixService
     private function getSizeOptions(Product $product): array
     {
         $sizes = [];
-        $variationSizeTemplate = $product->getVariationSizeTemplate();
+        $variationSizeTemplate = $product->getVariantSizeTemplate();
         
         if ($variationSizeTemplate instanceof VariationSizeChart) {
             $sizeOptionsData = $variationSizeTemplate->getSizeOptions();
