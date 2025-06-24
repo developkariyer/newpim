@@ -15,7 +15,7 @@ class VariationSize implements SelectOptionsProviderInterface
         $options = [];
         if (isset($context['object']) && $context['object'] instanceof Product) {
             $currentObject = $context['object'];
-            if (!$currentObject->getParent()) {
+            if (!$currentObject->getObjecType() === 'virtual') {
                 return $options;
             }
             $parentObject = $currentObject->getParent();
