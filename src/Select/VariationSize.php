@@ -9,17 +9,17 @@ use Pimcore\Model\DataObject\VariationSizeChart;
 
 class VariationSize implements SelectOptionsProviderInterface
 {
+
     public function getOptions(array $context, Data $fieldDefinition = null): array
     {
         $options = [];
         if (isset($context['object']) && $context['object'] instanceof Product) {
             $currentObject = $context['object'];
-            $variantSizeTemplate = $currentObject->getVariantSizeTemplate();
-            if (!$variantSizeTemplate && $currentObject->getParent() instanceof Product) {
-                $parentObject = $currentObject->getParent();
-                $variantSizeTemplate = $parentObject->getVariantSizeTemplate();
+            if (!$currentObject->getParent()) {
+                return $options;
             }
-            
+            $parentObject = $currentObject->getParent();
+            $variantSizeTemplate = $parentObject->getVariantSizeTemplate();
             if ($variantSizeTemplate instanceof VariationSizeChart) {
                 $sizeOptionsData = $variantSizeTemplate->getSizeOptions();
                 if (is_array($sizeOptionsData) && !empty($sizeOptionsData)) {
@@ -42,7 +42,7 @@ class VariationSize implements SelectOptionsProviderInterface
                     }
                 }
             }
-        } 
+        }
         return $options;
     }
 
