@@ -54,7 +54,7 @@ class ProductSaveListener
                 'size' => $row['size'],
                 'color' => $row['color'], 
                 'custom' => $row['custom'],
-                'isActive' => $row['isActive'] ? 'true' : 'false'
+                'isactive' => $row['isActive'] ? 'true' : 'false'
             ];
             $rowIndex++;
         }
