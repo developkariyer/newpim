@@ -11,15 +11,10 @@ use Pimcore\Container;
 class VariationSelect implements SelectOptionsProviderInterface
 {
 
-    private VariationMatrixService $variationMatrixService;
-
-    public function __construct()
-    {
-        $this->variationMatrixService = Container::get(VariationMatrixService::class);
-    }
 
     public function getOptions(array $context, Data $fieldDefinition = null): array
     {
+        $variationMatrixService = VariationMatrixService::getInstance();
         $options = [];
         if (isset($context['object']) && $context['object'] instanceof Product) {
             $currentObject = $context['object'];
