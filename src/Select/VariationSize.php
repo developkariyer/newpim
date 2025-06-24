@@ -18,6 +18,9 @@ class VariationSize implements SelectOptionsProviderInterface
             if (!$currentObject->getObjectType() === 'virtual') {
                 return $options;
             }
+            if (!$currentObject->getParent() instanceof Product) {
+                return $options;
+            }
             $parentObject = $currentObject->getParent();
             $variantSizeTemplate = $parentObject->getVariantSizeTemplate();
             if ($variantSizeTemplate instanceof VariationSizeChart) {
