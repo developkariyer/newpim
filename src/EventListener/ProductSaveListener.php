@@ -5,7 +5,6 @@ namespace App\EventListener;
 use App\Service\VariationMatrixService;
 use Pimcore\Event\Model\DataObjectEvent;
 use Pimcore\Model\DataObject\Product;
-use Pimcore\Model\Document\Editable\Table;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 
 #[AsEventListener(event: 'pimcore.dataobject.preUpdate')]
@@ -33,7 +32,7 @@ class ProductSaveListener
                 . json_encode($matrixData));
             }
 
-            $object->setVariationMatrix(new Table($matrixData));
+            $object->setVariationMatrix($matrixData);
             $object->save();
         }
     }
