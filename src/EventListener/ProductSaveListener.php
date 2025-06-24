@@ -33,12 +33,12 @@ class ProductSaveListener
                 return;
             }
 
-            // Log the raw matrix
             error_log('Generated variation matrix data for product ' . $object->getId() . ': ' . json_encode($matrixData));
 
             $structuredTable = new StructuredTable();
 
-            $structuredTable->setColumnKeys(['size', 'color', 'custom', 'isActive']);
+            $columnKeys = ['size', 'color', 'custom', 'isActive'];
+            $structuredTable->setColumnKeys($columnKeys);
             $structuredTable->setColumnLabels(['Size', 'Color', 'Custom', 'Is Active']);
 
             $data = [];
@@ -55,7 +55,7 @@ class ProductSaveListener
 
             $object->setVariationMatrix($structuredTable);
 
-            error_log('Variation matrix set successfully for product ' . $object->getId());
+            error_log('StructuredTable successfully set on product ' . $object->getId());
         }
     }
 }
