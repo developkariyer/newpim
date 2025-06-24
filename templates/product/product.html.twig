@@ -245,18 +245,33 @@
 {% block javascripts %}
     {{ parent() }}
     <script>
-        //image upload preview
         document.getElementById('imageInput').addEventListener('change', function(e) {
+            console.log('File input changed');
             const file = e.target.files[0];
             const preview = document.getElementById('imagePreview');
-            
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
-                };
-                reader.readAsDataURL(file);
+            if (!file) {
+                console.log('No file selected');
+                return;
             }
+            console.log('File:', file.name, file.type, file.size); 
+            if (!file.type.startsWith('image/')) {
+                alert('Lütfen bir resim dosyası seçin.');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Dosya boyutu 5MB\'dan küçük olmalıdır.');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                console.log('File loaded successfully'); 
+                preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+            };
+            reader.onerror = function() {
+                console.error('File reading error');
+                alert('Dosya okuma hatası!');
+            };
+            reader.readAsDataURL(file);
         });
 
 
