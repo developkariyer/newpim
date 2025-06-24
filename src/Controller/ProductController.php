@@ -32,6 +32,7 @@ class ProductController extends AbstractController
                 'name' => $category->getCategory(),
             ];
         }
+        return $categoryList;
     }
 
 }
