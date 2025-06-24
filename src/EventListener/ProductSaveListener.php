@@ -33,7 +33,6 @@ class ProductSaveListener
             }
 
             $object->setVariationMatrix($matrixData);
-            $object->save();
         }
     }
 }
