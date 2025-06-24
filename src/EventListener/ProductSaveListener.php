@@ -23,7 +23,16 @@ class ProductSaveListener
     {
         $object = $event->getObject();
         if ($object instanceof Product) {
+            error_log('ProductSaveListener triggered for product: ' . $object->getFullPath());
             $matrixData = $this->variationMatrixService->generateMatrix($object);
+
+            if (empty($matrixData)) {
+                error_log('Variation matrix data is empty for product ' . $object->getId() . '. The table will be empty.');
+            } else {
+                $error_log('Generated variation matrix data for product ' . $object->getId()
+                . json_encode($matrixData));
+            }
+
             $object->setVariationMatrix(new StructuredTable($matrixData));
         }
     }
