@@ -29,6 +29,9 @@ class VariationMatrixService
 
         if ($existingMatrix instanceof StructuredTable) {
             $existingData = $existingMatrix->getData();
+            if (!empty($existingData) && is_array($existingData[0])) {
+                error_log("DEBUG: StructuredTable keys: " . implode(', ', array_keys($existingData[0])));
+            }
             error_log("DEBUG: existingMatrix is StructuredTable, data: " . print_r($existingData, true));
             $hasRealData = false;
             if (is_array($existingData)) {
