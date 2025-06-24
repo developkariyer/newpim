@@ -5,6 +5,7 @@ namespace App\EventListener;
 use App\Service\VariationMatrixService;
 use Pimcore\Event\Model\DataObjectEvent;
 use Pimcore\Model\DataObject\Product;
+use Pimcore\Model\DataObject\Data\StructuredTable;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 
 #[AsEventListener(event: 'pimcore.dataobject.postUpdate')]
@@ -25,9 +26,14 @@ class ProductSaveListener
         if (!$object instanceof Product) {
             return;
         }
+
         $newMatrix = $this->variationMatrixService->generateMatrix($object);
+        
         if (!empty($newMatrix)) {
-            $object->setVariationMatrix($newMatrix);
+            $structuredTable = new StructuredTable();
+            $structuredTable->setData($newMatrix);
+            
+            $object->setVariationMatrix($structuredTable);
             $object->save();
         } 
     }

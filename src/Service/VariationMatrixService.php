@@ -11,7 +11,13 @@ class VariationMatrixService
     public function generateMatrix(Product $product): array
     {
         $existingMatrix = $product->getVariationMatrix();
-        if (is_array($existingMatrix) && !empty($existingMatrix)) {
+        if ($existingMatrix instanceof StructuredTable) {
+            $existingData = $existingMatrix->getData();
+            if (is_array($existingData) && !empty($existingData)) {
+                return [];
+            }
+        }
+        elseif (is_array($existingMatrix) && !empty($existingMatrix)) {
             return [];
         }
         $matrix = [];
