@@ -24,16 +24,38 @@ class ProductSaveListener
         $object = $event->getObject();
         if ($object instanceof Product) {
             error_log('ProductSaveListener triggered for product: ' . $object->getFullPath());
+            
             $matrixData = $this->variationMatrixService->generateMatrix($object);
 
             if (empty($matrixData)) {
                 error_log('Variation matrix data is empty for product ' . $object->getId() . '. The table will be empty.');
-            } else {
-                error_log('Generated variation matrix data for product ' . $object->getId()
-                . json_encode($matrixData));
+                $object->setVariationMatrix(null);
+                return;
             }
 
-            $object->setVariationMatrix(new StructuredTable($matrixData));
+            // Log the raw matrix
+            error_log('Generated variation matrix data for product ' . $object->getId() . ': ' . json_encode($matrixData));
+
+            $structuredTable = new StructuredTable();
+
+            $structuredTable->setColumnKeys(['size', 'color', 'custom', 'isActive']);
+            $structuredTable->setColumnLabels(['Size', 'Color', 'Custom', 'Is Active']);
+
+            $data = [];
+            foreach ($matrixData as $row) {
+                $data[] = [
+                    $row['size'] ?? '',
+                    $row['color'] ?? '',
+                    $row['custom'] ?? '',
+                    $row['isActive'] ?? false,
+                ];
+            }
+
+            $structuredTable->setData($data);
+
+            $object->setVariationMatrix($structuredTable);
+
+            error_log('Variation matrix set successfully for product ' . $object->getId());
         }
     }
 }
