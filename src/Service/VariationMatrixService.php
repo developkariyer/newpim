@@ -55,7 +55,7 @@ class VariationMatrixService
             $sizeOptionsData = $variationSizeTemplate->getSizeOptions();
             
             if (is_array($sizeOptionsData) && !empty($sizeOptionsData)) {
-                $dataRows = $sizeOptionsData;
+                $dataRows = array_slice($sizeOptionsData, 1);
                 
                 foreach ($dataRows as $sizeOption) {
                     if (is_array($sizeOption) && !empty($sizeOption[0])) {
@@ -109,7 +109,7 @@ class VariationMatrixService
             $customOptionsData = $customVariantTemplate->getCustomOptions();
             
             if (is_array($customOptionsData) && !empty($customOptionsData)) {
-                $dataRows = $customOptionsData;
+                $dataRows = array_slice($customOptionsData, 1);
                 
                 foreach ($dataRows as $customOption) {
                     if (is_array($customOption) && !empty($customOption[0])) {
