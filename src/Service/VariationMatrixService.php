@@ -109,7 +109,7 @@ class VariationMatrixService
             $customOptionsData = $customVariantTemplate->getCustomOptions();
             
             if (is_array($customOptionsData) && !empty($customOptionsData)) {
-                $dataRows = a$customOptionsData;
+                $dataRows = $customOptionsData;
                 
                 foreach ($dataRows as $customOption) {
                     if (is_array($customOption) && !empty($customOption[0])) {
