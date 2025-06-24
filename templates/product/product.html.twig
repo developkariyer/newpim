@@ -246,18 +246,26 @@
     {{ parent() }}
     <script>
         document.getElementById('imageInput').addEventListener('change', function(event) {
+            console.log("Dosya seçimi algılandı."); 
             const previewContainer = document.getElementById('imagePreview');
             const file = event.target.files[0];
-
             if (file) {
+                console.log("Seçilen dosya:", file.name);
+
                 if (file.type.startsWith('image/')) {
                     const reader = new FileReader();
+
                     reader.onload = function(e) {
-                        previewContainer.innerHTML = '';
+                        console.log("Dosya okundu, önizleme oluşturuluyor."); 
+                        previewContainer.innerHTML = ''; 
                         const img = document.createElement('img');
                         img.src = e.target.result;
                         img.alt = 'Ürün Resmi Önizlemesi';
                         previewContainer.appendChild(img);
+                    };
+                    reader.onerror = function() {
+                        console.error("Dosya okunurken hata oluştu!");
+                        alert("Resim okunurken bir hata meydana geldi.");
                     };
                     reader.readAsDataURL(file);
                 } else {
