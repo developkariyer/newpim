@@ -24,6 +24,11 @@ class ProductController extends AbstractController
     private function getCategories()
     {
         $categories = new CategoryListing();
+        $categories->setCondition("published = 1");
+        $categories->setObjectTypes([
+            \Pimcore\Model\DataObject\AbstractObject::OBJECT_TYPE_OBJECT,
+            \Pimcore\Model\DataObject\AbstractObject::OBJECT_TYPE_VARIANT
+        ]);
         $categories->load();
         $categoryList = [];
         foreach ($categories as $category) {
