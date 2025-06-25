@@ -7,7 +7,7 @@ use Pimcore\Model\DataObject\ClassDefinition\DynamicOptionsProvider\SelectOption
 use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\VariationColor;
 
-class VariationColor implements SelectOptionsProviderInterface
+class VariationColorSelect implements SelectOptionsProviderInterface
 {
 
     public function getOptions(array $context, Data $fieldDefinition = null): array
