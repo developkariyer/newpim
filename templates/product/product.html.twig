@@ -352,6 +352,7 @@
     }
 
     function updateSelectedItems(type) {
+        console.log(`Selected ${type}:`, selectedItems[type]);
         const selectedDiv = document.getElementById(`${type}Selected`);
         const hiddenDiv = document.getElementById(`${type}Hidden`);
         if (!selectedDiv || !hiddenDiv) {
