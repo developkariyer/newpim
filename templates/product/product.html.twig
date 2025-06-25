@@ -295,7 +295,8 @@
         customCharts: 'customTemplate[]',
         categories: 'productCategory'
     };
-    
+    const searchTypes = ['colors', 'brands', 'marketplaces', 'sizeCharts', 'customCharts', 'categories'];
+
     async function performSearch(type) {
         const searchInput = document.getElementById(`${type}Search`);
         if (!searchInput) {
@@ -385,10 +386,6 @@
         selectedItems[type] = selectedItems[type].filter(item => item.id !== itemId);
         updateSelectedItems(type);
     }
-
-
-
-    const searchTypes = ['colors', 'brands', 'marketplaces', 'sizeCharts', 'customCharts', 'categories'];
 
     searchTypes.forEach(type => {
         const searchElement = document.getElementById(`${type}Search`);
