@@ -479,25 +479,8 @@
             customCharts: selectedItems.customCharts,
             products: selectedItems.products
         };
-        
-        console.log('🚀 FORM VERİLERİ:');
-        console.log('================');
-        console.log('📝 Temel Bilgiler:');
-        console.log('  - Ürün Adı:', formData.productName);
-        console.log('  - Tanıtıcı Ad:', formData.productIdentifier);
-        console.log('  - Açıklama:', formData.productDescription);
-        console.log('  - Resim:', formData.productImage);
-        
-        console.log('📂 Kategori:', formData.categories);
-        console.log('🏷️ Markalar:', formData.brands);
-        console.log('🛒 Pazaryerleri:', formData.marketplaces);
-        console.log('📏 Beden Şablonu:', formData.sizeCharts);
-        console.log('🎨 Renkler:', formData.colors);
-        console.log('⚙️ Custom Şablon:', formData.customCharts);
-        console.log('📦 Set Ürünleri:', formData.products);
-        
-        console.log('================');
-        console.log('✅ Form hazır, controller\'a gönderilebilir!');
+        this.submit();
+        console.log('Form submitted with data:', formData);
     });
 
 </script>
