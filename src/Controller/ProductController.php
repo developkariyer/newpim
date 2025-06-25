@@ -263,23 +263,11 @@ class ProductController extends AbstractController
                 'mime' => $imageFile->getMimeType(),
                 'temp_path' => $imageFile->getPathname()
             ]);
-            $assetFolder = \Pimcore\Model\Asset::getByPath('/products');
-            if (!$assetFolder) {
-                dump('Products klasörü yok, oluşturuluyor...');
-                $assetFolder = new \Pimcore\Model\Asset\Folder();
-                $assetFolder->setFilename('products');
-                $assetFolder->setParent(\Pimcore\Model\Asset::getByPath('/'));
-                $assetFolder->save();
-                dump('Products klasörü oluşturuldu:', $assetFolder->getFullPath());
-            } else {
-                dump('Products klasörü mevcut:', $assetFolder->getFullPath());
-            }
             $extension = $imageFile->getClientOriginalExtension() ?: 'jpg';
             $filename = $this->generateSafeFilename($productKey) . '_' . time() . '.' . $extension;
             dump('Generated filename:', $filename);
             $imageAsset = new \Pimcore\Model\Asset\Image();
             $imageAsset->setFilename($filename);
-            $imageAsset->setParent($assetFolder);
             $fileContent = file_get_contents($imageFile->getPathname());
             if ($fileContent === false) {
                 throw new \Exception('Dosya içeriği okunamadı');
