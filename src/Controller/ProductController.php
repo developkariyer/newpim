@@ -139,9 +139,11 @@ class ProductController extends AbstractController
         if (empty($id)) {
             return null;
         }
-        $object = $this->getObjectById(self::CLASS_MAPPING[$type], (int)$id);
+        $idValue = is_array($id) ? $id[0] : $id;
+        $intId = (int)$idValue;
+        $object = $this->getObjectById(self::CLASS_MAPPING[$type], $intId);
         if (!$object) {
-            $errors[] = "{$displayName} ID {$id} bulunamadı";
+            $errors[] = "{$displayName} ID {$intId} bulunamadı";
         }
         return $object;
     }
