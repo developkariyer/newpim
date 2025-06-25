@@ -212,10 +212,21 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="sizeTemplate">Custom Şablonu</label>
+                        <select id="sizeTemplate" name="sizeTemplate" class="form-control">
+                            <option value="">Custom şablonu seçin</option>
+                            {% for custom in customCharts %}
+                                <option value="{{ custom.id }}">{{ custom.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <!--> Markalar, Pazaryerleri, Set?, Color Size Optimize -->
-            
+            customCharts
             <!-- Form Butonları -->
             <div style="text-align: right; margin-top: 2rem;">
                 <button type="button" class="btn btn-secondary">İptal</button>
