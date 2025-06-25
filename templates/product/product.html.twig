@@ -229,16 +229,13 @@
                     
                     <div class="form-group">
                         <label for="colorTemplate">Renkler</label>
-                        <div class="checkbox-group" style="max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem;">
-                            {% for color in colors %}
-                                <div style="margin-bottom: 0.5rem;">
-                                    <label style="display: flex; align-items: center; font-weight: normal;">
-                                        <input type="checkbox" name="colorTemplate[]" value="{{ color.id }}" style="margin-right: 0.5rem;">
-                                        {{ color.name }}
-                                    </label>
-                                </div>
-                            {% endfor %}
+                        <input type="text" id="colorsSearch" placeholder="Renk ara..." class="form-control" style="margin-bottom: 0.5rem;">
+                        <div id="colorsResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; background: white;">
                         </div>
+                        <div id="colorsSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
+                            <small style="color: #6c757d;">Seçilen renkler burada görünecek...</small>
+                        </div>
+                        <div id="colorsHidden"></div>
                     </div>
                 </div>
                 <div class="form-row">
@@ -251,20 +248,6 @@
                             {% endfor %}
                         </select>
                     </div>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="colorTemplate">Renkler</label>
-                <input type="text" id="colorsSearch" placeholder="Renk ara..." class="form-control" style="margin-bottom: 0.5rem;">
-                <div class="checkbox-group" style="max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem;">
-                    {% for color in colors %}
-                        <div style="margin-bottom: 0.5rem;">
-                            <label style="display: flex; align-items: center; font-weight: normal;">
-                                <input type="checkbox" name="colorTemplate[]" value="{{ color.id }}" style="margin-right: 0.5rem;">
-                                {{ color.name }}
-                            </label>
-                        </div>
-                    {% endfor %}
                 </div>
             </div>
         
@@ -282,27 +265,15 @@
     {{ parent() }}
     <script>
 
-
-    console.log('JavaScript loaded!');
-
     let searchTimeout;
 
     async function performSearch(type) {
-        console.log('performSearch called with type:', type);
         const searchInput = document.getElementById(`${type}Search`);
-        console.log('searchInput element:', searchInput);
-        
         if (!searchInput) {
             console.error('Search input not found:', `${type}Search`);
             return;
         }
-        
         const query = searchInput.value.trim();
-        console.log('Query:', query);
-        
-        
-        console.log('Searching for:', query, 'Type:', type);
-        
         try {
             const response = await fetch(`/product/search/${type}?q=${encodeURIComponent(query)}`);
             const data = await response.json();
@@ -312,10 +283,7 @@
         }
     }
 
-    console.log('Adding event listener...');
     const colorSearchElement = document.getElementById('colorsSearch');
-    console.log('colorsSearch element:', colorSearchElement);
-
     if (colorSearchElement) {
         colorSearchElement.addEventListener('input', () => {
             console.log('Input event triggered!');
