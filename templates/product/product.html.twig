@@ -236,12 +236,13 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="customTemplate">Custom Şablonu</label>
-                        <select id="customTemplate" name="customTemplate" class="form-control">
-                            <option value="">Custom şablonu seçin</option>
-                            {% for custom in customCharts %}
-                                <option value="{{ custom.id }}">{{ custom.name }}</option>
-                            {% endfor %}
-                        </select>
+                        <input type="text" id="customChartsSearch" placeholder="Custom şablonu ara..." class="form-control" style="margin-bottom: 0.5rem;">
+                        <div id="customChartsResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; background: white;">
+                        </div>
+                        <div id="customChartsSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
+                            <small style="color: #6c757d;">Seçilen custom şablonu burada görünecek...</small>
+                        </div>
+                        <div id="customChartsHidden"></div>
                     </div>
                 </div>
             </div>
@@ -413,6 +414,16 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 performSearch('sizeCharts'); 
+            }, 300);
+        });
+    }
+
+    const customChartSearchElement = document.getElementById('customChartsSearch');
+    if (customChartSearchElement) {
+        customChartSearchElement.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                performSearch('customCharts'); 
             }, 300);
         });
     }
