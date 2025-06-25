@@ -42,6 +42,13 @@ class ProductController extends AbstractController
         'sizeChart' => VariationSizeChart::class,
         'customChart' => CustomChart::class
     ];
+
+    private VariationMatrixService $variationMatrixService;
+
+    public function __construct(VariationMatrixService $variationMatrixService)
+    {
+        $this->variationMatrixService = $variationMatrixService;
+    }
     
     #[Route('/product', name: 'product')]
     public function index(): Response
@@ -133,7 +140,8 @@ class ProductController extends AbstractController
         
         $product->setPublished(true);
         $product->save();
-        $variants = $this->createProductVariants($product, $sizeChart, $colors);
+        $createdVariants = $this->variationMatrixService->createVariants($product);
+
         return $this->render('product/product.html.twig');
     }
 
