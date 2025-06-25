@@ -73,10 +73,10 @@ class VariationMatrixService
             $variant->setMarketplaces($parentProduct->getMarketplaces());
             $variant->setVariationColor($combination['color']);
             $variant->setVariationSize($combination['size']);
-            $variant->setObjectType('actual');
             if (!empty($combination['custom']) && method_exists($variant, 'setCustomSelect')) {
                 $variant->setCustomSelect($combination['custom']);
             }
+            $variant->setObjectType('actual');
             $variant->save();
             return $variant;
             
