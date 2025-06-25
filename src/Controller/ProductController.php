@@ -16,15 +16,23 @@ use Pimcore\Model\DataObject\Marketplace\Listing as MarketplaceListing;
 
 class ProductController extends AbstractController
 {
+    private const TYPE_MAPPING = [
+        'colors' => VariationColorListing::class,
+        'brands' => BrandListing::class,
+        'marketplaces' => MarketplaceListing::class,
+        'customCharts' => CustomChartListing::class,
+        'sizeCharts' => VariationSizeChartListing::class,
+    ];
+
     #[Route('/product', name: 'product')]
     public function index(): Response
     {
         $categories = $this->getCategories();
-        $sizeCharts = $this->getGenericListing(VariationSizeChartListing::class);
-        $colors = $this->getGenericListing(VariationColorListing::class);
-        $customCharts = $this->getGenericListing(CustomChartListing::class);
-        $brands = $this->getGenericListing(BrandListing::class);
-        $marketplaces = $this->getGenericListing(MarketplaceListing::class);
+        $sizeCharts = $this->getGenericListing(self::TYPE_MAPPING['sizeCharts']);
+        $colors = $this->getGenericListing(self::TYPE_MAPPING['colors']);
+        $customCharts = $this->getGenericListing(self::TYPE_MAPPING['customCharts']);
+        $brands = $this->getGenericListing(self::TYPE_MAPPING['brands']);
+        $marketplaces = $this->getGenericListing(self::TYPE_MAPPING['marketplaces']);
         return $this->render('product/product.html.twig', [
             'categories' => $categories,
             'sizeCharts' => $sizeCharts,
@@ -33,6 +41,26 @@ class ProductController extends AbstractController
             'brands' => $brands,
             'marketplaces' => $marketplaces
         ]);
+    }
+
+    #[Route('/product/search/{type}', name: 'product_search', methods: ['GET'])]
+    public function search(Request $request, string $type): JsonResponse
+    {
+        $query = trim($request->query->get('q', ''));
+        $page = 1;
+        $limit = 5;
+        if (!isset(self::TYPE_MAPPING[$type])) {
+            return new JsonResponse(['error' => 'Invalid search type'], 400);
+        }
+        if (strlen($query) < 2) {
+            return new JsonResponse([
+                'items' => []
+            ]);
+        }
+        $escapedQuery = addslashes($query);
+        $searchCondition = "published = 1 AND (name LIKE '%{$escapedQuery}%' OR key LIKE '%{$escapedQuery}%')";
+        $results = $this->getGenericListing($typeMapping[$type], $searchCondition, $page, $limit);
+        return new JsonResponse($results);
     }
 
     private function getGenericListing(string $listingClass, string $condition = "published = 1", ?int $page = null, ?int $limit = null): array 
