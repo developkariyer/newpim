@@ -282,6 +282,83 @@
             console.error(`${type} search error:`, error);
         }
     }
+    function displayResults(type, items) {
+        const resultsDiv = document.getElementById(`${type}Results`);
+        
+        if (items.length === 0) {
+            resultsDiv.innerHTML = '<div style="padding: 1rem; text-align: center; color: #6c757d;">Sonuç bulunamadı</div>';
+            resultsDiv.style.display = 'block';
+            return;
+        }
+        
+        resultsDiv.innerHTML = '';
+        items.forEach(item => {
+            const itemDiv = document.createElement('div');
+            itemDiv.style.cssText = 'padding: 0.5rem; cursor: pointer; border-bottom: 1px solid #f1f3f4;';
+            itemDiv.innerHTML = `🎨 ${item.name}`;
+            
+            itemDiv.addEventListener('click', () => {
+                addSelectedItem(type, item);
+            });
+            
+            itemDiv.addEventListener('mouseenter', () => {
+                itemDiv.style.backgroundColor = '#f8f9fa';
+            });
+            
+            itemDiv.addEventListener('mouseleave', () => {
+                itemDiv.style.backgroundColor = '';
+            });
+            
+            resultsDiv.appendChild(itemDiv);
+        });
+        
+        resultsDiv.style.display = 'block';
+    }
+
+    function addSelectedItem(type, item) {
+        if (type === 'colors') {
+            // Zaten seçili mi kontrol et
+            if (selectedColors.some(color => color.id === item.id)) {
+                return;
+            }
+            
+            selectedColors.push(item);
+            updateSelectedColors();
+        }
+        
+        // Search input'u temizle ve sonuçları gizle
+        document.getElementById(`${type}Search`).value = '';
+        document.getElementById(`${type}Results`).style.display = 'none';
+    }
+
+    function updateSelectedColors() {
+        const selectedDiv = document.getElementById('colorsSelected');
+        const hiddenDiv = document.getElementById('colorsHidden');
+        
+        if (selectedColors.length === 0) {
+            selectedDiv.innerHTML = '<small style="color: #6c757d;">Seçilen renkler burada görünecek...</small>';
+            hiddenDiv.innerHTML = '';
+            return;
+        }
+        
+        // Seçilen renkleri göster
+        selectedDiv.innerHTML = selectedColors.map(color => `
+            <span style="display: inline-block; background: #007bff; color: white; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 12px; font-size: 0.875rem;">
+                🎨 ${color.name}
+                <span onclick="removeColor(${color.id})" style="margin-left: 0.5rem; cursor: pointer; font-weight: bold;">×</span>
+            </span>
+        `).join('');
+        
+        // Hidden input'ları oluştur
+        hiddenDiv.innerHTML = selectedColors.map(color => 
+            `<input type="hidden" name="colorTemplate[]" value="${color.id}">`
+        ).join('');
+    }
+
+    function removeColor(colorId) {
+        selectedColors = selectedColors.filter(color => color.id !== colorId);
+        updateSelectedColors();
+    }
 
     const colorSearchElement = document.getElementById('colorsSearch');
     if (colorSearchElement) {
