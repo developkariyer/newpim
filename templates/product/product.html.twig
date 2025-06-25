@@ -341,11 +341,16 @@
 
     function addSelectedItem(type, item) {
         console.log('Adding item:', type, item);
-        if (selectedItems[type].some(selectedItem => selectedItem.id === item.id)) {
-            console.log('Item already selected');
-            return;
+        const singleSelectTypes = ['categories', 'sizeCharts', 'customCharts'];
+        if (singleSelectTypes.includes(type)) {
+            selectedItems[type] = [item];
+        } else {
+            if (selectedItems[type].some(selectedItem => selectedItem.id === item.id)) {
+                console.log('Item already selected');
+                return;
+            }
+            selectedItems[type].push(item);
         }
-        selectedItems[type].push(item);
         console.log(`Selected ${type}:`, selectedItems[type]);
         updateSelectedItems(type);
         document.getElementById(`${type}Search`).value = '';
