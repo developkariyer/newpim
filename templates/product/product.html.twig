@@ -278,6 +278,7 @@
             const response = await fetch(`/product/search/${type}?q=${encodeURIComponent(query)}`);
             const data = await response.json();
             console.log(`${type} search results:`, data.items);
+            displayResults(type, data.items);
         } catch (error) {
             console.error(`${type} search error:`, error);
         }
