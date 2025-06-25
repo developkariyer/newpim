@@ -48,8 +48,6 @@ class ProductController extends AbstractController
     public function search(Request $request, string $type): JsonResponse
     {
         $query = trim($request->query->get('q', ''));
-        $page = 1;
-        $limit = 5;
         if (!isset(self::TYPE_MAPPING[$type])) {
             return new JsonResponse(['error' => 'Invalid search type'], 400);
         }
@@ -60,7 +58,7 @@ class ProductController extends AbstractController
         }
         $escapedQuery = addslashes($query);
         $searchCondition = "published = 1 AND `key` LIKE '%{$escapedQuery}%'";
-        $results = $this->getGenericListing(self::TYPE_MAPPING[$type], $searchCondition, $page, $limit);
+        $results = $this->getGenericListing(self::TYPE_MAPPING[$type], $searchCondition);
         return new JsonResponse(['items' => $results]);
     }
 
