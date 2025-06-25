@@ -31,18 +31,16 @@ class ProductController extends AbstractController
         'marketplaces' => MarketplaceListing::class,
         'customCharts' => CustomChartListing::class,
         'sizeCharts' => VariationSizeChartListing::class,
-        'categories' => CategoryListing::class,
-        'products' => ProductListing::class
+        'categories' => CategoryListing::class
     ];
 
     private const CLASS_MAPPING = [
         'category' => Category::class,
         'brand' => Brand::class,
         'marketplace' => Marketplace::class,
-        'product' => Product::class,
         'color' => VariationColor::class,
         'sizeChart' => VariationSizeChart::class,
-        'customChart' => CustomChart::class,
+        'customChart' => CustomChart::class
     ];
     
     #[Route('/product', name: 'product')]
@@ -54,15 +52,13 @@ class ProductController extends AbstractController
         $customCharts = $this->getGenericListing(self::TYPE_MAPPING['customCharts']);
         $brands = $this->getGenericListing(self::TYPE_MAPPING['brands']);
         $marketplaces = $this->getGenericListing(self::TYPE_MAPPING['marketplaces']);
-        $products = $this->getGenericListing(self::TYPE_MAPPING['products']);
         return $this->render('product/product.html.twig', [
             'categories' => $categories,
             'sizeCharts' => $sizeCharts,
             'colors' => $colors,
             'customCharts' => $customCharts,
             'brands' => $brands,
-            'marketplaces' => $marketplaces,
-            'products' => $products
+            'marketplaces' => $marketplaces
         ]);
     }
 
@@ -97,7 +93,6 @@ class ProductController extends AbstractController
         $sizeTemplateId = $request->get('sizeTemplate');
         $colorIds = $request->get('colorTemplate', []);
         $customTemplateId = $request->get('customTemplate');
-        $setProducts = $request->get('products', []);
         
         $errors = [];
         $category = $this->validateSingleObject('category', $categoryId, $errors, 'Kategori');
@@ -106,8 +101,6 @@ class ProductController extends AbstractController
         $brands = $this->validateMultipleObjects('brand', $brandIds, $errors, 'Marka');
         $marketplaces = $this->validateMultipleObjects('marketplace', $marketplaceIds, $errors, 'Pazaryeri');
         $colors = $this->validateMultipleObjects('color', $colorIds, $errors, 'Renk');
-        $setProductIds = array_map('intval', array_keys($setProducts));
-        $setProductObjects = $this->validateMultipleObjects('product', $setProductIds, $errors, 'Set ürün');
         if (!empty($errors)) {
             return $this->render('product/product.html.twig', [
                 'errors' => $errors
