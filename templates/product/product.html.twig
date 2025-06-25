@@ -136,7 +136,6 @@
 
 {% block content %}
         <div class="product-form-container">
-        
         <form id="productForm" method="POST" enctype="multipart/form-data">
             <div class="form-section">
                 <h3>📝 Temel Ürün Bilgileri</h3>
@@ -145,7 +144,6 @@
                     <input type="text" id="productName" name="productName" class="form-control" 
                            placeholder="Örn: Premium Cotton T-Shirt" required>
                 </div>
-                
                 <div class="form-row">
                     <div class="form-group">
                         <label for="productIdentifier">Ürün Tanıtıcı Adı *</label>
@@ -178,7 +176,7 @@
                         <button type="button" class="upload-btn" onclick="document.getElementById('imageInput').click()">
                             Resim Seç
                         </button>
-                        <input type="file" id="imageInput" accept="image/*">
+                        <input type="file" id="imageInput" name="productImage" accept="image/*">
                     </div>
                 </div>
             </div>
@@ -444,6 +442,18 @@
             console.log(`Event listener added for ${type}`);
         } else {
             console.warn(`Search element not found: ${type}Search`);
+        }
+    });
+
+    document.getElementById('imageInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('imagePreview');
+                preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+            };
+            reader.readAsDataURL(file);
         }
     });
 
