@@ -100,76 +100,14 @@ class ProductController extends AbstractController
         $setProducts = $request->get('products', []);
         
         $errors = [];
-        $category = null;
-        if (!empty($categoryId)) {
-            $category = $this->getObjectById(self::CLASS_MAPPING['category'], (int)$categoryId);
-            if (!$category) {
-                $errors[] = "Kategori ID {$categoryId} bulunamadı";
-            }
-        }
-        $brands = [];
-        if (!empty($brandIds)) {
-            foreach ($brandIds as $brandId) {
-                $brand = $this->getObjectById(self::CLASS_MAPPING['brand'], (int)$brandId);
-                if (!$brand) {
-                    $errors[] = "Marka ID {$brandId} bulunamadı";
-                } else {
-                    $brands[] = $brand;
-                }
-            }
-        }
-        $marketplaces = [];
-        if (!empty($marketplaceIds)) {
-            foreach ($marketplaceIds as $marketplaceId) {
-                $marketplace = $this->getObjectById(self::CLASS_MAPPING['marketplace'], (int)$marketplaceId);
-                if (!$marketplace) {
-                    $errors[] = "Pazaryeri ID {$marketplaceId} bulunamadı";
-                } else {
-                    $marketplaces[] = $marketplace;
-                }
-            }
-        }
-        $sizeChart = null;
-        if (!empty($sizeTemplateId)) {
-            $sizeChart = $this->getObjectById(self::CLASS_MAPPING['sizeChart'], (int)$sizeTemplateId);
-            if (!$sizeChart) {
-                $errors[] = "Beden şablonu ID {$sizeTemplateId} bulunamadı";
-            }
-        }
-        $colors = [];
-        if (!empty($colorIds)) {
-            foreach ($colorIds as $colorId) {
-                $color = $this->getObjectById(self::CLASS_MAPPING['color'], (int)$colorId);
-                if (!$color) {
-                    $errors[] = "Renk ID {$colorId} bulunamadı";
-                } else {
-                    $colors[] = $color;
-                }
-            }
-        }
-        $customChart = null;
-        if (!empty($customTemplateId)) {
-            $customChart = $this->getObjectById(self::CLASS_MAPPING['customChart'], (int)$customTemplateId);
-            if (!$customChart) {
-                $errors[] = "Custom şablon ID {$customTemplateId} bulunamadı";
-            }
-        }
-        $setProductObjects = [];
-        if (!empty($setProducts)) {
-            foreach (array_keys($setProducts) as $productId) {
-                $product = $this->getObjectById(self::CLASS_MAPPING['product'], (int)$productId);
-                if (!$product) {
-                    $errors[] = "Set ürün ID {$productId} bulunamadı";
-                } else {
-                    $setProductObjects[] = $product;
-                }
-            }
-        }
+        $category = $this->validateSingleObject('category', $categoryId, $errors, 'Kategori');
+        $sizeChart = $this->validateSingleObject('sizeChart', $sizeTemplateId, $errors, 'Beden şablonu');
+        $customChart = $this->validateSingleObject('customChart', $customTemplateId, $errors, 'Custom şablon');
+        $brands = $this->validateMultipleObjects('brand', $brandIds, $errors, 'Marka');
+        $marketplaces = $this->validateMultipleObjects('marketplace', $marketplaceIds, $errors, 'Pazaryeri');
+        $colors = $this->validateMultipleObjects('color', $colorIds, $errors, 'Renk');
+        $setProductObjects = $this->validateMultipleObjects('product', array_keys($setProducts), $errors, 'Set ürün');
         if (!empty($errors)) {
-            dump([
-                'HATALAR' => $errors,
-                'İşlem durduruldu!'
-            ]);
             return $this->render('product/product.html.twig', [
                 'errors' => $errors
             ]);
@@ -190,12 +128,40 @@ class ProductController extends AbstractController
                 'customChart' => $customChart ? $customChart->getKey() : 'Seçilmedi',
                 'setProducts' => array_map(fn($p) => $p->getKey(), $setProductObjects),
             ],
-            'Set Ürün Miktarları' => $setProducts,
-            'DURUM' => '✅ Tüm objeler bulundu, işleme devam edilebilir!'
+            'Set Ürün Miktarları' => $setProducts
         ]);
-
-
         return $this->render('product/product.html.twig');
+    }
+
+    private function validateSingleObject(string $type, $id, array &$errors, string $displayName): ?object
+    {
+        if (empty($id)) {
+            return null;
+        }
+        $object = $this->getObjectById(self::CLASS_MAPPING[$type], (int)$id);
+        if (!$object) {
+            $errors[] = "{$displayName} ID {$id} bulunamadı";
+        }
+        return $object;
+    }
+
+    private function validateMultipleObjects(string $type, array $ids, array &$errors, string $displayName): array
+    {
+        if (empty($ids)) {
+            return [];
+        }
+        $objects = [];
+        foreach ($ids as $id) {
+            if (!empty($id)) {
+                $object = $this->getObjectById(self::CLASS_MAPPING[$type], (int)$id);
+                if (!$object) {
+                    $errors[] = "{$displayName} ID {$id} bulunamadı";
+                } else {
+                    $objects[] = $object;
+                }
+            }
+        }
+        return $objects;
     }
 
     private function getObjectById(string $className, int $id): ?object
