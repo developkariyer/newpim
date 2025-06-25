@@ -20,11 +20,11 @@ class ProductController extends AbstractController
     public function index(): Response
     {
         $categories = $this->getCategories();
-        $sizeCharts = $this->getSizeCharts();
-        $colors = $this->getColors();
-        $customCharts = $this->getCustomCharts();
-        $brands = $this->getBrands();
-        $marketplaces = $this->getMarketplaces();
+        $sizeCharts = $this->getGenericListing(VariationSizeChartListing::class);
+        $colors = $this->getGenericListing(VariationColorListing::class);
+        $customCharts = $this->getGenericListing(CustomChartListing::class);
+        $brands = $this->getGenericListing(BrandListing::class);
+        $marketplaces = $this->getGenericListing(MarketplaceListing::class);
         return $this->render('product/product.html.twig', [
             'categories' => $categories,
             'sizeCharts' => $sizeCharts,
@@ -33,6 +33,26 @@ class ProductController extends AbstractController
             'brands' => $brands,
             'marketplaces' => $marketplaces
         ]);
+    }
+
+    private function getGenericListing(string $listingClass, string $condition = "published = 1", ?int $page, ?int $limit): array 
+    {
+        $listing = new $listingClass();
+        $listing->setCondition($condition);
+        if ($limit !== null) {
+            $offset = ($page - 1) * $limit;
+            $listing->setLimit($limit);
+            $listing->setOffset($offset);
+        }
+        $listing->load();
+        $resultList = [];
+        foreach ($listing as $item) {
+            $resultList[] = [
+                'id' => $item->getId(),
+                'name' => $item->getKey(),
+            ];
+        }
+        return $resultList;
     }
 
     private function getSizeCharts()
