@@ -124,7 +124,7 @@ class ProductController extends AbstractController
         $product->setVariantSizeTemplate($sizeChart);
         $product->setCustomVariantTemplate($customChart);
         $product->setVariationColors($colors);
-        $product->setImage($imageFile ? $imageFile->getPathname() : null);
+        //$product->setImage($imageFile ? $imageFile->getPathname() : null);
         $product->setPublished(true);
         $product->save();
         
