@@ -357,6 +357,9 @@
     function addSelectedItem(type, item) {
         console.log('Adding item:', type, item);
         const singleSelectTypes = ['categories', 'sizeCharts', 'customCharts'];
+        if (type === 'products') {
+            item.quantity = 1;
+        }
         if (singleSelectTypes.includes(type)) {
             selectedItems[type] = [item];
         } else {
@@ -385,20 +388,48 @@
             hiddenDiv.innerHTML = '';
             return;
         }
-        selectedDiv.innerHTML = selectedItems[type].map(item => `
-            <span style="display: inline-block; background: #007bff; color: white; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 12px; font-size: 0.875rem;">
-                ${ICONS[type] || '📋'} ${item.name}
-                <span onclick="removeSelectedItem('${type}', ${item.id})" style="margin-left: 0.5rem; cursor: pointer; font-weight: bold;">×</span>
-            </span>
-        `).join('');
-        hiddenDiv.innerHTML = selectedItems[type].map(item => 
-            `<input type="hidden" name="${INPUT_NAMES[type] || type + '[]'}" value="${item.id}">`
-        ).join('');
+        if (type === 'products') {
+            selectedDiv.innerHTML = selectedItems[type].map((item, index) => `
+                <div style="display: flex; align-items: center; background: #007bff; color: white; padding: 0.5rem; margin: 0.25rem; border-radius: 8px; font-size: 0.875rem;">
+                    <span style="flex: 1;">${ICONS[type] || '📋'} ${item.name}</span>
+                    <span style="margin: 0 0.5rem;">Adet:</span>
+                    <input type="number" 
+                        value="${item.quantity || 1}" 
+                        min="1" 
+                        style="width: 60px; padding: 0.25rem; border: none; border-radius: 4px; text-align: center; color: #333;"
+                        onchange="updateProductQuantity(${index}, this.value)">
+                    <span onclick="removeSelectedItem('${type}', ${item.id})" style="margin-left: 0.5rem; cursor: pointer; font-weight: bold; font-size: 1.2rem;">×</span>
+                </div>
+            `).join('');
+        } else {
+            selectedDiv.innerHTML = selectedItems[type].map(item => `
+                <span style="display: inline-block; background: #007bff; color: white; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 12px; font-size: 0.875rem;">
+                    ${ICONS[type] || '📋'} ${item.name}
+                    <span onclick="removeSelectedItem('${type}', ${item.id})" style="margin-left: 0.5rem; cursor: pointer; font-weight: bold;">×</span>
+                </span>
+            `).join('');
+        }
+        if (type === 'products') {
+            hiddenDiv.innerHTML = selectedItems[type].map(item => 
+                `<input type="hidden" name="products[${item.id}]" value="${item.quantity || 1}">`
+            ).join('');
+        } else {
+            hiddenDiv.innerHTML = selectedItems[type].map(item => 
+                `<input type="hidden" name="${INPUT_NAMES[type] || type + '[]'}" value="${item.id}">`
+            ).join('');
+        }
     }
 
     function removeSelectedItem(type, itemId) {
         selectedItems[type] = selectedItems[type].filter(item => item.id !== itemId);
         updateSelectedItems(type);
+    }
+
+    function updateProductQuantity(index, quantity) {
+        if (selectedItems.products[index]) {
+            selectedItems.products[index].quantity = parseInt(quantity) || 1;
+            updateSelectedItems('products');
+        }
     }
 
     searchTypes.forEach(type => {
