@@ -133,8 +133,6 @@ class ProductController extends AbstractController
         $product->setVariantSizeTemplate($sizeChart);
         $product->setCustomVariantTemplate($customChart);
         $product->setVariationColors($colors);
-        
-        // 3. ADIM: Image'i product'a bağla
         if ($imageAsset) {
             dump('Product\'a image set ediliyor...');
             $product->setImage($imageAsset);
@@ -142,29 +140,6 @@ class ProductController extends AbstractController
         
         $product->setPublished(true);
         $product->save();
-        
-
-
-
-
-        // dump([
-        //     'Form Verileri' => [
-        //         'productName' => $productName,
-        //         'productIdentifier' => $productIdentifier,
-        //         'productDescription' => $productDescription,
-        //         'hasImage' => $imageFile ? 'Evet' : 'Hayır'
-        //     ],
-        //     'Bulunan Objeler' => [
-        //         'category' => $category ? $category->getKey() : 'Seçilmedi',
-        //         'brands' => array_map(fn($b) => $b->getKey(), $brands),
-        //         'marketplaces' => array_map(fn($m) => $m->getKey(), $marketplaces),
-        //         'sizeChart' => $sizeChart ? $sizeChart->getKey() : 'Seçilmedi',
-        //         'colors' => array_map(fn($c) => $c->getKey(), $colors),
-        //         'customChart' => $customChart ? $customChart->getKey() : 'Seçilmedi',
-        //         'setProducts' => array_map(fn($p) => $p->getKey(), $setProductObjects),
-        //     ],
-        //     'Set Ürün Miktarları' => $setProducts
-        // ]);
         return $this->render('product/product.html.twig');
     }
 
@@ -263,11 +238,23 @@ class ProductController extends AbstractController
                 'mime' => $imageFile->getMimeType(),
                 'temp_path' => $imageFile->getPathname()
             ]);
+            $assetFolder = \Pimcore\Model\Asset::getByPath('/products');
+            if (!$assetFolder) {
+                dump('Products klasörü yok, oluşturuluyor...');
+                $assetFolder = new \Pimcore\Model\Asset\Folder();
+                $assetFolder->setFilename('products');
+                $assetFolder->setParent(\Pimcore\Model\Asset::getByPath('/'));
+                $assetFolder->save();
+                dump('Products klasörü oluşturuldu:', $assetFolder->getFullPath());
+            } else {
+                dump('Products klasörü mevcut:', $assetFolder->getFullPath());
+            }
             $extension = $imageFile->getClientOriginalExtension() ?: 'jpg';
             $filename = $this->generateSafeFilename($productKey) . '_' . time() . '.' . $extension;
             dump('Generated filename:', $filename);
             $imageAsset = new \Pimcore\Model\Asset\Image();
             $imageAsset->setFilename($filename);
+            $imageAsset->setParent($assetFolder);
             $fileContent = file_get_contents($imageFile->getPathname());
             if ($fileContent === false) {
                 throw new \Exception('Dosya içeriği okunamadı');
