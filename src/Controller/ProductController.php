@@ -124,7 +124,7 @@ class ProductController extends AbstractController
         $product = new Product();
         $product->setParentId(294);
         $product->setKey($productName);
-        $product->setName($productName + ' - ' . $productIdentifier);
+        $product->setName($productName);
         $product->setProductIdentifier($productIdentifier);
         $product->setDescription($productDescription);
         $product->setCategory($category);
