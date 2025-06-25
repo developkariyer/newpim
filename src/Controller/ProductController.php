@@ -133,6 +133,7 @@ class ProductController extends AbstractController
         
         $product->setPublished(true);
         $product->save();
+        $variants = $this->createProductVariants($product, $sizeChart, $colors);
         return $this->render('product/product.html.twig');
     }
 
