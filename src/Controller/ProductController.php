@@ -113,26 +113,47 @@ class ProductController extends AbstractController
                 'errors' => $errors
             ]);
         }
-        dump([
-            'Form Verileri' => [
-                'productName' => $productName,
-                'productIdentifier' => $productIdentifier,
-                'productDescription' => $productDescription,
-                'hasImage' => $imageFile ? 'Evet' : 'Hayır'
-            ],
-            'Bulunan Objeler' => [
-                'category' => $category ? $category->getKey() : 'Seçilmedi',
-                'brands' => array_map(fn($b) => $b->getKey(), $brands),
-                'marketplaces' => array_map(fn($m) => $m->getKey(), $marketplaces),
-                'sizeChart' => $sizeChart ? $sizeChart->getKey() : 'Seçilmedi',
-                'colors' => array_map(fn($c) => $c->getKey(), $colors),
-                'customChart' => $customChart ? $customChart->getKey() : 'Seçilmedi',
-                'setProducts' => array_map(fn($p) => $p->getKey(), $setProductObjects),
-            ],
-            'Set Ürün Miktarları' => $setProducts
-        ]);
+
+        $product = new Product();
+        $product->setKey($productName);
+        $product->setProductIdentifier($productIdentifier);
+        $product->setDescription($productDescription);
+        $product->setCategory($category);
+        $product->setBrands($brands);
+        $product->setMarketplaces($marketplaces);
+        $product->setVariantSizeTemplate($sizeChart);
+        $product->setCustomVariantTemplate($customChart);
+        $product->setVariationColors($colors);
+        $product->setImage($imageFile ? $imageFile->getPathname() : null);
+        $product->setPublished(true);
+        $product->save();
+        
+
+
+
+
+        // dump([
+        //     'Form Verileri' => [
+        //         'productName' => $productName,
+        //         'productIdentifier' => $productIdentifier,
+        //         'productDescription' => $productDescription,
+        //         'hasImage' => $imageFile ? 'Evet' : 'Hayır'
+        //     ],
+        //     'Bulunan Objeler' => [
+        //         'category' => $category ? $category->getKey() : 'Seçilmedi',
+        //         'brands' => array_map(fn($b) => $b->getKey(), $brands),
+        //         'marketplaces' => array_map(fn($m) => $m->getKey(), $marketplaces),
+        //         'sizeChart' => $sizeChart ? $sizeChart->getKey() : 'Seçilmedi',
+        //         'colors' => array_map(fn($c) => $c->getKey(), $colors),
+        //         'customChart' => $customChart ? $customChart->getKey() : 'Seçilmedi',
+        //         'setProducts' => array_map(fn($p) => $p->getKey(), $setProductObjects),
+        //     ],
+        //     'Set Ürün Miktarları' => $setProducts
+        // ]);
         return $this->render('product/product.html.twig');
     }
+
+    private function createMainProduct()
 
     private function validateSingleObject(string $type, $id, array &$errors, string $displayName): ?object
     {
