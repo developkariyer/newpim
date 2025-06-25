@@ -213,12 +213,13 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="sizeTemplate">Beden Şablonu</label>
-                        <select id="sizeTemplate" name="sizeTemplate" class="form-control">
-                            <option value="">Beden şablonu seçin</option>
-                            {% for size in sizeCharts %}
-                                <option value="{{ size.id }}">{{ size.name }}</option>
-                            {% endfor %}
-                        </select>
+                        <input type="text" id="sizeChartsSearch" placeholder="Beden şablonu ara..." class="form-control" style="margin-bottom: 0.5rem;">
+                        <div id="sizeChartsResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; background: white;">
+                        </div>
+                        <div id="sizeChartsSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
+                            <small style="color: #6c757d;">Seçilen beden şablonu burada görünecek...</small>
+                        </div>
+                        <div id="sizeChartsHidden"></div>
                     </div>
                     
                     <div class="form-group">
@@ -402,6 +403,16 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 performSearch('marketplaces'); 
+            }, 300);
+        });
+    }
+
+    const sizeChartSearchElement = document.getElementById('sizeChartsSearch');
+    if (sizeChartSearchElement) {
+        sizeChartSearchElement.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                performSearch('sizeCharts'); 
             }, 300);
         });
     }
