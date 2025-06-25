@@ -539,18 +539,10 @@
             customCharts: selectedItems.customCharts,
             products: selectedItems.products
         };
-        const submitBtn = this.querySelector('button[type="submit"]');
-            if (submitBtn.disabled) {
-                e.preventDefault();
-                return false;
-            }
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '⏳ İşleniyor...';
         console.log('Form submitted with data:', formData);
         setTimeout(() => {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = 'Ürün Oluştur';
-        }, 5000);
+            this.submit();
+        }, 500);
     });
 
 </script>
