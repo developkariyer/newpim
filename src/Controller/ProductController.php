@@ -35,7 +35,7 @@ class ProductController extends AbstractController
         ]);
     }
 
-    private function getGenericListing(string $listingClass, string $condition = "published = 1", ?int $page, ?int $limit): array 
+    private function getGenericListing(string $listingClass, string $condition = "published = 1", ?int $page = null, ?int $limit = null): array 
     {
         $listing = new $listingClass();
         $listing->setCondition($condition);
