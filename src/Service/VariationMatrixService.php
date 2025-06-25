@@ -26,7 +26,7 @@ class VariationMatrixService
                             'size' => $size['value'],
                             'color' => $color['key'], 
                             'custom' => $custom['value'],
-                            'isActive' => false
+                            'isActive' => true
                         ];
                     }
                 } else {
@@ -34,12 +34,72 @@ class VariationMatrixService
                         'size' => $size['value'],
                         'color' => $color['key'],
                         'custom' => '',
-                        'isActive' => false
+                        'isActive' => true
                     ];
                 }
             }
         }
         return $matrix;
+    }
+
+    private function createSingleVariant(Product $parentProduct, array $combination): ?Product
+    {
+        try {
+            $keyParts = [
+                $parentProduct->getKey(),
+                $combination['color'],
+                $combination['size']
+            ];
+            if (!empty($combination['custom'])) {
+                $keyParts[] = $combination['custom'];
+            }
+            $variantKey = implode('_', array_filter($keyParts));
+            $existingVariant = Product::getByPath($parentProduct->getFullPath() . '/' . $variantKey);
+            if ($existingVariant) {
+                return $existingVariant; 
+            }
+            $variant = new Product();
+            $variant->setKey($variantKey);
+            $variant->setParent($parentProduct); 
+            $variant->setPublished(true);
+            $variantName = $parentProduct->getName() . ' - ' . $combination['color'] . ' - ' . $combination['size'];
+            if (!empty($combination['custom'])) {
+                $variantName .= ' - ' . $combination['custom'];
+            }
+            $variant->setName($variantName);
+            $variant->setDescription($parentProduct->getDescription());
+            $variant->setCategory($parentProduct->getCategory());
+            $variant->setBrands($parentProduct->getBrands());
+            $variant->setMarketplaces($parentProduct->getMarketplaces());
+            if (method_exists($variant, 'setVariantColor')) {
+                $variant->setVariationColor($combination['color']);
+            }
+            if (method_exists($variant, 'setVariantSize')) {
+                $variant->setVariationSize($combination['size']);
+            }
+            $variant->save();
+            return $variant;
+            
+        } catch (\Exception $e) {
+            error_log('Varyant oluşturma hatası: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function createVariants(Product $product): array
+    {
+        $matrix = $this->generateMatrix($product);
+        $createdVariants = [];
+        foreach ($matrix as $combination) {
+            if ($combination['isActive']) {
+                $variant = $this->createSingleVariant($product, $combination);
+                if ($variant) {
+                    $createdVariants[] = $variant;
+                }
+            }
+        }
+        
+        return $createdVariants;
     }
     
     private function getSizeOptions(Product $product): array
