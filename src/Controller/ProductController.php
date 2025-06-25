@@ -21,7 +21,7 @@ use Pimcore\Model\DataObject\CustomChart\Listing as CustomChartListing;
 use Pimcore\Model\DataObject\Brand\Listing as BrandListing;
 use Pimcore\Model\DataObject\Marketplace\Listing as MarketplaceListing;
 use Pimcore\Model\DataObject\Product\Listing as ProductListing;
-
+use App\Service\VariationMatrixService;
 
 class ProductController extends AbstractController
 {
