@@ -140,7 +140,7 @@ class ProductController extends AbstractController
         
         $product->setPublished(true);
         $product->save();
-        return $this->redirectToRoute('product');
+        return $this->render('product/product.html.twig');
     }
 
     private function validateSingleObject(string $type, $id, array &$errors, string $displayName): ?object
