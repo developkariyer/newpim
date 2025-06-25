@@ -383,65 +383,22 @@
 
 
 
-    const colorSearchElement = document.getElementById('colorsSearch');
-    if (colorSearchElement) {
-        colorSearchElement.addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                performSearch('colors'); 
-            }, 300);
-        });
-    }
+    const searchTypes = ['colors', 'brands', 'marketplaces', 'sizeCharts', 'customCharts', 'categories'];
 
-    const brandSearchElement = document.getElementById('brandsSearch');
-    if (brandSearchElement) {
-        brandSearchElement.addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                performSearch('brands'); 
-            }, 300);
-        });
-    }
-
-    const marketplaceSearchElement = document.getElementById('marketplacesSearch');
-    if (marketplaceSearchElement) {
-        marketplaceSearchElement.addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                performSearch('marketplaces'); 
-            }, 300);
-        });
-    }
-
-    const sizeChartSearchElement = document.getElementById('sizeChartsSearch');
-    if (sizeChartSearchElement) {
-        sizeChartSearchElement.addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                performSearch('sizeCharts'); 
-            }, 300);
-        });
-    }
-
-    const customChartSearchElement = document.getElementById('customChartsSearch');
-    if (customChartSearchElement) {
-        customChartSearchElement.addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                performSearch('customCharts'); 
-            }, 300);
-        });
-    }
-
-    const categorySearchElement = document.getElementById('categoriesSearch');
-    if (categorySearchElement) {
-        categorySearchElement.addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                performSearch('categories'); 
-            }, 300);
-        });
-    }
+    searchTypes.forEach(type => {
+        const searchElement = document.getElementById(`${type}Search`);
+        if (searchElement) {
+            searchElement.addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    performSearch(type); 
+                }, 300);
+            });
+            console.log(`Event listener added for ${type}`);
+        } else {
+            console.warn(`Search element not found: ${type}Search`);
+        }
+    });
 
 </script>
 {% endblock %}
