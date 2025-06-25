@@ -446,8 +446,10 @@
         }
     });
 
+    let imageFile = null;
     document.getElementById('imageInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
+        imageFile = file;
         if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
