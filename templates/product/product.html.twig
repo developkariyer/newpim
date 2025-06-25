@@ -283,7 +283,7 @@
     <script>
 
 
-
+        let searchTimeout;
         async function performSearch(type) {
             const searchInput = document.getElementById(`${type}Search`);
             const query = searchInput.value.trim();
@@ -296,7 +296,10 @@
             }
         }
         document.getElementById('colorsSearch').addEventListener('input', () => {
-            performSearch('colors');
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                performSearch('colors');
+            }, 300);
         });
 
     </script>
