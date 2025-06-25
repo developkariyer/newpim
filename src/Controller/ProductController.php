@@ -51,13 +51,13 @@ class ProductController extends AbstractController
         if (!isset(self::TYPE_MAPPING[$type])) {
             return new JsonResponse(['error' => 'Invalid search type'], 400);
         }
-        if (strlen($query) < 2) {
-            return new JsonResponse([
-                'items' => []
-            ]);
-        }
+        // if (strlen($query) < 2) {
+        //     return new JsonResponse([
+        //         'items' => []
+        //     ]);
+        // }
         $escapedQuery = addslashes($query);
-        $searchCondition = "published = 1 AND `key` LIKE '%{$escapedQuery}%'";
+        $searchCondition = "published = 1 AND LOWER(`key`) LIKE LOWER('%{$escapedQuery}%')";
         $results = $this->getGenericListing(self::TYPE_MAPPING[$type], $searchCondition);
         return new JsonResponse(['items' => $results]);
     }
