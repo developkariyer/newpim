@@ -470,6 +470,26 @@
             updateSelectedItems('products');
         }
     }
+    
+    function showLoading() {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        document.getElementById('productForm').classList.add('form-disabled');
+        const submitBtn = document.querySelector('.btn-primary');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '⏳ İşleniyor...';
+        }
+    }
+
+    function hideLoading() {
+        document.getElementById('loadingOverlay').style.display = 'none';
+        document.getElementById('productForm').classList.remove('form-disabled');
+        const submitBtn = document.querySelector('.btn-primary');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Ürün Oluştur';
+        }
+    }
 
     searchTypes.forEach(type => {
         const searchElement = document.getElementById(`${type}Search`);
