@@ -278,7 +278,9 @@
 {% endblock %}
 
 
-<script>
+{% block body_scripts %}
+    {{ parent() }}
+    <script>
 
 
     console.log('JavaScript loaded!');
@@ -328,3 +330,5 @@
     }
 
 </script>
+{% endblock %}
+
