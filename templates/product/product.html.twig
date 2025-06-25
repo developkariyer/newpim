@@ -137,7 +137,7 @@
 
 {% block content %}
         <div class="product-form-container">
-        <form id="productForm" method="POST" enctype="multipart/form-data">
+        <form id="productForm" method="POST" enctype="multipart/form-data action="{{ path('product_create') }}">
             <div class="form-section">
                 <h3>📝 Temel Ürün Bilgileri</h3>
                 <div class="form-row">
@@ -461,7 +461,6 @@
     });
 
     document.getElementById('productForm').addEventListener('submit', function(e) {
-        e.preventDefault(); 
         const formData = {
             productName: document.getElementById('productName').value,
             productIdentifier: document.getElementById('productIdentifier').value,

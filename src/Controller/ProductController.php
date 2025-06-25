@@ -67,6 +67,18 @@ class ProductController extends AbstractController
         return new JsonResponse(['items' => $results]);
     }
 
+    #[Route('/product/create', name: 'product_create', methods: ['GET', 'POST'])]
+    public function create(Request $request): Response
+    {
+        if ($request->isMethod('POST')) {
+            dump($request->request->all()); 
+            dump($request->files->all());   
+        }
+        
+        return $this->render('product/product.html.twig');
+    }
+
+
     private function getGenericListing(string $listingClass, string $condition = "published = 1", ?int $page = null, ?int $limit = null): array 
     {
         $listing = new $listingClass();
