@@ -229,7 +229,15 @@
                     
                     <div class="form-group">
                         <label for="colorTemplate">Renkler</label>
-                        <div class="checkbox-group" style="max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem;">
+                        <input type="text" 
+                            id="colorSearch" 
+                            class="form-control" 
+                            placeholder="Renk ara... (minimum 2 karakter)"
+                            style="margin-bottom: 0.5rem;"
+                            autocomplete="off">
+                        <div class="checkbox-group" 
+                            id="colorResults"
+                            style="max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem;">
                             {% for color in colors %}
                                 <div style="margin-bottom: 0.5rem;">
                                     <label style="display: flex; align-items: center; font-weight: normal;">
@@ -238,6 +246,9 @@
                                     </label>
                                 </div>
                             {% endfor %}
+                        </div>
+                        <div id="colorLoading" style="display: none; text-align: center; padding: 1rem; color: #6c757d;">
+                            🔍 Aranıyor...
                         </div>
                     </div>
                 </div>
@@ -298,6 +309,61 @@
                 }
             }
         });
+        let colorSearchTimeout;
+        const colorSearchInput = document.getElementById('colorSearch');
+        const colorResults = document.getElementById('colorResults');
+        const colorLoading = document.getElementById('colorLoading');
 
+        colorSearchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            clearTimeout(colorSearchTimeout);
+            
+            if (query.length < 2) {
+                location.reload(); 
+                return;
+            }
+            colorSearchTimeout = setTimeout(() => {
+                searchColors(query);
+            }, 300);
+        });
+
+        function searchColors(query) {
+            colorLoading.style.display = 'block';
+            colorResults.style.display = 'none';
+            fetch(`/product/search/colors?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayColorResults(data.items);
+                })
+                .catch(error => {
+                    console.error('Color search error:', error);
+                    alert('Renk arama hatası!');
+                })
+                .finally(() => {
+                    colorLoading.style.display = 'none';
+                    colorResults.style.display = 'block';
+                });
+        }
+
+        function displayColorResults(colors) {
+            colorResults.innerHTML = '';
+            
+            if (colors.length === 0) {
+                colorResults.innerHTML = '<div style="text-align: center; padding: 1rem; color: #6c757d;">Renk bulunamadı</div>';
+                return;
+            }
+            
+            colors.forEach(color => {
+                const colorDiv = document.createElement('div');
+                colorDiv.style.marginBottom = '0.5rem';
+                colorDiv.innerHTML = `
+                    <label style="display: flex; align-items: center; font-weight: normal;">
+                        <input type="checkbox" name="colorTemplate[]" value="${color.id}" style="margin-right: 0.5rem;">
+                        ${color.name}
+                    </label>
+                `;
+                colorResults.appendChild(colorDiv);
+            });
+        }
     </script>
 {% endblock %}

@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Pimcore\Model\Document;
 use Symfony\Component\HttpFoundation\Request;
@@ -59,15 +60,15 @@ class ProductController extends AbstractController
         }
         $escapedQuery = addslashes($query);
         $searchCondition = "published = 1 AND (name LIKE '%{$escapedQuery}%' OR key LIKE '%{$escapedQuery}%')";
-        $results = $this->getGenericListing($typeMapping[$type], $searchCondition, $page, $limit);
-        return new JsonResponse($results);
+        $results = $this->getGenericListing(self::TYPE_MAPPING[$type], $searchCondition, $page, $limit);
+        return new JsonResponse(['items' => $results]);
     }
 
     private function getGenericListing(string $listingClass, string $condition = "published = 1", ?int $page = null, ?int $limit = null): array 
     {
         $listing = new $listingClass();
         $listing->setCondition($condition);
-        if ($limit !== null) {
+        if ($limit !== null && $page !== null) {
             $offset = ($page - 1) * $limit;
             $listing->setLimit($limit);
             $listing->setOffset($offset);
