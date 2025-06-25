@@ -229,20 +229,16 @@
                     
                     <div class="form-group">
                         <label for="colorTemplate">Renkler</label>
-                        <input type="text" 
-                            id="colorSearch" 
-                            class="form-control" 
-                            placeholder="Renk ara... (minimum 2 karakter)"
-                            style="margin-bottom: 0.5rem;"
-                            autocomplete="off">
-                        <div id="colorSearchResults" 
-                            style="max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; display: none;">
+                        <div class="checkbox-group" style="max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem;">
+                            {% for color in colors %}
+                                <div style="margin-bottom: 0.5rem;">
+                                    <label style="display: flex; align-items: center; font-weight: normal;">
+                                        <input type="checkbox" name="colorTemplate[]" value="{{ color.id }}" style="margin-right: 0.5rem;">
+                                        {{ color.name }}
+                                    </label>
+                                </div>
+                            {% endfor %}
                         </div>
-                        <div id="selectedColors" 
-                            style="margin-top: 0.5rem; min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
-                            <small style="color: #6c757d;">Seçilen renkler burada görünecek...</small>
-                        </div>
-                        <div id="hiddenColorInputs"></div>
                     </div>
                 </div>
                 <div class="form-row">
@@ -302,120 +298,6 @@
                 }
             }
         });
-
-        let selectedColors = [];
-        let searchTimeout;
-
-        const colorSearchInput = document.getElementById('colorSearch');
-        const searchResults = document.getElementById('colorSearchResults');
-        const selectedColorsDiv = document.getElementById('selectedColors');
-        const hiddenInputsDiv = document.getElementById('hiddenColorInputs');
-
-        colorSearchInput.addEventListener('input', function() {
-            const query = this.value.trim();
-            
-            clearTimeout(searchTimeout);
-            
-            if (query.length < 2) {
-                searchResults.style.display = 'none';
-                return;
-            }
-            
-            searchTimeout = setTimeout(() => {
-                searchColors(query);
-            }, 300);
-        });
-
-        document.addEventListener('click', function(e) {
-            if (!colorSearchInput.contains(e.target) && !searchResults.contains(e.target)) {
-                searchResults.style.display = 'none';
-            }
-        });
-
-        function searchColors(query) {
-            searchResults.innerHTML = '<div style="text-align: center; padding: 1rem; color: #6c757d;">🔍 Aranıyor...</div>';
-            searchResults.style.display = 'block';
-            
-            fetch(`/product/search/colors?q=${encodeURIComponent(query)}`)
-                .then(response => response.json())
-                .then(data => {
-                    displaySearchResults(data.items);
-                })
-                .catch(error => {
-                    console.error('Search error:', error);
-                    searchResults.innerHTML = '<div style="text-align: center; padding: 1rem; color: #dc3545;">❌ Arama hatası</div>';
-                });
-        }
-
-        function displaySearchResults(colors) {
-            if (colors.length === 0) {
-                searchResults.innerHTML = '<div style="text-align: center; padding: 1rem; color: #6c757d;">😕 Renk bulunamadı</div>';
-                return;
-            }
-            
-            searchResults.innerHTML = '';
-            
-            colors.forEach(color => {
-                const isSelected = selectedColors.some(selected => selected.id === color.id);
-                if (isSelected) return;
-                
-                const colorItem = document.createElement('div');
-                colorItem.style.cssText = 'padding: 0.5rem; cursor: pointer; border-bottom: 1px solid #f1f3f4;';
-                colorItem.innerHTML = `
-                    <span style="margin-right: 0.5rem;">🎨</span>
-                    ${color.name}
-                `;
-                
-                colorItem.addEventListener('click', () => {
-                    selectColor(color);
-                });
-                
-                colorItem.addEventListener('mouseenter', () => {
-                    colorItem.style.backgroundColor = '#f8f9fa';
-                });
-                
-                colorItem.addEventListener('mouseleave', () => {
-                    colorItem.style.backgroundColor = '';
-                });
-                
-                searchResults.appendChild(colorItem);
-            });
-        }
-
-        function selectColor(color) {
-            selectedColors.push(color);
-            updateSelectedColors();
-            updateHiddenInputs();
-            
-            colorSearchInput.value = '';
-            searchResults.style.display = 'none';
-        }
-
-        function removeColor(colorId) {
-            selectedColors = selectedColors.filter(color => color.id !== colorId);
-            updateSelectedColors();
-            updateHiddenInputs();
-        }
-
-        function updateSelectedColors() {
-            if (selectedColors.length === 0) {
-                selectedColorsDiv.innerHTML = '<small style="color: #6c757d;">Seçilen renkler burada görünecek...</small>';
-                return;
-            }
-            
-            selectedColorsDiv.innerHTML = selectedColors.map(color => `
-                <span style="display: inline-block; background: #007bff; color: white; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 12px; font-size: 0.875rem;">
-                    🎨 ${color.name}
-                    <span onclick="removeColor(${color.id})" style="margin-left: 0.5rem; cursor: pointer; font-weight: bold;">×</span>
-                </span>
-            `).join('');
-        }
-
-        function updateHiddenInputs() {
-            hiddenInputsDiv.innerHTML = selectedColors.map(color => 
-                `<input type="hidden" name="colorTemplate[]" value="${color.id}">`
-            ).join('');
-        }
 
     </script>
 {% endblock %}

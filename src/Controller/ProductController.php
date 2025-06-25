@@ -61,7 +61,7 @@ class ProductController extends AbstractController
         $escapedQuery = addslashes($query);
         $searchCondition = "published = 1 AND (name LIKE '%{$escapedQuery}%' OR key LIKE '%{$escapedQuery}%')";
         $results = $this->getGenericListing(self::TYPE_MAPPING[$type], $searchCondition, $page, $limit);
-        return new JsonResponse($results);
+        return new JsonResponse(['items' => $results]);
     }
 
     private function getGenericListing(string $listingClass, string $condition = "published = 1", ?int $page = null, ?int $limit = null): array 
