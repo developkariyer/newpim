@@ -247,7 +247,19 @@
                     </div>
                 </div>
             </div>
-        
+            <div class="form-section">
+                <h3>📦 Set Ürün Bilgileri</h3>
+                <div class="form-group">
+                    <label for="products">Set Ürünleri</label>
+                    <input type="text" id="productsSearch" placeholder="Ürün ara..." class="form-control" style="margin-bottom: 0.5rem;">
+                    <div id="productsResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; background: white;">
+                    </div>
+                    <div id="productsSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
+                        <small style="color: #6c757d;">Seçilen set ürünleri burada görünecek...</small>
+                    </div>
+                    <div id="productsHidden"></div>
+                </div>
+            </div>
             <!-- Form Butonları -->
             <div style="text-align: right; margin-top: 2rem;">
                 <button type="button" class="btn btn-secondary">İptal</button>
@@ -269,7 +281,8 @@
         marketplaces: [],
         sizeCharts: [],
         customCharts: [],
-        categories: [] 
+        categories: [],
+        products: []
     };
     const ICONS = {
         'colors': '🎨',
@@ -277,7 +290,8 @@
         'marketplaces': '🛒',
         'sizeCharts': '📏',
         'customCharts': '⚙️',
-        'categories': '📂'
+        'categories': '📂',
+        'products': '📦'
     };
     const TYPE_LABELS = {
         colors: 'renkler',
@@ -285,7 +299,8 @@
         marketplaces: 'pazaryerleri',
         sizeCharts: 'beden şablonları',
         customCharts: 'custom şablonları',
-        categories: 'kategori' 
+        categories: 'kategori',
+        products: 'set ürünleri'
     };
     const INPUT_NAMES = {
         colors: 'colorTemplate[]',
@@ -293,9 +308,10 @@
         marketplaces: 'marketplaces[]',
         sizeCharts: 'sizeTemplate[]',
         customCharts: 'customTemplate[]',
-        categories: 'productCategory'
+        categories: 'productCategory',
+        products: 'products[]'
     };
-    const searchTypes = ['colors', 'brands', 'marketplaces', 'sizeCharts', 'customCharts', 'categories'];
+    const searchTypes = ['colors', 'brands', 'marketplaces', 'sizeCharts', 'customCharts', 'categories', 'products'];
 
     async function performSearch(type) {
         const searchInput = document.getElementById(`${type}Search`);

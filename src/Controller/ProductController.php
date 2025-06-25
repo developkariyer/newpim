@@ -14,6 +14,7 @@ use Pimcore\Model\DataObject\VariationColor\Listing as VariationColorListing;
 use Pimcore\Model\DataObject\CustomChart\Listing as CustomChartListing;
 use Pimcore\Model\DataObject\Brand\Listing as BrandListing;
 use Pimcore\Model\DataObject\Marketplace\Listing as MarketplaceListing;
+use Pimcore\Model\DataObject\Product\Listing as ProductListing;
 
 class ProductController extends AbstractController
 {
@@ -23,7 +24,8 @@ class ProductController extends AbstractController
         'marketplaces' => MarketplaceListing::class,
         'customCharts' => CustomChartListing::class,
         'sizeCharts' => VariationSizeChartListing::class,
-        'categories' => CategoryListing::class
+        'categories' => CategoryListing::class,
+        'products' => ProductListing::class
     ];
 
     #[Route('/product', name: 'product')]
@@ -35,13 +37,15 @@ class ProductController extends AbstractController
         $customCharts = $this->getGenericListing(self::TYPE_MAPPING['customCharts']);
         $brands = $this->getGenericListing(self::TYPE_MAPPING['brands']);
         $marketplaces = $this->getGenericListing(self::TYPE_MAPPING['marketplaces']);
+        $products = $this->getGenericListing(self::TYPE_MAPPING['products']);
         return $this->render('product/product.html.twig', [
             'categories' => $categories,
             'sizeCharts' => $sizeCharts,
             'colors' => $colors,
             'customCharts' => $customCharts,
             'brands' => $brands,
-            'marketplaces' => $marketplaces
+            'marketplaces' => $marketplaces,
+            'products' => $products
         ]);
     }
 
