@@ -253,7 +253,20 @@
                     </div>
                 </div>
             </div>
-
+            <div class="form-group">
+                <label for="colorTemplate">Renkler</label>
+                <input type="text" id="colorsSearch" placeholder="Renk ara..." class="form-control" style="margin-bottom: 0.5rem;">
+                <div class="checkbox-group" style="max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem;">
+                    {% for color in colors %}
+                        <div style="margin-bottom: 0.5rem;">
+                            <label style="display: flex; align-items: center; font-weight: normal;">
+                                <input type="checkbox" name="colorTemplate[]" value="{{ color.id }}" style="margin-right: 0.5rem;">
+                                {{ color.name }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
         
             <!-- Form Butonları -->
             <div style="text-align: right; margin-top: 2rem;">
@@ -268,7 +281,23 @@
 {% block javascripts %}
     {{ parent() }}
     <script>
-        
+
+
+
+        async function performSearch(type) {
+            const searchInput = document.getElementById(`${type}Search`);
+            const query = searchInput.value.trim();
+            try {
+                const response = await fetch(`/product/search/${type}?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                console.log(`${type} search results:`, data.items);
+            } catch (error) {
+                console.error(`${type} search error:`, error);
+            }
+        }
+        document.getElementById('colorsSearch').addEventListener('input', () => {
+            performSearch('colors');
+        });
 
     </script>
 {% endblock %}
