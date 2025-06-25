@@ -71,12 +71,10 @@ class VariationMatrixService
             $variant->setCategory($parentProduct->getCategory());
             $variant->setBrands($parentProduct->getBrands());
             $variant->setMarketplaces($parentProduct->getMarketplaces());
-            if (method_exists($variant, 'setVariantColor')) {
-                $variant->setVariationColor($combination['color']);
-            }
-            if (method_exists($variant, 'setVariantSize')) {
-                $variant->setVariationSize($combination['size']);
-            }
+            $variant->setVariationColor($combination['color']);
+            $variant->setVariationSize($combination['size']);
+            $variant->setObjectType('actual');
+            $variant->setType('variant');
             $variant->save();
             return $variant;
             
