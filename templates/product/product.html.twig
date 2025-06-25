@@ -129,6 +129,29 @@
         #imageInput {
             display: none;
         }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+
+        .alert-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .form-disabled {
+            pointer-events: none;
+            opacity: 0.6;
+        }
     </style>
 {% endblock %}
 
@@ -478,6 +501,8 @@
     });
 
     document.getElementById('productForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        showLoading();
         const formData = {
             productName: document.getElementById('productName').value,
             productIdentifier: document.getElementById('productIdentifier').value,
@@ -495,8 +520,10 @@
             customCharts: selectedItems.customCharts,
             products: selectedItems.products
         };
-        this.submit();
         console.log('Form submitted with data:', formData);
+        setTimeout(() => {
+            this.submit();
+        }, 500);
     });
 
 </script>
