@@ -501,7 +501,6 @@
     });
 
     document.getElementById('productForm').addEventListener('submit', function(e) {
-        e.preventDefault();
         showLoading();
         const formData = {
             productName: document.getElementById('productName').value,
