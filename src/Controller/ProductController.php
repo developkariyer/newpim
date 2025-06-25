@@ -71,6 +71,9 @@ class ProductController extends AbstractController
     public function create(Request $request): Response
     {
         if ($request->isMethod('POST')) {
+            error_log('POST Data: ' . print_r($request->request->all(), true));
+            error_log('FILES Data: ' . print_r($request->files->all(), true));
+        
             dump($request->request->all()); 
             dump($request->files->all());   
         }
