@@ -8,6 +8,12 @@ use Symfony\Component\Routing\Annotation\Route;
 use Pimcore\Model\Document;
 use Symfony\Component\HttpFoundation\Request;
 use Pimcore\Model\DataObject\Product; 
+use Pimcore\Model\DataObject\Brand;
+use Pimcore\Model\DataObject\Category;
+use Pimcore\Model\DataObject\Marketplace;
+use Pimcore\Model\DataObject\CustomChart;
+use Pimcore\Model\DataObject\VariationColor;
+use Pimcore\Model\DataObject\VariationSizeChart;
 use Pimcore\Model\DataObject\Category\Listing as CategoryListing;
 use Pimcore\Model\DataObject\VariationSizeChart\Listing as VariationSizeChartListing;
 use Pimcore\Model\DataObject\VariationColor\Listing as VariationColorListing;
@@ -15,6 +21,7 @@ use Pimcore\Model\DataObject\CustomChart\Listing as CustomChartListing;
 use Pimcore\Model\DataObject\Brand\Listing as BrandListing;
 use Pimcore\Model\DataObject\Marketplace\Listing as MarketplaceListing;
 use Pimcore\Model\DataObject\Product\Listing as ProductListing;
+
 
 class ProductController extends AbstractController
 {
@@ -28,6 +35,16 @@ class ProductController extends AbstractController
         'products' => ProductListing::class
     ];
 
+    private const CLASS_MAPPING = [
+        'category' => Category::class,
+        'brand' => Brand::class,
+        'marketplace' => Marketplace::class,
+        'product' => Product::class,
+        'color' => VariationColor::class,
+        'sizeChart' => VariationSizeChart::class,
+        'customChart' => CustomChart::class,
+    ];
+    
     #[Route('/product', name: 'product')]
     public function index(): Response
     {
@@ -67,46 +84,75 @@ class ProductController extends AbstractController
         return new JsonResponse(['items' => $results]);
     }
 
-    #[Route('/product/create', name: 'product_create', methods: ['GET', 'POST'])]
+    #[Route('/product/create', name: 'product_create', methods: ['POST'])]
     public function create(Request $request): Response
     {
-        if ($request->isMethod('POST')) {
-            $productName = $request->get('productName');
-            $productIdentifier = $request->get('productIdentifier');
-            $productDescription = $request->get('productDescription');
-            $imageFile = $request->files->get('productImage');
-            $categoryId = $request->get('productCategory');
-            $brandIds = $request->get('brands', []);
-            $marketplaceIds = $request->get('marketplaces', []);
-            $sizeTemplateId = $request->get('sizeTemplate');
-            $colorIds = $request->get('colorTemplate', []);
-            $customTemplateId = $request->get('customTemplate');
-            $setProducts = $request->get('products', []);
-            dump([
-                'Temel Bilgiler' => [
-                    'productName' => $productName,
-                    'productIdentifier' => $productIdentifier,
-                    'productDescription' => $productDescription,
-                ],
-                'Resim' => $imageFile ? [
-                    'name' => $imageFile->getClientOriginalName(),
-                    'size' => $imageFile->getSize(),
-                    'mime' => $imageFile->getMimeType()
-                ] : 'Yok',
-                'Kategori ID' => $categoryId,
-                'Marka IDs' => $brandIds,
-                'Pazaryeri IDs' => $marketplaceIds,
-                'Beden Şablon ID' => $sizeTemplateId,
-                'Renk IDs' => $colorIds,
-                'Custom Şablon ID' => $customTemplateId,
-                'Set Ürünleri' => $setProducts
-            ]);
-            
-        }
+        $productName = $request->get('productName');
+        $productIdentifier = $request->get('productIdentifier');
+        $productDescription = $request->get('productDescription');
+        $imageFile = $request->files->get('productImage');
+        $categoryId = $request->get('productCategory');
+        $brandIds = $request->get('brands', []);
+        $marketplaceIds = $request->get('marketplaces', []);
+        $sizeTemplateId = $request->get('sizeTemplate');
+        $colorIds = $request->get('colorTemplate', []);
+        $customTemplateId = $request->get('customTemplate');
+        $setProducts = $request->get('products', []);
         
+        $category = !empty($categoryId) ? $this->getObjectById(self::CLASS_MAPPING['category'], (int)$categoryId) : null;
+        $brands = !empty($brandIds) ? $this->getObjectsByIds(self::CLASS_MAPPING['brand'], $brandIds) : [];
+        $marketplaces = !empty($marketplaceIds) ? $this->getObjectsByIds(self::CLASS_MAPPING['marketplace'], $marketplaceIds) : [];
+        $sizeChart = !empty($sizeTemplateId) ? $this->getObjectById(self::CLASS_MAPPING['sizeChart'], (int)$sizeTemplateId) : null;
+        $colors = !empty($colorIds) ? $this->getObjectsByIds(self::CLASS_MAPPING['color'], $colorIds) : [];
+        $customChart = !empty($customTemplateId) ? $this->getObjectById(self::CLASS_MAPPING['customChart'], (int)$customTemplateId) : null;
+        $setProductObjects = !empty($setProducts) ? $this->getObjectsByIds(self::CLASS_MAPPING['product'], array_keys($setProducts)) : [];
+        
+        dump([
+            'Form Verileri' => [
+                'productName' => $productName,
+                'productIdentifier' => $productIdentifier,
+                'productDescription' => $productDescription,
+                'hasImage' => $imageFile ? 'Evet' : 'Hayır'
+            ],
+            'Bulunan Objeler' => [
+                'category' => $category ? $category->getKey() : 'Seçilmedi',
+                'brands' => array_map(fn($b) => $b->getKey(), $brands),
+                'marketplaces' => array_map(fn($m) => $m->getKey(), $marketplaces),
+                'sizeChart' => $sizeChart ? $sizeChart->getKey() : 'Seçilmedi',
+                'colors' => array_map(fn($c) => $c->getKey(), $colors),
+                'customChart' => $customChart ? $customChart->getKey() : 'Seçilmedi',
+                'setProducts' => array_map(fn($p) => $p->getKey(), $setProductObjects),
+            ],
+            'Set Ürün Miktarları' => $setProducts
+        ]);
+
+
         return $this->render('product/product.html.twig');
     }
 
+    private function getObjectById(string $className, int $id): ?object
+    {
+        if (!class_exists($className)) {
+            return null;
+        }
+        try {
+            return $className::getById($id);
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    private function getObjectsByIds(string $className, array $ids): array
+    {
+        $objects = [];
+        foreach ($ids as $id) {
+            $object = $this->getObjectById($className, (int)$id);
+            if ($object && $object->getPublished()) {
+                $objects[] = $object;
+            }
+        }
+        return $objects;
+    }
 
     private function getGenericListing(string $listingClass, string $condition = "published = 1", ?int $page = null, ?int $limit = null): array 
     {
