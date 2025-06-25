@@ -74,7 +74,6 @@ class VariationMatrixService
             $variant->setVariationColor($combination['color']);
             $variant->setVariationSize($combination['size']);
             $variant->setObjectType('actual');
-            $variant->setType('variant');
             $variant->save();
             return $variant;
             
