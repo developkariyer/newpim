@@ -284,36 +284,40 @@
             console.error(`${type} search error:`, error);
         }
     }
+
     function displayResults(type, items) {
         const resultsDiv = document.getElementById(`${type}Results`);
-        
         if (items.length === 0) {
             resultsDiv.innerHTML = '<div style="padding: 1rem; text-align: center; color: #6c757d;">Sonuç bulunamadı</div>';
             resultsDiv.style.display = 'block';
             return;
         }
-        
+        const getIcon = (type) => {
+            const icons = {
+                'colors': '🎨',
+                'brands': '🏷️',
+                'marketplaces': '🛒',
+                'sizeCharts': '📏',
+                'customCharts': '⚙️'
+            };
+            return icons[type] || '📋';
+        };
         resultsDiv.innerHTML = '';
         items.forEach(item => {
             const itemDiv = document.createElement('div');
             itemDiv.style.cssText = 'padding: 0.5rem; cursor: pointer; border-bottom: 1px solid #f1f3f4;';
-            itemDiv.innerHTML = `🎨 ${item.name}`;
-            
+            itemDiv.innerHTML = `${getIcon(type)} ${item.name}`;
             itemDiv.addEventListener('click', () => {
                 addSelectedItem(type, item);
             });
-            
             itemDiv.addEventListener('mouseenter', () => {
                 itemDiv.style.backgroundColor = '#f8f9fa';
             });
-            
             itemDiv.addEventListener('mouseleave', () => {
                 itemDiv.style.backgroundColor = '';
             });
-            
             resultsDiv.appendChild(itemDiv);
         });
-        
         resultsDiv.style.display = 'block';
     }
 
