@@ -153,8 +153,6 @@ class ProductController extends AbstractController
         return $this->render('product/product.html.twig');
     }
 
-    private function createMainProduct()
-
     private function validateSingleObject(string $type, $id, array &$errors, string $displayName): ?object
     {
         if (empty($id)) {
