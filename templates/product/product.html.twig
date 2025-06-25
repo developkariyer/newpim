@@ -464,7 +464,11 @@
             productName: document.getElementById('productName').value,
             productIdentifier: document.getElementById('productIdentifier').value,
             productDescription: document.getElementById('productDescription').value,
-            productImage: document.getElementById('imageInput').files[0]?.name || 'Seçili değil',
+            productImage: imageFile ? {
+                name: imageFile.name,
+                size: imageFile.size,
+                type: imageFile.type
+            } : 'Seçili değil',
             categories: selectedItems.categories,
             brands: selectedItems.brands,
             marketplaces: selectedItems.marketplaces,
