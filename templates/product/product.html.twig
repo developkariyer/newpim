@@ -136,7 +136,24 @@
 {% block title %}Katalog Yeni Ürün Girişi{% endblock %}
 
 {% block content %}
-        <div class="product-form-container">
+    <div class="product-form-container">
+        {% if errors is defined and errors|length > 0 %}
+        <div class="alert alert-danger" style="margin-bottom: 2rem; padding: 1rem; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; color: #721c24;">
+            <h4 style="margin: 0 0 1rem 0;">❌ Hatalar:</h4>
+            <ul style="margin: 0; padding-left: 1.5rem;">
+                {% for error in errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+            <div style="background: white; padding: 2rem; border-radius: 8px; text-align: center;">
+                <div style="width: 40px; height: 40px; margin: 0 auto 1rem; border: 4px solid #f3f3f3; border-top: 4px solid #007bff; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p style="margin: 0; font-size: 1.1rem; color: #333;">Ürün oluşturuluyor...</p>
+            </div>
+        </div>
         <form id="productForm" method="POST" enctype="multipart/form-data" action="{{ path('product_create') }}" >
             <div class="form-section">
                 <h3>📝 Temel Ürün Bilgileri</h3>

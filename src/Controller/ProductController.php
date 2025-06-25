@@ -99,14 +99,81 @@ class ProductController extends AbstractController
         $customTemplateId = $request->get('customTemplate');
         $setProducts = $request->get('products', []);
         
-        $category = !empty($categoryId) ? $this->getObjectById(self::CLASS_MAPPING['category'], (int)$categoryId) : null;
-        $brands = !empty($brandIds) ? $this->getObjectsByIds(self::CLASS_MAPPING['brand'], $brandIds) : [];
-        $marketplaces = !empty($marketplaceIds) ? $this->getObjectsByIds(self::CLASS_MAPPING['marketplace'], $marketplaceIds) : [];
-        $sizeChart = !empty($sizeTemplateId) ? $this->getObjectById(self::CLASS_MAPPING['sizeChart'], (int)$sizeTemplateId) : null;
-        $colors = !empty($colorIds) ? $this->getObjectsByIds(self::CLASS_MAPPING['color'], $colorIds) : [];
-        $customChart = !empty($customTemplateId) ? $this->getObjectById(self::CLASS_MAPPING['customChart'], (int)$customTemplateId) : null;
-        $setProductObjects = !empty($setProducts) ? $this->getObjectsByIds(self::CLASS_MAPPING['product'], array_keys($setProducts)) : [];
-        
+        $errors = [];
+        $category = null;
+        if (!empty($categoryId)) {
+            $category = $this->getObjectById(self::CLASS_MAPPING['category'], (int)$categoryId);
+            if (!$category) {
+                $errors[] = "Kategori ID {$categoryId} bulunamadı";
+            }
+        }
+        $brands = [];
+        if (!empty($brandIds)) {
+            foreach ($brandIds as $brandId) {
+                $brand = $this->getObjectById(self::CLASS_MAPPING['brand'], (int)$brandId);
+                if (!$brand) {
+                    $errors[] = "Marka ID {$brandId} bulunamadı";
+                } else {
+                    $brands[] = $brand;
+                }
+            }
+        }
+        $marketplaces = [];
+        if (!empty($marketplaceIds)) {
+            foreach ($marketplaceIds as $marketplaceId) {
+                $marketplace = $this->getObjectById(self::CLASS_MAPPING['marketplace'], (int)$marketplaceId);
+                if (!$marketplace) {
+                    $errors[] = "Pazaryeri ID {$marketplaceId} bulunamadı";
+                } else {
+                    $marketplaces[] = $marketplace;
+                }
+            }
+        }
+        $sizeChart = null;
+        if (!empty($sizeTemplateId)) {
+            $sizeChart = $this->getObjectById(self::CLASS_MAPPING['sizeChart'], (int)$sizeTemplateId);
+            if (!$sizeChart) {
+                $errors[] = "Beden şablonu ID {$sizeTemplateId} bulunamadı";
+            }
+        }
+        $colors = [];
+        if (!empty($colorIds)) {
+            foreach ($colorIds as $colorId) {
+                $color = $this->getObjectById(self::CLASS_MAPPING['color'], (int)$colorId);
+                if (!$color) {
+                    $errors[] = "Renk ID {$colorId} bulunamadı";
+                } else {
+                    $colors[] = $color;
+                }
+            }
+        }
+        $customChart = null;
+        if (!empty($customTemplateId)) {
+            $customChart = $this->getObjectById(self::CLASS_MAPPING['customChart'], (int)$customTemplateId);
+            if (!$customChart) {
+                $errors[] = "Custom şablon ID {$customTemplateId} bulunamadı";
+            }
+        }
+        $setProductObjects = [];
+        if (!empty($setProducts)) {
+            foreach (array_keys($setProducts) as $productId) {
+                $product = $this->getObjectById(self::CLASS_MAPPING['product'], (int)$productId);
+                if (!$product) {
+                    $errors[] = "Set ürün ID {$productId} bulunamadı";
+                } else {
+                    $setProductObjects[] = $product;
+                }
+            }
+        }
+        if (!empty($errors)) {
+            dump([
+                'HATALAR' => $errors,
+                'İşlem durduruldu!'
+            ]);
+            return $this->render('product/product.html.twig', [
+                'errors' => $errors
+            ]);
+        }
         dump([
             'Form Verileri' => [
                 'productName' => $productName,
@@ -123,7 +190,8 @@ class ProductController extends AbstractController
                 'customChart' => $customChart ? $customChart->getKey() : 'Seçilmedi',
                 'setProducts' => array_map(fn($p) => $p->getKey(), $setProductObjects),
             ],
-            'Set Ürün Miktarları' => $setProducts
+            'Set Ürün Miktarları' => $setProducts,
+            'DURUM' => '✅ Tüm objeler bulundu, işleme devam edilebilir!'
         ]);
 
 
@@ -140,18 +208,6 @@ class ProductController extends AbstractController
         } catch (\Exception $e) {
             return null;
         }
-    }
-
-    private function getObjectsByIds(string $className, array $ids): array
-    {
-        $objects = [];
-        foreach ($ids as $id) {
-            $object = $this->getObjectById($className, (int)$id);
-            if ($object && $object->getPublished()) {
-                $objects[] = $object;
-            }
-        }
-        return $objects;
     }
 
     private function getGenericListing(string $listingClass, string $condition = "published = 1", ?int $page = null, ?int $limit = null): array 
