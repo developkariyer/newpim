@@ -23,6 +23,7 @@ class ProductController extends AbstractController
         'marketplaces' => MarketplaceListing::class,
         'customCharts' => CustomChartListing::class,
         'sizeCharts' => VariationSizeChartListing::class,
+        'categories' => CategoryListing::class
     ];
 
     #[Route('/product', name: 'product')]
