@@ -278,56 +278,54 @@
 {% endblock %}
 
 
-{% block javascripts %}
+<script>
     {{ parent() }}
-    <script>
 
 
-        console.log('JavaScript loaded!');
+    console.log('JavaScript loaded!');
 
-        let searchTimeout;
+    let searchTimeout;
+
+    async function performSearch(type) {
+        console.log('performSearch called with type:', type);
+        const searchInput = document.getElementById(`${type}Search`);
+        console.log('searchInput element:', searchInput);
         
-        async function performSearch(type) {
-            console.log('performSearch called with type:', type);
-            const searchInput = document.getElementById(`${type}Search`);
-            console.log('searchInput element:', searchInput);
-            
-            if (!searchInput) {
-                console.error('Search input not found:', `${type}Search`);
-                return;
-            }
-            
-            const query = searchInput.value.trim();
-            console.log('Query:', query);
-            
-          
-            console.log('Searching for:', query, 'Type:', type);
-            
-            try {
-                const response = await fetch(`/product/search/${type}?q=${encodeURIComponent(query)}`);
-                const data = await response.json();
-                console.log(`${type} search results:`, data.items);
-            } catch (error) {
-                console.error(`${type} search error:`, error);
-            }
+        if (!searchInput) {
+            console.error('Search input not found:', `${type}Search`);
+            return;
         }
         
-        console.log('Adding event listener...');
-        const colorSearchElement = document.getElementById('colorsSearch');
-        console.log('colorsSearch element:', colorSearchElement);
+        const query = searchInput.value.trim();
+        console.log('Query:', query);
         
-        if (colorSearchElement) {
-            colorSearchElement.addEventListener('input', () => {
-                console.log('Input event triggered!');
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    performSearch('colors'); 
-                }, 300);
-            });
-            console.log('Event listener added successfully!');
-        } else {
-            console.error('colorsSearch element not found!');
+        
+        console.log('Searching for:', query, 'Type:', type);
+        
+        try {
+            const response = await fetch(`/product/search/${type}?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            console.log(`${type} search results:`, data.items);
+        } catch (error) {
+            console.error(`${type} search error:`, error);
         }
+    }
 
-    </script>
-{% endblock %}
+    console.log('Adding event listener...');
+    const colorSearchElement = document.getElementById('colorsSearch');
+    console.log('colorsSearch element:', colorSearchElement);
+
+    if (colorSearchElement) {
+        colorSearchElement.addEventListener('input', () => {
+            console.log('Input event triggered!');
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                performSearch('colors'); 
+            }, 300);
+        });
+        console.log('Event listener added successfully!');
+    } else {
+        console.error('colorsSearch element not found!');
+    }
+
+</script>
