@@ -188,16 +188,13 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="brands">Markalar</label>
-                                <div class="checkbox-group" style="max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem;">
-                                    {% for brand in brands %}
-                                        <div style="margin-bottom: 0.5rem;">
-                                            <label style="display: flex; align-items: center; font-weight: normal;">
-                                                <input type="checkbox" name="brands[]" value="{{ brand.id }}" style="margin-right: 0.5rem;">
-                                                {{ brand.name }}
-                                            </label>
-                                        </div>
-                                    {% endfor %}
-                                </div>
+                            <input type="text" id="brandsSearch" placeholder="Marka ara..." class="form-control" style="margin-bottom: 0.5rem;">
+                            <div id="brandsResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; background: white;">
+                            </div>
+                            <div id="brandsSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
+                                <small style="color: #6c757d;">Seçilen markalar burada görünecek...</small>
+                            </div>
+                            <div id="brandsHidden"></div>
                         </div>
                         <div class="form-group">
                             <label for="marketplaces">Pazaryerleri</label>
@@ -380,12 +377,24 @@
         updateSelectedItems(type);
     }
 
+
+
     const colorSearchElement = document.getElementById('colorsSearch');
     if (colorSearchElement) {
         colorSearchElement.addEventListener('input', () => {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 performSearch('colors'); 
+            }, 300);
+        });
+    }
+
+    const brandSearchElement = document.getElementById('brandsSearch');
+    if (brandSearchElement) {
+        brandSearchElement.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                performSearch('brands'); 
             }, 300);
         });
     }
