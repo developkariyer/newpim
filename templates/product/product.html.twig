@@ -263,11 +263,38 @@
 
 {% block body_scripts %}
     {{ parent() }}
-    <script>
+<script>
 
     let searchTimeout;
-    let selectedColors = [];
-
+    let selectedItems = {
+        colors: [],
+        brands: [],
+        marketplaces: [],
+        sizeCharts: [],
+        customCharts: []
+    };
+    const ICONS = {
+        'colors': '🎨',
+        'brands': '🏷️',
+        'marketplaces': '🛒',
+        'sizeCharts': '📏',
+        'customCharts': '⚙️'
+    };
+    const TYPE_LABELS = {
+        colors: 'renkler',
+        brands: 'markalar',
+        marketplaces: 'pazaryerleri',
+        sizeCharts: 'beden şablonları',
+        customCharts: 'custom şablonları'
+    };
+    const INPUT_NAMES = {
+        colors: 'colorTemplate[]',
+        brands: 'brands[]',
+        marketplaces: 'marketplaces[]',
+        sizeCharts: 'sizeTemplate[]',
+        customCharts: 'customTemplate[]'
+    };
+    
     async function performSearch(type) {
         const searchInput = document.getElementById(`${type}Search`);
         if (!searchInput) {
@@ -292,21 +319,11 @@
             resultsDiv.style.display = 'block';
             return;
         }
-        const getIcon = (type) => {
-            const icons = {
-                'colors': '🎨',
-                'brands': '🏷️',
-                'marketplaces': '🛒',
-                'sizeCharts': '📏',
-                'customCharts': '⚙️'
-            };
-            return icons[type] || '📋';
-        };
         resultsDiv.innerHTML = '';
         items.forEach(item => {
             const itemDiv = document.createElement('div');
             itemDiv.style.cssText = 'padding: 0.5rem; cursor: pointer; border-bottom: 1px solid #f1f3f4;';
-            itemDiv.innerHTML = `${getIcon(type)} ${item.name}`;
+            itemDiv.innerHTML = `${ICONS[type] || '📋'} ${item.name}`;
             itemDiv.addEventListener('click', () => {
                 addSelectedItem(type, item);
             });
@@ -322,64 +339,56 @@
     }
 
     function addSelectedItem(type, item) {
-        if (type === 'colors') {
-            // Zaten seçili mi kontrol et
-            if (selectedColors.some(color => color.id === item.id)) {
-                return;
-            }
-            
-            selectedColors.push(item);
-            updateSelectedColors();
+        console.log('Adding item:', type, item);
+        if (selectedItems[type].some(selectedItem => selectedItem.id === item.id)) {
+            console.log('Item already selected');
+            return;
         }
-        
-        // Search input'u temizle ve sonuçları gizle
+        selectedItems[type].push(item);
+        console.log(`Selected ${type}:`, selectedItems[type]);
+        updateSelectedItems(type);
         document.getElementById(`${type}Search`).value = '';
         document.getElementById(`${type}Results`).style.display = 'none';
     }
 
-    function updateSelectedColors() {
-        console.log('Selected colors:', selectedColors);
-        const selectedDiv = document.getElementById('colorsSelected');
-        const hiddenDiv = document.getElementById('colorsHidden');
-        
-        if (selectedColors.length === 0) {
-            selectedDiv.innerHTML = '<small style="color: #6c757d;">Seçilen renkler burada görünecek...</small>';
+    function updateSelectedItems(type) {
+        const selectedDiv = document.getElementById(`${type}Selected`);
+        const hiddenDiv = document.getElementById(`${type}Hidden`);
+        if (!selectedDiv || !hiddenDiv) {
+            console.error(`Elements not found for type: ${type}`);
+            return;
+        }
+        if (selectedItems[type].length === 0) {
+            selectedDiv.innerHTML = `<small style="color: #6c757d;">Seçilen ${TYPE_LABELS[type] || type} burada görünecek...</small>`;
             hiddenDiv.innerHTML = '';
             return;
         }
-        
-        // Seçilen renkleri göster
-        selectedDiv.innerHTML = selectedColors.map(color => `
+        selectedDiv.innerHTML = selectedItems[type].map(item => `
             <span style="display: inline-block; background: #007bff; color: white; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 12px; font-size: 0.875rem;">
-                🎨 ${color.name}
-                <span onclick="removeColor(${color.id})" style="margin-left: 0.5rem; cursor: pointer; font-weight: bold;">×</span>
+                ${ICONS[type] || '📋'} ${item.name}
+                <span onclick="removeSelectedItem('${type}', ${item.id})" style="margin-left: 0.5rem; cursor: pointer; font-weight: bold;">×</span>
             </span>
         `).join('');
-        
-        // Hidden input'ları oluştur
-        hiddenDiv.innerHTML = selectedColors.map(color => 
-            `<input type="hidden" name="colorTemplate[]" value="${color.id}">`
+        hiddenDiv.innerHTML = selectedItems[type].map(item => 
+            `<input type="hidden" name="${INPUT_NAMES[type] || type + '[]'}" value="${item.id}">`
         ).join('');
     }
 
-    function removeColor(colorId) {
-        selectedColors = selectedColors.filter(color => color.id !== colorId);
-        updateSelectedColors();
+    function removeSelectedItem(type, itemId) {
+        selectedItems[type] = selectedItems[type].filter(item => item.id !== itemId);
+        updateSelectedItems(type);
     }
 
     const colorSearchElement = document.getElementById('colorsSearch');
     if (colorSearchElement) {
         colorSearchElement.addEventListener('input', () => {
-            console.log('Input event triggered!');
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 performSearch('colors'); 
             }, 300);
         });
-        console.log('Event listener added successfully!');
-    } else {
-        console.error('colorsSearch element not found!');
     }
+
 
 </script>
 {% endblock %}
