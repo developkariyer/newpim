@@ -106,7 +106,8 @@ class ProductController extends AbstractController
         $brands = $this->validateMultipleObjects('brand', $brandIds, $errors, 'Marka');
         $marketplaces = $this->validateMultipleObjects('marketplace', $marketplaceIds, $errors, 'Pazaryeri');
         $colors = $this->validateMultipleObjects('color', $colorIds, $errors, 'Renk');
-        $setProductObjects = $this->validateMultipleObjects('product', array_keys($setProducts), $errors, 'Set ürün');
+        $setProductIds = array_map('intval', array_keys($setProducts));
+        $setProductObjects = $this->validateMultipleObjects('product', $setProductIds, $errors, 'Set ürün');
         if (!empty($errors)) {
             return $this->render('product/product.html.twig', [
                 'errors' => $errors
@@ -153,9 +154,11 @@ class ProductController extends AbstractController
         $objects = [];
         foreach ($ids as $id) {
             if (!empty($id)) {
-                $object = $this->getObjectById(self::CLASS_MAPPING[$type], (int)$id);
+                $idValue = is_array($id) ? $id[0] : $id;
+                $intId = (int)$idValue;
+                $object = $this->getObjectById(self::CLASS_MAPPING[$type], $intId);
                 if (!$object) {
-                    $errors[] = "{$displayName} ID {$id} bulunamadı";
+                    $errors[] = "{$displayName} ID {$intId} bulunamadı";
                 } else {
                     $objects[] = $object;
                 }
