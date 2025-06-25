@@ -184,7 +184,7 @@
                 </div>
             </div>
             <div class="form-section">
-                <h3> Marka</h3>
+                <h3> Pazaryeri Bilgileri</h3>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="brands">Markalar</label>
@@ -199,11 +199,23 @@
                                     {% endfor %}
                                 </div>
                         </div>
+                        <div class="form-group">
+                            <label for="marketplaces">Pazaryerleri</label>
+                                <div class="checkbox-group" style="max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem;">
+                                    {% for marketplace in marketplaces %}
+                                        <div style="margin-bottom: 0.5rem;">
+                                            <label style="display: flex; align-items: center; font-weight: normal;">
+                                                <input type="checkbox" name="marketplaces[]" value="{{ marketplace.id }}" style="margin-right: 0.5rem;">
+                                                {{ marketplace.name }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                        </div>
                     </div>
             </div>
             <div class="form-section">
                 <h3>🎨 Varyasyon Şablonları</h3>
-                
                 <div class="form-row">
                     <div class="form-group">
                         <label for="sizeTemplate">Beden Şablonu</label>
@@ -242,8 +254,7 @@
                 </div>
             </div>
 
-            <!--> Markalar, Pazaryerleri, Set?, Color Size Optimize -->
-            customCharts
+        
             <!-- Form Butonları -->
             <div style="text-align: right; margin-top: 2rem;">
                 <button type="button" class="btn btn-secondary">İptal</button>

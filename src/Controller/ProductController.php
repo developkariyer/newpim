@@ -12,6 +12,7 @@ use Pimcore\Model\DataObject\VariationSizeChart\Listing as VariationSizeChartLis
 use Pimcore\Model\DataObject\VariationColor\Listing as VariationColorListing;
 use Pimcore\Model\DataObject\CustomChart\Listing as CustomChartListing;
 use Pimcore\Model\DataObject\Brand\Listing as BrandListing;
+use Pimcore\Model\DataObject\Marketplace\Listing as MarketplaceListing;
 
 class ProductController extends AbstractController
 {
@@ -23,12 +24,14 @@ class ProductController extends AbstractController
         $colors = $this->getColors();
         $customCharts = $this->getCustomCharts();
         $brands = $this->getBrands();
+        $marketplaces = $this->getMarketplaces();
         return $this->render('product/product.html.twig', [
             'categories' => $categories,
             'sizeCharts' => $sizeCharts,
             'colors' => $colors,
             'customCharts' => $customCharts,
-            'brands' => $brands
+            'brands' => $brands,
+            'marketplaces' => $marketplaces
         ]);
     }
 
@@ -87,6 +90,25 @@ class ProductController extends AbstractController
             ];
         }
         return $brandList;
+    }
+
+    private function getMarketplaces()
+    {
+        /*
+         * This method retrieves all marketplaces that are published.
+         * It returns an array of marketplaces with their ID and name.
+         */
+        $marketplaces = new MarketplaceListing();
+        $marketplaces->setCondition("published = 1");
+        $marketplaces->load();
+        $marketplaceList = [];
+        foreach ($marketplaces as $marketplace) {
+            $marketplaceList[] = [
+                'id' => $marketplace->getId(),
+                'name' => $marketplace->getKey(),
+            ];
+        }
+        return $marketplaceList;
     }
 
     private function getCategories()
