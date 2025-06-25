@@ -59,7 +59,7 @@ class ProductController extends AbstractController
             ]);
         }
         $escapedQuery = addslashes($query);
-        $searchCondition = "published = 1 AND (name LIKE '%{$escapedQuery}%' OR key LIKE '%{$escapedQuery}%')";
+        $searchCondition = "published = 1 AND (name LIKE '%{$escapedQuery}%' OR `key` LIKE '%{$escapedQuery}%')";
         $results = $this->getGenericListing(self::TYPE_MAPPING[$type], $searchCondition, $page, $limit);
         return new JsonResponse(['items' => $results]);
     }
