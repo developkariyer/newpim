@@ -71,11 +71,37 @@ class ProductController extends AbstractController
     public function create(Request $request): Response
     {
         if ($request->isMethod('POST')) {
-            error_log('POST Data: ' . print_r($request->request->all(), true));
-            error_log('FILES Data: ' . print_r($request->files->all(), true));
-        
-            dump($request->request->all()); 
-            dump($request->files->all());   
+            $productName = $request->get('productName');
+            $productIdentifier = $request->get('productIdentifier');
+            $productDescription = $request->get('productDescription');
+            $imageFile = $request->files->get('productImage');
+            $categoryId = $request->get('productCategory');
+            $brandIds = $request->get('brands', []);
+            $marketplaceIds = $request->get('marketplaces', []);
+            $sizeTemplateId = $request->get('sizeTemplate');
+            $colorIds = $request->get('colorTemplate', []);
+            $customTemplateId = $request->get('customTemplate');
+            $setProducts = $request->get('products', []);
+            dump([
+                'Temel Bilgiler' => [
+                    'productName' => $productName,
+                    'productIdentifier' => $productIdentifier,
+                    'productDescription' => $productDescription,
+                ],
+                'Resim' => $imageFile ? [
+                    'name' => $imageFile->getClientOriginalName(),
+                    'size' => $imageFile->getSize(),
+                    'mime' => $imageFile->getMimeType()
+                ] : 'Yok',
+                'Kategori ID' => $categoryId,
+                'Marka IDs' => $brandIds,
+                'Pazaryeri IDs' => $marketplaceIds,
+                'Beden Şablon ID' => $sizeTemplateId,
+                'Renk IDs' => $colorIds,
+                'Custom Şablon ID' => $customTemplateId,
+                'Set Ürünleri' => $setProducts
+            ]);
+            
         }
         
         return $this->render('product/product.html.twig');
