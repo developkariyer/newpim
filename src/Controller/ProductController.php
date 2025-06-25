@@ -55,88 +55,8 @@ class ProductController extends AbstractController
         return $resultList;
     }
 
-    private function getSizeCharts()
-    {
-        /*
-         * This method retrieves all size charts that are published.
-         * It returns an array of size charts with their ID and name.
-         */
-        $sizeCharts = new VariationSizeChartListing();
-        $sizeCharts->setCondition("published = 1");
-        $sizeCharts->load();
-        $sizeChartList = [];
-        foreach ($sizeCharts as $sizeChart) {
-            $sizeChartList[] = [
-                'id' => $sizeChart->getId(),
-                'name' => $sizeChart->getKey(),
-            ];
-        }
-        return $sizeChartList;
-    }
-
-    private function getCustomCharts()
-    {
-        /*
-         * This method retrieves all custom charts that are published.
-         * It returns an array of custom charts with their ID and name.
-         */
-        $customCharts = new CustomChartListing();
-        $customCharts->setCondition("published = 1");
-        $customCharts->load();
-        $customChartList = [];
-        foreach ($customCharts as $customChart) {
-            $customChartList[] = [
-                'id' => $customChart->getId(),
-                'name' => $customChart->getKey(),
-            ];
-        }
-        return $customChartList;
-    }
-
-    private function getBrands()
-    {
-        /*
-         * This method retrieves all brands that are published.
-         * It returns an array of brands with their ID and name.
-         */
-        $brands = new BrandListing();
-        $brands->setCondition("published = 1");
-        $brands->load();
-        $brandList = [];
-        foreach ($brands as $brand) {
-            $brandList[] = [
-                'id' => $brand->getId(),
-                'name' => $brand->getKey(),
-            ];
-        }
-        return $brandList;
-    }
-
-    private function getMarketplaces()
-    {
-        /*
-         * This method retrieves all marketplaces that are published.
-         * It returns an array of marketplaces with their ID and name.
-         */
-        $marketplaces = new MarketplaceListing();
-        $marketplaces->setCondition("published = 1");
-        $marketplaces->load();
-        $marketplaceList = [];
-        foreach ($marketplaces as $marketplace) {
-            $marketplaceList[] = [
-                'id' => $marketplace->getId(),
-                'name' => $marketplace->getKey(),
-            ];
-        }
-        return $marketplaceList;
-    }
-
     private function getCategories()
     {
-        /*
-         * This method retrieves all categories that are published and do not have children.
-         * It returns an array of categories with their ID and name.
-         */
         $categories = new CategoryListing();
         $categories->setCondition("published = 1");
         $categories->load();
@@ -151,25 +71,6 @@ class ProductController extends AbstractController
             ];
         }
         return $categoryList;
-    }
-
-    private function getColors()
-    {
-        /*
-         * This method retrieves all colors that are published.
-         * It returns an array of colors with their ID and name.
-         */
-        $colors = new VariationColorListing();
-        $colors->setCondition("published = 1");
-        $colors->load();
-        $colorList = [];
-        foreach ($colors as $color) {
-            $colorList[] = [
-                'id' => $color->getId(),
-                'name' => $color->getKey(),
-            ];
-        }
-        return $colorList;
     }
 
 }
