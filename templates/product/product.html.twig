@@ -284,9 +284,18 @@
 
 
         let searchTimeout;
+        
         async function performSearch(type) {
             const searchInput = document.getElementById(`${type}Search`);
             const query = searchInput.value.trim();
+            
+            if (query.length < 2) {
+                console.log('Query too short:', query);
+                return;
+            }
+            
+            console.log('Searching for:', query, 'Type:', type);
+            
             try {
                 const response = await fetch(`/product/search/${type}?q=${encodeURIComponent(query)}`);
                 const data = await response.json();
@@ -295,10 +304,11 @@
                 console.error(`${type} search error:`, error);
             }
         }
+        
         document.getElementById('colorsSearch').addEventListener('input', () => {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                performSearch('colors');
+                performSearch('colors'); 
             }, 300);
         });
 
