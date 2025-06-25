@@ -283,17 +283,24 @@
     <script>
 
 
+        console.log('JavaScript loaded!');
+
         let searchTimeout;
         
         async function performSearch(type) {
+            console.log('performSearch called with type:', type);
             const searchInput = document.getElementById(`${type}Search`);
-            const query = searchInput.value.trim();
+            console.log('searchInput element:', searchInput);
             
-            if (query.length < 2) {
-                console.log('Query too short:', query);
+            if (!searchInput) {
+                console.error('Search input not found:', `${type}Search`);
                 return;
             }
             
+            const query = searchInput.value.trim();
+            console.log('Query:', query);
+            
+          
             console.log('Searching for:', query, 'Type:', type);
             
             try {
@@ -305,12 +312,22 @@
             }
         }
         
-        document.getElementById('colorsSearch').addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                performSearch('colors'); 
-            }, 300);
-        });
+        console.log('Adding event listener...');
+        const colorSearchElement = document.getElementById('colorsSearch');
+        console.log('colorsSearch element:', colorSearchElement);
+        
+        if (colorSearchElement) {
+            colorSearchElement.addEventListener('input', () => {
+                console.log('Input event triggered!');
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    performSearch('colors'); 
+                }, 300);
+            });
+            console.log('Event listener added successfully!');
+        } else {
+            console.error('colorsSearch element not found!');
+        }
 
     </script>
 {% endblock %}
