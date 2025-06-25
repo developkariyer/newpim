@@ -114,6 +114,13 @@ class ProductController extends AbstractController
             ]);
         }
 
+        $imageAsset = null;
+        if ($imageFile && $imageFile->isValid()) {
+            dump('Image upload başlıyor...');
+            $imageAsset = $this->uploadProductImage($imageFile, $productIdentifier ?: $productName);
+            dump('Image upload tamamlandı:', $imageAsset ? $imageAsset->getFullPath() : 'HATA');
+        }
+
         $product = new Product();
         $product->setParentId(294);
         $product->setKey($productName);
@@ -126,7 +133,13 @@ class ProductController extends AbstractController
         $product->setVariantSizeTemplate($sizeChart);
         $product->setCustomVariantTemplate($customChart);
         $product->setVariationColors($colors);
-        //$product->setImage($imageFile ? $imageFile->getPathname() : null);
+        
+        // 3. ADIM: Image'i product'a bağla
+        if ($imageAsset) {
+            dump('Product\'a image set ediliyor...');
+            $product->setImage($imageAsset);
+        }
+        
         $product->setPublished(true);
         $product->save();
         
@@ -238,6 +251,61 @@ class ProductController extends AbstractController
             ];
         }
         return $categoryList;
+    }
+
+    private function uploadProductImage($imageFile, string $productKey): ?\Pimcore\Model\Asset\Image
+    {
+        try {
+            dump('uploadProductImage başlıyor...');
+            dump('File info:', [
+                'name' => $imageFile->getClientOriginalName(),
+                'size' => $imageFile->getSize(),
+                'mime' => $imageFile->getMimeType(),
+                'temp_path' => $imageFile->getPathname()
+            ]);
+            $assetFolder = \Pimcore\Model\Asset::getByPath('/products');
+            if (!$assetFolder) {
+                dump('Products klasörü yok, oluşturuluyor...');
+                $assetFolder = new \Pimcore\Model\Asset\Folder();
+                $assetFolder->setFilename('products');
+                $assetFolder->setParent(\Pimcore\Model\Asset::getByPath('/'));
+                $assetFolder->save();
+                dump('Products klasörü oluşturuldu:', $assetFolder->getFullPath());
+            } else {
+                dump('Products klasörü mevcut:', $assetFolder->getFullPath());
+            }
+            $extension = $imageFile->getClientOriginalExtension() ?: 'jpg';
+            $filename = $this->generateSafeFilename($productKey) . '_' . time() . '.' . $extension;
+            dump('Generated filename:', $filename);
+            $imageAsset = new \Pimcore\Model\Asset\Image();
+            $imageAsset->setFilename($filename);
+            $imageAsset->setParent($assetFolder);
+            $fileContent = file_get_contents($imageFile->getPathname());
+            if ($fileContent === false) {
+                throw new \Exception('Dosya içeriği okunamadı');
+            }
+            $imageAsset->setData($fileContent);
+            $imageAsset->save();
+            dump('Image asset oluşturuldu:', [
+                'ID' => $imageAsset->getId(),
+                'Path' => $imageAsset->getFullPath(),
+                'Size' => $imageAsset->getFileSize()
+            ]);
+            return $imageAsset;
+        } catch (\Exception $e) {
+            dump('Image upload HATA:', $e->getMessage());
+            return null;
+        }
+    }
+
+    private function generateSafeFilename(string $input): string
+    {
+        $filename = mb_strtolower($input);
+        $filename = str_replace(['ı', 'ğ', 'ü', 'ş', 'ö', 'ç'], ['i', 'g', 'u', 's', 'o', 'c'], $filename);
+        $filename = preg_replace('/[^a-z0-9]/', '_', $filename);
+        $filename = preg_replace('/_+/', '_', $filename);
+        $filename = trim($filename, '_');
+        return $filename ?: 'product';
     }
 
 }
