@@ -183,7 +183,21 @@
                     </div>
                 </div>
             </div>
+            <div class="form-section">
+                <h3> Marka</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="brands">Markalar</label>
+                            <select id="brand" name="brand" class="form-control">
+                                <option value="">Marka seçin</option>
+                                {% for brand in brands %}
+                                    <option value="{{ brand.id }}">{{ brand.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
 
+            </div>
             <div class="form-section">
                 <h3>🎨 Varyasyon Şablonları</h3>
                 
@@ -214,8 +228,8 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="sizeTemplate">Custom Şablonu</label>
-                        <select id="sizeTemplate" name="sizeTemplate" class="form-control">
+                        <label for="customTemplate">Custom Şablonu</label>
+                        <select id="customTemplate" name="customTemplate" class="form-control">
                             <option value="">Custom şablonu seçin</option>
                             {% for custom in customCharts %}
                                 <option value="{{ custom.id }}">{{ custom.name }}</option>

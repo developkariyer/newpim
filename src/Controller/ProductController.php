@@ -11,6 +11,7 @@ use Pimcore\Model\DataObject\Category\Listing as CategoryListing;
 use Pimcore\Model\DataObject\VariationSizeChart\Listing as VariationSizeChartListing;
 use Pimcore\Model\DataObject\VariationColor\Listing as VariationColorListing;
 use Pimcore\Model\DataObject\CustomChart\Listing as CustomChartListing;
+use Pimcore\Model\DataObject\Brand\Listing as BrandListing;
 
 class ProductController extends AbstractController
 {
@@ -21,11 +22,13 @@ class ProductController extends AbstractController
         $sizeCharts = $this->getSizeCharts();
         $colors = $this->getColors();
         $customCharts = $this->getCustomCharts();
+        $brands = $this->getBrands();
         return $this->render('product/product.html.twig', [
             'categories' => $categories,
             'sizeCharts' => $sizeCharts,
             'colors' => $colors,
-            'customCharts' => $customCharts
+            'customCharts' => $customCharts,
+            'brands' => $brands
         ]);
     }
 
@@ -65,6 +68,25 @@ class ProductController extends AbstractController
             ];
         }
         return $customChartList;
+    }
+
+    private function getBrands()
+    {
+        /*
+         * This method retrieves all brands that are published.
+         * It returns an array of brands with their ID and name.
+         */
+        $brands = new BrandListing();
+        $brands->setCondition("published = 1");
+        $brands->load();
+        $brandList = [];
+        foreach ($brands as $brand) {
+            $brandList[] = [
+                'id' => $brand->getId(),
+                'name' => $brand->getKey(),
+            ];
+        }
+        return $brandList;
     }
 
     private function getCategories()
