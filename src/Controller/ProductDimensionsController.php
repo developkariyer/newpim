@@ -1,27 +1,30 @@
 <?php
 namespace App\Controller;
 
-use App\Connector\Marketplace\CiceksepetiConnector;
 use App\Model\DataObject\Marketplace;
 use App\Model\DataObject\VariantProduct;
-use App\Utils\Utility;
+use App\Service\DatabaseService;
 use Doctrine\DBAL\Exception;
-use Pimcore\Db;
 use Random\RandomException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Message\CiceksepetiCategoryUpdateMessage;
-use Symfony\Component\Messenger\MessageBusInterface;
-use Pimcore\Controller\FrontendController;
-use Pimcore\Model\DataObject\Product;
-use Pimcore\Model\DataObject\Data\Link;
 use Pimcore\Model\Asset;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\ExpressionLanguage\Expression;
 
+
+
 class ProductDimensionsController extends FrontendController
 {
+
+    private DatabaseService $databaseService;
+
+    public function __construct(DatabaseService $databaseService)
+    {
+        $this->databaseService = $databaseService;
+    }
+
     /**
      * @Route("/productDimensions", name="product_dimensions_main_page")
      * @param Request $request
@@ -82,7 +85,7 @@ class ProductDimensionsController extends FrontendController
         $categories = [];
         try {
             $sql = "SELECT DISTINCT(category) FROM object_query_category WHERE category IS NOT NULL AND category != '' ORDER BY category ASC";
-            $result = Utility::fetchFromSql($sql);
+            $result = $this->databaseService->fetchAllSql($sql);
             foreach ($result as $category) {
                 $categories[] = $category['category'];
             }
