@@ -2,7 +2,7 @@
 namespace App\Controller;
 
 use App\Model\DataObject\Marketplace;
-use App\Model\DataObject\VariantProduct;
+use Pimcore\Model\DataObject\Product;
 use App\Service\DatabaseService;
 use Doctrine\DBAL\Exception;
 use Random\RandomException;
