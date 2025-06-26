@@ -56,8 +56,6 @@ class CatalogController extends AbstractController
                     ];
                 }
             }
-
-            
         }
         $formattedProducts = array_values($formattedProducts);
         return [
