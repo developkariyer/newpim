@@ -32,7 +32,7 @@ class Product extends Concrete
 
     public function checkIwasku(bool $forced = false): bool
     {
-        if ($forced || ($this->getObjectType() === self::OBJECT_TYPE_VIRTUAL && $this->isPublished() && strlen($this->getIwasku() ?? '') != 12)) {
+        if ($forced || ($this->getObjectType() === self::OBJECT_TYPE_ACTUAL && $this->isPublished() && strlen($this->getIwasku() ?? '') != 12)) {
             $pid = $this->getInheritedField("productIdentifier");
             $iwasku = str_pad(str_replace('-', '', $pid), 7, '0', STR_PAD_RIGHT);
             $productCode = $this->getProductCode();
