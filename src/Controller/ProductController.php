@@ -24,20 +24,6 @@ use Pimcore\Model\DataObject\Product\Listing as ProductListing;
 use App\Service\VariationMatrixService;
 
 
-
-// yapılacaklar
-// ürün oluşturma tekrar test
-// oluşan ürün parent belilrleme hangi klasör altında olacak
-// catalog sayfası
-// ürün boyutları sayfası
-// etiket sayfası
-// set oluşturma sayfası 
-// büyük veri testi
-
-
-
-
-
 class ProductController extends AbstractController
 {
     private const TYPE_MAPPING = [
