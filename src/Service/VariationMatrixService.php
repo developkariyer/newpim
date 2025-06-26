@@ -53,7 +53,7 @@ class VariationMatrixService
             if (!empty($combination['custom'])) {
                 $keyParts[] = $combination['custom'];
             }
-            $variantKey = implode('_', array_filter($keyParts));
+            $variantKey = $this->generateSafeKey(implode('_', array_filter($keyParts)));
             $existingVariant = Product::getByPath($parentProduct->getFullPath() . '/' . $variantKey);
             if ($existingVariant) {
                 return $existingVariant; 
@@ -174,5 +174,15 @@ class VariationMatrixService
             }
         }
         return $customs;
+    }
+
+    private function generateSafeKey(string $input): string
+    {
+        $filename = mb_strtolower($input);
+        $filename = str_replace(['ı', 'ğ', 'ü', 'ş', 'ö', 'ç'], ['i', 'g', 'u', 's', 'o', 'c'], $filename);
+        $filename = preg_replace('/[^a-z0-9]/', '_', $filename);
+        $filename = preg_replace('/_+/', '_', $filename);
+        $filename = trim($filename, '_');
+        return $filename ?: 'variant';
     }
 }
