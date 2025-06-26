@@ -65,6 +65,11 @@ class DataObjectListener implements EventSubscriberInterface
         }
     }
 
+    public function onPostUpdate(DataObjectEvent $event): void
+    {
+        
+    }
+
     /**
      * Called before saving an object to database
      * Used for setting object folder
