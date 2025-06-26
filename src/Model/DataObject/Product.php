@@ -110,5 +110,14 @@ class Product extends Concrete
             return $object->$fieldName();
         });
     }
-    
+
+    public static function findByField(string $field, mixed $value): \Pimcore\Model\DataObject\Product|false
+    {
+        $list = new Listing();
+        $list->setCondition("`$field` = ?", [$value]);
+        $list->setUnpublished(true);
+        $list->setLimit(1);
+        return $list->current();
+    }
+
 }
