@@ -50,6 +50,7 @@ class VariationMatrixService
                 return $existingVariant; 
             }
             $variant = new Product();
+            $variant->setKey($this->generateSafeKey($parentProduct->getKey() . '-' . $combination['color'] . '-' . $combination['size'] . (!empty($combination['custom']) ? '-' . $combination['custom'] : '')));
             $variant->setParent($parentProduct); 
             $variant->setPublished(true);
             $variantName = $parentProduct->getName() . '  ' . $combination['color'] . '  ' . $combination['size'];
