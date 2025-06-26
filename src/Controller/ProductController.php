@@ -23,6 +23,21 @@ use Pimcore\Model\DataObject\Marketplace\Listing as MarketplaceListing;
 use Pimcore\Model\DataObject\Product\Listing as ProductListing;
 use App\Service\VariationMatrixService;
 
+
+
+// yapılacaklar
+// ürün oluşturma tekrar test
+// oluşan ürün parent belilrleme hangi klasör altında olacak
+// catalog sayfası
+// ürün boyutları sayfası
+// etiket sayfası
+// set oluşturma sayfası 
+// büyük veri testi
+
+
+
+
+
 class ProductController extends AbstractController
 {
     private const TYPE_MAPPING = [
@@ -116,13 +131,23 @@ class ProductController extends AbstractController
 
         $imageAsset = null;
         if ($imageFile && $imageFile->isValid()) {
-            dump('Image upload başlıyor...');
             $imageAsset = $this->uploadProductImage($imageFile, $productIdentifier ?: $productName);
-            dump('Image upload tamamlandı:', $imageAsset ? $imageAsset->getFullPath() : 'HATA');
+        }
+
+        $mainFolderId = 266;
+        $identifierPrefix = strtoupper(explode('-', $productIdentifier)[0]);
+        $urunlerFolder = \Pimcore\Model\DataObject\Folder::getById($mainFolderId);
+        $parentFolderPath = $urunlerFolder->getFullPath() . '/' . $identifierPrefix;
+        $parentFolder = \Pimcore\Model\DataObject\Folder::getByPath($parentFolderPath);
+        if (!$parentFolder) {
+            $parentFolder = new \Pimcore\Model\DataObject\Folder();
+            $parentFolder->setKey($identifierPrefix);
+            $parentFolder->setParent($urunlerFolder);
+            $parentFolder->save();
         }
 
         $product = new Product();
-        $product->setParentId(294);
+        $product->setParent($parentFolder);
         $product->setKey($productName);
         $product->setName($productName);
         $product->setProductIdentifier($productIdentifier);
@@ -134,10 +159,8 @@ class ProductController extends AbstractController
         $product->setCustomVariantTemplate($customChart);
         $product->setVariationColors($colors);
         if ($imageAsset) {
-            dump('Product\'a image set ediliyor...');
             $product->setImage($imageAsset);
         }
-        
         $product->setPublished(true);
         $product->save();
         $createdVariants = $this->variationMatrixService->createVariants($product);
