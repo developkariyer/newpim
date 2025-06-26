@@ -12,6 +12,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Pimcore\Model\Asset;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\ExpressionLanguage\Expression;
+use Pimcore\Controller\FrontendController;
 
 
 
