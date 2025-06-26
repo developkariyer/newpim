@@ -65,7 +65,6 @@ class VariationMatrixService
             $variant->setObjectType('actual');
             $variant->checkProductCode();
             $variant->checkKey();
-            $variant->save();
             if ($variant->checkIwasku()) {
                 $variant->save();
             }
