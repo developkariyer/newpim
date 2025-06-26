@@ -22,9 +22,7 @@ class DataObjectListener implements EventSubscriberInterface
         return [
             'pimcore.dataobject.preDelete' => 'onPreDelete',
             'pimcore.dataobject.preAdd' => 'onPreAdd',
-            'pimcore.dataobject.preUpdate' => 'onPreUpdate',
-            'pimcore.dataobject.postUpdate' => 'onPostUpdate',
-            'pimcore.dataobject.postLoad' => 'onPostLoad',
+            'pimcore.dataobject.preUpdate' => 'onPreUpdate'
         ];
     }
 
@@ -63,11 +61,6 @@ class DataObjectListener implements EventSubscriberInterface
             Product::setGetInheritedValues(false);
             $object->checkProductCode();
         }
-    }
-
-    public function onPostUpdate(DataObjectEvent $event): void
-    {
-        
     }
 
     /**
