@@ -33,15 +33,33 @@ class CatalogController extends AbstractController
         $products = $productsListing->load();
         $formattedProducts = [];
         foreach ($products as $product) {
-            $formattedProducts[] = [
-                'id' => $product->getId(),
-                'name' => $product->getName(),
-                'image' => $product->getImage(),
-                'productIdentifier' => $product->getProductIdentifier(),
-                'category' => $product->getCategory()
-            ];
-        }
+            if ($product->getObjectType() === 'virtual') {
+                $productId = $product->getId();
+                $formattedProducts[$productId] = [
+                    'id' => $productId,
+                    'name' => $product->getName(),
+                    'image' => $product->getImage(),
+                    'productIdentifier' => $product->getProductIdentifier(),
+                    'category' => $product->getCategory(),
+                    'type' => 'main',
+                    'variants' => []
+                ];
+            }
+            else {
+                $parent = $product->getParent();
+                if ($parent && isset($formattedProducts[$parent->getId()])) {
+                    $formattedProducts[$parent->getId()]['variants'][] = [
+                        'id' => $product->getId(),
+                        'name' => $product->getName(),
+                        'iwasku' => $product->getIwasku(),
+                        'type' => 'variant'
+                    ];
+                }
+            }
 
+            
+        }
+        $formattedProducts = array_values($formattedProducts);
         return [
             'products' => $formattedProducts,
             'total' => $totalCount,

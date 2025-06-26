@@ -82,14 +82,19 @@
             font-family: monospace;
         }
         
-        .product-category {
-            display: inline-block;
-            background: #e3f2fd;
-            color: #1976d2;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 11px;
+ 11px;
             font-weight: 500;
+        }
+        
+        .variants-count {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #eee;
+        }
+        
+        .variants-count small {
+            color: #666;
+            font-size: 11px;
         }
         
         .empty-state {
@@ -104,6 +109,13 @@
     </style>
 {% endblock %}
 
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        console.log('Katalog sayfası yüklendi');
+        console.log('Toplam ürün sayısı:', {{ total }});
+    </script>
+{% endblock %}
 
 {% block title %}Ürün Kataloğu{% endblock %}
 
@@ -135,6 +147,12 @@
                         {% if product.category %}
                             <div class="product-category">{{ product.category }}</div>
                         {% endif %}
+                        
+                        {% if product.variants|length > 0 %}
+                            <div class="variants-count">
+                                <small>{{ product.variants|length }} varyant</small>
+                            </div>
+                        {% endif %}
                     </div>
                 {% endfor %}
             </div>
@@ -145,13 +163,4 @@
             </div>
         {% endif %}
     </div>
-{% endblock %}
-
-
-{% block body_scripts %}
-    {{ parent() }}
-    <script>
-        console.log('Katalog sayfası yüklendi');
-        console.log('Toplam ürün sayısı:', {{ total }});
-    </script>
 {% endblock %}
