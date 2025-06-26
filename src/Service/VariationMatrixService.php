@@ -48,11 +48,7 @@ class VariationMatrixService
             $variant = new Product();
             $variant->setParent($parentProduct); 
             $variant->setPublished(true);
-            $variantName = $parentProduct->getName() . '  ' . $combination['color'] . '  ' . $combination['size'];
-            if (!empty($combination['custom'])) {
-                $variantName .= ' - ' . $combination['custom'];
-            }
-            $variant->setName($variantName);
+            $variant->setName($parentProduct->getName());
             $variant->setDescription($parentProduct->getDescription());
             $variant->setCategory($parentProduct->getCategory());
             $variant->setBrands($parentProduct->getBrands());
