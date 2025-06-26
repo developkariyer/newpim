@@ -1,45 +1,45 @@
 {% extends 'base.html.twig' %}
-
-{% block stylesheets %}
-    {{ parent() }}
-    <style>
-        .product-row {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            margin-bottom: 10px;
-        }
-        .product-image {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            margin-right: 20px;
-        }
-        .product-details {
-            flex-grow: 1;
-        }
-        .product-name {
-            font-weight: bold;
-            font-size: 1.2em;
-        }
-        .variant-row {
-            display: none;
-            margin-top: 10px;
-        }
-        .variant-row.show {
-            display: block;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
-    </style>
-{% endblock %}
-
+<head>
+    {% block stylesheets %}
+        {{ parent() }}
+        <style>
+            .product-row {
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+                margin-bottom: 10px;
+            }
+            .product-image {
+                width: 100px;
+                height: 100px;
+                object-fit: cover;
+                margin-right: 20px;
+            }
+            .product-details {
+                flex-grow: 1;
+            }
+            .product-name {
+                font-weight: bold;
+                font-size: 1.2em;
+            }
+            .variant-row {
+                display: none;
+                margin-top: 10px;
+            }
+            .variant-row.show {
+                display: block;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 8px;
+            }
+        </style>
+    {% endblock %}
+</head>
 
 {% block title %}Ürün Kataloğu{% endblock %}
 
