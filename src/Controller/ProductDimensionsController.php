@@ -70,7 +70,7 @@ class ProductDimensionsController extends FrontendController
                 'iwasku' => $product->getInheritedField("iwasku"),
                 'variationSize' => $product->getVariationSize(),
                 'variationColor' => $product->getVariationColor(),
-                'wsCategory' => $product->getInheritedField("productCategory"),
+                'wsCategory' => $product->getCategory()->getKey(),
                 'weight' => $product->getInheritedField("packageWeight"),
                 'width' => $product->getInheritedField("packageDimension1"),
                 'length' => $product->getInheritedField("packageDimension2"),
