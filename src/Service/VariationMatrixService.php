@@ -77,6 +77,12 @@ class VariationMatrixService
                 $variant->setCustomSelect($combination['custom']);
             }
             $variant->setObjectType('actual');
+            $variant->checkProductCode();
+            $variant->checkKey();
+            $variant->save();
+            if ($variant->checkIwasku()) {
+                $variant->save();
+            }
             $variant->save();
             return $variant;
             
