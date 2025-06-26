@@ -480,28 +480,6 @@
     });
 
     document.getElementById('productForm').addEventListener('submit', function(e) {
-        let errors = [];
-        if (selectedItems.categories.length === 0) {
-            errors.push('Kategori seçmelisiniz.');
-        }
-        if (selectedItems.brands.length === 0) {
-            errors.push('Marka seçmelisiniz.');
-        }
-        if (selectedItems.marketplaces.length === 0) {
-            errors.push('Pazaryeri seçmelisiniz.');
-        }
-        if (selectedItems.sizeCharts.length === 0) {
-            errors.push('Beden şablonu seçmelisiniz.');
-        }
-        if (selectedItems.colors.length === 0) {
-            errors.push('Renk seçmelisiniz.');
-        }
-        if (errors.length > 0) {
-            e.preventDefault();
-            alert(errors.join('\n'));
-            hideLoading();
-            return false;
-        }
         showLoading();
         const formData = {
             productName: document.getElementById('productName').value,
