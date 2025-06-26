@@ -148,6 +148,7 @@ class ProductController extends AbstractController
         try {   
             $product = new Product();
             $product->setParent($parentFolder);
+            $product->setKey($productIdentifier . ' ' . $productName);
             $product->setName($productName);
             $product->setProductIdentifier($productIdentifier);
             $product->setDescription($productDescription);

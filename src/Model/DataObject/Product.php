@@ -49,6 +49,9 @@ class Product extends Concrete
 
     public function checkKey(): void
     {
+        if (!empty($this->getKey())) {
+            return;
+        }
         $key = $this->getInheritedField("ProductIdentifier");
         $key .= " ";
         $key .= $this->getInheritedField("Name");
