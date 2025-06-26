@@ -177,6 +177,13 @@
                 <p style="margin: 0; font-size: 1.1rem; color: #333;">Ürün oluşturuluyor...</p>
             </div>
         </div>
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label == 'danger' ? 'danger' : (label == 'success' ? 'success' : 'info') }}" style="margin-bottom: 1rem;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
         <form id="productForm" method="POST" enctype="multipart/form-data" action="{{ path('product_create') }}" >
             <div class="form-section">
                 <h3>📝 Temel Ürün Bilgileri</h3>

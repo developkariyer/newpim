@@ -145,27 +145,34 @@ class ProductController extends AbstractController
             $parentFolder->setParent($urunlerFolder);
             $parentFolder->save();
         }
-
-        $product = new Product();
-        $product->setParent($parentFolder);
-        $product->setKey($productIdentifier . ' ' . $productName);
-        $product->setName($productName);
-        $product->setProductIdentifier($productIdentifier);
-        $product->setDescription($productDescription);
-        $product->setCategory($category);
-        $product->setBrands($brands);
-        $product->setMarketplaces($marketplaces);
-        $product->setVariantSizeTemplate($sizeChart);
-        $product->setCustomVariantTemplate($customChart);
-        $product->setVariationColors($colors);
-        if ($imageAsset) {
-            $product->setImage($imageAsset);
+        try {   
+            $product = new Product();
+            $product->setParent($parentFolder);
+            $product->setKey($productIdentifier . ' ' . $productName);
+            $product->setName($productName);
+            $product->setProductIdentifier($productIdentifier);
+            $product->setDescription($productDescription);
+            $product->setCategory($category);
+            $product->setBrands($brands);
+            $product->setMarketplaces($marketplaces);
+            $product->setVariantSizeTemplate($sizeChart);
+            $product->setCustomVariantTemplate($customChart);
+            $product->setVariationColors($colors);
+            if ($imageAsset) {
+                $product->setImage($imageAsset);
+            }
+            $product->setPublished(true);
+            $product->save();
+            $createdVariants = $this->variationMatrixService->createVariants($product);
+            $this->addFlash('success', 'Ürün ve varyantlar başarıyla oluşturuldu.');
+            return $this->redirectToRoute('product');
+        }catch (\Throwable $e) {
+            $this->addFlash('danger', 'Ürün oluşturulurken bir hata oluştu: ' . $e->getMessage());
+            return $this->render('product/product.html.twig', [
+                'errors' => ['Ürün oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.'],
+            ]);
         }
-        $product->setPublished(true);
-        $product->save();
-        $createdVariants = $this->variationMatrixService->createVariants($product);
-
-        return $this->render('product/product.html.twig');
+        
     }
 
     private function validateSingleObject(string $type, $id, array &$errors, string $displayName): ?object
