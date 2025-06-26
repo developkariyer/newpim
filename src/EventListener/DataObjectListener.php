@@ -78,7 +78,7 @@ class DataObjectListener implements EventSubscriberInterface
             $object->checkIwasku();
             $object->checkProductCode();
             $object->checkProductIdentifier();
-            $object->checkKey();
+            //$object->checkKey();
         }
     }
 
