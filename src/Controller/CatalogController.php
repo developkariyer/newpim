@@ -21,7 +21,7 @@ class CatalogController extends AbstractController
         ]);
     }
 
-    private function getProduct($limit, $offset, $condition = "published = 1"): array
+    private function getProducts($limit, $offset, $condition = "published = 1"): array
     {
         $productsListing = new Product\Listing();
         $productsListing->setLimit($limit);
