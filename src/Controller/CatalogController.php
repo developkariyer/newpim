@@ -12,7 +12,7 @@ use Pimcore\Model\DataObject\Product;
 class CatalogController extends AbstractController
 {
     #[Route('/catalog', name: 'catalog')]
-    public function catalog(): Response
+    public function index(): Response
     {
         $products = $this->getProducts(20, 0);
         return $this->render('catalog/catalog.html.twig', [
