@@ -45,12 +45,21 @@ class VariationMatrixService
     private function createSingleVariant(Product $parentProduct, array $combination): ?Product
     {
         try {
+            $keyParts = [
+                $parentProduct->getKey(),
+                $combination['color'],
+                $combination['size']
+            ];
+            if (!empty($combination['custom'])) {
+                $keyParts[] = $combination['custom'];
+            }
+            $variantKey = $this->generateSafeKey(implode('_', array_filter($keyParts)));
             $existingVariant = Product::getByPath($parentProduct->getFullPath() . '/' . $variantKey);
             if ($existingVariant) {
                 return $existingVariant; 
             }
             $variant = new Product();
-            $variant->setKey($this->generateSafeKey($parentProduct->getKey() . '-' . $combination['color'] . '-' . $combination['size'] . (!empty($combination['custom']) ? '-' . $combination['custom'] : '')));
+            $variant->setKey($variantKey);
             $variant->setParent($parentProduct); 
             $variant->setPublished(true);
             $variantName = $parentProduct->getName() . '  ' . $combination['color'] . '  ' . $combination['size'];
