@@ -61,7 +61,7 @@ class Product extends Concrete
             $key .= " $variationColor";
         }
         if (!empty($key)) {
-            $this->setKey($key);
+            //$this->setKey($key);
         } else {
             $this->setKey("gecici_{$this->generateUniqueCode(10)}");
         }
