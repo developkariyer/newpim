@@ -54,14 +54,18 @@ class Product extends Concrete
         $key .= $this->getInheritedField("Name");
         $variationSize = $this->getInheritedField("VariationSize");
         $variationColor = $this->getInheritedField("VariationColor");
+        $customField = $this->getInheritedField("CustomSelect");
         if (!empty($variationSize)) {
             $key .= " $variationSize";
         }
         if (!empty($variationColor)) {
             $key .= " $variationColor";
         }
+        if (!empty($customField)) {
+            $key .= " $customField";
+        }
         if (!empty($key)) {
-            //$this->setKey($key);
+            $this->setKey($key);
         } else {
             $this->setKey("gecici_{$this->generateUniqueCode(10)}");
         }
