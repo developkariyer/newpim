@@ -54,11 +54,7 @@ class Product extends Concrete
         }
         $key = $this->getInheritedField("ProductIdentifier");
         $key .= " ";
-        $name = $this->getInheritedField("Name");
-        if (strpos($name, '_') !== false) {
-            $name = explode('_', $name)[0];
-        }
-        $key .= $name;
+        $key .= $this->getInheritedField("Name");
         $variationSize = $this->getInheritedField("VariationSize");
         $variationColor = $this->getInheritedField("VariationColor");
         $customField = $this->getInheritedField("CustomSelect");
