@@ -17,14 +17,7 @@ use Symfony\Component\ExpressionLanguage\Expression;
 
 class ProductDimensionsController extends FrontendController
 {
-
-    private DatabaseService $databaseService;
-
-    public function __construct(DatabaseService $databaseService)
-    {
-        $this->databaseService = $databaseService;
-    }
-
+    
     /**
      * @Route("/productDimensions", name="product_dimensions_main_page")
      * @param Request $request
@@ -85,7 +78,7 @@ class ProductDimensionsController extends FrontendController
         $categories = [];
         try {
             $sql = "SELECT DISTINCT(category) FROM object_query_category WHERE category IS NOT NULL AND category != '' ORDER BY category ASC";
-            $result = $this->databaseService->fetchAllSql($sql);
+            $result = Utility::fetchFromSql($sql);
             foreach ($result as $category) {
                 $categories[] = $category['category'];
             }
