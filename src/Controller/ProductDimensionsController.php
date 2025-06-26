@@ -64,13 +64,14 @@ class ProductDimensionsController extends FrontendController
             if ($product->getObjectType() != 'actual' || !$product instanceof Product) {
                 continue;
             }
+            $category = $product->getCategory();
             $productData[] = [
                 'id' => $product->getId(),
                 'name' => $product->getInheritedField("name"),
                 'iwasku' => $product->getInheritedField("iwasku"),
                 'variationSize' => $product->getVariationSize(),
                 'variationColor' => $product->getVariationColor(),
-                'wsCategory' => $product->getCategory()->getKey(),
+                'wsCategory' => $category ? $category->getKey() : null,
                 'weight' => $product->getInheritedField("packageWeight"),
                 'width' => $product->getInheritedField("packageDimension1"),
                 'length' => $product->getInheritedField("packageDimension2"),
