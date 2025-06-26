@@ -11,7 +11,7 @@ use Pimcore\Model\DataObject\Product;
 
 class CatalogController extends AbstractController
 {
-    #[Route('/', name: 'catalog')]
+    #[Route('/catalog', name: 'catalog')]
     public function catalog(): Response
     {
         $products = $this->getProducts(20, 0);
