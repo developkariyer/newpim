@@ -62,7 +62,7 @@ class VariationMatrixService
             $variant->setKey($variantKey);
             $variant->setParent($parentProduct); 
             $variant->setPublished(true);
-            $variantName = $parentProduct->getName() . '  ' . $combination['color'] . '  ' . $combination['size'];
+            $variantName = $parentProduct->getName() . '  ' ;
             if (!empty($combination['custom'])) {
                 $variantName .= ' - ' . $combination['custom'];
             }
