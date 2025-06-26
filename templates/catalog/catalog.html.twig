@@ -3,6 +3,45 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
+        .product-row {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .product-row:hover {
+            background-color: #f8f9fa;
+        }
+
+        .product-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            margin-right: 1rem;
+            border-radius: 5px;
+        }
+
+        .product-details {
+            flex-grow: 1;
+        }
+
+        .product-name {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .variant-row {
+            display: none; /* Başlangıçta gizli */
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #eee;
+        }
+
+        .variant-row.show {
+            display: block; /* Tıklanınca göster */
+        }
     </style>
 {% endblock %}
 
@@ -16,6 +55,50 @@
 {% block title %}Ürün Kataloğu{% endblock %}
 
 {% block content %}
-    
-    
+    <h1>Ürün Kataloğu</h1>
+    {% for product in products %}
+        <div class="product-row" data-product-id="{{ product.id }}">
+            <img src="{{ product.image ? asset(product.image.path) : 'https://via.placeholder.com/100' }}" alt="{{ product.name }}" class="product-image">
+            <div class="product-details">
+                <div class="product-name">{{ product.name }}</div>
+                <div>Kategori: {{ product.category ? product.category.key : 'Belirtilmemiş' }}</div>
+                <div>Ürün Kodu: {{ product.productIdentifier }}</div>
+            </div>
+        </div>
+        <div class="variant-row" data-product-id="{{ product.id }}">
+            {% if product.variants is not empty %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Varyant Adı</th>
+                            <th>Iwasku</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for variant in product.variants %}
+                            <tr>
+                                <td>{{ variant.name }}</td>
+                                <td>{{ variant.iwasku }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Bu ürünün varyantı bulunmamaktadır.</p>
+            {% endif %}
+        </div>
+    {% endfor %}
+{% endblock %}
+
+{% block body_scripts %}
+    {{ parent() }}
+    <script>
+        document.querySelectorAll('.product-row').forEach(row => {
+            row.addEventListener('click', () => {
+                const productId = row.dataset.productId;
+                const variantRow = document.querySelector(`.variant-row[data-product-id="${productId}"]`);
+                variantRow.classList.toggle('show');
+            });
+        });
+    </script>
 {% endblock %}
