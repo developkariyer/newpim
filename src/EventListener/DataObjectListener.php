@@ -2,7 +2,6 @@
 
 namespace App\EventListener;
 
-use App\Model\DataObject\VariantProduct;
 use Exception;
 use Pimcore\Model\DataObject\Data\ExternalImage;
 use Pimcore\Model\DataObject\Folder;
@@ -110,14 +109,6 @@ class DataObjectListener implements EventSubscriberInterface
 
     private static function traverseProducts($object)
     {
-        $listingItems = $object->getListingItems();
-        foreach ($listingItems as $listingItem) {
-            if (($listingItem instanceof VariantProduct)) {
-                if ($listingItem->getImageUrl() instanceof ExternalImage) {
-                    return $listingItem->getImageUrl()->getUrl();
-                }
-            }
-        }
         $children = $object->getChildren();
         foreach ($children as $child) {
             if ($child instanceof Product) {
