@@ -26,6 +26,11 @@ use Pimcore\Model\Element\DuplicateFullPathException;
 class Product extends Concrete
 {
 
+    public function getObjectType(): string
+    {
+        return $this->getType();
+    }
+
     /**
      * @var array $level0NullFields
      * Fields to nullify for level 0 products
