@@ -13,7 +13,7 @@ use Pimcore\Model\Asset;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\ExpressionLanguage\Expression;
 use Pimcore\Controller\FrontendController;
-
+use App\Utils\Utility;
 
 
 class ProductDimensionsController extends FrontendController
