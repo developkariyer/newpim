@@ -1,0 +1,323 @@
+{% extends 'base.html.twig' %}
+{% block title %} Sticker {% endblock %}
+{% block navbaritems %}
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Etiket
+        </a>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" onclick="displayNewGroupForm()">Yeni Grup</a></li>
+            <li><a class="dropdown-item" href="#" onclick="displayNewStickerForm()">Yeni Etiket</a></li>
+        </ul>
+    </li>
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Gruplar
+        </a>
+        <ul class="dropdown-menu">
+            {% for group in groups %}
+                <li><a class="dropdown-item" href="#" onclick="selectGroup('{{ group.name }}', {{ group.id }})">{{ group.name }}</a></li>
+            {% endfor %}
+        </ul>
+    </li>
+{% endblock %}
+{% block header %}
+
+{% endblock %}
+{% block content %}
+<div class="container mt-2">
+    <div class="row d-none" id="newStickerForm">
+        <div class="col-12 mt-5">
+            <h1>Yeni Etiket Grubu Oluştur</h1>
+            <form method="post" action="/sticker/add-sticker-group" class="mt-3">
+                <!--suppress HtmlFormInputWithoutLabel -->
+                <input type="text" name="form_data" placeholder="Grup İsmi" class="form-control mb-3">
+                <div class="d-flex flex-column">
+                    <button type="submit" class="btn btn-success mb-2">Grup Ekle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="row d-none" id="newStickerProductForm">
+        <div class="col-12 mt-5">
+            <h1>Yeni Etiket Oluştur</h1>
+            <form method="post" action="/sticker/add-sticker" class="mt-3">
+                <div class="mb-3">
+                    <label for="form_data">Ürün Kodu</label>
+                    <input
+                            type="text"
+                            name="form_data"
+                            id="form_data"
+                            placeholder="IWASKU|ASIN"
+                            class="form-control mb-3"
+                            required>
+                </div>
+                <div class="mb-3">
+                    <label for="group_id">Ürün Grubu</label>
+                    <select
+                            name="group_id"
+                            id="group_id"
+                            class="form-select"
+                            required>
+                        <option value="" disabled selected>Etiket Grubu</option>
+                        {% for group in groups %}
+                            <option value="{{ group.id }}">{{ group.name }}</option>
+                        {% else %}
+                            <option value="" disabled>Etiket Grubu Bulunamadı</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Ekle</button>
+            </form>
+        </div>
+    </div>
+    <div class="row mb-3 align-items-center">
+        <div class="col-md-6">
+            <h5 id="groupTitle" class="mb-0"></h5>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex justify-content-end" role="search">
+                <div class="input-group input-group-sm" style="max-width: 250px;">
+                <span class="input-group-text bg-light border-end-0">
+                    <i class="fas fa-search text-muted"></i>
+                </span>
+                    <input
+                            type="text"
+                            disabled
+                            id="searchInput"
+                            placeholder="Ürün ara..."
+                            class="form-control form-control-sm border-start-0"
+                            aria-label="Ara"
+                            style="border-top-right-radius: 0.25rem; border-bottom-right-radius: 0.25rem;"
+                    >
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="" id="stickerList">
+        <div class="row mt-2">
+            <div class="col-12"><h5 id="groupTitle"></h5></div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-12"  id="stickers-container" style="overflow-x: auto;">
+            </div>
+            <nav class="col-12" aria-label="Page navigation">
+                <ul id="pagination-container" class="pagination justify-content-center">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block body_scripts %}
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        let selectedGroupId = null;
+        let searchTerm = '';
+        let timeoutId;
+
+        document.getElementById('searchInput').addEventListener('input', function() {
+            searchTerm = this.value;
+            let charCount = searchTerm.length;
+            if (searchTerm.trim() === '' ) {
+                clearTimeout(timeoutId);
+                loadStickers(selectedGroupId, currentPage);
+            }
+            if (charCount > 2) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(function() {
+                    loadStickers(selectedGroupId, currentPage, searchTerm);
+                }, 250);
+            }
+        });
+
+        function displayNewGroupForm() {
+            document.getElementById('newStickerForm').classList.remove('d-none');
+            document.getElementById('stickerList').classList.add('d-none');
+            document.getElementById('newStickerProductForm').classList.add('d-none');
+            document.getElementById('searchInput').disabled = true;
+        }
+
+        function displayNewStickerForm() {
+            document.getElementById('newStickerProductForm').classList.remove('d-none');
+            document.getElementById('newStickerForm').classList.add('d-none');
+            document.getElementById('stickerList').classList.add('d-none');
+            document.getElementById('searchInput').disabled = true;
+        }
+
+        function loadStickers(groupId, page = 1,  searchTerm = '') {
+            const paginationContainer = document.getElementById('pagination-container');
+            highlightSelectedGroup(groupId);
+            selectedGroupId = groupId;
+            currentPage = page;
+            const container = document.getElementById('stickers-container');
+            container.innerHTML = '<p>Loading...</p>';
+            const searchParam = searchTerm !== '' ? `&searchTerm=${encodeURIComponent(searchTerm)}` : '';
+            let url = `/sticker/get-stickers/${groupId}?page=${page}&limit=10`;
+            if (searchParam) {
+                url += searchParam;
+            }
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch stickers. Status code: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        container.innerHTML = Object.keys(data.stickers).map(identifier => {
+                            const group = data.stickers[identifier];
+                            const mainSticker = group[0];
+                            return `
+                                   <div class="accordion" id="accordion-${identifier}">
+                                        <div class="accordion-item mb-3">
+                                            <h2 class="accordion-header" id="heading-${identifier}">
+                                                <button class="accordion-button w-100" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${identifier}" aria-expanded="true" aria-controls="collapse-${identifier}" onclick="loadDetails('${identifier}','${groupId}')">
+                                                    <div class="row w-100 d-flex align-items-center">
+                                                        <div class="col-8 d-flex flex-column">
+                                                            <h5 class="card-title mb-0" style="font-size: 1.25rem; word-wrap: break-word;">${identifier} ${mainSticker.product_name}</h5>
+                                                            <p class="card-text mb-0" style="font-size: 1rem; word-wrap: break-word;">${mainSticker.category}</p>
+                                                        </div>
+                                                        <div class="col-4 d-flex justify-content-end">
+                                                            <img src="${mainSticker.image_link}" alt="${mainSticker.product_name}" class="img-fluid" style="max-width: 60px; height: auto;">
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            </h2>
+                                            <div id="collapse-${identifier}" class="accordion-collapse collapse" aria-labelledby="heading-${identifier}" data-bs-parent="#accordion-${identifier}">
+                                                <div class="accordion-body">
+                                                    <div id="details-content-${identifier}">Loading details...</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                   </div>
+                            `;
+                        }).join('');
+                        totalPages = data.pagination.total_pages;
+                        if (searchTerm !== '') {
+                            paginationContainer.style.visibility = 'hidden';
+                        } else {
+                            paginationContainer.style.visibility = 'visible';
+                            renderPagination();
+                        }
+                    } else {
+                        container.innerHTML = '<p>No stickers available for this group.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching stickers:', error);
+                    container.innerHTML = '<p>An error occurred while loading stickers.</p>';
+                });
+        }
+
+        function loadDetails(identifier, groupId) {
+            const detailsContainer = document.getElementById(`details-content-${identifier}`);
+            detailsContainer.innerHTML = 'Loading details...';
+            fetch(`/sticker/get-product-details/${identifier}/${groupId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const products = data.products;
+                        products.sort((a, b) => {
+                            return a.variationSize.localeCompare(b.variationSize, undefined, { numeric: true });
+                        });
+                        let detailsHtml = '';
+                        products.forEach(product => {
+                            detailsHtml += `
+                            ${product.productIdentifier} ${product.name} ${product.variationSize} ${product.variationColor} (${product.iwasku})
+                            <a href="${product.sticker_link_eu}" target="_blank">EU Link</a> |
+                            <a href="${product.sticker_link}" target="_blank">IWASKU Link</a>
+                            <br/>
+                            `;
+                        });
+                        detailsContainer.innerHTML = `
+                            <div class="accordion" id="accordion-${identifier}">
+                                ${detailsHtml}
+                            </div>
+                        `;
+                    } else {
+                        detailsContainer.innerHTML = 'Failed to load details.';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading details:', error);
+                    detailsContainer.innerHTML = 'Error loading details.';
+                });
+        }
+
+
+        function renderPagination() {
+            const paginationContainer = document.getElementById('pagination-container');
+            paginationContainer.innerHTML = '';
+            let paginationHTML = '';
+            paginationHTML += `
+            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="loadStickers(selectedGroupId, 1)" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>`;
+
+            paginationHTML += `
+            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="loadStickers(selectedGroupId, ${currentPage - 1})" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>`;
+
+            const maxVisiblePages = 5;
+            const firstVisiblePage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            const lastVisiblePage = Math.min(totalPages, firstVisiblePage + maxVisiblePages - 1);
+
+            for (let page = firstVisiblePage; page <= lastVisiblePage; page++) {
+                paginationHTML += `
+                <li class="page-item ${page === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="loadStickers(selectedGroupId, ${page})">${page}</a>
+                </li>`;
+            }
+
+            paginationHTML += `
+            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="loadStickers(selectedGroupId, ${currentPage + 1})" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>`;
+
+            paginationHTML += `
+            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="loadStickers(selectedGroupId, ${totalPages})" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>`;
+            paginationContainer.innerHTML = paginationHTML;
+        }
+
+        function highlightSelectedGroup(groupId) {
+            const groupLinks = document.querySelectorAll('.list-group-item');
+            groupLinks.forEach(link => {
+                if (parseInt(link.dataset.groupId) === groupId) {
+                    link.classList.add('active');
+                    link.setAttribute('aria-current', 'true');
+                } else {
+                    link.classList.remove('active');
+                    link.removeAttribute('aria-current');
+                }
+            });
+        }
+
+        function selectGroup(groupName, groupId) {
+            localStorage.setItem('group_id', groupId);
+            document.getElementById("groupTitle").innerHTML = groupName;
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchInput').disabled = false;
+            document.getElementById('newStickerForm').classList.add('d-none');
+            document.getElementById('newStickerProductForm').classList.add('d-none');
+            document.getElementById('stickerList').classList.remove('d-none');
+            loadStickers(groupId, 1, searchTerm);
+        }
+    </script>
+
+{% endblock %}
