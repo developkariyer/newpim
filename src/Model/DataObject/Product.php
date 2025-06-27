@@ -562,21 +562,6 @@ class Product extends Concrete
         }
         $this->setStickerFnsku($assets);
         $this->save();
-
-        /*$variantObjects  = $this->getListingItems();
-        $assets = [];
-        foreach ($variantObjects as $variant) {
-            if ($variant->getFnsku() !== null) {
-                $fnsku = $variant->getFnsku();
-                $asin = $variant->getUniqueMarketplaceId();
-                $asset = PdfGenerator::generate4x6Fnsku($this, $fnsku, $asin, "{$fnsku}_{$this->getKey()}_fnsku.pdf");
-                if ($asset) {
-                    $assets[] = $asset;
-                }
-            }
-        }
-        $this->setStickerFnsku($assets);
-        $this->save();*/
         return $assets;
     }
 
