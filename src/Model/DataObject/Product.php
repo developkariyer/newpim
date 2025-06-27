@@ -73,10 +73,7 @@ class Product extends Concrete
         'packageDimension1',
         'packageDimension2',
         'packageDimension3',
-        'packageWeight',
-        'inBoxCount',
-        'inPaletteCount',
-        'inContainerCount',
+        'packageWeight'
     ];
 
     /**
