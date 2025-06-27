@@ -291,58 +291,58 @@ class Product extends Concrete
      * @return void
      * @throws DuplicateFullPathException
      */
-    public function checkAssetFolders(): void
-    {
-        if (!$this->isPublished() || $this->level()>0) {
-            return;
-        }
+    // public function checkAssetFolders(): void
+    // {
+    //     if (!$this->isPublished() || $this->level()>0) {
+    //         return;
+    //     }
 
-        $fieldsToFix = [
-            'Image' => 'Album',
-        ];
+    //     $fieldsToFix = [
+    //         'Image' => 'Album',
+    //     ];
 
-        $relationsToFix = [
-            'Technicals' => 'Dokuman',
-            'DesignFiles' => 'Tasarim',
-        ];
+    //     $relationsToFix = [
+    //         'Technicals' => 'Dokuman',
+    //         'DesignFiles' => 'Tasarim',
+    //     ];
 
-        $collectionsToFix = [
-            'RawFiles' => 'Ham',
-            'ProductAlbum' => 'Album'
-        ];
+    //     $collectionsToFix = [
+    //         'RawFiles' => 'Ham',
+    //         'ProductAlbum' => 'Album'
+    //     ];
 
-        foreach ($fieldsToFix as $field=>$folder) {
-            $fieldName = "get$field";
-            $asset = $this->$fieldName();
-            $this->updateAsset($asset, $this->cachedAssetPath($folder));
-        }
+    //     foreach ($fieldsToFix as $field=>$folder) {
+    //         $fieldName = "get$field";
+    //         $asset = $this->$fieldName();
+    //         $this->updateAsset($asset, $this->cachedAssetPath($folder));
+    //     }
 
-        foreach ($relationsToFix as $field=>$folder) {
-            $fieldName = "get$field";
-            $fieldObject = $this->$fieldName();
-            if (!$fieldObject) {
-                continue;
-            }
-            foreach ($fieldObject as $asset) {
-                $this->updateAsset($asset, $this->cachedAssetPath($folder));
-            }
-        }
+    //     foreach ($relationsToFix as $field=>$folder) {
+    //         $fieldName = "get$field";
+    //         $fieldObject = $this->$fieldName();
+    //         if (!$fieldObject) {
+    //             continue;
+    //         }
+    //         foreach ($fieldObject as $asset) {
+    //             $this->updateAsset($asset, $this->cachedAssetPath($folder));
+    //         }
+    //     }
 
-        foreach ($collectionsToFix as $collection => $folder) {
-            $collectionName = "get$collection";
-            $collectionObject = $this->$collectionName() ?? [];
-            foreach ($collectionObject as $element) {
-                $fieldName = $element->getCollectionName();
-                $fieldObject = $element->getCollectionAssets() ?? [];
-                $assetFolder = $this->cachedAssetPath($folder);
-                foreach ($fieldObject as $asset) {
-                    if ($asset instanceof Asset) {
-                        $this->updateAsset($asset, Utility::checkSetAssetPath($fieldName, $assetFolder));
-                    }
-                }
-            }
-        }
-    }
+    //     foreach ($collectionsToFix as $collection => $folder) {
+    //         $collectionName = "get$collection";
+    //         $collectionObject = $this->$collectionName() ?? [];
+    //         foreach ($collectionObject as $element) {
+    //             $fieldName = $element->getCollectionName();
+    //             $fieldObject = $element->getCollectionAssets() ?? [];
+    //             $assetFolder = $this->cachedAssetPath($folder);
+    //             foreach ($fieldObject as $asset) {
+    //                 if ($asset instanceof Asset) {
+    //                     $this->updateAsset($asset, Utility::checkSetAssetPath($fieldName, $assetFolder));
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     /**
      * Checks and manages variations of the product based on size and color.
