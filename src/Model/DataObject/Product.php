@@ -12,7 +12,6 @@ use Pimcore\Model\DataObject\Product\Listing;
 use App\Utils\Utility;
 use Pimcore\Model\DataObject\Service;
 use Pimcore\Model\DataObject\Data\Video;
-use Pimcore\Model\DataObject\VariantProduct;
 use Pimcore\Model\Element\DuplicateFullPathException;
 
 /**
@@ -450,39 +449,7 @@ class Product extends Concrete
         $this->save();
     }
 
-    /**
-     * Adds a variant or variants to the product's listing items.
-     *
-     * Checks if the given variant(s) already exist. If not, adds them to the listing and saves the product.
-     *
-     * @param VariantProduct $variant A variant  to add.
-     * @return true|Product True if added successfully, false otherwise.
-     * @throws Exception
-     */
-    public function addVariant(VariantProduct $variant): true|Product
-    {
-        $listingItems = $this->getListingItems();
-        $listingIds = array_map(function ($item) {
-            return $item->getId();
-        }, $listingItems);
-        $variantArray = (is_array($variant)) ? $variant : [$variant];
-        $dirty = false;
-        foreach ($variantArray as $variant) {
-            if (!$variant instanceof VariantProduct) {
-                continue;
-            }
-            if (!in_array($variant->getId(), $listingIds)) {
-                $dirty = true;
-                $listingItems[] = $variant;
-            }
-        }
-        if ($dirty) {
-            $this->setListingItems($listingItems);
-            return $this->save();
-        }
-        return true;
-    }
-
+    
     /**
     * Generates a unique product code of a specified number of digits.
     *
