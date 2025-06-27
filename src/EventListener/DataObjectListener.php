@@ -140,7 +140,6 @@ class DataObjectListener implements EventSubscriberInterface
         if ($object instanceof Product) {
             Product::setGetInheritedValues(false);
             if ($object->level()>0) {
-                $object->setTechnicals(null);
                 $object->setVariationSizeList(null);
                 $object->setVariationColorList(null);
             } else {
