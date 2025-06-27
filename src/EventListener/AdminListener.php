@@ -3,7 +3,6 @@
 namespace App\EventListener;
 
 use App\Model\AdminStyle\ProductAdminStyle;
-use App\Model\DataObject\VariantProduct;
 use Pimcore\Bundle\AdminBundle\Event\ElementAdminStyleEvent;
 use Pimcore\Model\DataObject\ClassDefinition\CustomLayout;
 use Pimcore\Model\DataObject\Product;
@@ -82,8 +81,7 @@ class AdminListener implements EventSubscriberInterface
     {
         $object = $event->getElement();
         if (
-            $object instanceof Product || 
-            $object instanceof VariantProduct
+            $object instanceof Product
         ) {
             $event->setAdminStyle(new ProductAdminStyle($object));
         }
