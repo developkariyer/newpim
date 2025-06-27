@@ -1,24 +1,27 @@
 <?php
 namespace App\Controller;
 
+use App\Connector\Marketplace\CiceksepetiConnector;
 use App\Model\DataObject\Marketplace;
-use Pimcore\Model\DataObject\Product;
-use App\Service\DatabaseService;
+use App\Model\DataObject\VariantProduct;
+use App\Utils\Utility;
 use Doctrine\DBAL\Exception;
+use Pimcore\Db;
 use Random\RandomException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Message\CiceksepetiCategoryUpdateMessage;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Pimcore\Controller\FrontendController;
+use Pimcore\Model\DataObject\Product;
+use Pimcore\Model\DataObject\Data\Link;
 use Pimcore\Model\Asset;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\ExpressionLanguage\Expression;
-use Pimcore\Controller\FrontendController;
-use App\Utils\Utility;
-
 
 class ProductDimensionsController extends FrontendController
 {
-    
     /**
      * @Route("/productDimensions", name="product_dimensions_main_page")
      * @param Request $request
@@ -58,17 +61,16 @@ class ProductDimensionsController extends FrontendController
         $count = $listingObject->count();
         $productData = [];
         foreach ($products as $product) {
-            if ($product->getObjectType() != 'actual' || !$product instanceof Product) {
+            if ($product->level() != 1 || !$product instanceof Product) {
                 continue;
             }
-            $category = $product->getCategory();
             $productData[] = [
                 'id' => $product->getId(),
                 'name' => $product->getInheritedField("name"),
                 'iwasku' => $product->getInheritedField("iwasku"),
                 'variationSize' => $product->getVariationSize(),
                 'variationColor' => $product->getVariationColor(),
-                'wsCategory' => $category ? $category->getKey() : null,
+                'wsCategory' => $product->getInheritedField("productCategory"),
                 'weight' => $product->getInheritedField("packageWeight"),
                 'width' => $product->getInheritedField("packageDimension1"),
                 'length' => $product->getInheritedField("packageDimension2"),
