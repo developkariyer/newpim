@@ -384,10 +384,10 @@
             <!-- Form Butonları -->
             <div style="text-align: right; margin-top: 2rem;">
                 <button type="button" class="btn btn-secondary">İptal</button>
-                <button type="submit" class="btn btn-primary">Ürün Oluştur</button>
+                <button type="button" class="btn btn-primary" id="goToVariationsBtn">İlerle</button>
             </div>
         </form>
-
+        <!-- Beden Tablosu Modal -->
         <div class="modal fade" id="sizeTableModal" tabindex="-1" aria-labelledby="sizeTableModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
@@ -455,6 +455,13 @@
             </div>
         </div>
         <!-- Custom Tablo Modal End -->
+
+        <div id="variationStep" style="display:none; margin-top:2rem;">
+            <h3>Varyasyonları Seç</h3>
+            <div id="variationTableContainer"></div>
+            <button type="button" class="btn btn-success" id="createVariationsBtn">Varyasyonları Kaydet</button>
+        </div>
+
     </div>
 {% endblock %}
 
@@ -795,6 +802,41 @@
         
         var modal = bootstrap.Modal.getInstance(document.getElementById('customTableModal'));
         modal.hide();
+    });
+
+    document.getElementById('goToVariationsBtn').addEventListener('click', function() {
+        const colors = selectedItems.colors.map(c => c.name);
+        const sizes = JSON.parse(document.getElementById('sizeTableData').value || '[]').map(s => s.beden);
+        let customs = [];
+        try {
+            const customData = JSON.parse(document.getElementById('customTableData').value || '{}');
+            customs = (customData.rows || []).map(r => r.deger);
+        } catch {}
+
+        function cartesianProduct(arrays) {
+            return arrays.reduce((a, b) => a.flatMap(d => b.map(e => [ ...(Array.isArray(d) ? d : [d]), e ])));
+        }
+        let combos = cartesianProduct([colors, sizes]);
+        if (customs.length > 0) {
+            combos = cartesianProduct([colors, sizes, customs]);
+        }
+
+        let html = '<table class="table table-bordered"><thead><tr>';
+        html += '<th>Seç</th><th>Renk</th><th>Beden</th>';
+        if (customs.length > 0) html += '<th>Custom</th>';
+        html += '</tr></thead><tbody>';
+        combos.forEach((combo, i) => {
+            html += `<tr>
+                <td><input type="checkbox" class="variation-checkbox" checked data-index="${i}"></td>
+                <td>${combo[0]}</td>
+                <td>${combo[1]}</td>`;
+            if (customs.length > 0) html += `<td>${combo[2]}</td>`;
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+        document.getElementById('variationTableContainer').innerHTML = html;
+        document.getElementById('variationStep').style.display = 'block';
+        window.scrollTo({ top: document.getElementById('variationStep').offsetTop, behavior: 'smooth' });
     });
 
 </script>
