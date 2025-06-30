@@ -94,22 +94,6 @@ class ProductController extends AbstractController
         if ($variations) {
             $variations = json_decode($variations, true);
         }
-
-        // dump([
-        //     'productName'        => $productName,
-        //     'productIdentifier'  => $productIdentifier,
-        //     'productDescription' => $productDescription,
-        //     'imageFile'          => $imageFile ? $imageFile->getClientOriginalName() : 'YOK',
-        //     'categoryId'         => $categoryId,
-        //     'brandIds'           => $brandIds,
-        //     'marketplaceIds'     => $marketplaceIds,
-        //     'colorIds'           => $colorIds,
-        //     'customTemplateId'   => $customTemplateId,
-        //     'sizeTableData'      => $sizeTableData,
-        //     'customTableData'    => $customTableData,
-        //     'variations'         => $variations,
-        // ]);
-        
         $errors = [];
         $category = $this->validateSingleObject('category', $categoryId, $errors, 'Kategori');
         $brands = $this->validateMultipleObjects('brand', $brandIds, $errors, 'Marka');
@@ -158,7 +142,6 @@ class ProductController extends AbstractController
                 }
                 $product->setVariationSizeTable($variationSizeTable);
             }
-
             $customFieldTable = [];
             if ($customTableData) {
                 $customTableDecoded = json_decode($customTableData, true);
