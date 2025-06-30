@@ -150,16 +150,19 @@ class ProductController extends AbstractController
             $variationSizeTable = [];
             if ($sizeTableData) {
                 $variationSizeTable = json_decode($sizeTableData, true);
-                if (is_array($variationSizeTable)) {
-                    $product->setVariationSizeTable($variationSizeTable);
+                if (!is_array($variationSizeTable)) {
+                    $variationSizeTable = [];
                 }
+                $product->setVariationSizeTable($variationSizeTable);
             }
+
             $customFieldTable = [];
             if ($customTableData) {
                 $customFieldTable = json_decode($customTableData, true);
-                if (is_array($customFieldTable)) {
-                    $product->setCustomFieldTable($customFieldTable);
+                if (!is_array($customFieldTable)) {
+                    $customFieldTable = [];
                 }
+                $product->setCustomFieldTable($customFieldTable);
             }
             $this->checkProductCode($product);
             $product->setPublished(true);
