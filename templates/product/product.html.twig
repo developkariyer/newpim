@@ -240,7 +240,6 @@
 {% block title %}Katalog Yeni Ürün Girişi{% endblock %}
 
 {% block content %}
-<div id="step1">
     <div class="product-form-container">
         {% if errors is defined and errors|length > 0 %}
             <div class="alert alert-danger" style="margin-bottom: 2rem; padding: 1rem; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; color: #721c24;">
@@ -267,7 +266,8 @@
                 </div>
             {% endfor %}
         {% endfor %}
-        <form id="productForm" method="POST" enctype="multipart/form-data" action="{{ path('product_create') }}" >
+    <form id="productForm" method="POST" enctype="multipart/form-data" action="{{ path('product_create') }}" >
+        <div id="step1">
             <div class="form-section">
                 <h3>📝 Temel Ürün Bilgileri</h3>
                 <div class="form-row">
@@ -291,7 +291,7 @@
                     <div class="form-group">
                         <label for="productIdentifier">Ürün Tanıtıcı Adı *</label>
                         <input type="text" id="productIdentifier" name="productIdentifier" class="form-control" 
-                               placeholder="Örn: PTS-001" required>
+                                placeholder="Örn: PTS-001" required>
                     </div>
                     <div class="form-group">
                         <label for="productCategory">Kategori *</label>
@@ -308,7 +308,7 @@
                 <div class="form-group">
                     <label for="productDescription">Açıklama</label>
                     <textarea id="productDescription" name="productDescription" class="form-control" 
-                              rows="3" placeholder="Ürün hakkında detaylı açıklama..."></textarea>
+                                rows="3" placeholder="Ürün hakkında detaylı açıklama..."></textarea>
                 </div>
             </div>
             <div class="form-section">
@@ -384,10 +384,20 @@
             </div>
             <!-- Form Butonları -->
             <div style="text-align: right; margin-top: 2rem;">
-                <button type="button" class="btn btn-secondary">İptal</button>
-                <button type="button" class="btn btn-primary" id="goToVariationsBtn">İlerle</button>
+            <button type="button" class="btn btn-secondary">İptal</button>
+            <button type="button" class="btn btn-primary" id="goToVariationsBtn">İlerle</button>
             </div>
-        </form>
+        </div>
+        <div id="step2" style="display:none;">
+            <h3>Varyasyonları Seç</h3>
+            <div id="variationTableContainer"></div>
+            <input type="hidden" name="variationsData" id="variationsData">
+            <div style="text-align: right; margin-top: 2rem;">
+                <button type="button" class="btn btn-secondary" id="backToStep1Btn">Geri</button>
+                <button type="submit" class="btn btn-success">Kaydet</button>
+            </div>
+        </div>
+    </form>
         <!-- Beden Tablosu Modal -->
         <div class="modal fade" id="sizeTableModal" tabindex="-1" aria-labelledby="sizeTableModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
@@ -459,15 +469,7 @@
 
     </div>
 </div>
-<div id="step2" style="display:none;">
-    <h3>Varyasyonları Seç</h3>
-    <div id="variationTableContainer"></div>
-    <input type="hidden" name="variationsData" id="variationsData">
-    <div style="text-align: right; margin-top: 2rem;">
-        <button type="button" class="btn btn-secondary" id="backToStep1Btn">Geri</button>
-        <button type="submit" class="btn btn-success">Kaydet</button>
-    </div>
-</div>
+
 {% endblock %}
 
 
@@ -641,7 +643,9 @@
     });
 
     document.getElementById('productForm').addEventListener('submit', function(e) {
+        e.preventDefault();
         showLoading();
+        const rows = [];
         document.querySelectorAll('#variationTableContainer tbody tr').forEach(tr => {
             const checked = tr.querySelector('.variation-checkbox').checked;
             if (!checked) return;
@@ -652,6 +656,22 @@
             rows.push({ renk, beden, custom });
         });
         document.getElementById('variationsData').value = JSON.stringify(rows);
+        const formData = new FormData(this);
+        const data = {};
+        for (const [key, value] of formData.entries()) {
+            if (data[key]) {
+                if (!Array.isArray(data[key])) data[key] = [data[key]];
+                data[key].push(value);
+            } else {
+                data[key] = value;
+            }
+        }
+        console.log('Tüm Form Datası:', data);
+        if (data.variationsData) {
+            try {
+                console.log('Varyasyonlar:', JSON.parse(data.variationsData));
+            } catch {}
+        }
     });
 
     document.getElementById('addNewColorBtn').addEventListener('click', function() {
@@ -679,7 +699,6 @@
         })
         .catch(() => alert('Sunucu hatası!'));
     });
-
 
     // Size Table Functions
     function addSizeRow(values = {}) {
