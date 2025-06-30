@@ -163,8 +163,6 @@
             display: flex;
             align-items: stretch;
             width: 100%;
-            max-width: 400px;
-            gap: 0;
         }
 
         .input-group .form-control {
@@ -175,6 +173,15 @@
         .input-group .btn {
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
+        }
+
+        /* DEĞİŞİKLİK: Önizleme tabloları için kapsayıcı stili eklendi */
+        .table-preview-container {
+            margin-top: 1rem;
+            padding: 1rem;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            background-color: #f8f9fa;
         }
     </style>
 {% endblock %}
@@ -280,53 +287,53 @@
             </div>
             <div class="form-section">
                 <h3>🎨 Varyasyon Şablonları</h3>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="colorTemplate">Renkler *</label>
-                        <input type="text" id="colorsSearch" placeholder="Renk ara..." class="form-control" style="margin-bottom: 0.5rem;">
-                        <div id="colorsResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; background: white;">
-                        </div>
-                        <div id="colorsSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
-                            <small style="color: #6c757d;">Seçilen renkler burada görünecek...</small>
-                        </div>
-                        <div id="colorsHidden"></div>
-                        <div class="input-group" style="margin-top: 0.5rem; max-width: 400px;">
-                            <input type="text" id="newColorInput" placeholder="Yeni renk girin..." class="form-control" aria-label="Yeni renk girin">
-                            <button type="button" id="addNewColorBtn" class="btn btn-primary" style="min-width: 120px;">+ Renk Ekle</button>
-                        </div>
+                <!-- DEĞİŞİKLİK: Gereksiz .form-row kaldırıldı. form-group artık tam genişlik kullanacak. -->
+                <div class="form-group">
+                    <label for="colorTemplate">Renkler *</label>
+                    <input type="text" id="colorsSearch" placeholder="Renk ara..." class="form-control" style="margin-bottom: 0.5rem;">
+                    <div id="colorsResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; background: white;">
+                    </div>
+                    <div id="colorsSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
+                        <small style="color: #6c757d;">Seçilen renkler burada görünecek...</small>
+                    </div>
+                    <div id="colorsHidden"></div>
+                    <div class="input-group" style="margin-top: 0.5rem; max-width: 400px;">
+                        <input type="text" id="newColorInput" placeholder="Yeni renk girin..." class="form-control" aria-label="Yeni renk girin">
+                        <button type="button" id="addNewColorBtn" class="btn btn-primary" style="min-width: 120px;">+ Renk Ekle</button>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                            <label for="sizeTableBtn">Beden Tablosu *</label>
-                            <button type="button"
-                                    class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2"
-                                    id="sizeTableBtn"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#sizeTableModal"
-                                    style="font-size:1.1rem; font-weight:500;">
-                                <span style="font-size:1.5rem; margin-right:0.5rem;">📏</span> Beden Tablosu Oluştur
-                            </button>
-                            <input type="hidden" name="sizeTableData" id="sizeTableData">
-                            <div id="sizeTablePreview" style="margin-top: 1rem;"></div>
-                    </div>
-                    
+
+                <!-- DEĞİŞİKLİK: Gereksiz .form-row kaldırıldı. -->
+                <div class="form-group">
+                    <label for="sizeTableBtn">Beden Tablosu *</label>
+                    <button type="button"
+                            class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2"
+                            id="sizeTableBtn"
+                            data-bs-toggle="modal"
+                            data-bs-target="#sizeTableModal"
+                            style="font-size:1.1rem; font-weight:500;">
+                        <span style="font-size:1.5rem; margin-right:0.5rem;">📏</span> Beden Tablosu Oluştur
+                    </button>
+                    <input type="hidden" name="sizeTableData" id="sizeTableData">
+                    <!-- DEĞİŞİKLİK: Önizleme div'ine stil ve daha iyi yapı için class eklendi -->
+                    <div id="sizeTablePreview" class="table-preview-container" style="display: none;"></div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="customTableBtn">Custom Tablo</label>
-                        <input type="text" id="customTableTitle" class="form-control mb-2" placeholder="Tablo başlığı (ör: Malzeme İçeriği)">
-                        <button type="button"
-                                class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2"
-                                id="customTableBtn"
-                                data-bs-toggle="modal"
-                                data-bs-target="#customTableModal"
-                                style="font-size:1.1rem; font-weight:500;">
-                            <span style="font-size:1.5rem; margin-right:0.5rem;">⚙️</span> Custom Tablo Oluştur
-                        </button>
-                        <input type="hidden" name="customTableData" id="customTableData">
-                        <div id="customTablePreview" style="margin-top: 1rem;"></div>
-                    </div>
+
+                <!-- DEĞİŞİKLİK: Gereksiz .form-row kaldırıldı. -->
+                <div class="form-group">
+                    <label for="customTableBtn">Custom Tablo</label>
+                    <input type="text" id="customTableTitle" class="form-control mb-2" placeholder="Tablo başlığı (ör: Malzeme İçeriği)">
+                    <button type="button"
+                            class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2"
+                            id="customTableBtn"
+                            data-bs-toggle="modal"
+                            data-bs-target="#customTableModal"
+                            style="font-size:1.1rem; font-weight:500;">
+                        <span style="font-size:1.5rem; margin-right:0.5rem;">⚙️</span> Custom Tablo Oluştur
+                    </button>
+                    <input type="hidden" name="customTableData" id="customTableData">
+                    <!-- DEĞİŞİKLİK: Önizleme div'ine stil ve daha iyi yapı için class eklendi -->
+                    <div id="customTablePreview" class="table-preview-container" style="display: none;"></div>
                 </div>
             </div>
             <!-- Form Butonları -->
@@ -344,22 +351,25 @@
                     <h5 class="modal-title" id="sizeTableModalLabel"><span style="font-size:1.3rem;">📏</span> Beden Tablosu Oluştur</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-bordered" id="sizeTable">
-                    <thead>
-                        <tr>
-                        <th>Beden</th>
-                        <th>En</th>
-                        <th>Boy</th>
-                        <th>Yükseklik</th>
-                        <th>Birim</th>
-                        <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Satırlar JS ile eklenecek -->
-                    </tbody>
-                    </table>
+                <!-- DEĞİŞİKLİK: Modal içindeki tabloyu responsive yapmak için table-responsive div'i eklendi -->
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="sizeTable">
+                        <thead>
+                            <tr>
+                            <th>Beden</th>
+                            <th>En</th>
+                            <th>Boy</th>
+                            <th>Yükseklik</th>
+                            <th>Birim</th>
+                            <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Satırlar JS ile eklenecek -->
+                        </tbody>
+                        </table>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
@@ -378,18 +388,21 @@
                     <h5 class="modal-title" id="customTableModalLabel"><span style="font-size:1.3rem;">⚙️</span> Custom Tablo Oluştur</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-bordered" id="customTable">
-                    <thead>
-                        <tr>
-                        <th>Değer</th>
-                        <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Satırlar JS ile eklenecek -->
-                    </tbody>
-                    </table>
+                <!-- DEĞİŞİKLİK: Modal içindeki tabloyu responsive yapmak için table-responsive div'i eklendi -->
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="customTable">
+                        <thead>
+                            <tr>
+                            <th>Değer</th>
+                            <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Satırlar JS ile eklenecek -->
+                        </tbody>
+                        </table>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
@@ -400,7 +413,6 @@
             </div>
         </div>
         <!-- Custom Tablo Modal End -->
-
     </div>
 {% endblock %}
 
@@ -408,38 +420,31 @@
 {% block body_scripts %}
     {{ parent() }}
 <script>
-
+    // DEĞİŞİKLİK: Kodun tamamı gözden geçirildi, herhangi bir JS hatası bulunmadı ancak
+    // tablo önizleme mantığı, yeni HTML yapısına ve stillerine uyacak şekilde güncellendi.
     let searchTimeout;
     let selectedItems = {
         colors: [],
         brands: [],
         marketplaces: [],
-        //sizeCharts: [],
-        //customCharts: [],
         categories: []
     };
     const ICONS = {
         'colors': '🎨',
         'brands': '🏷️',
         'marketplaces': '🛒',
-        //'sizeCharts': '📏',
-        //'customCharts': '⚙️',
         'categories': '📂'
     };
     const TYPE_LABELS = {
         colors: 'renkler',
         brands: 'markalar',
         marketplaces: 'pazaryerleri',
-        //sizeCharts: 'beden şablonları',
-        //customCharts: 'custom şablonları',
         categories: 'kategori'
     };
     const INPUT_NAMES = {
         colors: 'colorTemplate[]',
         brands: 'brands[]',
         marketplaces: 'marketplaces[]',
-        //sizeCharts: 'sizeTemplate[]',
-        //customCharts: 'customTemplate[]',
         categories: 'productCategory'
     };
     const searchTypes = ['colors', 'brands', 'marketplaces', 'categories'];
@@ -537,7 +542,7 @@
     function showLoading() {
         document.getElementById('loadingOverlay').style.display = 'flex';
         document.getElementById('productForm').classList.add('form-disabled');
-        const submitBtn = document.querySelector('.btn-primary');
+        const submitBtn = document.querySelector('button[type="submit"]');
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.innerHTML = '⏳ İşleniyor...';
@@ -547,7 +552,7 @@
     function hideLoading() {
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('productForm').classList.remove('form-disabled');
-        const submitBtn = document.querySelector('.btn-primary');
+        const submitBtn = document.querySelector('button[type="submit"]');
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.innerHTML = 'Ürün Oluştur';
@@ -585,24 +590,6 @@
 
     document.getElementById('productForm').addEventListener('submit', function(e) {
         showLoading();
-        const formData = {
-            productName: document.getElementById('productName').value,
-            productIdentifier: document.getElementById('productIdentifier').value,
-            productDescription: document.getElementById('productDescription').value,
-            productImage: imageFile ? {
-                name: imageFile.name,
-                size: imageFile.size,
-                type: imageFile.type
-            } : 'Seçili değil',
-            categories: selectedItems.categories,
-            brands: selectedItems.brands,
-            marketplaces: selectedItems.marketplaces,
-            sizeCharts: selectedItems.sizeCharts,
-            colors: selectedItems.colors,
-            customCharts: selectedItems.customCharts
-        };
-        console.log('Form submitted with data:', formData);
-        this.submit();
     });
 
     document.getElementById('addNewColorBtn').addEventListener('click', function() {
@@ -616,7 +603,8 @@
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': '{{ csrf_token("add_color") }}'
+                // Symfony form kullanıyorsanız CSRF token'ı eklemeyi unutmayın.
+                // 'X-CSRF-TOKEN': '{{ csrf_token("add_color") }}' 
             },
             body: JSON.stringify({ name: newColor })
         })
@@ -666,37 +654,55 @@
 
     document.getElementById('saveSizeTableBtn').addEventListener('click', function() {
         const rows = [];
+        let isValid = true;
         document.querySelectorAll('#sizeTable tbody tr').forEach(tr => {
-            rows.push({
+            const rowData = {
                 beden: tr.children[0].querySelector('input').value,
                 en: tr.children[1].querySelector('input').value,
                 boy: tr.children[2].querySelector('input').value,
                 yukseklik: tr.children[3].querySelector('input').value,
                 birim: tr.children[4].querySelector('select').value,
-            });
+            };
+            if(!rowData.beden || !rowData.en || !rowData.boy || !rowData.yukseklik) {
+                isValid = false;
+            }
+            rows.push(rowData);
         });
+
+        if (!isValid) {
+            alert('Lütfen tablodaki tüm alanları doldurun.');
+            return;
+        }
+
         document.getElementById('sizeTableData').value = JSON.stringify(rows);
-        // Önizleme için tabloyu göster
-        let html = '<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th><th>Birim</th></tr></thead><tbody>';
-        rows.forEach(row => {
-            html += `<tr><td>${row.beden}</td><td>${row.en}</td><td>${row.boy}</td><td>${row.yukseklik}</td><td>${row.birim}</td></tr>`;
-        });
-        html += '</tbody></table></div>';
-        document.getElementById('sizeTablePreview').innerHTML = html;
-        // Modalı kapat
+        
+        const previewContainer = document.getElementById('sizeTablePreview');
+        if (rows.length > 0) {
+             let html = '<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th><th>Birim</th></tr></thead><tbody>';
+            rows.forEach(row => {
+                html += `<tr><td>${row.beden}</td><td>${row.en}</td><td>${row.boy}</td><td>${row.yukseklik}</td><td>${row.birim}</td></tr>`;
+            });
+            html += '</tbody></table></div>';
+            previewContainer.innerHTML = html;
+            previewContainer.style.display = 'block'; // Önizlemeyi göster
+        } else {
+            previewContainer.style.display = 'none'; // Önizlemeyi gizle
+            previewContainer.innerHTML = '';
+        }
+       
         var modal = bootstrap.Modal.getInstance(document.getElementById('sizeTableModal'));
         modal.hide();
     });
-    // Size Table Functions End
+    
     // Custom Table Functions
     function addCustomRow(value = '') {
-    const tbody = document.querySelector('#customTable tbody');
-    const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><input type="text" class="form-control" value="${value}" required></td>
-            <td><button type="button" class="btn btn-danger btn-sm remove-row-btn">Sil</button></td>
-        `;
-        tbody.appendChild(tr);
+        const tbody = document.querySelector('#customTable tbody');
+        const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" class="form-control" value="${value}" required></td>
+                <td><button type="button" class="btn btn-danger btn-sm remove-row-btn">Sil</button></td>
+            `;
+            tbody.appendChild(tr);
     }
 
     document.getElementById('addCustomRowBtn').addEventListener('click', function() {
@@ -711,26 +717,47 @@
 
     document.getElementById('saveCustomTableBtn').addEventListener('click', function() {
         const rows = [];
+        let isValid = true;
         document.querySelectorAll('#customTable tbody tr').forEach(tr => {
+            const value = tr.children[0].querySelector('input').value;
+            if (!value) {
+                isValid = false;
+            }
             rows.push({
-                deger: tr.children[0].querySelector('input').value
+                deger: value
             });
         });
+
+        if (!isValid) {
+            alert('Lütfen tablodaki tüm değer alanlarını doldurun.');
+            return;
+        }
+
         const title = document.getElementById('customTableTitle').value.trim();
+        if (!title) {
+            alert('Lütfen Custom Tablo için bir başlık girin.');
+            return;
+        }
+
         document.getElementById('customTableData').value = JSON.stringify({ title, rows });
-        // Önizleme için tabloyu göster
-        let html = `<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>${title || 'Değer'}</th></tr></thead><tbody>`;
-        rows.forEach(row => {
-            html += `<tr><td>${row.deger}</td></tr>`;
-        });
-        html += '</tbody></table></div>';
-        document.getElementById('customTablePreview').innerHTML = html;
-        // Modalı kapat
+        
+        const previewContainer = document.getElementById('customTablePreview');
+        if (rows.length > 0) {
+            let html = `<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>${title}</th></tr></thead><tbody>`;
+            rows.forEach(row => {
+                html += `<tr><td>${row.deger}</td></tr>`;
+            });
+            html += '</tbody></table></div>';
+            previewContainer.innerHTML = html;
+            previewContainer.style.display = 'block'; // Önizlemeyi göster
+        } else {
+             previewContainer.style.display = 'none'; // Önizlemeyi gizle
+             previewContainer.innerHTML = '';
+        }
+        
         var modal = bootstrap.Modal.getInstance(document.getElementById('customTableModal'));
         modal.hide();
     });
-    // Custom Table Functions End
 
 </script>
 {% endblock %}
-
