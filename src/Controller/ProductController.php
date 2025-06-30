@@ -92,18 +92,20 @@ class ProductController extends AbstractController
         $customTableData = $request->get('customTableData');
         $variations = $request->get('variationsData');
 
-        error_log('productName: ' . print_r($productName, true));
-        error_log('productIdentifier: ' . print_r($productIdentifier, true));
-        error_log('productDescription: ' . print_r($productDescription, true));
-        error_log('imageFile: ' . ($imageFile ? $imageFile->getClientOriginalName() : 'YOK'));
-        error_log('categoryId: ' . print_r($categoryId, true));
-        error_log('brandIds: ' . print_r($brandIds, true));
-        error_log('marketplaceIds: ' . print_r($marketplaceIds, true));
-        error_log('colorIds: ' . print_r($colorIds, true));
-        error_log('customTemplateId: ' . print_r($customTemplateId, true));
-        error_log('sizeTableData: ' . print_r($sizeTableData, true));
-        error_log('customTableData: ' . print_r($customTableData, true));
-        error_log('variations: ' . print_r($variations, true));
+        dump([
+            'productName'        => $productName,
+            'productIdentifier'  => $productIdentifier,
+            'productDescription' => $productDescription,
+            'imageFile'          => $imageFile ? $imageFile->getClientOriginalName() : 'YOK',
+            'categoryId'         => $categoryId,
+            'brandIds'           => $brandIds,
+            'marketplaceIds'     => $marketplaceIds,
+            'colorIds'           => $colorIds,
+            'customTemplateId'   => $customTemplateId,
+            'sizeTableData'      => $sizeTableData,
+            'customTableData'    => $customTableData,
+            'variations'         => $variations,
+        ]);
         
         // $errors = [];
         // $category = $this->validateSingleObject('category', $categoryId, $errors, 'Kategori');
