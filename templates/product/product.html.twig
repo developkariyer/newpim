@@ -170,6 +170,57 @@
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
         }
+
+        @media (max-width: 600px) {
+            .modal-lg {
+                max-width: 98vw !important;
+                margin: 0.5rem;
+            }
+            #sizeTable th, #sizeTable td {
+                font-size: 0.95rem;
+                padding: 0.4rem;
+            }
+            #sizeTable .form-control, #sizeTable .form-select {
+                font-size: 0.95rem;
+                padding: 0.4rem 0.5rem;
+            }
+        }
+            #sizeTableModal .modal-content {
+            border-radius: 12px;
+        }
+        #sizeTableModal .modal-header {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        #sizeTableModal .modal-footer {
+            background: #f8f9fa;
+            border-top: 1px solid #e1e5e9;
+        }
+        #sizeTableModal .btn-success {
+            background: #28a745;
+            border: none;
+            font-weight: 500;
+            font-size: 1rem;
+            padding: 0.6rem 1.5rem;
+        }
+        #sizeTableModal .btn-success:hover {
+            background: #218838;
+        }
+        #sizeTableModal .btn-primary {
+            background: #007bff;
+            border: none;
+            font-weight: 500;
+            font-size: 1rem;
+            padding: 0.6rem 1.5rem;
+        }
+        #sizeTableModal .btn-primary:hover {
+            background: #0056b3;
+        }
+        #sizeTableModal .btn-danger {
+            font-size: 0.95rem;
+            padding: 0.3rem 0.8rem;
+        }
+        
     </style>
 {% endblock %}
 
@@ -302,8 +353,10 @@
                     </div>
                     <div class="form-group">
                         <label for="sizeTableBtn">Beden Tablosu *</label>
-                        <button type="button" class="btn btn-outline-primary" id="sizeTableBtn" data-bs-toggle="modal" data-bs-target="#sizeTableModal">
-                            Beden Tablosu Oluştur
+                        <button type="button" class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2"
+                                id="sizeTableBtn" data-bs-toggle="modal" data-bs-target="#sizeTableModal"
+                                style="font-size:1.1rem; font-weight:500;">
+                            <span style="font-size:1.5rem; margin-right:0.5rem;">📏</span> Beden Tablosu Oluştur
                         </button>
                         <input type="hidden" name="sizeTableData" id="sizeTableData">
                         <div id="sizeTablePreview" style="margin-top: 1rem;"></div>
@@ -334,10 +387,10 @@
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="sizeTableModalLabel">Beden Tablosu Oluştur</h5>
+                    <h5 class="modal-title" id="sizeTableModalLabel"><span style="font-size:1.3rem;">📏</span> Beden Tablosu Oluştur</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
                 </div>
-                <div class="modal-body">
+                <div class="table-responsive">
                     <table class="table table-bordered" id="sizeTable">
                     <thead>
                         <tr>
@@ -353,10 +406,10 @@
                         <!-- Satırlar JS ile eklenecek -->
                     </tbody>
                     </table>
-                    <button type="button" class="btn btn-success" id="addSizeRowBtn">+ Satır Ekle</button>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                    <button type="button" class="btn btn-success" id="addSizeRowBtn">+ Satır Ekle</button>
                     <button type="button" class="btn btn-primary" id="saveSizeTableBtn">Kaydet</button>
                 </div>
                 </div>
@@ -639,7 +692,6 @@
                 birim: tr.children[4].querySelector('select').value,
             });
         });
-        console.log('Tablo verisi:', rows);
         document.getElementById('sizeTableData').value = JSON.stringify(rows);
         // Önizleme için tabloyu göster
         let html = '<table class="table table-sm table-bordered"><thead><tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th><th>Birim</th></tr></thead><tbody>';
