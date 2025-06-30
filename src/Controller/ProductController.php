@@ -182,7 +182,7 @@ class ProductController extends AbstractController
                 $this->addProductVariants($product, $variations);
             }
             $this->addFlash('success', 'Ürün ve varyantlar başarıyla oluşturuldu.');
-            return $this->redirectToRoute('product');
+            //return $this->redirectToRoute('product');
         }catch (\Throwable $e) {
             $this->addFlash('danger', 'Ürün oluşturulurken bir hata oluştu: ' . $e->getMessage());
             return $this->render('product/product.html.twig', [
