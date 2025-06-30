@@ -643,7 +643,6 @@
     });
 
     document.getElementById('productForm').addEventListener('submit', function(e) {
-        e.preventDefault();
         showLoading();
         const rows = [];
         document.querySelectorAll('#variationTableContainer tbody tr').forEach(tr => {

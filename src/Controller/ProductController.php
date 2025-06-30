@@ -86,69 +86,81 @@ class ProductController extends AbstractController
         $categoryId = $request->get('productCategory');
         $brandIds = $request->get('brands', []);
         $marketplaceIds = $request->get('marketplaces', []);
-        $sizeTemplateId = $request->get('sizeTemplate');
-        $colorIds = $request->get('colorTemplate', []);
+        $colorIds = $request->get('colors', []);
         $customTemplateId = $request->get('customTemplate');
         $sizeTableData = $request->get('sizeTableData');
-        $sizeTableRows = json_decode($sizeTableData, true);
-        $variations = json_decode($request->get('variationsData'), true);
+        $customTableData = $request->get('customTableData');
+        $variations = $request->get('variationsData');
+
+        error_log('productName: ' . print_r($productName, true));
+        error_log('productIdentifier: ' . print_r($productIdentifier, true));
+        error_log('productDescription: ' . print_r($productDescription, true));
+        error_log('imageFile: ' . ($imageFile ? $imageFile->getClientOriginalName() : 'YOK'));
+        error_log('categoryId: ' . print_r($categoryId, true));
+        error_log('brandIds: ' . print_r($brandIds, true));
+        error_log('marketplaceIds: ' . print_r($marketplaceIds, true));
+        error_log('colorIds: ' . print_r($colorIds, true));
+        error_log('customTemplateId: ' . print_r($customTemplateId, true));
+        error_log('sizeTableData: ' . print_r($sizeTableData, true));
+        error_log('customTableData: ' . print_r($customTableData, true));
+        error_log('variations: ' . print_r($variations, true));
         
-        $errors = [];
-        $category = $this->validateSingleObject('category', $categoryId, $errors, 'Kategori');
-        $sizeChart = $this->validateSingleObject('sizeChart', $sizeTemplateId, $errors, 'Beden şablonu');
-        $customChart = $this->validateSingleObject('customChart', $customTemplateId, $errors, 'Custom şablon');
-        $brands = $this->validateMultipleObjects('brand', $brandIds, $errors, 'Marka');
-        $marketplaces = $this->validateMultipleObjects('marketplace', $marketplaceIds, $errors, 'Pazaryeri');
-        $colors = $this->validateMultipleObjects('color', $colorIds, $errors, 'Renk');
-        if (!empty($errors)) {
-            return $this->render('product/product.html.twig', [
-                'errors' => $errors
-            ]);
-        }
+        // $errors = [];
+        // $category = $this->validateSingleObject('category', $categoryId, $errors, 'Kategori');
+        // $sizeChart = $this->validateSingleObject('sizeChart', $sizeTemplateId, $errors, 'Beden şablonu');
+        // $customChart = $this->validateSingleObject('customChart', $customTemplateId, $errors, 'Custom şablon');
+        // $brands = $this->validateMultipleObjects('brand', $brandIds, $errors, 'Marka');
+        // $marketplaces = $this->validateMultipleObjects('marketplace', $marketplaceIds, $errors, 'Pazaryeri');
+        // $colors = $this->validateMultipleObjects('color', $colorIds, $errors, 'Renk');
+        // if (!empty($errors)) {
+        //     return $this->render('product/product.html.twig', [
+        //         'errors' => $errors
+        //     ]);
+        // }
 
-        $imageAsset = null;
-        if ($imageFile && $imageFile->isValid()) {
-            $imageAsset = $this->uploadProductImage($imageFile, $productIdentifier ?: $productName);
-        }
+        // $imageAsset = null;
+        // if ($imageFile && $imageFile->isValid()) {
+        //     $imageAsset = $this->uploadProductImage($imageFile, $productIdentifier ?: $productName);
+        // }
 
-        $mainFolderId = 266;
-        $identifierPrefix = strtoupper(explode('-', $productIdentifier)[0]);
-        $urunlerFolder = \Pimcore\Model\DataObject\Folder::getById($mainFolderId);
-        $parentFolderPath = $urunlerFolder->getFullPath() . '/' . $identifierPrefix;
-        $parentFolder = \Pimcore\Model\DataObject\Folder::getByPath($parentFolderPath);
-        if (!$parentFolder) {
-            $parentFolder = new \Pimcore\Model\DataObject\Folder();
-            $parentFolder->setKey($identifierPrefix);
-            $parentFolder->setParent($urunlerFolder);
-            $parentFolder->save();
-        }
-        try {   
-            $product = new Product();
-            $product->setParent($parentFolder);
-            $product->setKey($productIdentifier . ' ' . $productName);
-            $product->setName($productName);
-            $product->setProductIdentifier($productIdentifier);
-            $product->setDescription($productDescription);
-            $product->setCategory($category);
-            $product->setBrands($brands);
-            $product->setMarketplaces($marketplaces);
-            $product->setVariantSizeTemplate($sizeChart);
-            $product->setCustomVariantTemplate($customChart);
-            $product->setVariationColors($colors);
-            if ($imageAsset) {
-                $product->setImage($imageAsset);
-            }
-            $product->setPublished(true);
-            $product->save();
-            $createdVariants = $this->variationMatrixService->createVariants($product);
-            $this->addFlash('success', 'Ürün ve varyantlar başarıyla oluşturuldu.');
-            return $this->redirectToRoute('product');
-        }catch (\Throwable $e) {
-            $this->addFlash('danger', 'Ürün oluşturulurken bir hata oluştu: ' . $e->getMessage());
-            return $this->render('product/product.html.twig', [
-                'errors' => ['Ürün oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.'],
-            ]);
-        }
+        // $mainFolderId = 266;
+        // $identifierPrefix = strtoupper(explode('-', $productIdentifier)[0]);
+        // $urunlerFolder = \Pimcore\Model\DataObject\Folder::getById($mainFolderId);
+        // $parentFolderPath = $urunlerFolder->getFullPath() . '/' . $identifierPrefix;
+        // $parentFolder = \Pimcore\Model\DataObject\Folder::getByPath($parentFolderPath);
+        // if (!$parentFolder) {
+        //     $parentFolder = new \Pimcore\Model\DataObject\Folder();
+        //     $parentFolder->setKey($identifierPrefix);
+        //     $parentFolder->setParent($urunlerFolder);
+        //     $parentFolder->save();
+        // }
+        // try {   
+        //     $product = new Product();
+        //     $product->setParent($parentFolder);
+        //     $product->setKey($productIdentifier . ' ' . $productName);
+        //     $product->setName($productName);
+        //     $product->setProductIdentifier($productIdentifier);
+        //     $product->setDescription($productDescription);
+        //     $product->setCategory($category);
+        //     $product->setBrands($brands);
+        //     $product->setMarketplaces($marketplaces);
+        //     $product->setVariantSizeTemplate($sizeChart);
+        //     $product->setCustomVariantTemplate($customChart);
+        //     $product->setVariationColors($colors);
+        //     if ($imageAsset) {
+        //         $product->setImage($imageAsset);
+        //     }
+        //     $product->setPublished(true);
+        //     $product->save();
+        //     $createdVariants = $this->variationMatrixService->createVariants($product);
+        //     $this->addFlash('success', 'Ürün ve varyantlar başarıyla oluşturuldu.');
+        //     return $this->redirectToRoute('product');
+        // }catch (\Throwable $e) {
+        //     $this->addFlash('danger', 'Ürün oluşturulurken bir hata oluştu: ' . $e->getMessage());
+        //     return $this->render('product/product.html.twig', [
+        //         'errors' => ['Ürün oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.'],
+        //     ]);
+        // }
         
     }
 
