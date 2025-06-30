@@ -149,6 +149,30 @@ class ProductController extends AbstractController
         
     }
 
+    #[Route('/product/add-color', name: 'product_add_color', methods: ['POST'])]
+    public function addColor(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $colorName = trim($data['name'] ?? '');
+        if (!$colorName) {
+            return new JsonResponse(['success' => false, 'message' => 'Renk adı boş olamaz.']);
+        }
+
+        $existing = new Color\Listing();
+        $existing->setCondition('color = ?', [$colorName]);
+        if ($existing->count() > 0) {
+            return new JsonResponse(['success' => false, 'message' => 'Bu renk zaten mevcut.']);
+        }
+
+        $color = new Color();
+        $color->setKey(\Pimcore\File::getValidFilename($colorName));
+        $color->setParentId(1247);
+        $color->setColor($colorName);
+        $color->save();
+
+        return new JsonResponse(['success' => true, 'id' => $color->getId()]);
+    }
+
     private function getGenericListing(string $listingClass, string $condition = "published = 1", ?int $page = null, ?int $limit = null): array 
     {
         $listing = new $listingClass();

@@ -506,6 +506,33 @@
         this.submit();
     });
 
+    document.getElementById('addNewColorBtn').addEventListener('click', function() {
+        const newColor = document.getElementById('newColorInput').value.trim();
+        if (!newColor) {
+            alert('Lütfen bir renk girin.');
+            return;
+        }
+        fetch('/product/add-color', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': '{{ csrf_token("add_color") }}'
+            },
+            body: JSON.stringify({ name: newColor })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                addSelectedItem('colors', { id: data.id, name: newColor });
+                document.getElementById('newColorInput').value = '';
+            } else {
+                alert(data.message || 'Renk eklenemedi.');
+            }
+        })
+        .catch(() => alert('Sunucu hatası!'));
+    });
+
 </script>
 {% endblock %}
 
