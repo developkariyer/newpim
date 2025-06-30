@@ -15,7 +15,7 @@ class VariationColorSelect implements SelectOptionsProviderInterface
         $options = [];
         if (isset($context['object']) && $context['object'] instanceof Product) {
             $currentObject = $context['object'];
-            if (!$currentObject->isVariant()) {
+            if ($currentObject->getType() !== \Pimcore\Model\DataObject::OBJECT_TYPE_VARIANT) {
                 return $options;
             }
             $listingObject = new Color\Listing();

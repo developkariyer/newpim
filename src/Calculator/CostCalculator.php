@@ -11,7 +11,7 @@ class CostCalculator implements CalculatorClassInterface
 {
     public function compute(Concrete $object, CalculatedValue $context): string
     {
-        if (!($object instanceof Product) || !$object->isVariant()) {
+        if (!($object instanceof Product) || $currentObject->getType() !== \Pimcore\Model\DataObject::OBJECT_TYPE_VARIANT) {
             return '';
         }
         return match ($context->getFieldname()) {
