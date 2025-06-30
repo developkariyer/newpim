@@ -147,6 +147,7 @@ class ProductController extends AbstractController
             if ($imageAsset) {
                 $product->setImage($imageAsset);
             }
+            $product->checkProductCode($product);
             $product->setPublished(true);
             $product->save();
             $this->addFlash('success', 'Ürün ve varyantlar başarıyla oluşturuldu.');
@@ -183,6 +184,51 @@ class ProductController extends AbstractController
         $color->save();
 
         return new JsonResponse(['success' => true, 'id' => $color->getId()]);
+    }
+
+    private function checkProductCode($product, $numberDigits = 5): bool
+    {
+        Product::setGetInheritedValues(false);
+        if (strlen($product->getProductCode()) == $numberDigits) {
+            Product::setGetInheritedValues(true);
+            return false;
+        }
+        $productCode = $this->generateUniqueCode($numberDigits);
+        $product->setProductCode($productCode);
+        Product::setGetInheritedValues(true);
+        return true;
+    }
+
+    private function generateUniqueCode(int $numberDigits=5): string
+    {
+        while (true) {
+            $candidateCode = $this->generateCustomString($numberDigits);
+            if (!$this->findByField('productCode', $candidateCode)) {
+                return $candidateCode;
+            }
+        }
+    }
+
+    private static function generateCustomString(int $length = 5): string
+    {
+        $characters = 'ABCDEFGHJKMNPQRSTVWXYZ1234567890';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+
+        for ($i = 0; $i < $length; $i++) {
+            $randomIndex = mt_rand(0, $charactersLength - 1);
+            $randomString .= $characters[$randomIndex];
+        }
+        return $randomString;
+    }
+
+    public function findByField(string $field, mixed $value): \Pimcore\Model\DataObject\Product|false
+    {
+        $list = new ProductListing();
+        $list->setCondition("`$field` = ?", [$value]);
+        $list->setUnpublished(true);
+        $list->setLimit(1);
+        return $list->current();
     }
 
     private function getGenericListing(string $listingClass, string $condition = "published = 1", ?int $page = null, ?int $limit = null): array 
