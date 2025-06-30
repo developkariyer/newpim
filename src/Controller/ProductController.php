@@ -142,7 +142,7 @@ class ProductController extends AbstractController
             $product->setProductIdentifier($productIdentifier);
             $product->setDescription($productDescription);
             $product->setProductCategory($category);
-            $product->setBrands($brands);
+            $product->setBrandItems($brands);
             $product->setMarketplaces($marketplaces);
             if ($imageAsset) {
                 $product->setImage($imageAsset);
