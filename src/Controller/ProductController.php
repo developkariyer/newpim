@@ -177,7 +177,7 @@ class ProductController extends AbstractController
             $this->checkProductCode($product);
             $product->setPublished(true);
             $product->save();
-             if (is_array($variations) && count($variations) > 0) {
+            if (is_array($variations) && count($variations) > 0) {
                 $this->addProductVariants($product, $variations);
             }
             $this->addFlash('success', 'Ürün ve varyantlar başarıyla oluşturuldu.');
