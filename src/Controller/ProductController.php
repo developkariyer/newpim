@@ -205,8 +205,7 @@ class ProductController extends AbstractController
             $parentName = $parentProduct->getName();
             $variantKey = implode('-', array_filter([$variantData['renk'] ?? '', $variantData['beden'] ?? '', $variantData['custom'] ?? '']));
             $fullKeyBase = $parentIdentifier . '-' . $parentName . '-' . ($variantKey ?: 'variant');
-            $fullKey = $fullKeyBase . '-' . uniqid();
-            $variant->setKey($fullKey);
+            $variant->setKey($fullKeyBase);
             $variant->setName($fullKeyBase);
             if (!empty($variantData['renk'])) {
                 $colorObj = new \Pimcore\Model\DataObject\Color\Listing();
