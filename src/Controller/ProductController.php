@@ -165,7 +165,7 @@ class ProductController extends AbstractController
         }
 
         $color = new Color();
-        $color->setKey(\Pimcore\File::getValidFilename($colorName));
+        $color->setKey($colorName);
         $color->setParentId(1247);
         $color->setColor($colorName);
         $color->setPublished(true);
