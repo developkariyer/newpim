@@ -175,11 +175,11 @@ class ProductController extends AbstractController
                 $product->setCustomFieldTable($customFieldTable);
             }
             $this->checkProductCode($product);
-            if (is_array($variations) && count($variations) > 0) {
-                $this->addProductVariants($product, $variations);
-            }
             $product->setPublished(true);
             $product->save();
+             if (is_array($variations) && count($variations) > 0) {
+                $this->addProductVariants($product, $variations);
+            }
             $this->addFlash('success', 'Ürün ve varyantlar başarıyla oluşturuldu.');
             return $this->redirectToRoute('product');
         }catch (\Throwable $e) {
@@ -212,6 +212,7 @@ class ProductController extends AbstractController
             $this->checkIwasku($variant);
             $variant->setPublished(true);
             $variant->save();
+            dump('Varyant kaydedildi:', $variant->getId());
         }
     }
 
