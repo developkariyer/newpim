@@ -147,6 +147,20 @@ class ProductController extends AbstractController
             if ($imageAsset) {
                 $product->setImage($imageAsset);
             }
+            $variationSizeTable = [];
+            if ($sizeTableData) {
+                $variationSizeTable = json_decode($sizeTableData, true);
+                if (is_array($variationSizeTable)) {
+                    $product->setVariationSizeTable($variationSizeTable);
+                }
+            }
+            $customFieldTable = [];
+            if ($customTableData) {
+                $customFieldTable = json_decode($customTableData, true);
+                if (is_array($customFieldTable)) {
+                    $product->setCustomFieldTable($customFieldTable);
+                }
+            }
             $this->checkProductCode($product);
             $product->setPublished(true);
             $product->save();
