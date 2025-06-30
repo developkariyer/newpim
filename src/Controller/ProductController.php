@@ -223,7 +223,7 @@ class ProductController extends AbstractController
             if (!empty($variantData['custom'])) {
                 $variant->setCustomField($variantData['custom']);
             }
-            $this->checkIwasku($parentProduct ,$variant);
+            $this->checkIwasku($parentIdentifier , $variant);
             $variant->setPublished(true);
             $variant->save();
             dump('Varyant kaydedildi:', $variant->getId());
@@ -255,14 +255,13 @@ class ProductController extends AbstractController
         return new JsonResponse(['success' => true, 'id' => $color->getId()]);
     }
 
-    public function checkIwasku($parentProduct, $product): bool
+    public function checkIwasku($parentIdentifier, $product): bool
     {
         if (
             $product->getType() == Product::OBJECT_TYPE_VARIANT
             && strlen($product->getIwasku() ?? '') != 12
         ) {
-            $pid = $parentProduct->getProductIdentifier();
-            $iwasku = str_pad(str_replace('-', '', $pid), 7, '0', STR_PAD_RIGHT);
+            $iwasku = str_pad(str_replace('-', '', $parentIdentifier), 7, '0', STR_PAD_RIGHT);
             $productCode = $product->getProductCode();
             if (strlen($productCode) != 5) {
                 $productCode = $this->generateUniqueCode(5);
@@ -309,15 +308,6 @@ class ProductController extends AbstractController
             $randomString .= $characters[$randomIndex];
         }
         return $randomString;
-    }
-
-    public function getInheritedField(string $field): mixed
-    {
-        return Service::useInheritedValues(true, function() use ($field) {
-            $object = $this;
-            $fieldName = "get" . ucfirst($field);
-            return $object->$fieldName();
-        });
     }
 
     public function findByField(string $field, mixed $value): \Pimcore\Model\DataObject\Product|false
