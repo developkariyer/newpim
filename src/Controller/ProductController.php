@@ -205,7 +205,13 @@ class ProductController extends AbstractController
             $variant->setKey($variantKey ?: uniqid('variant_'));
             $variant->setName($variantKey);
             if (!empty($variantData['renk'])) {
-                $variant->setVariationColor($variantData['renk']);
+                $colorObj = new \Pimcore\Model\DataObject\Color\Listing();
+                $colorObj->setCondition('color = ?', [$variantData['renk']]);
+                $colorObj->setLimit(1);
+                $colorObj = $colorObj->current();
+                if ($colorObj) {
+                    $variant->setVariationColor($colorObj);
+                }
             }
             if (!empty($variantData['beden'])) {
                 $variant->setVariationSize($variantData['beden']);
