@@ -456,10 +456,22 @@
         </div>
         <!-- Custom Tablo Modal End -->
 
-        <div id="variationStep" style="display:none; margin-top:2rem;">
-            <h3>Varyasyonları Seç</h3>
-            <div id="variationTableContainer"></div>
-            <button type="button" class="btn btn-success" id="createVariationsBtn">Varyasyonları Kaydet</button>
+        <div class="modal fade" id="variationModal" tabindex="-1" aria-labelledby="variationModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="variationModalLabel">Varyasyonları Seç</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="variationTableContainer"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-success" id="createVariationsBtn">Varyasyonları Kaydet</button>
+                </div>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -835,8 +847,8 @@
         });
         html += '</tbody></table>';
         document.getElementById('variationTableContainer').innerHTML = html;
-        document.getElementById('variationStep').style.display = 'block';
-        window.scrollTo({ top: document.getElementById('variationStep').offsetTop, behavior: 'smooth' });
+        var modal = new bootstrap.Modal(document.getElementById('variationModal'));
+        modal.show();
     });
 
 </script>
