@@ -11,13 +11,9 @@ use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\Brand;
 use Pimcore\Model\DataObject\Category;
 use Pimcore\Model\DataObject\Marketplace;
-use Pimcore\Model\DataObject\CustomChart;
-use Pimcore\Model\DataObject\VariationColor;
-use Pimcore\Model\DataObject\VariationSizeChart;
+use Pimcore\Model\DataObject\Color;
 use Pimcore\Model\DataObject\Category\Listing as CategoryListing;
-use Pimcore\Model\DataObject\VariationSizeChart\Listing as VariationSizeChartListing;
-use Pimcore\Model\DataObject\VariationColor\Listing as VariationColorListing;
-use Pimcore\Model\DataObject\CustomChart\Listing as CustomChartListing;
+use Pimcore\Model\DataObject\Color\Listing as VariationColorListing;
 use Pimcore\Model\DataObject\Brand\Listing as BrandListing;
 use Pimcore\Model\DataObject\Marketplace\Listing as MarketplaceListing;
 use Pimcore\Model\DataObject\Product\Listing as ProductListing;
@@ -30,18 +26,14 @@ class ProductController extends AbstractController
         'colors' => VariationColorListing::class,
         'brands' => BrandListing::class,
         'marketplaces' => MarketplaceListing::class,
-        'customCharts' => CustomChartListing::class,
-        'sizeCharts' => VariationSizeChartListing::class,
         'categories' => CategoryListing::class
     ];
 
     private const CLASS_MAPPING = [
-        'category' => Category::class,
+        'color' => Color::class,
         'brand' => Brand::class,
         'marketplace' => Marketplace::class,
-        'color' => VariationColor::class,
-        'sizeChart' => VariationSizeChart::class,
-        'customChart' => CustomChart::class
+        'category' => Category::class
     ];
 
     private VariationMatrixService $variationMatrixService;
@@ -55,16 +47,12 @@ class ProductController extends AbstractController
     public function index(): Response
     {
         $categories = $this->getCategories();
-        $sizeCharts = $this->getGenericListing(self::TYPE_MAPPING['sizeCharts']);
         $colors = $this->getGenericListing(self::TYPE_MAPPING['colors']);
-        $customCharts = $this->getGenericListing(self::TYPE_MAPPING['customCharts']);
         $brands = $this->getGenericListing(self::TYPE_MAPPING['brands']);
         $marketplaces = $this->getGenericListing(self::TYPE_MAPPING['marketplaces']);
         return $this->render('product/product.html.twig', [
             'categories' => $categories,
-            'sizeCharts' => $sizeCharts,
             'colors' => $colors,
-            'customCharts' => $customCharts,
             'brands' => $brands,
             'marketplaces' => $marketplaces
         ]);
@@ -161,6 +149,26 @@ class ProductController extends AbstractController
         
     }
 
+    private function getGenericListing(string $listingClass, string $condition = "published = 1", ?int $page = null, ?int $limit = null): array 
+    {
+        $listing = new $listingClass();
+        $listing->setCondition($condition);
+        if ($limit !== null && $page !== null) {
+            $offset = ($page - 1) * $limit;
+            $listing->setLimit($limit);
+            $listing->setOffset($offset);
+        }
+        $listing->load();
+        $resultList = [];
+        foreach ($listing as $item) {
+            $resultList[] = [
+                'id' => $item->getId(),
+                'name' => $item->getKey(),
+            ];
+        }
+        return $resultList;
+    }
+
     private function validateSingleObject(string $type, $id, array &$errors, string $displayName): ?object
     {
         if (empty($id)) {
@@ -206,26 +214,6 @@ class ProductController extends AbstractController
         } catch (\Exception $e) {
             return null;
         }
-    }
-
-    private function getGenericListing(string $listingClass, string $condition = "published = 1", ?int $page = null, ?int $limit = null): array 
-    {
-        $listing = new $listingClass();
-        $listing->setCondition($condition);
-        if ($limit !== null && $page !== null) {
-            $offset = ($page - 1) * $limit;
-            $listing->setLimit($limit);
-            $listing->setOffset($offset);
-        }
-        $listing->load();
-        $resultList = [];
-        foreach ($listing as $item) {
-            $resultList[] = [
-                'id' => $item->getId(),
-                'name' => $item->getKey(),
-            ];
-        }
-        return $resultList;
     }
 
     private function getCategories()
