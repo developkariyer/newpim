@@ -147,7 +147,7 @@ class ProductController extends AbstractController
             if ($imageAsset) {
                 $product->setImage($imageAsset);
             }
-            $product->checkProductCode($product);
+            $this->checkProductCode($product);
             $product->setPublished(true);
             $product->save();
             $this->addFlash('success', 'Ürün ve varyantlar başarıyla oluşturuldu.');
