@@ -819,7 +819,7 @@
         modal.hide();
     });
 
-    document.getElementById('goToStep2Btn').onclick = function() {
+    document.getElementById('goToVariationsBtn').onclick = function() {
         const colors = selectedItems.colors.map(c => c.name);
         const sizesData = JSON.parse(document.getElementById('sizeTableData').value || '[]');
         const sizes = sizesData.map(s => s.beden);
