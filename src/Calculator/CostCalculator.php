@@ -11,7 +11,7 @@ class CostCalculator implements CalculatorClassInterface
 {
     public function compute(Concrete $object, CalculatedValue $context): string
     {
-        if (!($object instanceof Product) || $object->level() !== 1) {
+        if (!($object instanceof Product) || !$object->isVariant()) {
             return '';
         }
         return match ($context->getFieldname()) {
