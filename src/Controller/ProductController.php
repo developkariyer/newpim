@@ -201,9 +201,12 @@ class ProductController extends AbstractController
             $variant = new Product();
             $variant->setParent($parentProduct);
             $variant->setType(Product::OBJECT_TYPE_VARIANT);
+            $parentIdentifier = $parentProduct->getProductIdentifier();
+            $parentName = $parentProduct->getName();
             $variantKey = implode('-', array_filter([$variantData['renk'] ?? '', $variantData['beden'] ?? '', $variantData['custom'] ?? '']));
-            $variant->setKey($variantKey ?: uniqid('variant_'));
-            $variant->setName($variantKey);
+            $fullKey = $parentIdentifier . '-' . $parentName . '-' . ($variantKey ?: uniqid('variant_'));
+            $variant->setKey($fullKey);
+            $variant->setName($fullKey);
             if (!empty($variantData['renk'])) {
                 $colorObj = new \Pimcore\Model\DataObject\Color\Listing();
                 $colorObj->setCondition('color = ?', [$variantData['renk']]);
@@ -253,7 +256,10 @@ class ProductController extends AbstractController
 
     public function checkIwasku($product): bool
     {
-        if ($product->getType() == Product::OBJECT_TYPE_VARIANT && $product->isPublished() && strlen($product->getIwasku() ?? '') != 12) {
+        if (
+            $product->getType() == Product::OBJECT_TYPE_VARIANT
+            && strlen($product->getIwasku() ?? '') != 12
+        ) {
             $pid = $this->getInheritedField("productIdentifier");
             $iwasku = str_pad(str_replace('-', '', $pid), 7, '0', STR_PAD_RIGHT);
             $productCode = $product->getProductCode();
