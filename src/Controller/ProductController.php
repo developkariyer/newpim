@@ -222,7 +222,7 @@ class ProductController extends AbstractController
             if (!empty($variantData['custom'])) {
                 $variant->setCustomField($variantData['custom']);
             }
-            $this->checkIwasku($variant);
+            $this->checkIwasku($parentProduct ,$variant);
             $variant->setPublished(true);
             $variant->save();
             dump('Varyant kaydedildi:', $variant->getId());
@@ -254,13 +254,13 @@ class ProductController extends AbstractController
         return new JsonResponse(['success' => true, 'id' => $color->getId()]);
     }
 
-    public function checkIwasku($product): bool
+    public function checkIwasku($parentProduct, $product): bool
     {
         if (
             $product->getType() == Product::OBJECT_TYPE_VARIANT
             && strlen($product->getIwasku() ?? '') != 12
         ) {
-            $pid = $this->getInheritedField("productIdentifier");
+            $pid = $parentProduct->getProductIdentifier();
             $iwasku = str_pad(str_replace('-', '', $pid), 7, '0', STR_PAD_RIGHT);
             $productCode = $product->getProductCode();
             if (strlen($productCode) != 5) {
