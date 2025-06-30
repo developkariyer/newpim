@@ -639,6 +639,7 @@
                 birim: tr.children[4].querySelector('select').value,
             });
         });
+        console.log('Tablo verisi:', rows);
         document.getElementById('sizeTableData').value = JSON.stringify(rows);
         // Önizleme için tabloyu göster
         let html = '<table class="table table-sm table-bordered"><thead><tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th><th>Birim</th></tr></thead><tbody>';
