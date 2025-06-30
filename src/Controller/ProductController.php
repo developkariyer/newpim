@@ -91,6 +91,9 @@ class ProductController extends AbstractController
         $sizeTableData = $request->get('sizeTableData');
         $customTableData = $request->get('customTableData');
         $variations = $request->get('variationsData');
+        if ($variations) {
+            $variations = json_decode($variations, true);
+        }
 
         // dump([
         //     'productName'        => $productName,
