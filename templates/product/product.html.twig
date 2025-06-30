@@ -385,18 +385,23 @@
                         <div id="sizeTablePreview" style="margin-top: 1rem;"></div>
                     </div>
                 </div>
-                {# <div class="form-row">
+                <div class="form-row">
                     <div class="form-group">
-                        <label for="customTemplate">Custom Şablonu</label>
-                        <input type="text" id="customChartsSearch" placeholder="Custom şablonu ara..." class="form-control" style="margin-bottom: 0.5rem;">
-                        <div id="customChartsResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; background: white;">
-                        </div>
-                        <div id="customChartsSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
-                            <small style="color: #6c757d;">Seçilen custom şablonu burada görünecek...</small>
-                        </div>
-                        <div id="customChartsHidden"></div>
+                        <label for="customTableBtn">Custom Tablo</label>
+                        <input type="text" id="customTableTitle" class="form-control mb-2" placeholder="Tablo başlığı (ör: Malzeme İçeriği)">
+                        <button type="button"
+                                class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2"
+                                id="customTableBtn"
+                                data-bs-toggle="modal"
+                                data-bs-target="#customTableModal"
+                                style="font-size:1.1rem; font-weight:500;">
+                            <span style="font-size:1.5rem; margin-right:0.5rem;">⚙️</span> Custom Tablo Oluştur
+                        </button>
+                        <input type="hidden" name="customTableData" id="customTableData">
+                        <div id="customTablePreview" style="margin-top: 1rem;"></div>
                     </div>
-                </div> #}
+                </div>
+
             </div>
             <!-- Form Butonları -->
             <div style="text-align: right; margin-top: 2rem;">
@@ -439,7 +444,36 @@
             </div>
         </div>
         <!-- Beden Tablosu Modal End -->
-
+        <!-- Custom Tablo Modal -->
+        <div class="modal fade" id="customTableModal" tabindex="-1" aria-labelledby="customTableModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="customTableModalLabel"><span style="font-size:1.3rem;">⚙️</span> Custom Tablo Oluştur</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="customTable">
+                    <thead>
+                        <tr>
+                        <th>Değer</th>
+                        <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Satırlar JS ile eklenecek -->
+                    </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                    <button type="button" class="btn btn-success" id="addCustomRowBtn">+ Satır Ekle</button>
+                    <button type="button" class="btn btn-primary" id="saveCustomTableBtn">Kaydet</button>
+                </div>
+                </div>
+            </div>
+        </div>
+        <!-- Custom Tablo Modal End -->
 
     </div>
 {% endblock %}
@@ -728,6 +762,48 @@
         modal.hide();
     });
     // Size Table Functions End
+    // Custom Table Functions
+    function addCustomRow(value = '') {
+    const tbody = document.querySelector('#customTable tbody');
+    const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text" class="form-control" value="${value}" required></td>
+            <td><button type="button" class="btn btn-danger btn-sm remove-row-btn">Sil</button></td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    document.getElementById('addCustomRowBtn').addEventListener('click', function() {
+        addCustomRow();
+    });
+
+    document.querySelector('#customTable tbody').addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-row-btn')) {
+            e.target.closest('tr').remove();
+        }
+    });
+
+    document.getElementById('saveCustomTableBtn').addEventListener('click', function() {
+        const rows = [];
+        document.querySelectorAll('#customTable tbody tr').forEach(tr => {
+            rows.push({
+                deger: tr.children[0].querySelector('input').value
+            });
+        });
+        const title = document.getElementById('customTableTitle').value.trim();
+        document.getElementById('customTableData').value = JSON.stringify({ title, rows });
+        // Önizleme için tabloyu göster
+        let html = `<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>${title || 'Değer'}</th></tr></thead><tbody>`;
+        rows.forEach(row => {
+            html += `<tr><td>${row.deger}</td></tr>`;
+        });
+        html += '</tbody></table></div>';
+        document.getElementById('customTablePreview').innerHTML = html;
+        // Modalı kapat
+        var modal = bootstrap.Modal.getInstance(document.getElementById('customTableModal'));
+        modal.hide();
+    });
+    // Custom Table Functions End
 
 </script>
 {% endblock %}
