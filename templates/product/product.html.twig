@@ -57,6 +57,12 @@
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
         }
+
+        @media (max-width: 700px) {
+            .form-row {
+                grid-template-columns: 1fr !important;
+            }
+        }
         
         .btn {
             padding: 0.75rem 2rem;
@@ -345,17 +351,7 @@
             </div>
             <div class="form-section">
                 <h3>🎨 Varyasyon Şablonları</h3>
-                    {# <div class="form-group">
-                        <label for="sizeTemplate">Beden Şablonu *</label>
-                        <input type="text" id="sizeChartsSearch" placeholder="Beden şablonu ara..." class="form-control" style="margin-bottom: 0.5rem;">
-                        <div id="sizeChartsResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; background: white;">
-                        </div>
-                        <div id="sizeChartsSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
-                            <small style="color: #6c757d;">Seçilen beden şablonu burada görünecek...</small>
-                        </div>
-                        <div id="sizeChartsHidden"></div>
-                    </div> #}
-                    
+                <div class="form-row">
                     <div class="form-group">
                         <label for="colorTemplate">Renkler *</label>
                         <input type="text" id="colorsSearch" placeholder="Renk ara..." class="form-control" style="margin-bottom: 0.5rem;">
@@ -370,7 +366,7 @@
                             <button type="button" id="addNewColorBtn" class="btn btn-primary" style="min-width: 120px;">+ Renk Ekle</button>
                         </div>
                     </div>
-                    
+                </div>
                 <div class="form-row">
                     <div class="form-group">
                             <label for="sizeTableBtn">Beden Tablosu *</label>
@@ -385,6 +381,9 @@
                             <input type="hidden" name="sizeTableData" id="sizeTableData">
                             <div id="sizeTablePreview" style="margin-top: 1rem;"></div>
                     </div>
+                    
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label for="customTableBtn">Custom Tablo</label>
                         <input type="text" id="customTableTitle" class="form-control mb-2" placeholder="Tablo başlığı (ör: Malzeme İçeriği)">
@@ -400,7 +399,6 @@
                         <div id="customTablePreview" style="margin-top: 1rem;"></div>
                     </div>
                 </div>
-
             </div>
             <!-- Form Butonları -->
             <div style="text-align: right; margin-top: 2rem;">
