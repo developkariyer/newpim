@@ -184,8 +184,20 @@
                 font-size: 0.95rem;
                 padding: 0.4rem 0.5rem;
             }
+            #sizeTableBtn {
+                font-size: 1rem !important;
+                padding: 0.9rem 0.5rem !important;
+            }
+            .table-responsive {
+                overflow-x: auto;
+            }
+            .table th, .table td {
+                white-space: nowrap;
+                font-size: 0.95rem;
+                padding: 0.4rem;
+            }
         }
-            #sizeTableModal .modal-content {
+        #sizeTableModal .modal-content {
             border-radius: 12px;
         }
         #sizeTableModal .modal-header {
@@ -353,8 +365,11 @@
                     </div>
                     <div class="form-group">
                         <label for="sizeTableBtn">Beden Tablosu *</label>
-                        <button type="button" class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2"
-                                id="sizeTableBtn" data-bs-toggle="modal" data-bs-target="#sizeTableModal"
+                        <button type="button"
+                                class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2"
+                                id="sizeTableBtn"
+                                data-bs-toggle="modal"
+                                data-bs-target="#sizeTableModal"
                                 style="font-size:1.1rem; font-weight:500;">
                             <span style="font-size:1.5rem; margin-right:0.5rem;">📏</span> Beden Tablosu Oluştur
                         </button>
@@ -694,11 +709,11 @@
         });
         document.getElementById('sizeTableData').value = JSON.stringify(rows);
         // Önizleme için tabloyu göster
-        let html = '<table class="table table-sm table-bordered"><thead><tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th><th>Birim</th></tr></thead><tbody>';
+        let html = '<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th><th>Birim</th></tr></thead><tbody>';
         rows.forEach(row => {
             html += `<tr><td>${row.beden}</td><td>${row.en}</td><td>${row.boy}</td><td>${row.yukseklik}</td><td>${row.birim}</td></tr>`;
         });
-        html += '</tbody></table>';
+        html += '</tbody></table></div>';
         document.getElementById('sizeTablePreview').innerHTML = html;
         // Modalı kapat
         var modal = bootstrap.Modal.getInstance(document.getElementById('sizeTableModal'));
