@@ -165,7 +165,7 @@
             border-top-right-radius: 0;
             border-bottom-right-radius: 0;
         }
-        
+
         .input-group .btn {
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
@@ -300,6 +300,14 @@
                             <button type="button" id="addNewColorBtn" class="btn btn-primary" style="min-width: 120px;">+ Renk Ekle</button>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label for="sizeTableBtn">Beden Tablosu *</label>
+                        <button type="button" class="btn btn-outline-primary" id="sizeTableBtn" data-bs-toggle="modal" data-bs-target="#sizeTableModal">
+                            Beden Tablosu Oluştur
+                        </button>
+                        <input type="hidden" name="sizeTableData" id="sizeTableData">
+                        <div id="sizeTablePreview" style="margin-top: 1rem;"></div>
+                    </div>
                 </div>
                 {# <div class="form-row">
                     <div class="form-group">
@@ -320,6 +328,43 @@
                 <button type="submit" class="btn btn-primary">Ürün Oluştur</button>
             </div>
         </form>
+
+        <!-- Beden Tablosu Modal -->
+        <div class="modal fade" id="sizeTableModal" tabindex="-1" aria-labelledby="sizeTableModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sizeTableModalLabel">Beden Tablosu Oluştur</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered" id="sizeTable">
+                    <thead>
+                        <tr>
+                        <th>Beden</th>
+                        <th>En</th>
+                        <th>Boy</th>
+                        <th>Yükseklik</th>
+                        <th>Birim</th>
+                        <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Satırlar JS ile eklenecek -->
+                    </tbody>
+                    </table>
+                    <button type="button" class="btn btn-success" id="addSizeRowBtn">+ Satır Ekle</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                    <button type="button" class="btn btn-primary" id="saveSizeTableBtn">Kaydet</button>
+                </div>
+                </div>
+            </div>
+        </div>
+        <!-- Beden Tablosu Modal End -->
+
+
     </div>
 {% endblock %}
 
@@ -550,6 +595,63 @@
         })
         .catch(() => alert('Sunucu hatası!'));
     });
+
+
+    // Size Table Functions
+    function addSizeRow(values = {}) {
+        const tbody = document.querySelector('#sizeTable tbody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text" class="form-control" value="${values.beden || ''}" required></td>
+            <td><input type="number" class="form-control" value="${values.en || ''}" step="any" required></td>
+            <td><input type="number" class="form-control" value="${values.boy || ''}" step="any" required></td>
+            <td><input type="number" class="form-control" value="${values.yukseklik || ''}" step="any" required></td>
+            <td>
+                <select class="form-select">
+                    <option value="cm" ${values.birim === 'cm' ? 'selected' : ''}>cm</option>
+                    <option value="mm" ${values.birim === 'mm' ? 'selected' : ''}>mm</option>
+                    <option value="m" ${values.birim === 'm' ? 'selected' : ''}>m</option>
+                </select>
+            </td>
+            <td><button type="button" class="btn btn-danger btn-sm remove-row-btn">Sil</button></td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    document.getElementById('addSizeRowBtn').addEventListener('click', function() {
+        addSizeRow();
+    });
+
+    document.querySelector('#sizeTable tbody').addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-row-btn')) {
+            e.target.closest('tr').remove();
+        }
+    });
+
+    document.getElementById('saveSizeTableBtn').addEventListener('click', function() {
+        const rows = [];
+        document.querySelectorAll('#sizeTable tbody tr').forEach(tr => {
+            rows.push({
+                beden: tr.children[0].querySelector('input').value,
+                en: tr.children[1].querySelector('input').value,
+                boy: tr.children[2].querySelector('input').value,
+                yukseklik: tr.children[3].querySelector('input').value,
+                birim: tr.children[4].querySelector('select').value,
+            });
+        });
+        document.getElementById('sizeTableData').value = JSON.stringify(rows);
+        // Önizleme için tabloyu göster
+        let html = '<table class="table table-sm table-bordered"><thead><tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th><th>Birim</th></tr></thead><tbody>';
+        rows.forEach(row => {
+            html += `<tr><td>${row.beden}</td><td>${row.en}</td><td>${row.boy}</td><td>${row.yukseklik}</td><td>${row.birim}</td></tr>`;
+        });
+        html += '</tbody></table>';
+        document.getElementById('sizeTablePreview').innerHTML = html;
+        // Modalı kapat
+        var modal = bootstrap.Modal.getInstance(document.getElementById('sizeTableModal'));
+        modal.hide();
+    });
+    // Size Table Functions End
 
 </script>
 {% endblock %}
