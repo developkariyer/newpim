@@ -168,6 +168,7 @@ class ProductController extends AbstractController
         $color->setKey(\Pimcore\File::getValidFilename($colorName));
         $color->setParentId(1247);
         $color->setColor($colorName);
+        $color->setPublished(true);
         $color->save();
 
         return new JsonResponse(['success' => true, 'id' => $color->getId()]);
