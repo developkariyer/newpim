@@ -158,9 +158,11 @@ class ProductController extends AbstractController
 
             $customFieldTable = [];
             if ($customTableData) {
-                $customFieldTable = json_decode($customTableData, true);
-                if (!is_array($customFieldTable)) {
-                    $customFieldTable = [];
+                $customTableDecoded = json_decode($customTableData, true);
+                if (is_array($customTableDecoded) && isset($customTableDecoded['rows']) && is_array($customTableDecoded['rows'])) {
+                    $customFieldTable = $customTableDecoded['rows'];
+                } elseif (is_array($customTableDecoded)) {
+                    $customFieldTable = $customTableDecoded;
                 }
                 $product->setCustomFieldTable($customFieldTable);
             }
