@@ -63,6 +63,56 @@
                 grid-template-columns: 1fr !important;
             }
         }
+
+        @media screen and (max-width: 768px) {
+            .modal-body .table thead {
+                display: none;
+            }
+
+            .modal-body .table,
+            .modal-body .table tbody,
+            .modal-body .table tr,
+            .modal-body .table td {
+                display: block;
+                width: 100%;
+            }
+
+            .modal-body .table tr {
+                margin-bottom: 1rem;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                padding: 0.5rem;
+            }
+
+            .modal-body .table td {
+                text-align: right;
+                padding-left: 50%; 
+                position: relative;
+                border: none;
+                padding-bottom: 0.5rem;
+                padding-top: 0.5rem;
+            }
+            
+            .modal-body .table td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 0.5rem;
+                width: 45%;
+                padding-right: 1rem;
+                text-align: left;
+                font-weight: 500;
+                color: #495057;
+            }
+            
+            .modal-body .table td:last-child {
+                text-align: center;
+                padding-left: 0;
+            }
+
+            .modal-body .table td:last-child::before {
+                display: none; 
+            }
+        }
         
         .btn {
             padding: 0.75rem 2rem;
@@ -287,7 +337,6 @@
             </div>
             <div class="form-section">
                 <h3>🎨 Varyasyon Şablonları</h3>
-                <!-- DEĞİŞİKLİK: Gereksiz .form-row kaldırıldı. form-group artık tam genişlik kullanacak. -->
                 <div class="form-group">
                     <label for="colorTemplate">Renkler *</label>
                     <input type="text" id="colorsSearch" placeholder="Renk ara..." class="form-control" style="margin-bottom: 0.5rem;">
@@ -303,7 +352,6 @@
                     </div>
                 </div>
 
-                <!-- DEĞİŞİKLİK: Gereksiz .form-row kaldırıldı. -->
                 <div class="form-group">
                     <label for="sizeTableBtn">Beden Tablosu *</label>
                     <button type="button"
@@ -315,11 +363,9 @@
                         <span style="font-size:1.5rem; margin-right:0.5rem;">📏</span> Beden Tablosu Oluştur
                     </button>
                     <input type="hidden" name="sizeTableData" id="sizeTableData">
-                    <!-- DEĞİŞİKLİK: Önizleme div'ine stil ve daha iyi yapı için class eklendi -->
                     <div id="sizeTablePreview" class="table-preview-container" style="display: none;"></div>
                 </div>
 
-                <!-- DEĞİŞİKLİK: Gereksiz .form-row kaldırıldı. -->
                 <div class="form-group">
                     <label for="customTableBtn">Custom Tablo</label>
                     <input type="text" id="customTableTitle" class="form-control mb-2" placeholder="Tablo başlığı (ör: Malzeme İçeriği)">
@@ -332,7 +378,6 @@
                         <span style="font-size:1.5rem; margin-right:0.5rem;">⚙️</span> Custom Tablo Oluştur
                     </button>
                     <input type="hidden" name="customTableData" id="customTableData">
-                    <!-- DEĞİŞİKLİK: Önizleme div'ine stil ve daha iyi yapı için class eklendi -->
                     <div id="customTablePreview" class="table-preview-container" style="display: none;"></div>
                 </div>
             </div>
@@ -343,7 +388,6 @@
             </div>
         </form>
 
-        <!-- Beden Tablosu Modal -->
         <div class="modal fade" id="sizeTableModal" tabindex="-1" aria-labelledby="sizeTableModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
@@ -351,7 +395,6 @@
                     <h5 class="modal-title" id="sizeTableModalLabel"><span style="font-size:1.3rem;">📏</span> Beden Tablosu Oluştur</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
                 </div>
-                <!-- DEĞİŞİKLİK: Modal içindeki tabloyu responsive yapmak için table-responsive div'i eklendi -->
                 <div class="modal-body">
                     <div class="table-responsive">
                         <table class="table table-bordered" id="sizeTable">
@@ -388,7 +431,6 @@
                     <h5 class="modal-title" id="customTableModalLabel"><span style="font-size:1.3rem;">⚙️</span> Custom Tablo Oluştur</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
                 </div>
-                <!-- DEĞİŞİKLİK: Modal içindeki tabloyu responsive yapmak için table-responsive div'i eklendi -->
                 <div class="modal-body">
                     <div class="table-responsive">
                         <table class="table table-bordered" id="customTable">
@@ -420,8 +462,6 @@
 {% block body_scripts %}
     {{ parent() }}
 <script>
-    // DEĞİŞİKLİK: Kodun tamamı gözden geçirildi, herhangi bir JS hatası bulunmadı ancak
-    // tablo önizleme mantığı, yeni HTML yapısına ve stillerine uyacak şekilde güncellendi.
     let searchTimeout;
     let selectedItems = {
         colors: [],
@@ -602,9 +642,7 @@
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                // Symfony form kullanıyorsanız CSRF token'ı eklemeyi unutmayın.
-                // 'X-CSRF-TOKEN': '{{ csrf_token("add_color") }}' 
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({ name: newColor })
         })
@@ -626,18 +664,18 @@
         const tbody = document.querySelector('#sizeTable tbody');
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><input type="text" class="form-control" value="${values.beden || ''}" required></td>
-            <td><input type="number" class="form-control" value="${values.en || ''}" step="any" required></td>
-            <td><input type="number" class="form-control" value="${values.boy || ''}" step="any" required></td>
-            <td><input type="number" class="form-control" value="${values.yukseklik || ''}" step="any" required></td>
-            <td>
+            <td data-label="Beden"><input type="text" class="form-control" value="${values.beden || ''}" required></td>
+            <td data-label="En"><input type="number" class="form-control" value="${values.en || ''}" step="any" required></td>
+            <td data-label="Boy"><input type="number" class="form-control" value="${values.boy || ''}" step="any" required></td>
+            <td data-label="Yükseklik"><input type="number" class="form-control" value="${values.yukseklik || ''}" step="any" required></td>
+            <td data-label="Birim">
                 <select class="form-select">
                     <option value="cm" ${values.birim === 'cm' ? 'selected' : ''}>cm</option>
                     <option value="mm" ${values.birim === 'mm' ? 'selected' : ''}>mm</option>
                     <option value="m" ${values.birim === 'm' ? 'selected' : ''}>m</option>
                 </select>
             </td>
-            <td><button type="button" class="btn btn-danger btn-sm remove-row-btn">Sil</button></td>
+            <td><button type="button" class="btn btn-danger btn-sm remove-row-btn w-100">Sil</button></td>
         `;
         tbody.appendChild(tr);
     }
@@ -699,7 +737,7 @@
         const tbody = document.querySelector('#customTable tbody');
         const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><input type="text" class="form-control" value="${value}" required></td>
+                <td data-label="Değer"><input type="text" class="form-control" value="${value}" required></td>
                 <td><button type="button" class="btn btn-danger btn-sm remove-row-btn">Sil</button></td>
             `;
             tbody.appendChild(tr);
