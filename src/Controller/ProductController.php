@@ -164,7 +164,6 @@ class ProductController extends AbstractController
                     && isset($customTableDecoded['rows'])
                     && is_array($customTableDecoded['rows'])
                 ) {
-                    // Title'ı ilk satır olarak ekle
                     $title = isset($customTableDecoded['title']) ? $customTableDecoded['title'] : '';
                     if ($title !== '') {
                         array_unshift($customTableDecoded['rows'], ['deger' => $title, 'isTitle' => true]);
@@ -176,6 +175,9 @@ class ProductController extends AbstractController
                 $product->setCustomFieldTable($customFieldTable);
             }
             $this->checkProductCode($product);
+            if (is_array($variations) && count($variations) > 0) {
+                $this->addProductVariants($product, $variations);
+            }
             $product->setPublished(true);
             $product->save();
             $this->addFlash('success', 'Ürün ve varyantlar başarıyla oluşturuldu.');
@@ -187,6 +189,30 @@ class ProductController extends AbstractController
             ]);
         }
         
+    }
+
+    private function addProductVariants(Product $parentProduct, array $variations): void
+    {
+        foreach ($variations as $variantData) {
+            $variant = new Product();
+            $variant->setParent($parentProduct);
+            $variant->setType(Product::OBJECT_TYPE_VARIANT);
+            $variantKey = implode('-', array_filter([$variantData['renk'] ?? '', $variantData['beden'] ?? '', $variantData['custom'] ?? '']));
+            $variant->setKey($variantKey ?: uniqid('variant_'));
+            $variant->setName($variantKey);
+            if (!empty($variantData['renk'])) {
+                $variant->setVariationColor($variantData['renk']);
+            }
+            if (!empty($variantData['beden'])) {
+                $variant->setVariationSize($variantData['beden']);
+            }
+            if (!empty($variantData['custom'])) {
+                $variant->setCustomField($variantData['custom']);
+            }
+            $this->checkIwasku($variant);
+            $variant->setPublished(true);
+            $variant->save();
+        }
     }
 
     #[Route('/product/add-color', name: 'product_add_color', methods: ['POST'])]
@@ -212,6 +238,23 @@ class ProductController extends AbstractController
         $color->save();
 
         return new JsonResponse(['success' => true, 'id' => $color->getId()]);
+    }
+
+    public function checkIwasku($product): bool
+    {
+        if ($product->getType() == Product::OBJECT_TYPE_VARIANT && $product->isPublished() && strlen($product->getIwasku() ?? '') != 12) {
+            $pid = $this->getInheritedField("productIdentifier");
+            $iwasku = str_pad(str_replace('-', '', $pid), 7, '0', STR_PAD_RIGHT);
+            $productCode = $product->getProductCode();
+            if (strlen($productCode) != 5) {
+                $productCode = $this->generateUniqueCode(5);
+                $product->setProductCode($productCode);
+            }
+            $iwasku .= $productCode;
+            $product->setIwasku($iwasku);
+            return true;
+        }
+        return false;
     }
 
     private function checkProductCode($product, $numberDigits = 5): bool
@@ -248,6 +291,15 @@ class ProductController extends AbstractController
             $randomString .= $characters[$randomIndex];
         }
         return $randomString;
+    }
+
+    public function getInheritedField(string $field): mixed
+    {
+        return Service::useInheritedValues(true, function() use ($field) {
+            $object = $this;
+            $fieldName = "get" . ucfirst($field);
+            return $object->$fieldName();
+        });
     }
 
     public function findByField(string $field, mixed $value): \Pimcore\Model\DataObject\Product|false
