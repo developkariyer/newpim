@@ -262,11 +262,8 @@ class ProductController extends AbstractController
             && strlen($product->getIwasku() ?? '') != 12
         ) {
             $iwasku = str_pad(str_replace('-', '', $parentIdentifier), 7, '0', STR_PAD_RIGHT);
-            $productCode = $product->getProductCode();
-            if (strlen($productCode) != 5) {
-                $productCode = $this->generateUniqueCode(5);
-                $product->setProductCode($productCode);
-            }
+            $productCode = $this->generateUniqueCode(5);
+            $product->setProductCode($productCode);
             $iwasku .= $productCode;
             $product->setIwasku($iwasku);
             return true;
