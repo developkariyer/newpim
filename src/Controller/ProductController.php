@@ -159,7 +159,16 @@ class ProductController extends AbstractController
             $customFieldTable = [];
             if ($customTableData) {
                 $customTableDecoded = json_decode($customTableData, true);
-                if (is_array($customTableDecoded) && isset($customTableDecoded['rows']) && is_array($customTableDecoded['rows'])) {
+                if (
+                    is_array($customTableDecoded)
+                    && isset($customTableDecoded['rows'])
+                    && is_array($customTableDecoded['rows'])
+                ) {
+                    // Title'ı ilk satır olarak ekle
+                    $title = isset($customTableDecoded['title']) ? $customTableDecoded['title'] : '';
+                    if ($title !== '') {
+                        array_unshift($customTableDecoded['rows'], ['deger' => $title, 'isTitle' => true]);
+                    }
                     $customFieldTable = $customTableDecoded['rows'];
                 } elseif (is_array($customTableDecoded)) {
                     $customFieldTable = $customTableDecoded;
