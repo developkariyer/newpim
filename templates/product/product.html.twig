@@ -152,6 +152,24 @@
             pointer-events: none;
             opacity: 0.6;
         }
+
+        .input-group {
+            display: flex;
+            align-items: stretch;
+            width: 100%;
+            max-width: 400px;
+            gap: 0;
+        }
+
+        .input-group .form-control {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        
+        .input-group .btn {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
     </style>
 {% endblock %}
 
@@ -277,9 +295,9 @@
                             <small style="color: #6c757d;">Seçilen renkler burada görünecek...</small>
                         </div>
                         <div id="colorsHidden"></div>
-                        <div style="margin-top: 0.5rem;">
-                            <input type="text" id="newColorInput" placeholder="Yeni renk girin..." class="form-control" style="display: inline-block; width: 70%;">
-                            <button type="button" id="addNewColorBtn" class="btn btn-primary" style="display: inline-block; width: 28%; margin-left: 2%;">+ Renk Ekle</button>
+                        <div class="input-group" style="margin-top: 0.5rem; max-width: 400px;">
+                            <input type="text" id="newColorInput" placeholder="Yeni renk girin..." class="form-control" aria-label="Yeni renk girin">
+                            <button type="button" id="addNewColorBtn" class="btn btn-primary" style="min-width: 120px;">+ Renk Ekle</button>
                         </div>
                     </div>
                 </div>
