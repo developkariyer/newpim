@@ -240,6 +240,7 @@
 {% block title %}Katalog Yeni Ürün Girişi{% endblock %}
 
 {% block content %}
+<div id="step1">
     <div class="product-form-container">
         {% if errors is defined and errors|length > 0 %}
             <div class="alert alert-danger" style="margin-bottom: 2rem; padding: 1rem; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; color: #721c24;">
@@ -456,25 +457,17 @@
         </div>
         <!-- Custom Tablo Modal End -->
 
-        <div class="modal fade" id="variationModal" tabindex="-1" aria-labelledby="variationModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-xl">
-                <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="variationModalLabel">Varyasyonları Seç</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="variationTableContainer"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-                    <button type="button" class="btn btn-success" id="createVariationsBtn">Varyasyonları Kaydet</button>
-                </div>
-                </div>
-            </div>
-        </div>
-
     </div>
+</div>
+<div id="step2" style="display:none;">
+    <h3>Varyasyonları Seç</h3>
+    <div id="variationTableContainer"></div>
+    <input type="hidden" name="variationsData" id="variationsData">
+    <div style="text-align: right; margin-top: 2rem;">
+        <button type="button" class="btn btn-secondary" id="backToStep1Btn">Geri</button>
+        <button type="submit" class="btn btn-success">Kaydet</button>
+    </div>
+</div>
 {% endblock %}
 
 
@@ -649,6 +642,16 @@
 
     document.getElementById('productForm').addEventListener('submit', function(e) {
         showLoading();
+        document.querySelectorAll('#variationTableContainer tbody tr').forEach(tr => {
+            const checked = tr.querySelector('.variation-checkbox').checked;
+            if (!checked) return;
+            const tds = tr.querySelectorAll('td');
+            const renk = tds[1].innerText;
+            const beden = tds[2].innerText;
+            const custom = tds.length > 3 ? tds[3].innerText : null;
+            rows.push({ renk, beden, custom });
+        });
+        document.getElementById('variationsData').value = JSON.stringify(rows);
     });
 
     document.getElementById('addNewColorBtn').addEventListener('click', function() {
@@ -816,9 +819,10 @@
         modal.hide();
     });
 
-    document.getElementById('goToVariationsBtn').addEventListener('click', function() {
+    document.getElementById('goToStep2Btn').onclick = function() {
         const colors = selectedItems.colors.map(c => c.name);
-        const sizes = JSON.parse(document.getElementById('sizeTableData').value || '[]').map(s => s.beden);
+        const sizesData = JSON.parse(document.getElementById('sizeTableData').value || '[]');
+        const sizes = sizesData.map(s => s.beden);
         let customs = [];
         try {
             const customData = JSON.parse(document.getElementById('customTableData').value || '{}');
@@ -838,18 +842,29 @@
         if (customs.length > 0) html += '<th>Custom</th>';
         html += '</tr></thead><tbody>';
         combos.forEach((combo, i) => {
+            const sizeObj = sizesData.find(s => s.beden === combo[1]);
+            let sizeLabel = combo[1];
+            if (sizeObj) {
+                sizeLabel += ` (En: ${sizeObj.en}, Boy: ${sizeObj.boy}, Yükseklik: ${sizeObj.yukseklik}, ${sizeObj.birim})`;
+            }
             html += `<tr>
                 <td><input type="checkbox" class="variation-checkbox" checked data-index="${i}"></td>
                 <td>${combo[0]}</td>
-                <td>${combo[1]}</td>`;
+                <td>${sizeLabel}</td>`;
             if (customs.length > 0) html += `<td>${combo[2]}</td>`;
             html += '</tr>';
         });
         html += '</tbody></table>';
         document.getElementById('variationTableContainer').innerHTML = html;
-        var modal = new bootstrap.Modal(document.getElementById('variationModal'));
-        modal.show();
-    });
+
+        document.getElementById('step1').style.display = 'none';
+        document.getElementById('step2').style.display = 'block';
+    };
+
+    document.getElementById('backToStep1Btn').onclick = function() {
+        document.getElementById('step2').style.display = 'none';
+        document.getElementById('step1').style.display = 'block';
+    };
 
 </script>
 {% endblock %}

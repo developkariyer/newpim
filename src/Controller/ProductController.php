@@ -91,6 +91,7 @@ class ProductController extends AbstractController
         $customTemplateId = $request->get('customTemplate');
         $sizeTableData = $request->get('sizeTableData');
         $sizeTableRows = json_decode($sizeTableData, true);
+        $variations = json_decode($request->get('variationsData'), true);
         
         $errors = [];
         $category = $this->validateSingleObject('category', $categoryId, $errors, 'Kategori');
