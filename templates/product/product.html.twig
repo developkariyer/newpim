@@ -839,6 +839,21 @@
     });
 
     document.getElementById('goToVariationsBtn').onclick = function() {
+        const step1 = document.getElementById('step1');
+        const requiredInputs = step1.querySelectorAll('input[required], textarea[required], select[required]');
+        let isValid = true;
+        requiredInputs.forEach(input => {
+            if (!input.value.trim()) {
+                input.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                input.classList.remove('is-invalid');
+            }
+        });
+        if (!isValid) {
+            alert('Lütfen tüm zorunlu alanları doldurun.');
+            return;
+        }
         const colors = selectedItems.colors.map(c => c.name);
         const sizesData = JSON.parse(document.getElementById('sizeTableData').value || '[]');
         const sizes = sizesData.map(s => s.beden);
