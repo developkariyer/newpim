@@ -1,34 +1,28 @@
 <?php
-
-declare(strict_types=1);
-
 namespace App\Controller;
 
-use Pimcore\Model\DataObject\Brand;
-use Pimcore\Model\DataObject\Brand\Listing as BrandListing;
-use Pimcore\Model\DataObject\Category;
-use Pimcore\Model\DataObject\Category\Listing as CategoryListing;
-use Pimcore\Model\DataObject\Color;
-use Pimcore\Model\DataObject\Color\Listing as ColorListing;
-use Pimcore\Model\DataObject\Marketplace;
-use Pimcore\Model\DataObject\Marketplace\Listing as MarketplaceListing;
-use Pimcore\Model\DataObject\Product;
-use Pimcore\Model\DataObject\Product\Listing as ProductListing;
-use Pimcore\Model\Asset\Image as AssetImage;
-use Pimcore\Model\Asset\Folder as AssetFolder;
-use Pimcore\Model\Asset;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
+use Pimcore\Model\Document;
+use Symfony\Component\HttpFoundation\Request;
+use Pimcore\Model\DataObject\Product; 
+use Pimcore\Model\DataObject\Brand;
+use Pimcore\Model\DataObject\Category;
+use Pimcore\Model\DataObject\Marketplace;
+use Pimcore\Model\DataObject\Color;
+use Pimcore\Model\DataObject\Category\Listing as CategoryListing;
+use Pimcore\Model\DataObject\Color\Listing as VariationColorListing;
+use Pimcore\Model\DataObject\Brand\Listing as BrandListing;
+use Pimcore\Model\DataObject\Marketplace\Listing as MarketplaceListing;
+use Pimcore\Model\DataObject\Product\Listing as ProductListing;
 
-#[Route('/product', name: 'product_')]
+
 class ProductController extends AbstractController
 {
     private const TYPE_MAPPING = [
-        'colors' => ColorListing::class,
+        'colors' => VariationColorListing::class,
         'brands' => BrandListing::class,
         'marketplaces' => MarketplaceListing::class,
         'categories' => CategoryListing::class
@@ -40,219 +34,302 @@ class ProductController extends AbstractController
         'marketplace' => Marketplace::class,
         'category' => Category::class
     ];
-
-    private const MAIN_FOLDER_ID = 1246;
-    private const COLOR_PARENT_ID = 1247;
-    private const PRODUCT_CODE_LENGTH = 5;
-    private const IWASKU_LENGTH = 12;
-
-    #[Route('', name: 'index', methods: ['GET'])]
+    
+    #[Route('/product', name: 'product')]
     public function index(): Response
     {
-        return $this->render('product/product.html.twig');
+        $categories = $this->getCategories();
+        $colors = $this->getGenericListing(self::TYPE_MAPPING['colors']);
+        $brands = $this->getGenericListing(self::TYPE_MAPPING['brands']);
+        $marketplaces = $this->getGenericListing(self::TYPE_MAPPING['marketplaces']);
+        return $this->render('product/product.html.twig', [
+            'categories' => $categories,
+            'colors' => $colors,
+            'brands' => $brands,
+            'marketplaces' => $marketplaces
+        ]);
     }
 
-    #[Route('/search/{type}', name: 'search_relations', methods: ['GET'])]
-    public function searchRelations(Request $request, string $type): JsonResponse
+    #[Route('/product/search/{type}', name: 'product_search', methods: ['GET'])]
+    public function search(Request $request, string $type): JsonResponse
     {
-        try {
-            $query = trim($request->query->get('q', ''));
-            
-            if (!isset(self::TYPE_MAPPING[$type])) {
-                return new JsonResponse(['error' => 'Invalid search type'], Response::HTTP_BAD_REQUEST);
-            }
-
-            $condition = "published = 1";
-            if (!empty($query)) {
-                $escapedQuery = addslashes($query);
-                $condition .= " AND LOWER(`key`) LIKE LOWER('%{$escapedQuery}%')";
-            }
-
-            $results = $this->getGenericListing(self::TYPE_MAPPING[$type], $condition);
-            return new JsonResponse(['items' => $results]);
-
-        } catch (\Throwable $e) {
-            error_log("Search relations error: " . $e->getMessage());
-            return new JsonResponse(['error' => 'Search failed'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        $query = trim($request->query->get('q', ''));
+        if (!isset(self::TYPE_MAPPING[$type])) {
+            return new JsonResponse(['error' => 'Invalid search type'], 400);
         }
+        // if (strlen($query) < 2) {
+        //     return new JsonResponse([
+        //         'items' => []
+        //     ]);
+        // }
+        $escapedQuery = addslashes($query);
+        $searchCondition = "published = 1 AND LOWER(`key`) LIKE LOWER('%{$escapedQuery}%')";
+        $results = $this->getGenericListing(self::TYPE_MAPPING[$type], $searchCondition);
+        return new JsonResponse(['items' => $results]);
     }
 
-    #[Route('/search-products', name: 'search_products', methods: ['GET'])]
+    #[Route('/product/search-products', name: 'product_search_products', methods: ['GET'])]
     public function searchProducts(Request $request): JsonResponse
     {
-        try {
+       try {
             $query = trim($request->query->get('q', ''));
-            
-            if (mb_strlen($query) < 2) {
+            if (strlen($query) < 2) {
                 return new JsonResponse(['items' => []]);
             }
-
+            
             $listing = new ProductListing();
             $listing->setCondition('productIdentifier LIKE ? OR name LIKE ?', ["%$query%", "%$query%"]);
             $listing->setLimit(1);
             $products = $listing->load();
-
-            if (empty($products)) {
+            
+            if (count($products) === 0) {
                 return new JsonResponse(['items' => []]);
             }
-
-            $product = $products[0];
-            $productData = $this->buildProductData($product);
-
-            return new JsonResponse(['items' => [$productData]]);
-
-        } catch (\Throwable $e) {
-            error_log("Product search error: " . $e->getMessage());
-            return new JsonResponse(['error' => 'Product search failed'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    #[Route('/save', name: 'save', methods: ['POST'])]
-    public function save(Request $request): Response
-    {
-        try {
-            $productData = $this->extractRequestData($request);
-            $imageFile = $request->files->get('productImage');
             
-            $validationErrors = $this->validateProductData($productData);
-            if (!empty($validationErrors)) {
-                foreach ($validationErrors as $error) {
-                    $this->addFlash('danger', $error);
+            $product = $products[0]; 
+            
+            $variants = [];
+            $variantColors = [];
+            $usedSizes = [];
+            $usedCustoms = [];
+            $usedColorIds = [];
+            $hasVariants = $product->hasChildren();
+            
+            if ($hasVariants) {
+                $productVariants = $product->getChildren([Product::OBJECT_TYPE_VARIANT]);
+                
+                foreach ($productVariants as $variant) {
+                    $variants[] = [
+                        'id' => $variant->getId(),
+                        'name' => $variant->getName(),
+                        'color' => $variant->getVariationColor() ? $variant->getVariationColor()->getColor() : null,
+                        'colorId' => $variant->getVariationColor() ? $variant->getVariationColor()->getId() : null,
+                        'size' => $variant->getVariationSize(),
+                        'custom' => $variant->getCustomField(),
+                    ];
+                    if ($variant->getVariationColor()) {
+                        $colorId = $variant->getVariationColor()->getId();
+                        $usedColorIds[] = $colorId;
+                        $variantColors[] = [
+                            'id' => $colorId,
+                            'name' => $variant->getVariationColor()->getColor()
+                        ];
+                    }
+                    
+                    if ($variant->getVariationSize()) {
+                        $usedSizes[] = $variant->getVariationSize();
+                    }
+                    
+                    if ($variant->getCustomField()) {
+                        $usedCustoms[] = $variant->getCustomField();
+                    }
                 }
-                return $this->redirectToRoute('product_index');
+            }
+            
+            $brands = [];
+            $brandItems = $product->getBrandItems();
+            if ($brandItems) {
+                if (is_array($brandItems)) {
+                    foreach ($brandItems as $brand) {
+                        $brands[] = [
+                            'id' => $brand->getId(),
+                            'name' => $brand->getKey()
+                        ];
+                    }
+                } elseif ($brandItems instanceof \Pimcore\Model\DataObject\Brand) {
+                    $brands[] = [
+                        'id' => $brandItems->getId(),
+                        'name' => $brandItems->getKey()
+                    ];
+                }
+            }
+            
+            $marketplaces = [];
+            $marketplaceItems = $product->getMarketplaces();
+            if ($marketplaceItems) {
+                if (is_array($marketplaceItems)) {
+                    foreach ($marketplaceItems as $marketplace) {
+                        $marketplaces[] = [
+                            'id' => $marketplace->getId(),
+                            'name' => $marketplace->getKey()
+                        ];
+                    }
+                } elseif ($marketplaceItems instanceof \Pimcore\Model\DataObject\Marketplace) {
+                    $marketplaces[] = [
+                        'id' => $marketplaceItems->getId(),
+                        'name' => $marketplaceItems->getKey()
+                    ];
+                }
+            }
+            
+            $sizeTable = [];
+            $sizeTableData = $product->getVariationSizeTable();
+            if ($sizeTableData && is_array($sizeTableData)) {
+                foreach ($sizeTableData as $row) {
+                    $beden = $row['beden'] ?? $row['label'] ?? '';
+                    $sizeTable[] = [
+                        'beden' => $beden,
+                        'en' => $row['en'] ?? $row['width'] ?? '',     
+                        'boy' => $row['boy'] ?? $row['length'] ?? '',    
+                        'yukseklik' => $row['yukseklik'] ?? $row['height'] ?? '', 
+                        'birim' => $row['birim'] ?? $row['unit'] ?? '',  
+                        'locked' => in_array($beden, $usedSizes) 
+                    ];
+                }
             }
 
-            $isUpdate = !empty($productData['editingProductId']);
-            $product = $this->saveProduct($productData, $imageFile, $isUpdate);
-
-            if ($product) {
-                $this->saveProductVariants($product, $productData['variations'] ?? []);
+            
+            $customTable = [];
+            $customTableData = $product->getCustomFieldTable();
+            if ($customTableData && is_array($customTableData)) {
+                $customRows = [];
+                $customTitle = '';
                 
-                $message = $isUpdate 
-                    ? 'Ürün başarıyla güncellendi ve yeni varyantlar eklendi.'
-                    : 'Ürün ve varyantlar başarıyla oluşturuldu.';
+                foreach ($customTableData as $index => $row) {
+                    $deger = '';
+                    if (isset($row['deger'])) {
+                        $deger = is_string($row['deger']) ? $row['deger'] : (string)$row['deger'];
+                    } elseif (isset($row['value'])) {
+                        $deger = is_string($row['value']) ? $row['value'] : (string)$row['value'];
+                    }
+                    
+                    if (!empty($deger) && $deger !== '[object Object]') {
+                        if ($index === 0) {
+                            // İlk satır = title
+                            $customTitle = $deger;
+                        } else {
+                            // Diğer satırlar = rows (sadece bunlar varyasyonda kullanılır)
+                            $customRows[] = [
+                                'deger' => $deger,
+                                'locked' => in_array($deger, $usedCustoms) 
+                            ];
+                        }
+                    }
+                }
                 
-                $this->addFlash('success', $message);
-            } else {
-                $this->addFlash('danger', 'Ürün kaydedilemedi.');
+                $customTable = [
+                    'title' => $customTitle,
+                    'rows' => $customRows
+                ];
             }
-
-            return $this->redirectToRoute('product_index');
-
-        } catch (\Throwable $e) {
-            error_log("Product save error: " . $e->getMessage());
-            $this->addFlash('danger', 'Ürün kaydedilirken bir hata oluştu: ' . $e->getMessage());
-            return $this->redirectToRoute('product_index');
+            
+            $item = [
+                'id' => $product->getId(),
+                'name' => $product->getName(),
+                'productIdentifier' => $product->getProductIdentifier(),
+                'description' => $product->getDescription(),
+                'categoryId' => $product->getProductCategory() ? $product->getProductCategory()->getId() : null,
+                'categoryName' => $product->getProductCategory() ? $product->getProductCategory()->getKey() : null,
+                'brands' => $brands,
+                'marketplaces' => $marketplaces,
+                'imagePath' => $product->getImage() ? $product->getImage()->getFullPath() : null,
+                'hasVariants' => $hasVariants,
+                'variants' => $variants,
+                'variantColors' => array_values(array_unique($variantColors, SORT_REGULAR)),
+                'sizeTable' => $sizeTable, 
+                'customTable' => $customTable, 
+                'usedSizes' => array_unique($usedSizes), 
+                'usedCustoms' => array_values(array_unique($usedCustoms)), 
+                'usedColorIds' => array_unique($usedColorIds), 
+                'canEditSizeTable' => true,
+                'canEditColors' => true, 
+                'canEditCustomTable' => true, 
+                'canCreateVariants' => true 
+            ];
+            return new JsonResponse(['items' => [$item]]);
+            
+        } catch (\Exception $e) {
+            error_log('Search error: ' . $e->getMessage());
+            error_log($e->getTraceAsString());
+            return new JsonResponse(['error' => $e->getMessage()], 500);
         }
     }
 
-    #[Route('/add-color', name: 'add_color', methods: ['POST'])]
-    public function addColor(Request $request): JsonResponse
+    #[Route('/product/create', name: 'product_create', methods: ['POST'])]
+    public function create(Request $request): Response
     {
-        try {
-            $data = json_decode($request->getContent(), true);
-            $colorName = trim($data['name'] ?? '');
-
-            if (empty($colorName)) {
-                return new JsonResponse(['success' => false, 'message' => 'Renk adı boş olamaz.'], Response::HTTP_BAD_REQUEST);
-            }
-
-            if ($this->colorExists($colorName)) {
-                return new JsonResponse(['success' => false, 'message' => 'Bu renk zaten mevcut.'], Response::HTTP_BAD_REQUEST);
-            }
-
-            $color = $this->createColor($colorName);
-
-            return new JsonResponse([
-                'success' => true,
-                'id' => $color->getId(),
-                'name' => $color->getKey()
-            ]);
-
-        } catch (\Throwable $e) {
-            error_log("Add color error: " . $e->getMessage());
-            return new JsonResponse(['success' => false, 'message' => 'Renk eklenirken bir hata oluştu.'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    /**
-     * Request'ten ürün verilerini çıkarır ve düzenler
-     */
-    private function extractRequestData(Request $request): array
-    {
-        $data = $request->request->all();
+        $editingProductId = $request->get('editingProductId');
+        $isUpdate = !empty($editingProductId);
         
-        // JSON verilerini decode et
-        $jsonFields = ['variationsData', 'sizeTableData', 'customTableData'];
-        foreach ($jsonFields as $field) {
-            if (isset($data[$field]) && is_string($data[$field])) {
-                $data[$field] = json_decode($data[$field], true) ?: [];
-            }
+        $productName = $request->get('productName');
+        $productIdentifier = $request->get('productIdentifier');
+        $productDescription = $request->get('productDescription');
+        $imageFile = $request->files->get('productImage');
+        $categoryId = $request->get('productCategory');
+        $brandIds = $request->get('brands', []);
+        $marketplaceIds = $request->get('marketplaces', []);
+        $colorIds = $request->get('colors', []);
+        $sizeTableData = $request->get('sizeTableData');
+        $customTableData = $request->get('customTableData');
+        $variations = $request->get('variationsData');
+        
+        if ($variations) {
+            $variations = json_decode($variations, true);
         }
 
-        // Array alanları düzenle
-        $arrayFields = ['brands', 'marketplaces', 'colors'];
-        foreach ($arrayFields as $field) {
-            if (!isset($data[$field]) || !is_array($data[$field])) {
-                $data[$field] = [];
-            }
-        }
-
-        return [
-            'editingProductId' => $data['editingProductId'] ?? null,
-            'productName' => trim($data['productName'] ?? ''),
-            'productIdentifier' => trim($data['productIdentifier'] ?? ''),
-            'productDescription' => trim($data['productDescription'] ?? ''),
-            'categoryId' => $data['productCategory'] ?? null,
-            'brandIds' => $data['brands'],
-            'marketplaceIds' => $data['marketplaces'],
-            'colorIds' => $data['colors'],
-            'sizeTableData' => $data['sizeTableData'] ?? [],
-            'customTableData' => $data['customTableData'] ?? [],
-            'variations' => $data['variationsData'] ?? []
-        ];
-    }
-
-    /**
-     * Ürün verilerini doğrular
-     */
-    private function validateProductData(array $data): array
-    {
+        // Validation
         $errors = [];
+        $category = $this->validateSingleObject('category', $categoryId, $errors, 'Kategori');
+        $brands = $this->validateMultipleObjects('brand', $brandIds, $errors, 'Marka');
+        $marketplaces = $this->validateMultipleObjects('marketplace', $marketplaceIds, $errors, 'Pazaryeri');
+        $colors = $this->validateMultipleObjects('color', $colorIds, $errors, 'Renk');
 
-        if (empty($data['productName'])) {
-            $errors[] = 'Ürün adı gereklidir.';
+        if (!empty($errors)) {
+            foreach ($errors as $error) {
+                $this->addFlash('danger', $error);
+            }
+            return $this->redirectToRoute('product');
         }
 
-        if (empty($data['productIdentifier'])) {
-            $errors[] = 'Ürün tanıtıcı gereklidir.';
-        }
-
-        $category = $this->validateSingleObject('category', $data['categoryId'], $errors, 'Kategori');
-        $this->validateMultipleObjects('brand', $data['brandIds'], $errors, 'Marka');
-        $this->validateMultipleObjects('marketplace', $data['marketplaceIds'], $errors, 'Pazaryeri');
-        $this->validateMultipleObjects('color', $data['colorIds'], $errors, 'Renk');
-
-        return $errors;
-    }
-
-    /**
-     * Ürünü kaydeder (yeni veya güncelleme)
-     */
-    private function saveProduct(array $data, ?UploadedFile $imageFile, bool $isUpdate): ?Product
-    {
         try {
+            // Mevcut ürün varsa al, yoksa yeni oluştur
             if ($isUpdate) {
-                $product = Product::getById($data['editingProductId']);
+                $product = Product::getById($editingProductId);
                 if (!$product) {
-                    throw new \RuntimeException('Güncellenecek ürün bulunamadı.');
+                    $this->addFlash('danger', 'Güncellenecek ürün bulunamadı.');
+                    return $this->redirectToRoute('product');
                 }
+                dump('Ürün güncelleniyor:', $product->getId());
             } else {
-                $product = $this->createNewProduct($data, $imageFile);
+                // Yeni ürün oluştur
+                $imageAsset = null;
+                if ($imageFile && $imageFile->isValid()) {
+                    $imageAsset = $this->uploadProductImage($imageFile, $productIdentifier ?: $productName);
+                }
+
+                $mainFolderId = 1246;
+                $identifierPrefix = strtoupper(explode('-', $productIdentifier)[0]);
+                $productsFolder = \Pimcore\Model\DataObject\Folder::getById($mainFolderId);
+                $parentFolderPath = $productsFolder->getFullPath() . '/' . $identifierPrefix;
+                $parentFolder = \Pimcore\Model\DataObject\Folder::getByPath($parentFolderPath);
+                
+                if (!$parentFolder) {
+                    $parentFolder = new \Pimcore\Model\DataObject\Folder();
+                    $parentFolder->setKey($identifierPrefix);
+                    $parentFolder->setParent($productsFolder);
+                    $parentFolder->save();
+                }
+
+                $product = new Product();
+                $product->setParent($parentFolder);
+                $product->setKey($productIdentifier . ' ' . $productName);
+                $product->setProductIdentifier($productIdentifier);
+                
+                if ($imageAsset) {
+                    $product->setImage($imageAsset);
+                }
+                
+                dump('Yeni ürün oluşturuluyor...');
             }
 
-            $this->updateProductProperties($product, $data);
-            
+            // Ürün bilgilerini güncelle (hem yeni hem mevcut için)
+            $product->setName($productName);
+            $product->setDescription($productDescription);
+            $product->setProductCategory($category);
+            $product->setBrandItems($brands);
+            $product->setMarketplaces($marketplaces);
+
+            // Resim güncelle (sadece update modunda ve yeni resim yüklendiyse)
             if ($isUpdate && $imageFile && $imageFile->isValid()) {
                 $imageAsset = $this->uploadProductImage($imageFile, $product->getProductIdentifier());
                 if ($imageAsset) {
@@ -260,596 +337,235 @@ class ProductController extends AbstractController
                 }
             }
 
-            $this->updateProductTables($product, $data);
+            // Size Table güncelle
+            if ($sizeTableData) {
+                $variationSizeTable = json_decode($sizeTableData, true);
+                if (is_array($variationSizeTable)) {
+                    $product->setVariationSizeTable($variationSizeTable);
+                }
+            }
 
+            if ($customTableData) {
+                $customTableDecoded = json_decode($customTableData, true);
+                if (
+                    is_array($customTableDecoded)
+                    && isset($customTableDecoded['rows'])
+                    && is_array($customTableDecoded['rows'])
+                ) {
+                    $title = isset($customTableDecoded['title']) ? trim($customTableDecoded['title']) : '';
+                    $customFieldTable = [];
+                    if ($title !== '') {
+                        $customFieldTable[] = ['deger' => $title];
+                    }
+                    foreach ($customTableDecoded['rows'] as $row) {
+                        if (isset($row['deger']) && !empty($row['deger'])) {
+                            $customFieldTable[] = ['deger' => $row['deger']];
+                        }
+                    }
+                    
+                    $product->setCustomFieldTable($customFieldTable);
+                }
+            }
+
+            // Product code kontrol et (sadece yeni ürün için)
             if (!$isUpdate) {
-                $this->generateProductCode($product);
+                $this->checkProductCode($product);
             }
 
             $product->setPublished(true);
             $product->save();
 
-            return $product;
+            dump('Ürün kaydedildi:', $product->getId());
+
+            // Varyantları ekle (hem yeni hem mevcut ürün için)
+            if (is_array($variations) && count($variations) > 0) {
+                $this->addProductVariants($product, $variations);
+            }
+
+            // Başarı mesajı
+            if ($isUpdate) {
+                $this->addFlash('success', 'Ürün başarıyla güncellendi ve yeni varyantlar eklendi.');
+            } else {
+                $this->addFlash('success', 'Ürün ve varyantlar başarıyla oluşturuldu.');
+            }
+
+            return $this->redirectToRoute('product');
 
         } catch (\Throwable $e) {
-            error_log("Save product error: " . $e->getMessage());
-            return null;
+            $errorMessage = $isUpdate ? 'Ürün güncellenirken bir hata oluştu: ' : 'Ürün oluşturulurken bir hata oluştu: ';
+            $this->addFlash('danger', $errorMessage . $e->getMessage());
+            
+            return $this->render('product/product.html.twig', [
+                'errors' => [$errorMessage . 'Lütfen tekrar deneyin.'],
+            ]);
         }
     }
 
-    /**
-     * Yeni ürün oluşturur
-     */
-    private function createNewProduct(array $data, ?UploadedFile $imageFile): Product
+    private function addProductVariants(Product $parentProduct, array $variations): void
     {
-        $imageAsset = null;
-        if ($imageFile && $imageFile->isValid()) {
-            $imageAsset = $this->uploadProductImage($imageFile, $data['productIdentifier']);
-        }
-
-        $parentFolder = $this->getOrCreateProductFolder($data['productIdentifier']);
-
-        $product = new Product();
-        $product->setParent($parentFolder);
-        $product->setKey($data['productIdentifier'] . ' ' . $data['productName']);
-        $product->setProductIdentifier($data['productIdentifier']);
-        
-        if ($imageAsset) {
-            $product->setImage($imageAsset);
-        }
-
-        return $product;
-    }
-
-    /**
-     * Ürün özelliklerini günceller
-     */
-    private function updateProductProperties(Product $product, array $data): void
-    {
-        $product->setName($data['productName']);
-        $product->setDescription($data['productDescription']);
-
-        $category = $this->getObjectById(self::CLASS_MAPPING['category'], (int)$data['categoryId']);
-        $product->setProductCategory($category);
-
-        $brands = $this->getMultipleObjects('brand', $data['brandIds']);
-        $product->setBrandItems($brands);
-
-        $marketplaces = $this->getMultipleObjects('marketplace', $data['marketplaceIds']);
-        $product->setMarketplaces($marketplaces);
-    }
-
-    /**
-     * Ürün tablolarını günceller (size table ve custom table)
-     */
-    private function updateProductTables(Product $product, array $data): void
-    {
-        if (!empty($data['sizeTableData']) && is_array($data['sizeTableData'])) {
-            $product->setVariationSizeTable($data['sizeTableData']);
-        }
-
-        if (!empty($data['customTableData']) && is_array($data['customTableData'])) {
-            $customFieldTable = $this->buildCustomFieldTable($data['customTableData']);
-            $product->setCustomFieldTable($customFieldTable);
-        }
-    }
-
-    /**
-     * Custom field table yapısını oluşturur
-     */
-    private function buildCustomFieldTable(array $customTableData): array
-    {
-        $customFieldTable = [];
-        
-        $title = trim($customTableData['title'] ?? '');
-        if (!empty($title)) {
-            $customFieldTable[] = ['deger' => $title];
-        }
-
-        if (isset($customTableData['rows']) && is_array($customTableData['rows'])) {
-            foreach ($customTableData['rows'] as $row) {
-                if (isset($row['deger']) && !empty(trim($row['deger']))) {
-                    $customFieldTable[] = ['deger' => trim($row['deger'])];
-                }
-            }
-        }
-
-        return $customFieldTable;
-    }
-
-    /**
-     * Ürün varyantlarını kaydeder
-     */
-    private function saveProductVariants(Product $parentProduct, array $variations): void
-    {
-        if (empty($variations) || !is_array($variations)) {
-            return;
-        }
-
         foreach ($variations as $variantData) {
-            $this->createProductVariant($parentProduct, $variantData);
-        }
-    }
-
-    /**
-     * Tek bir ürün varyantı oluşturur
-     */
-    private function createProductVariant(Product $parentProduct, array $variantData): void
-    {
-        try {
             $variant = new Product();
             $variant->setParent($parentProduct);
             $variant->setType(Product::OBJECT_TYPE_VARIANT);
-            
-            $variantKey = $this->buildVariantKey($parentProduct, $variantData);
-            $variant->setKey($variantKey);
-            $variant->setName($variantKey);
-
-            $this->setVariantProperties($variant, $variantData);
-            $this->generateVariantCodes($variant, $parentProduct->getProductIdentifier());
-
+            $parentIdentifier = $parentProduct->getProductIdentifier();
+            $parentName = $parentProduct->getName();
+            $variantKey = implode('-', array_filter([$variantData['renk'] ?? '', $variantData['beden'] ?? '', $variantData['custom'] ?? '']));
+            $fullKeyBase = $parentIdentifier . '-' . $parentName . '-' . ($variantKey ?: 'variant');
+            $variant->setKey($fullKeyBase);
+            $variant->setName($fullKeyBase);
+            if (!empty($variantData['renk'])) {
+                $colorObj = new \Pimcore\Model\DataObject\Color\Listing();
+                $colorObj->setCondition('color = ?', [$variantData['renk']]);
+                $colorObj->setLimit(1);
+                $colorObj = $colorObj->current();
+                if ($colorObj) {
+                    $variant->setVariationColor($colorObj);
+                }
+            }
+            if (!empty($variantData['beden'])) {
+                $variant->setVariationSize($variantData['beden']);
+            }
+            if (!empty($variantData['custom'])) {
+                $variant->setCustomField($variantData['custom']);
+            }
+            $this->checkIwasku($parentIdentifier , $variant);
             $variant->setPublished(true);
             $variant->save();
-
-        } catch (\Throwable $e) {
-            error_log("Create variant error: " . $e->getMessage());
+            dump('Varyant kaydedildi:', $variant->getId());
         }
     }
 
-    /**
-     * Varyant key'ini oluşturur
-     */
-    private function buildVariantKey(Product $parentProduct, array $variantData): string
+    #[Route('/product/add-color', name: 'product_add_color', methods: ['POST'])]
+    public function addColor(Request $request): JsonResponse
     {
-        $keyParts = array_filter([
-            $variantData['renk'] ?? '',
-            $variantData['beden'] ?? '',
-            $variantData['custom'] ?? ''
-        ]);
+        $data = json_decode($request->getContent(), true);
+        $colorName = trim($data['name'] ?? '');
+        if (!$colorName) {
+            return new JsonResponse(['success' => false, 'message' => 'Renk adı boş olamaz.']);
+        }
 
-        $variantKey = implode('-', $keyParts) ?: 'variant';
-        
-        return sprintf('%s-%s-%s', 
-            $parentProduct->getProductIdentifier(),
-            $parentProduct->getName(),
-            $variantKey
-        );
+        $existing = new Color\Listing();
+        $existing->setCondition('color = ?', [$colorName]);
+        if ($existing->count() > 0) {
+            return new JsonResponse(['success' => false, 'message' => 'Bu renk zaten mevcut.']);
+        }
+
+        $color = new Color();
+        $color->setKey($colorName);
+        $color->setParentId(1247);
+        $color->setColor($colorName);
+        $color->setPublished(true);
+        $color->save();
+
+        return new JsonResponse(['success' => true, 'id' => $color->getId()]);
     }
 
-    /**
-     * Varyant özelliklerini set eder
-     */
-    private function setVariantProperties(Product $variant, array $variantData): void
+    public function checkIwasku($parentIdentifier, $product): bool
     {
-        if (!empty($variantData['renk'])) {
-            $color = $this->findColorByName($variantData['renk']);
-            if ($color) {
-                $variant->setVariationColor($color);
-            }
-        }
-
-        if (!empty($variantData['beden'])) {
-            $variant->setVariationSize($variantData['beden']);
-        }
-
-        if (!empty($variantData['custom'])) {
-            $variant->setCustomField($variantData['custom']);
-        }
-    }
-
-    /**
-     * Varyant için kod ve IWASKU oluşturur
-     */
-    private function generateVariantCodes(Product $variant, string $parentIdentifier): void
-    {
-        if ($variant->getType() === Product::OBJECT_TYPE_VARIANT) {
-            $productCode = $this->generateUniqueCode(self::PRODUCT_CODE_LENGTH);
-            $variant->setProductCode($productCode);
-
+        if (
+            $product->getType() == Product::OBJECT_TYPE_VARIANT
+            && strlen($product->getIwasku() ?? '') != 12
+        ) {
             $iwasku = str_pad(str_replace('-', '', $parentIdentifier), 7, '0', STR_PAD_RIGHT);
+            $productCode = $this->generateUniqueCode(5);
+            $product->setProductCode($productCode);
             $iwasku .= $productCode;
-            $variant->setIwasku($iwasku);
+            $product->setIwasku($iwasku);
+            return true;
         }
+        return false;
     }
 
-    /**
-     * Ürün için klasör getirir veya oluşturur
-     */
-    private function getOrCreateProductFolder(string $productIdentifier): \Pimcore\Model\DataObject\Folder
-    {
-        $identifierPrefix = strtoupper(explode('-', $productIdentifier)[0]);
-        $productsFolder = \Pimcore\Model\DataObject\Folder::getById(self::MAIN_FOLDER_ID);
-        $parentFolderPath = $productsFolder->getFullPath() . '/' . $identifierPrefix;
-        $parentFolder = \Pimcore\Model\DataObject\Folder::getByPath($parentFolderPath);
-        
-        if (!$parentFolder) {
-            $parentFolder = new \Pimcore\Model\DataObject\Folder();
-            $parentFolder->setKey($identifierPrefix);
-            $parentFolder->setParent($productsFolder);
-            $parentFolder->save();
-        }
-
-        return $parentFolder;
-    }
-
-    /**
-     * Ürün için benzersiz kod üretir
-     */
-    private function generateProductCode(Product $product): void
+    private function checkProductCode($product, $numberDigits = 5): bool
     {
         Product::setGetInheritedValues(false);
-        
-        if (strlen($product->getProductCode() ?? '') !== self::PRODUCT_CODE_LENGTH) {
-            $productCode = $this->generateUniqueCode(self::PRODUCT_CODE_LENGTH);
-            $product->setProductCode($productCode);
+        if (strlen($product->getProductCode()) == $numberDigits) {
+            Product::setGetInheritedValues(true);
+            return false;
         }
-        
+        $productCode = $this->generateUniqueCode($numberDigits);
+        $product->setProductCode($productCode);
         Product::setGetInheritedValues(true);
+        return true;
     }
 
-    /**
-     * Benzersiz kod üretir
-     */
-    private function generateUniqueCode(int $length = self::PRODUCT_CODE_LENGTH): string
+    private function generateUniqueCode(int $numberDigits=5): string
     {
-        $attempts = 0;
-        $maxAttempts = 100;
-
-        while ($attempts < $maxAttempts) {
-            $candidateCode = $this->generateRandomString($length);
+        while (true) {
+            $candidateCode = $this->generateCustomString($numberDigits);
             if (!$this->findByField('productCode', $candidateCode)) {
                 return $candidateCode;
             }
-            $attempts++;
         }
-
-        throw new \RuntimeException('Benzersiz kod üretilemedi.');
     }
 
-    /**
-     * Rastgele string üretir
-     */
-    private function generateRandomString(int $length): string
+    private static function generateCustomString(int $length = 5): string
     {
         $characters = 'ABCDEFGHJKMNPQRSTVWXYZ1234567890';
         $charactersLength = strlen($characters);
         $randomString = '';
 
         for ($i = 0; $i < $length; $i++) {
-            $randomIndex = random_int(0, $charactersLength - 1);
+            $randomIndex = mt_rand(0, $charactersLength - 1);
             $randomString .= $characters[$randomIndex];
         }
-
         return $randomString;
     }
 
-    /**
-     * Ürün resmi yükler
-     */
-    private function uploadProductImage(UploadedFile $imageFile, string $productKey): ?AssetImage
+    public function findByField(string $field, mixed $value): \Pimcore\Model\DataObject\Product|false
     {
-        try {
-            $assetFolder = Asset::getByPath('/products');
-            if (!$assetFolder) {
-                $assetFolder = new AssetFolder();
-                $assetFolder->setFilename('products');
-                $assetFolder->setParent(Asset::getByPath('/'));
-                $assetFolder->save();
-            }
-
-            $extension = $imageFile->getClientOriginalExtension() ?: 'jpg';
-            $filename = $this->generateSafeFilename($productKey) . '_' . time() . '.' . $extension;
-
-            $imageAsset = new AssetImage();
-            $imageAsset->setFilename($filename);
-            $imageAsset->setParent($assetFolder);
-
-            $fileContent = file_get_contents($imageFile->getPathname());
-            if ($fileContent === false) {
-                throw new \RuntimeException('Dosya içeriği okunamadı');
-            }
-
-            $imageAsset->setData($fileContent);
-            $imageAsset->save();
-
-            return $imageAsset;
-
-        } catch (\Throwable $e) {
-            error_log("Image upload error: " . $e->getMessage());
-            return null;
-        }
+        $list = new ProductListing();
+        $list->setCondition("`$field` = ?", [$value]);
+        $list->setUnpublished(true);
+        $list->setLimit(1);
+        return $list->current();
     }
 
-    /**
-     * Güvenli dosya adı üretir
-     */
-    private function generateSafeFilename(string $input): string
-    {
-        $filename = mb_strtolower($input);
-        $filename = str_replace(['ı', 'ğ', 'ü', 'ş', 'ö', 'ç'], ['i', 'g', 'u', 's', 'o', 'c'], $filename);
-        $filename = preg_replace('/[^a-z0-9]/', '_', $filename);
-        $filename = preg_replace('/_+/', '_', $filename);
-        $filename = trim($filename, '_');
-        
-        return $filename ?: 'product';
-    }
-
-    /**
-     * Renk oluşturur
-     */
-    private function createColor(string $colorName): Color
-    {
-        $color = new Color();
-        $color->setKey($colorName);
-        $color->setParentId(self::COLOR_PARENT_ID);
-        $color->setColor($colorName);
-        $color->setPublished(true);
-        $color->save();
-
-        return $color;
-    }
-
-    /**
-     * Rengin var olup olmadığını kontrol eder
-     */
-    private function colorExists(string $colorName): bool
-    {
-        $listing = new ColorListing();
-        $listing->setCondition('color = ?', [$colorName]);
-        
-        return $listing->count() > 0;
-    }
-
-    /**
-     * Rengi ismine göre bulur
-     */
-    private function findColorByName(string $colorName): ?Color
-    {
-        $listing = new ColorListing();
-        $listing->setCondition('color = ?', [$colorName]);
-        $listing->setLimit(1);
-        
-        return $listing->current() ?: null;
-    }
-
-    /**
-     * Ürün datasını build eder (search için)
-     */
-    private function buildProductData(Product $product): array
-    {
-        $variants = $this->getProductVariants($product);
-        $variantAnalysis = $this->analyzeVariants($variants);
-
-        return [
-            'id' => $product->getId(),
-            'name' => $product->getName(),
-            'productIdentifier' => $product->getProductIdentifier(),
-            'description' => $product->getDescription(),
-            'categoryId' => $product->getProductCategory()?->getId(),
-            'categoryName' => $product->getProductCategory()?->getKey(),
-            'brands' => $this->formatRelationArray($product->getBrandItems()),
-            'marketplaces' => $this->formatRelationArray($product->getMarketplaces()),
-            'imagePath' => $product->getImage()?->getFullPath(),
-            'hasVariants' => $product->hasChildren(),
-            'variants' => $variants,
-            'variantColors' => array_values(array_unique($variantAnalysis['colors'], SORT_REGULAR)),
-            'sizeTable' => $this->buildSizeTableData($product, $variantAnalysis['usedSizes']),
-            'customTable' => $this->buildCustomTableData($product, $variantAnalysis['usedCustoms']),
-            'usedSizes' => array_unique($variantAnalysis['usedSizes']),
-            'usedCustoms' => array_values(array_unique($variantAnalysis['usedCustoms'])),
-            'usedColorIds' => array_unique($variantAnalysis['usedColorIds']),
-            'canEditSizeTable' => true,
-            'canEditColors' => true,
-            'canEditCustomTable' => true,
-            'canCreateVariants' => true
-        ];
-    }
-
-    /**
-     * Ürün varyantlarını getirir
-     */
-    private function getProductVariants(Product $product): array
-    {
-        if (!$product->hasChildren()) {
-            return [];
-        }
-
-        $variants = [];
-        $productVariants = $product->getChildren([Product::OBJECT_TYPE_VARIANT]);
-
-        foreach ($productVariants as $variant) {
-            $variants[] = [
-                'id' => $variant->getId(),
-                'name' => $variant->getName(),
-                'color' => $variant->getVariationColor()?->getColor(),
-                'colorId' => $variant->getVariationColor()?->getId(),
-                'size' => $variant->getVariationSize(),
-                'custom' => $variant->getCustomField(),
-            ];
-        }
-
-        return $variants;
-    }
-
-    /**
-     * Varyantları analiz eder
-     */
-    private function analyzeVariants(array $variants): array
-    {
-        $colors = [];
-        $usedSizes = [];
-        $usedCustoms = [];
-        $usedColorIds = [];
-
-        foreach ($variants as $variant) {
-            if ($variant['colorId']) {
-                $usedColorIds[] = $variant['colorId'];
-                $colors[] = [
-                    'id' => $variant['colorId'],
-                    'name' => $variant['color']
-                ];
-            }
-
-            if ($variant['size']) {
-                $usedSizes[] = $variant['size'];
-            }
-
-            if ($variant['custom']) {
-                $usedCustoms[] = $variant['custom'];
-            }
-        }
-
-        return [
-            'colors' => $colors,
-            'usedSizes' => $usedSizes,
-            'usedCustoms' => $usedCustoms,
-            'usedColorIds' => $usedColorIds
-        ];
-    }
-
-    /**
-     * Size table datasını build eder
-     */
-    private function buildSizeTableData(Product $product, array $usedSizes): array
-    {
-        $sizeTable = [];
-        $sizeTableData = $product->getVariationSizeTable();
-
-        if ($sizeTableData && is_array($sizeTableData)) {
-            foreach ($sizeTableData as $row) {
-                $beden = $row['beden'] ?? $row['label'] ?? '';
-                $sizeTable[] = [
-                    'beden' => $beden,
-                    'en' => $row['en'] ?? $row['width'] ?? '',
-                    'boy' => $row['boy'] ?? $row['length'] ?? '',
-                    'yukseklik' => $row['yukseklik'] ?? $row['height'] ?? '',
-                    'birim' => $row['birim'] ?? $row['unit'] ?? '',
-                    'locked' => in_array($beden, $usedSizes, true)
-                ];
-            }
-        }
-
-        return $sizeTable;
-    }
-
-    /**
-     * Custom table datasını build eder
-     */
-    private function buildCustomTableData(Product $product, array $usedCustoms): array
-    {
-        $customTableData = $product->getCustomFieldTable();
-        
-        if (!$customTableData || !is_array($customTableData)) {
-            return [];
-        }
-
-        $customRows = [];
-        $customTitle = '';
-
-        foreach ($customTableData as $index => $row) {
-            $deger = $row['deger'] ?? $row['value'] ?? '';
-            
-            if (!empty($deger) && $deger !== '[object Object]') {
-                if ($index === 0) {
-                    $customTitle = $deger;
-                } else {
-                    $customRows[] = [
-                        'deger' => $deger,
-                        'locked' => in_array($deger, $usedCustoms, true)
-                    ];
-                }
-            }
-        }
-
-        return [
-            'title' => $customTitle,
-            'rows' => $customRows
-        ];
-    }
-
-    /**
-     * İlişki array'ini formatlar
-     */
-    private function formatRelationArray($items): array
-    {
-        if (!$items) {
-            return [];
-        }
-
-        $result = [];
-        $itemsArray = is_array($items) ? $items : [$items];
-
-        foreach ($itemsArray as $item) {
-            $result[] = [
-                'id' => $item->getId(),
-                'name' => $item->getKey()
-            ];
-        }
-
-        return $result;
-    }
-
-    /**
-     * Generic listing getirir
-     */
-    private function getGenericListing(string $listingClass, string $condition = "published = 1", ?int $page = null, ?int $limit = null): array
+    private function getGenericListing(string $listingClass, string $condition = "published = 1", ?int $page = null, ?int $limit = null): array 
     {
         $listing = new $listingClass();
         $listing->setCondition($condition);
-        
         if ($limit !== null && $page !== null) {
             $offset = ($page - 1) * $limit;
             $listing->setLimit($limit);
             $listing->setOffset($offset);
         }
-        
         $listing->load();
         $resultList = [];
-        
         foreach ($listing as $item) {
             $resultList[] = [
                 'id' => $item->getId(),
                 'name' => $item->getKey(),
             ];
         }
-
         return $resultList;
     }
 
-    /**
-     * Tek obje validasyonu
-     */
     private function validateSingleObject(string $type, $id, array &$errors, string $displayName): ?object
     {
         if (empty($id)) {
             return null;
         }
-
-        $intId = (int)(is_array($id) ? $id[0] : $id);
+        $idValue = is_array($id) ? $id[0] : $id;
+        $intId = (int)$idValue;
         $object = $this->getObjectById(self::CLASS_MAPPING[$type], $intId);
-        
         if (!$object) {
             $errors[] = "{$displayName} ID {$intId} bulunamadı";
         }
-
         return $object;
     }
 
-    /**
-     * Çoklu obje validasyonu
-     */
     private function validateMultipleObjects(string $type, array $ids, array &$errors, string $displayName): array
     {
         if (empty($ids)) {
             return [];
         }
-
         $objects = [];
         foreach ($ids as $id) {
             if (!empty($id)) {
-                $intId = (int)(is_array($id) ? $id[0] : $id);
+                $idValue = is_array($id) ? $id[0] : $id;
+                $intId = (int)$idValue;
                 $object = $this->getObjectById(self::CLASS_MAPPING[$type], $intId);
-                
                 if (!$object) {
                     $errors[] = "{$displayName} ID {$intId} bulunamadı";
                 } else {
@@ -857,54 +573,92 @@ class ProductController extends AbstractController
                 }
             }
         }
-
         return $objects;
     }
 
-    /**
-     * Çoklu obje getirir
-     */
-    private function getMultipleObjects(string $type, array $ids): array
-    {
-        $objects = [];
-        foreach ($ids as $id) {
-            if (!empty($id)) {
-                $intId = (int)(is_array($id) ? $id[0] : $id);
-                $object = $this->getObjectById(self::CLASS_MAPPING[$type], $intId);
-                if ($object) {
-                    $objects[] = $object;
-                }
-            }
-        }
-        return $objects;
-    }
-
-    /**
-     * ID ile obje getirir
-     */
     private function getObjectById(string $className, int $id): ?object
     {
         if (!class_exists($className)) {
             return null;
         }
-
         try {
             return $className::getById($id);
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
             return null;
         }
     }
 
-    /**
-     * Alan ile ürün bulur
-     */
-    private function findByField(string $field, mixed $value): Product|false
+    private function getCategories()
     {
-        $list = new ProductListing();
-        $list->setCondition("`$field` = ?", [$value]);
-        $list->setUnpublished(true);
-        $list->setLimit(1);
-        
-        return $list->current();
+        $categories = new CategoryListing();
+        $categories->setCondition("published = 1");
+        $categories->load();
+        $categoryList = [];
+        foreach ($categories as $category) {
+            if ($category->hasChildren()) {
+                continue; 
+            }
+            $categoryList[] = [
+                'id' => $category->getId(),
+                'name' => $category->getKey(),
+            ];
+        }
+        return $categoryList;
     }
+
+    private function uploadProductImage($imageFile, string $productKey): ?\Pimcore\Model\Asset\Image
+    {
+        try {
+            dump('uploadProductImage başlıyor...');
+            dump('File info:', [
+                'name' => $imageFile->getClientOriginalName(),
+                'size' => $imageFile->getSize(),
+                'mime' => $imageFile->getMimeType(),
+                'temp_path' => $imageFile->getPathname()
+            ]);
+            $assetFolder = \Pimcore\Model\Asset::getByPath('/products');
+            if (!$assetFolder) {
+                dump('Products klasörü yok, oluşturuluyor...');
+                $assetFolder = new \Pimcore\Model\Asset\Folder();
+                $assetFolder->setFilename('products');
+                $assetFolder->setParent(\Pimcore\Model\Asset::getByPath('/'));
+                $assetFolder->save();
+                dump('Products klasörü oluşturuldu:', $assetFolder->getFullPath());
+            } else {
+                dump('Products klasörü mevcut:', $assetFolder->getFullPath());
+            }
+            $extension = $imageFile->getClientOriginalExtension() ?: 'jpg';
+            $filename = $this->generateSafeFilename($productKey) . '_' . time() . '.' . $extension;
+            dump('Generated filename:', $filename);
+            $imageAsset = new \Pimcore\Model\Asset\Image();
+            $imageAsset->setFilename($filename);
+            $imageAsset->setParent($assetFolder);
+            $fileContent = file_get_contents($imageFile->getPathname());
+            if ($fileContent === false) {
+                throw new \Exception('Dosya içeriği okunamadı');
+            }
+            $imageAsset->setData($fileContent);
+            $imageAsset->save();
+            dump('Image asset oluşturuldu:', [
+                'ID' => $imageAsset->getId(),
+                'Path' => $imageAsset->getFullPath(),
+                'Size' => $imageAsset->getFileSize()
+            ]);
+            return $imageAsset;
+        } catch (\Exception $e) {
+            dump('Image upload HATA:', $e->getMessage());
+            return null;
+        }
+    }
+
+    private function generateSafeFilename(string $input): string
+    {
+        $filename = mb_strtolower($input);
+        $filename = str_replace(['ı', 'ğ', 'ü', 'ş', 'ö', 'ç'], ['i', 'g', 'u', 's', 'o', 'c'], $filename);
+        $filename = preg_replace('/[^a-z0-9]/', '_', $filename);
+        $filename = preg_replace('/_+/', '_', $filename);
+        $filename = trim($filename, '_');
+        return $filename ?: 'product';
+    }
+
 }
