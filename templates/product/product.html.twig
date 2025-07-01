@@ -677,6 +677,10 @@
         }
 
         function fillFormWithProduct(product) {
+            console.log('Product data:', product); // Add this line for debugging
+            console.log('Size table:', product.sizeTable); // Add this line
+            console.log('Used sizes:', product.usedSizes); // Add this line
+            console.log('Variants:', product.variants); // Add this line
             document.getElementById('productName').value = product.name || '';
             document.getElementById('productIdentifier').value = product.productIdentifier || '';
             document.getElementById('productDescription').value = product.description || '';
@@ -720,7 +724,9 @@
             tbody.innerHTML = '';
             
             sizeTable.forEach(row => {
-                const isLocked = usedSizes.includes(row.beden);
+                // Fix: Check both 'beden' and 'label' properties for compatibility
+                const sizeValue = row.beden || row.label || '';
+                const isLocked = usedSizes.includes(sizeValue);
                 addSizeRow(row, isLocked);
             });
             
@@ -1065,12 +1071,14 @@
                 const size = combo[1];
                 const custom = customs.length > 0 ? combo[2] : null;
                 
-                // Check if this variant is locked
-                const isLocked = lockedVariants.some(v => 
-                    v.color === color && 
-                    v.size === size && 
-                    v.custom === custom
-                );
+                // Fix: Improved variant locking logic
+                const isLocked = lockedVariants.some(v => {
+                    const colorMatch = v.color === color || (v.colorName && v.colorName === color);
+                    const sizeMatch = v.size === size || (v.sizeName && v.sizeName === size);
+                    const customMatch = custom ? (v.custom === custom || (v.customName && v.customName === custom)) : !v.custom;
+                    
+                    return colorMatch && sizeMatch && customMatch;
+                });
 
                 const sizeObj = sizesData.find(s => s.beden === size);
                 let sizeLabel = size;
