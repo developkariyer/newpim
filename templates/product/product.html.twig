@@ -765,11 +765,24 @@
         function populateCustomTable(customTable, usedCustoms = []) {
             console.log('populateCustomTable called with:', customTable, usedCustoms);
             
+            // GÜVENLE KONTROL: Element var mı?
+            const customTitleElement = document.getElementById('customTitle');
+            if (!customTitleElement) {
+                console.error('customTitle element bulunamadı!');
+                // Element yoksa yaratmaya çalışma, sadece devam et
+            } else {
+                customTitleElement.value = customTable.title || '';
+            }
+            
+            // DÜZELTME: usedCustoms'ı array'e çevir
             const usedCustomsArray = Array.isArray(usedCustoms) ? usedCustoms : Object.values(usedCustoms || {});
             
-            document.getElementById('customTitle').value = customTable.title || '';
-            
             const tbody = document.querySelector('#customTable tbody');
+            if (!tbody) {
+                console.error('customTable tbody bulunamadı!');
+                return;
+            }
+            
             tbody.innerHTML = '';
             
             if (customTable.rows && customTable.rows.length > 0) {
@@ -782,9 +795,16 @@
                 });
             }
             
-            document.getElementById('customTableData').value = JSON.stringify(customTable);
+            // GÜVENLE KONTROL: Element var mı?
+            const customTableDataElement = document.getElementById('customTableData');
+            if (!customTableDataElement) {
+                console.error('customTableData element bulunamadı!');
+            } else {
+                customTableDataElement.value = JSON.stringify(customTable);
+            }
+            
             updateCustomTablePreview(customTable);
-        }
+}
 
         function setEditMode() {
             isEditMode = true;
