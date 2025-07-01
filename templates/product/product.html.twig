@@ -810,12 +810,28 @@
         function clearForm() {
             selectedProduct = null;
             isEditMode = false;
-            lockedVariants = [];
+            lockedVariants = []; // ÖNEMLI: State'i temizle
+            
+            // DÜZELTME: Tüm state'leri sıfırla
+            selectedItems = { 
+                colors: [], 
+                brands: [], 
+                marketplaces: [], 
+                categories: [] 
+            };
             
             document.getElementById('selectedProductInfo').style.display = 'none';
             document.getElementById('editingProductId').value = '';
             document.getElementById('productForm').reset();
-            selectedItems = { colors: [], brands: [], marketplaces: [], categories: [] };
+            
+            // Form field'larını sıfırla
+            document.getElementById('customTableTitle').value = '';
+            document.getElementById('sizeTableData').value = '';
+            document.getElementById('customTableData').value = '';
+            
+            // Table'ları temizle
+            document.querySelector('#sizeTable tbody').innerHTML = '';
+            document.querySelector('#customTable tbody').innerHTML = '';
             
             const identifierField = document.getElementById('productIdentifier');
             identifierField.readOnly = false;
@@ -823,20 +839,18 @@
             identifierField.style.cursor = '';
             
             document.getElementById('imageInput').setAttribute('required', 'required');
-            document.getElementById('productForm').action = '{{ path('product_create') }}';
             document.getElementById('submitBtn').textContent = 'Kaydet';
             
-            // Clear previews
+            // Preview'ları temizle
             document.getElementById('sizeTablePreview').style.display = 'none';
             document.getElementById('customTablePreview').style.display = 'none';
             document.getElementById('imagePreview').innerHTML = '📷';
             
-            // Clear hidden inputs
-            document.getElementById('sizeTableData').value = '';
-            document.getElementById('customTableData').value = '';
-            
-            // Update selected items display
+            // Selected items'ları güncelle
             searchTypes.forEach(type => updateSelectedItems(type));
+            
+            // Step'i sıfırla
+            showStep1();
         }
 
         async function performSearch(type) {
