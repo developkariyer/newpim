@@ -763,18 +763,23 @@
         }
 
         function populateCustomTable(customTable, usedCustoms = []) {
+            console.log('populateCustomTable called with:', customTable, usedCustoms);
+            
+            const usedCustomsArray = Array.isArray(usedCustoms) ? usedCustoms : Object.values(usedCustoms || {});
+            
+            document.getElementById('customTitle').value = customTable.title || '';
+            
             const tbody = document.querySelector('#customTable tbody');
             tbody.innerHTML = '';
             
-            if (customTable.rows) {
+            if (customTable.rows && customTable.rows.length > 0) {
                 customTable.rows.forEach(row => {
-                    const isLocked = usedCustoms.includes(row.deger);
-                    addCustomRow(row.deger, isLocked);
+                    const customValue = row.deger || '';
+                    // Array metodu kullan
+                    const isLocked = usedCustomsArray.includes(customValue);
+                    console.log(`Custom ${customValue} locked: ${isLocked}`);
+                    addCustomRow(row, isLocked);
                 });
-            }
-            
-            if (customTable.title) {
-                document.getElementById('customTableTitle').value = customTable.title;
             }
             
             document.getElementById('customTableData').value = JSON.stringify(customTable);
