@@ -237,6 +237,9 @@ class ProductController extends AbstractController
     #[Route('/product/create', name: 'product_create', methods: ['POST'])]
     public function create(Request $request): Response
     {
+        $editingProductId = $request->get('editingProductId');
+        $isUpdate = !empty($editingProductId);
+        
         $productName = $request->get('productName');
         $productIdentifier = $request->get('productIdentifier');
         $productDescription = $request->get('productDescription');
@@ -245,62 +248,93 @@ class ProductController extends AbstractController
         $brandIds = $request->get('brands', []);
         $marketplaceIds = $request->get('marketplaces', []);
         $colorIds = $request->get('colors', []);
-        $customTemplateId = $request->get('customTemplate');
         $sizeTableData = $request->get('sizeTableData');
         $customTableData = $request->get('customTableData');
         $variations = $request->get('variationsData');
+        
         if ($variations) {
             $variations = json_decode($variations, true);
         }
+
+        // Validation
         $errors = [];
         $category = $this->validateSingleObject('category', $categoryId, $errors, 'Kategori');
         $brands = $this->validateMultipleObjects('brand', $brandIds, $errors, 'Marka');
         $marketplaces = $this->validateMultipleObjects('marketplace', $marketplaceIds, $errors, 'Pazaryeri');
         $colors = $this->validateMultipleObjects('color', $colorIds, $errors, 'Renk');
+
         if (!empty($errors)) {
-            return $this->render('product/product.html.twig', [
-                'errors' => $errors
-            ]);
+            foreach ($errors as $error) {
+                $this->addFlash('danger', $error);
+            }
+            return $this->redirectToRoute('product');
         }
 
-        $imageAsset = null;
-        if ($imageFile && $imageFile->isValid()) {
-            $imageAsset = $this->uploadProductImage($imageFile, $productIdentifier ?: $productName);
-        }
+        try {
+            // Mevcut ürün varsa al, yoksa yeni oluştur
+            if ($isUpdate) {
+                $product = Product::getById($editingProductId);
+                if (!$product) {
+                    $this->addFlash('danger', 'Güncellenecek ürün bulunamadı.');
+                    return $this->redirectToRoute('product');
+                }
+                dump('Ürün güncelleniyor:', $product->getId());
+            } else {
+                // Yeni ürün oluştur
+                $imageAsset = null;
+                if ($imageFile && $imageFile->isValid()) {
+                    $imageAsset = $this->uploadProductImage($imageFile, $productIdentifier ?: $productName);
+                }
 
-        $mainFolderId = 1246;
-        $identifierPrefix = strtoupper(explode('-', $productIdentifier)[0]);
-        $productsFolder = \Pimcore\Model\DataObject\Folder::getById($mainFolderId);
-        $parentFolderPath = $productsFolder->getFullPath() . '/' . $identifierPrefix;
-        $parentFolder = \Pimcore\Model\DataObject\Folder::getByPath($parentFolderPath);
-        if (!$parentFolder) {
-            $parentFolder = new \Pimcore\Model\DataObject\Folder();
-            $parentFolder->setKey($identifierPrefix);
-            $parentFolder->setParent($productsFolder);
-            $parentFolder->save();
-        }
-        try {   
-            $product = new Product();
-            $product->setParent($parentFolder);
-            $product->setKey($productIdentifier . ' ' . $productName);
+                $mainFolderId = 1246;
+                $identifierPrefix = strtoupper(explode('-', $productIdentifier)[0]);
+                $productsFolder = \Pimcore\Model\DataObject\Folder::getById($mainFolderId);
+                $parentFolderPath = $productsFolder->getFullPath() . '/' . $identifierPrefix;
+                $parentFolder = \Pimcore\Model\DataObject\Folder::getByPath($parentFolderPath);
+                
+                if (!$parentFolder) {
+                    $parentFolder = new \Pimcore\Model\DataObject\Folder();
+                    $parentFolder->setKey($identifierPrefix);
+                    $parentFolder->setParent($productsFolder);
+                    $parentFolder->save();
+                }
+
+                $product = new Product();
+                $product->setParent($parentFolder);
+                $product->setKey($productIdentifier . ' ' . $productName);
+                $product->setProductIdentifier($productIdentifier);
+                
+                if ($imageAsset) {
+                    $product->setImage($imageAsset);
+                }
+                
+                dump('Yeni ürün oluşturuluyor...');
+            }
+
+            // Ürün bilgilerini güncelle (hem yeni hem mevcut için)
             $product->setName($productName);
-            $product->setProductIdentifier($productIdentifier);
             $product->setDescription($productDescription);
             $product->setProductCategory($category);
             $product->setBrandItems($brands);
             $product->setMarketplaces($marketplaces);
-            if ($imageAsset) {
-                $product->setImage($imageAsset);
+
+            // Resim güncelle (sadece update modunda ve yeni resim yüklendiyse)
+            if ($isUpdate && $imageFile && $imageFile->isValid()) {
+                $imageAsset = $this->uploadProductImage($imageFile, $product->getProductIdentifier());
+                if ($imageAsset) {
+                    $product->setImage($imageAsset);
+                }
             }
-            $variationSizeTable = [];
+
+            // Size Table güncelle
             if ($sizeTableData) {
                 $variationSizeTable = json_decode($sizeTableData, true);
-                if (!is_array($variationSizeTable)) {
-                    $variationSizeTable = [];
+                if (is_array($variationSizeTable)) {
+                    $product->setVariationSizeTable($variationSizeTable);
                 }
-                $product->setVariationSizeTable($variationSizeTable);
             }
-            $customFieldTable = [];
+
+            // Custom Table güncelle
             if ($customTableData) {
                 $customTableDecoded = json_decode($customTableData, true);
                 if (
@@ -309,31 +343,48 @@ class ProductController extends AbstractController
                     && is_array($customTableDecoded['rows'])
                 ) {
                     $title = isset($customTableDecoded['title']) ? $customTableDecoded['title'] : '';
-                    if ($title !== '') {
-                        array_unshift($customTableDecoded['rows'], ['deger' => $title, 'isTitle' => true]);
-                    }
                     $customFieldTable = $customTableDecoded['rows'];
-                } elseif (is_array($customTableDecoded)) {
-                    $customFieldTable = $customTableDecoded;
+                    
+                    if ($title !== '') {
+                        array_unshift($customFieldTable, ['deger' => $title, 'isTitle' => true]);
+                    }
+                    
+                    $product->setCustomFieldTable($customFieldTable);
                 }
-                $product->setCustomFieldTable($customFieldTable);
             }
-            $this->checkProductCode($product);
+
+            // Product code kontrol et (sadece yeni ürün için)
+            if (!$isUpdate) {
+                $this->checkProductCode($product);
+            }
+
             $product->setPublished(true);
             $product->save();
-            dump('Variations:', $variations);
+
+            dump('Ürün kaydedildi:', $product->getId());
+
+            // Varyantları ekle (hem yeni hem mevcut ürün için)
             if (is_array($variations) && count($variations) > 0) {
                 $this->addProductVariants($product, $variations);
             }
-            $this->addFlash('success', 'Ürün ve varyantlar başarıyla oluşturuldu.');
+
+            // Başarı mesajı
+            if ($isUpdate) {
+                $this->addFlash('success', 'Ürün başarıyla güncellendi ve yeni varyantlar eklendi.');
+            } else {
+                $this->addFlash('success', 'Ürün ve varyantlar başarıyla oluşturuldu.');
+            }
+
             return $this->redirectToRoute('product');
-        }catch (\Throwable $e) {
-            $this->addFlash('danger', 'Ürün oluşturulurken bir hata oluştu: ' . $e->getMessage());
+
+        } catch (\Throwable $e) {
+            $errorMessage = $isUpdate ? 'Ürün güncellenirken bir hata oluştu: ' : 'Ürün oluşturulurken bir hata oluştu: ';
+            $this->addFlash('danger', $errorMessage . $e->getMessage());
+            
             return $this->render('product/product.html.twig', [
-                'errors' => ['Ürün oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.'],
+                'errors' => [$errorMessage . 'Lütfen tekrar deneyin.'],
             ]);
         }
-        
     }
 
     #[Route('/product/update', name: 'product_update', methods: ['POST'])]
