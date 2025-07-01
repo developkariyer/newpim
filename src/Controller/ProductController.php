@@ -17,7 +17,6 @@ use Pimcore\Model\DataObject\Color\Listing as VariationColorListing;
 use Pimcore\Model\DataObject\Brand\Listing as BrandListing;
 use Pimcore\Model\DataObject\Marketplace\Listing as MarketplaceListing;
 use Pimcore\Model\DataObject\Product\Listing as ProductListing;
-use App\Service\VariationMatrixService;
 
 
 class ProductController extends AbstractController
@@ -35,13 +34,6 @@ class ProductController extends AbstractController
         'marketplace' => Marketplace::class,
         'category' => Category::class
     ];
-
-    private VariationMatrixService $variationMatrixService;
-
-    public function __construct(VariationMatrixService $variationMatrixService)
-    {
-        $this->variationMatrixService = $variationMatrixService;
-    }
     
     #[Route('/product', name: 'product')]
     public function index(): Response
