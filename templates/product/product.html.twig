@@ -506,17 +506,27 @@
         clearTimeout(productSearchTimeout);
         productSearchTimeout = setTimeout(() => {
             fetch(`/product/search-products?q=${encodeURIComponent(query)}`)
-                .then(res => res.json())
-                .then(data => {
-                    displayProductSearchResults(data.items);
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+                    return res.json();
                 })
-                .catch(err => console.error('Ürün arama hatası:', err));
-        }, 1000);
+                .then(data => {
+                    console.log('Arama sonucu:', data); 
+                    displayProductSearchResults(data.items || []);
+                })
+                .catch(err => {
+                    console.error('Ürün arama hatası:', err);
+                    displayProductSearchResults([]);
+                });
+        }, 300);
     });
-
+    
     function displayProductSearchResults(items) {
         const resultsDiv = document.getElementById('productSearchResults');
-        if (items.length === 0) {
+        
+        if (!items || !Array.isArray(items) || items.length === 0) {
             resultsDiv.innerHTML = '<div style="padding: 1rem; text-align: center; color: #6c757d;">Ürün bulunamadı</div>';
             resultsDiv.style.display = 'block';
             return;

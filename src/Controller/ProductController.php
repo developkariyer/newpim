@@ -79,7 +79,7 @@ class ProductController extends AbstractController
             
             $listing = new ProductListing();
             $listing->setCondition('productIdentifier LIKE ? OR name LIKE ?', ["%$query%", "%$query%"]);
-            $listing->setLimit(10); 
+            $listing->setLimit(1); 
             $products = $listing->load();
             $items = [];
             
