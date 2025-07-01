@@ -71,7 +71,7 @@ class ProductController extends AbstractController
     #[Route('/product/search-products', name: 'product_search_products', methods: ['GET'])]
     public function searchProducts(Request $request): JsonResponse
     {
-        try {
+       try {
             $query = trim($request->query->get('q', ''));
             if (strlen($query) < 2) {
                 return new JsonResponse(['items' => []]);
@@ -85,9 +85,14 @@ class ProductController extends AbstractController
             if (count($products) === 0) {
                 return new JsonResponse(['items' => []]);
             }
+            
             $product = $products[0]; 
+            
             $variants = [];
             $variantColors = [];
+            $usedSizes = [];
+            $usedCustoms = [];
+            $usedColorIds = [];
             $hasVariants = $product->hasChildren();
             
             if ($hasVariants) {
@@ -103,10 +108,20 @@ class ProductController extends AbstractController
                         'custom' => $variant->getCustomField(),
                     ];
                     if ($variant->getVariationColor()) {
+                        $colorId = $variant->getVariationColor()->getId();
+                        $usedColorIds[] = $colorId;
                         $variantColors[] = [
-                            'id' => $variant->getVariationColor()->getId(),
+                            'id' => $colorId,
                             'name' => $variant->getVariationColor()->getColor()
                         ];
+                    }
+                    
+                    if ($variant->getVariationSize()) {
+                        $usedSizes[] = $variant->getVariationSize();
+                    }
+                    
+                    if ($variant->getCustomField()) {
+                        $usedCustoms[] = $variant->getCustomField();
                     }
                 }
             }
@@ -151,15 +166,18 @@ class ProductController extends AbstractController
             $sizeTableData = $product->getVariationSizeTable();
             if ($sizeTableData && is_array($sizeTableData)) {
                 foreach ($sizeTableData as $row) {
+                    $beden = $row['label'] ?? '';
                     $sizeTable[] = [
-                        'beden' => $row['label'] ?? '',
+                        'beden' => $beden,
                         'en' => $row['width'] ?? '',
                         'boy' => $row['length'] ?? '',
                         'yukseklik' => $row['height'] ?? '',
-                        'birim' => $row['unit'] ?? ''
+                        'birim' => $row['unit'] ?? '',
+                        'locked' => in_array($beden, $usedSizes) 
                     ];
                 }
             }
+            
             $customTable = [];
             $customTableData = $product->getCustomFieldTable();
             if ($customTableData && is_array($customTableData)) {
@@ -170,8 +188,10 @@ class ProductController extends AbstractController
                     if ($index === 0) {
                         $customTitle = $row['value'] ?? '';
                     } else {
+                        $deger = $row['value'] ?? '';
                         $customRows[] = [
-                            'deger' => $row['value'] ?? ''
+                            'deger' => $deger,
+                            'locked' => in_array($deger, $usedCustoms) 
                         ];
                     }
                 }
@@ -181,6 +201,7 @@ class ProductController extends AbstractController
                     'rows' => $customRows
                 ];
             }
+            
             $item = [
                 'id' => $product->getId(),
                 'name' => $product->getName(),
@@ -193,14 +214,17 @@ class ProductController extends AbstractController
                 'imagePath' => $product->getImage() ? $product->getImage()->getFullPath() : null,
                 'hasVariants' => $hasVariants,
                 'variants' => $variants,
-                'variantColors' => array_values(array_unique($variantColors, SORT_REGULAR)), 
-                'sizeTable' => $sizeTable,
-                'customTable' => $customTable,
-                'canEditSizeTable' => !$hasVariants,
-                'canEditColors' => true,
-                'canEditCustomTable' => !$hasVariants,
+                'variantColors' => array_values(array_unique($variantColors, SORT_REGULAR)),
+                'sizeTable' => $sizeTable, 
+                'customTable' => $customTable, 
+                'usedSizes' => array_unique($usedSizes), 
+                'usedCustoms' => array_unique($usedCustoms), 
+                'usedColorIds' => array_unique($usedColorIds), 
+                'canEditSizeTable' => true,
+                'canEditColors' => true, 
+                'canEditCustomTable' => true, 
+                'canCreateVariants' => true 
             ];
-            
             return new JsonResponse(['items' => [$item]]);
             
         } catch (\Exception $e) {
