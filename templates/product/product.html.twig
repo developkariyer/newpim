@@ -1094,13 +1094,33 @@
                 customs = (customData.rows || []).map(r => r.deger);
             } catch {}
 
+            // DEBUG: Veri kaynaklarını ve tiplerini kontrol et
+            console.log("--- VARIANT MATRIX DATA ---");
+            console.log("Kilitlenecek Varyantlar (lockedVariants):", JSON.parse(JSON.stringify(lockedVariants)));
+            console.log("Matris Renkleri:", colors);
+            console.log("Matris Bedenleri:", sizes);
+            console.log("Matris Custom Değerleri:", customs);
+            console.log("--------------------------");
+
             function cartesianProduct(arrays) {
-                return arrays.reduce((a, b) => a.flatMap(d => b.map(e => [...(Array.isArray(d) ? d : [d]), e])));
+                // Boş array'leri filtrele
+                const filteredArrays = arrays.filter(arr => arr && arr.length > 0);
+                if (filteredArrays.length === 0) return [];
+                return filteredArrays.reduce((a, b) => a.flatMap(d => b.map(e => [...(Array.isArray(d) ? d : [d]), e])));
             }
 
-            let combos = cartesianProduct([colors, sizes]);
+            // Renk ve Beden zorunlu olduğu için, eğer boşlarsa matris oluşturma.
+            if (colors.length === 0 || sizes.length === 0) {
+                document.getElementById('variationTableContainer').innerHTML = '<div class="alert alert-warning">Varyasyon matrisini oluşturmak için lütfen en az bir Renk ve bir Beden seçin.</div>';
+                return;
+            }
+
+            let combos;
             if (customs.length > 0) {
                 combos = cartesianProduct([colors, sizes, customs]);
+            } else {
+                // Custom yoksa, her kombinasyona null ekle
+                combos = cartesianProduct([colors, sizes]).map(item => [...item, null]);
             }
 
             let html = '<table class="table table-bordered"><thead><tr>';
@@ -1108,33 +1128,29 @@
             if (customs.length > 0) html += '<th>Custom</th>';
             html += '</tr></thead><tbody>';
 
-            console.log('Generating matrix with locked variants:', lockedVariants); // Debug
-
             combos.forEach((combo, i) => {
                 const color = combo[0];
                 const size = combo[1];
-                const custom = customs.length > 0 ? combo[2] : null;
+                const custom = combo[2]; // Artık her zaman bir değere sahip (string veya null)
                 
-                console.log(`Checking combo: ${color}-${size}-${custom}`); // Debug her combo için
-                
+                // --- KESİN EŞLEŞTİRME MANTIĞI ---
                 const isLocked = lockedVariants.some(v => {
-                    const colorMatch = (v.color === color);
-                    const sizeMatch = (v.size === size);
-                    let customMatch = true;
-                    if (custom !== null && custom !== undefined) {
-                        customMatch = (v.custom === custom);
-                    } else {
-                        customMatch = (!v.custom || v.custom === null || v.custom === undefined);
-                    }
-                    const result = colorMatch && sizeMatch && customMatch;
-                    console.log(`  Variant check: color=${colorMatch}, size=${sizeMatch}, custom=${customMatch}, result=${result}`); // Debug
-                    if (result) {
-                        console.log(`✅ LOCKED variant found: ${color}-${size}-${custom}`);
-                    }
-                    return result;
-                });
+                    // Verileri standartlaştır: string'e çevir, trim'le, null ise null kalsın
+                    const v_color = v.color ? String(v.color).trim() : null;
+                    const v_size = v.size ? String(v.size).trim() : null;
+                    const v_custom = v.custom ? String(v.custom).trim() : null;
 
-                console.log(`Final isLocked for ${color}-${size}-${custom}: ${isLocked}`); // Debug final result
+                    const combo_color = color ? String(color).trim() : null;
+                    const combo_size = size ? String(size).trim() : null;
+                    const combo_custom = custom ? String(custom).trim() : null;
+
+                    // Eşleşmeyi kontrol et
+                    const colorMatch = (v_color === combo_color);
+                    const sizeMatch = (v_size === combo_size);
+                    const customMatch = (v_custom === combo_custom); // İkisi de null ise true döner
+
+                    return colorMatch && sizeMatch && customMatch;
+                });
 
                 const sizeObj = sizesData.find(s => s.beden === size);
                 let sizeLabel = size;
@@ -1146,8 +1162,6 @@
                 const lockIcon = isLocked ? '🔒 ' : '';
                 const checkboxAttributes = isLocked ? 'disabled checked' : '';
 
-                console.log(`HTML for ${color}-${size}-${custom}: rowClass="${rowClass}", checkboxAttributes="${checkboxAttributes}"`); // Debug HTML
-
                 html += `<tr class="${rowClass}">
                     <td>
                         <input type="checkbox" class="variation-checkbox" data-index="${i}" ${checkboxAttributes}>
@@ -1155,12 +1169,14 @@
                     </td>
                     <td>${lockIcon}${color}</td>
                     <td>${lockIcon}${sizeLabel}</td>`;
-                if (customs.length > 0) html += `<td>${lockIcon}${custom || ''}</td>`;
+                
+                if (customs.length > 0) {
+                    html += `<td>${lockIcon}${custom || ''}</td>`;
+                }
                 html += '</tr>';
             });
 
             html += '</tbody></table>';
-            console.log('Final HTML:', html); // Debug final HTML
             document.getElementById('variationTableContainer').innerHTML = html;
         }
 
