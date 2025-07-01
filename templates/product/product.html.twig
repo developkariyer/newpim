@@ -3,6 +3,12 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
+        .variant-locked input[type="checkbox"]:disabled {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+            pointer-events: none !important;
+        }
+        
         .product-form-container {
             max-width: 800px;
             margin: 2rem auto;
@@ -1120,7 +1126,7 @@
                     }
                     const result = colorMatch && sizeMatch && customMatch;
                     if (result) {
-                        console.log(`Locked variant found: ${color}-${size}-${custom}`); // Debug
+                        console.log(`✅ LOCKED variant found: ${color}-${size}-${custom}`); // Debug
                     }
                     return result;
                 });
@@ -1132,12 +1138,11 @@
                 }
 
                 const rowClass = isLocked ? 'variant-locked' : '';
-                const checkboxDisabled = isLocked ? 'disabled checked' : '';
                 const lockIcon = isLocked ? '🔒 ' : '';
 
                 html += `<tr class="${rowClass}">
                     <td>
-                        <input type="checkbox" class="variation-checkbox" data-index="${i}" ${checkboxDisabled}>
+                        <input type="checkbox" class="variation-checkbox" data-index="${i}" ${isLocked ? 'disabled checked' : ''}>
                         ${isLocked ? '<br><small>Mevcut varyant</small>' : ''}
                     </td>
                     <td>${lockIcon}${color}</td>
