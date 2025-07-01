@@ -763,8 +763,9 @@
         }
 
         function populateCustomTable(customTable, usedCustoms = []) {
-            console.log('Populating custom table:', customTable);
+            console.log('populateCustomTable called with:', customTable, usedCustoms);
             
+            // DÜZELTME: Doğru ID kullan
             const customTitleElement = document.getElementById('customTableTitle');
             if (customTitleElement) {
                 customTitleElement.value = customTable.title || '';
@@ -777,7 +778,6 @@
             
             tbody.innerHTML = '';
             
-            // DÜZELTME: Sadece 'rows' dizisini işle
             if (customTable.rows && customTable.rows.length > 0) {
                 customTable.rows.forEach(row => {
                     const customValue = row.deger || '';
@@ -1041,7 +1041,7 @@
                 return;
             }
 
-            const title = document.getElementById('customTableTitle').value.trim(); // DÜZELTME: Doğru ID
+            const title = document.getElementById('customTableTitle').value.trim();
             if (!title) {
                 alert('Lütfen Custom Tablo için bir başlık girin.');
                 return;
@@ -1115,9 +1115,15 @@
             
             try {
                 const customData = JSON.parse(document.getElementById('customTableData').value || '{}');
+                console.log('Custom data structure:', customData); // Debug
                 
                 if (customData.rows && customData.rows.length > 0) {
-                    customs = customData.rows.map(row => row.deger).filter(value => value && value.trim() !== '');
+                    customData.rows.forEach(row => {
+                        const value = row.deger || '';
+                        if (value && value.trim() !== '') {
+                            customs.push(value);
+                        }
+                    });
                 }
             } catch {}
 
