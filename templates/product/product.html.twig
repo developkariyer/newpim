@@ -710,13 +710,22 @@
             if (product.customTable && product.customTable.rows && product.customTable.rows.length > 0) {
                 populateCustomTable(product.customTable, product.usedCustoms || []);
             }
-            if (product.variants) {
-                lockedVariants = product.variants.map(v => ({
-                    color: v.color || v.colorName || v.renk,
-                    size: v.size || v.sizeName || v.beden,
-                    custom: v.custom || v.customName || v.customValue
-                }));
-                console.log('Locked variants:', lockedVariants); // Debug
+           if (product.variants && product.variants.length > 0) {
+                lockedVariants = product.variants.map(v => {
+                    console.log('Processing variant:', v); // Debug individual variant
+                    return {
+                        color: v.color || v.colorName || v.renk || v.productVariantColor?.name,
+                        size: v.size || v.sizeName || v.beden || v.productVariantSize?.beden,
+                        custom: v.custom || v.customName || v.customValue || v.productVariantCustom?.deger
+                    };
+                });
+                console.log('Mapped locked variants:', lockedVariants);
+                if (product.variantColors && product.variantColors.length > 0) {
+                    updateSelectedItems('colors');
+                }
+            } else {
+                console.log('No variants found in product data');
+                lockedVariants = [];
             }
         }
 
@@ -861,12 +870,24 @@
                 return;
             }
             
-            selectedDiv.innerHTML = selectedItems[type].map(item => `
-                <span style="display: inline-block; background: #007bff; color: white; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 12px; font-size: 0.875rem;">
-                    ${ICONS[type] || '📋'} ${item.name}
-                    <span onclick="removeSelectedItem('${type}', ${item.id})" style="margin-left: 0.5rem; cursor: pointer; font-weight: bold;">×</span>
-                </span>
-            `).join('');
+            selectedDiv.innerHTML = selectedItems[type].map(item => {
+                let isColorLocked = false;
+                if (type === 'colors' && lockedVariants.length > 0) {
+                    isColorLocked = lockedVariants.some(v => v.color === item.name);
+                }
+                
+                const lockIcon = isColorLocked ? '🔒 ' : '';
+                const removeButton = isColorLocked ? 
+                    `<span style="margin-left: 0.5rem; color: #6c757d; cursor: not-allowed;" title="Bu renk varyantlarda kullanıldığı için kaldırılamaz">🔒</span>` :
+                    `<span onclick="removeSelectedItem('${type}', ${item.id})" style="margin-left: 0.5rem; cursor: pointer; font-weight: bold;">×</span>`;
+                    
+                return `
+                    <span style="display: inline-block; background: ${isColorLocked ? '#6c757d' : '#007bff'}; color: white; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 12px; font-size: 0.875rem;">
+                        ${lockIcon}${ICONS[type] || '📋'} ${item.name}
+                        ${removeButton}
+                    </span>
+                `;
+            }).join('');
             
             hiddenDiv.innerHTML = selectedItems[type].map(item => 
                 `<input type="hidden" name="${INPUT_NAMES[type] || type + '[]'}" value="${item.id}">`
@@ -874,7 +895,17 @@
         }
 
         function removeSelectedItem(type, itemId) {
-            selectedItems[type] = selectedItems[type].filter(item => item.id !== itemId);
+            if (type === 'colors' && lockedVariants.length > 0) {
+                const item = selectedItems[type].find(item => item.id == itemId);
+                if (item) {
+                    const isColorLocked = lockedVariants.some(v => v.color === item.name);
+                    if (isColorLocked) {
+                        alert('Bu renk varyantlarda kullanıldığı için kaldırılamaz.');
+                        return;
+                    }
+                }
+            }
+            selectedItems[type] = selectedItems[type].filter(item => item.id != itemId);
             updateSelectedItems(type);
         }
 
