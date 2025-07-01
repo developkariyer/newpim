@@ -765,11 +765,9 @@
         function populateCustomTable(customTable, usedCustoms = []) {
             console.log('populateCustomTable called with:', customTable, usedCustoms);
             
-            // GÜVENLE KONTROL: Element var mı?
-            const customTitleElement = document.getElementById('customTitle');
+            const customTitleElement = document.getElementById('customTableTitle'); // customTitle değil customTableTitle
             if (!customTitleElement) {
-                console.error('customTitle element bulunamadı!');
-                // Element yoksa yaratmaya çalışma, sadece devam et
+                console.error('customTableTitle element bulunamadı!');
             } else {
                 customTitleElement.value = customTable.title || '';
             }
@@ -804,7 +802,7 @@
             }
             
             updateCustomTablePreview(customTable);
-}
+        }
 
         function setEditMode() {
             isEditMode = true;
@@ -981,7 +979,7 @@
             tbody.appendChild(tr);
         }
 
-        function addCustomRow(value = '', isLocked = false) {
+        function addCustomRow(value = {}, isLocked = false) {
             const tbody = document.querySelector('#customTable tbody');
             const tr = document.createElement('tr');
             
@@ -989,9 +987,12 @@
                 tr.classList.add('locked-row');
             }
             
+            // DÜZELTME: value object'i veya string olabilir
+            const degerValue = typeof value === 'object' ? (value.deger || '') : value;
+            
             tr.innerHTML = `
                 <td data-label="Değer">
-                    <input type="text" class="form-control" value="${value}" ${isLocked ? 'readonly' : ''} required>
+                    <input type="text" class="form-control" value="${degerValue}" ${isLocked ? 'readonly' : ''} required>
                     ${isLocked ? '<small class="text-muted">🔒 Varyantlarda kullanılıyor</small>' : ''}
                 </td>
                 <td>
@@ -1124,9 +1125,15 @@
             
             try {
                 const customData = JSON.parse(document.getElementById('customTableData').value || '{}');
-                // DÜZELTME: Title satırını (ilk satırı) hariç tut
+                console.log('Custom data structure:', customData); // Debug
+                
                 if (customData.rows && customData.rows.length > 0) {
-                    customs = customData.rows.map(r => r.deger);
+                    customData.rows.forEach(row => {
+                        const value = row.deger || '';
+                        if (value && value.trim() !== '') {
+                            customs.push(value);
+                        }
+                    });
                 }
             } catch {}
 
