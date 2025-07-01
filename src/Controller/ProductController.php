@@ -185,14 +185,22 @@ class ProductController extends AbstractController
                 $customTitle = '';
                 
                 foreach ($customTableData as $index => $row) {
-                    if ($index === 0) {
-                        $customTitle = $row['value'] ?? '';
+                    if ($index === 0 && isset($row['isTitle']) && $row['isTitle']) {
+                        $customTitle = $row['deger'] ?? $row['value'] ?? '';
                     } else {
-                        $deger = $row['value'] ?? '';
-                        $customRows[] = [
-                            'deger' => $deger,
-                            'locked' => in_array($deger, $usedCustoms) 
-                        ];
+                        $deger = '';
+                        if (isset($row['deger'])) {
+                            $deger = is_string($row['deger']) ? $row['deger'] : (string)$row['deger'];
+                        } elseif (isset($row['value'])) {
+                            $deger = is_string($row['value']) ? $row['value'] : (string)$row['value'];
+                        }
+                        
+                        if (!empty($deger) && $deger !== '[object Object]') {
+                            $customRows[] = [
+                                'deger' => $deger,
+                                'locked' => in_array($deger, $usedCustoms) 
+                            ];
+                        }
                     }
                 }
                 
@@ -218,7 +226,7 @@ class ProductController extends AbstractController
                 'sizeTable' => $sizeTable, 
                 'customTable' => $customTable, 
                 'usedSizes' => array_unique($usedSizes), 
-                'usedCustoms' => array_unique($usedCustoms), 
+                'usedCustoms' => array_values(array_unique($usedCustoms)), 
                 'usedColorIds' => array_unique($usedColorIds), 
                 'canEditSizeTable' => true,
                 'canEditColors' => true, 
@@ -334,7 +342,6 @@ class ProductController extends AbstractController
                 }
             }
 
-            // Custom Table güncelle
             if ($customTableData) {
                 $customTableDecoded = json_decode($customTableData, true);
                 if (
@@ -343,10 +350,18 @@ class ProductController extends AbstractController
                     && is_array($customTableDecoded['rows'])
                 ) {
                     $title = isset($customTableDecoded['title']) ? $customTableDecoded['title'] : '';
-                    $customFieldTable = $customTableDecoded['rows'];
+                    $customFieldTable = [];
                     
+                    // Title'ı ilk satır olarak ekle
                     if ($title !== '') {
-                        array_unshift($customFieldTable, ['deger' => $title, 'isTitle' => true]);
+                        $customFieldTable[] = ['deger' => $title, 'isTitle' => true];
+                    }
+                    
+                    // Rows'ları ekle
+                    foreach ($customTableDecoded['rows'] as $row) {
+                        if (isset($row['deger']) && !empty($row['deger'])) {
+                            $customFieldTable[] = ['deger' => $row['deger']];
+                        }
                     }
                     
                     $product->setCustomFieldTable($customFieldTable);
