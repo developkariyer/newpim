@@ -267,6 +267,21 @@
             {% endfor %}
         {% endfor %}
     <form id="productForm" method="POST" enctype="multipart/form-data" action="{{ path('product_create') }}" >
+        <div class="form-section" style="background: #f8f9fa; border-color: #17a2b8;">
+            <h3 style="border-color: #17a2b8; color: #17a2b8;">🔍 Ürün Ara ve Düzenle</h3>
+            <div class="form-group">
+                <label for="productSearchInput">Mevcut Ürün Ara (Identifier veya İsim)</label>
+                <input type="text" id="productSearchInput" class="form-control" placeholder="Örn: PTS-001 veya Premium Cotton T-Shirt">
+                <div id="productSearchResults" style="display: none; position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; background: white; border-radius: 4px; margin-top: 2px;"></div>
+            </div>
+            <div id="selectedProductInfo" style="display: none; padding: 1rem; background: #e3f2fd; border-radius: 4px; margin-top: 1rem;">
+                <h5 style="margin: 0 0 0.5rem 0; color: #1976d2;">✅ Seçilen Ürün:</h5>
+                <div id="selectedProductDetails"></div>
+                <button type="button" id="clearSelectedProduct" class="btn btn-outline-secondary btn-sm" style="margin-top: 0.5rem;">❌ Seçimi Temizle</button>
+            </div>
+        </div>
+        <input type="hidden" id="editingProductId" name="editingProductId" value="">
+        
         <div id="step1">
             <div class="form-section">
                 <h3>📝 Temel Ürün Bilgileri</h3>
@@ -476,6 +491,136 @@
 {% block body_scripts %}
     {{ parent() }}
 <script>
+// edit start
+    let selectedProduct = null;
+    let isEditMode = false;
+
+    // Ürün arama fonksiyonu
+    document.getElementById('productSearchInput').addEventListener('input', function() {
+        const query = this.value.trim();
+        if (query.length < 2) {
+            document.getElementById('productSearchResults').style.display = 'none';
+            return;
+        }
+        
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            fetch(`/product/search-products?q=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(data => {
+                    displayProductSearchResults(data.items);
+                })
+                .catch(err => console.error('Ürün arama hatası:', err));
+        }, 300);
+    });
+
+    function displayProductSearchResults(items) {
+        const resultsDiv = document.getElementById('productSearchResults');
+        if (items.length === 0) {
+            resultsDiv.innerHTML = '<div style="padding: 1rem; text-align: center; color: #6c757d;">Ürün bulunamadı</div>';
+            resultsDiv.style.display = 'block';
+            return;
+        }
+        
+        resultsDiv.innerHTML = '';
+        items.forEach(item => {
+            const itemDiv = document.createElement('div');
+            itemDiv.style.cssText = 'padding: 0.75rem; cursor: pointer; border-bottom: 1px solid #f1f3f4;';
+            itemDiv.innerHTML = `
+                <div style="font-weight: 500;">${item.name}</div>
+                <div style="font-size: 0.875rem; color: #6c757d;">${item.productIdentifier}</div>
+                <div style="font-size: 0.75rem; color: #28a745;">${item.hasVariants ? '✅ Varyantları var' : '⚠️ Varyant yok'}</div>
+            `;
+            itemDiv.addEventListener('click', () => {
+                selectProductForEdit(item);
+            });
+            itemDiv.addEventListener('mouseenter', () => {
+                itemDiv.style.backgroundColor = '#f8f9fa';
+            });
+            itemDiv.addEventListener('mouseleave', () => {
+                itemDiv.style.backgroundColor = '';
+            });
+            resultsDiv.appendChild(itemDiv);
+        });
+        resultsDiv.style.display = 'block';
+    }
+
+    function selectProductForEdit(product) {
+        selectedProduct = product;
+        isEditMode = true;
+        
+        document.getElementById('productSearchResults').style.display = 'none';
+        document.getElementById('productSearchInput').value = '';
+        
+        document.getElementById('selectedProductDetails').innerHTML = `
+            <strong>${product.name}</strong> (${product.productIdentifier})<br>
+            <small style="color: #6c757d;">${product.description || 'Açıklama yok'}</small>
+        `;
+        document.getElementById('selectedProductInfo').style.display = 'block';
+        document.getElementById('editingProductId').value = product.id;
+        
+        fillFormWithProduct(product);
+        
+        lockEditableFields();
+    }
+
+    function fillFormWithProduct(product) {
+        document.getElementById('productName').value = product.name || '';
+        document.getElementById('productIdentifier').value = product.productIdentifier || '';
+        document.getElementById('productDescription').value = product.description || '';
+        
+        if (product.categoryId) {
+            selectedItems.categories = [{id: product.categoryId, name: product.categoryName}];
+            updateSelectedItems('categories');
+        }
+        if (product.imagePath) {
+            document.getElementById('imagePreview').innerHTML = `<img src="${product.imagePath}" alt="Product Image">`;
+        }
+        document.getElementById('productForm').action = '{{ path('product_update') }}';
+    }
+
+    function lockEditableFields() {
+        const identifierField = document.getElementById('productIdentifier');
+        identifierField.readOnly = true;
+        identifierField.style.backgroundColor = '#e9ecef';
+        identifierField.style.cursor = 'not-allowed';
+        document.getElementById('imageInput').removeAttribute('required');
+        
+        const submitBtn = document.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.textContent = '💾 Ürünü Güncelle';
+        }
+    }
+
+    document.getElementById('clearSelectedProduct').addEventListener('click', function() {
+        selectedProduct = null;
+        isEditMode = false;
+        
+        document.getElementById('selectedProductInfo').style.display = 'none';
+        document.getElementById('editingProductId').value = '';
+        document.getElementById('productForm').reset();
+        selectedItems = { colors: [], brands: [], marketplaces: [], categories: [] };
+        
+        unlockEditableFields();
+        
+        document.getElementById('productForm').action = '{{ path('product_create') }}';
+    });
+
+    function unlockEditableFields() {
+        const identifierField = document.getElementById('productIdentifier');
+        identifierField.readOnly = false;
+        identifierField.style.backgroundColor = '';
+        identifierField.style.cursor = '';
+        
+        document.getElementById('imageInput').setAttribute('required', 'required');
+        
+        const submitBtn = document.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.textContent = 'Kaydet';
+        }
+    }
+
+// edit end
     let searchTimeout;
     let selectedItems = {
         colors: [],

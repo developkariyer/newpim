@@ -68,6 +68,41 @@ class ProductController extends AbstractController
         return new JsonResponse(['items' => $results]);
     }
 
+    #[Route('/product/search-products', name: 'product_search_products', methods: ['GET'])]
+    public function searchProducts(Request $request): JsonResponse
+    {
+        $query = trim($request->query->get('q', ''));
+        if (strlen($query) < 2) {
+            return new JsonResponse(['items' => []]);
+        }
+        
+        $listing = new ProductListing();
+        $listing->setCondition('productIdentifier LIKE ? OR name LIKE ?', ["%$query%", "%$query%"]);
+        $listing->setLimit(1);
+        
+        $product = $listing->current(); 
+        
+        if (!$product) {
+            return new JsonResponse(['items' => []]);
+        }
+        
+        $item = [
+            'id' => $product->getId(),
+            'name' => $product->getName(),
+            'productIdentifier' => $product->getProductIdentifier(),
+            'description' => $product->getDescription(),
+            'categoryId' => $product->getProductCategory() ? $product->getProductCategory()->getId() : null,
+            'categoryName' => $product->getProductCategory() ? $product->getProductCategory()->getKey() : null,
+            'brandIds' => array_map(fn($brand) => $brand->getId(), $product->getBrandItems() ?: []),
+            'marketplaceIds' => array_map(fn($mp) => $mp->getId(), $product->getMarketplaces() ?: []),
+            'colorIds' => array_map(fn($color) => $color->getId(), $product->getVariationColor() ?: []),
+            'imagePath' => $product->getImage() ? $product->getImage()->getFullPath() : null,
+            'hasVariants' => $product->hasChildren(),
+        ];
+        
+        return new JsonResponse(['items' => [$item]]);
+    }
+
     #[Route('/product/create', name: 'product_create', methods: ['POST'])]
     public function create(Request $request): Response
     {
