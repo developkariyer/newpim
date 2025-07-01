@@ -763,48 +763,23 @@
         }
 
         function populateCustomTable(customTable, usedCustoms = []) {
-            console.log('populateCustomTable called with:', customTable, usedCustoms);
-            
-            // GÜVENLE KONTROL: Element var mı?
-            const customTitleElement = document.getElementById('customTitle');
-            if (!customTitleElement) {
-                console.error('customTitle element bulunamadı!');
-                // Element yoksa yaratmaya çalışma, sadece devam et
-            } else {
-                customTitleElement.value = customTable.title || '';
-            }
-            
-            // DÜZELTME: usedCustoms'ı array'e çevir
-            const usedCustomsArray = Array.isArray(usedCustoms) ? usedCustoms : Object.values(usedCustoms || {});
-            
             const tbody = document.querySelector('#customTable tbody');
-            if (!tbody) {
-                console.error('customTable tbody bulunamadı!');
-                return;
-            }
-            
             tbody.innerHTML = '';
             
-            if (customTable.rows && customTable.rows.length > 0) {
+            if (customTable.rows) {
                 customTable.rows.forEach(row => {
-                    const customValue = row.deger || '';
-                    // Array metodu kullan
-                    const isLocked = usedCustomsArray.includes(customValue);
-                    console.log(`Custom ${customValue} locked: ${isLocked}`);
-                    addCustomRow(row, isLocked);
+                    const isLocked = usedCustoms.includes(row.deger);
+                    addCustomRow(row.deger, isLocked);
                 });
             }
             
-            // GÜVENLE KONTROL: Element var mı?
-            const customTableDataElement = document.getElementById('customTableData');
-            if (!customTableDataElement) {
-                console.error('customTableData element bulunamadı!');
-            } else {
-                customTableDataElement.value = JSON.stringify(customTable);
+            if (customTable.title) {
+                document.getElementById('customTableTitle').value = customTable.title;
             }
             
+            document.getElementById('customTableData').value = JSON.stringify(customTable);
             updateCustomTablePreview(customTable);
-}
+        }
 
         function setEditMode() {
             isEditMode = true;
@@ -814,7 +789,7 @@
             identifierField.style.cursor = 'not-allowed';
             
             document.getElementById('imageInput').removeAttribute('required');
-            document.getElementById('productForm').action = '{{ path('product_create') }}';
+            document.getElementById('productForm').action = '{{ path('product_update') }}';
             document.getElementById('submitBtn').textContent = '💾 Ürünü Güncelle';
         }
 
@@ -1172,6 +1147,7 @@
                 console.log(`\n=== COMBO ${i}: ${color}-${size}-${custom} ===`);
                 console.log(`Full size format: ${fullSizeFormat}`);
                 
+                // DÜZELTME: fullSizeFormat ile karşılaştır
                 const isLocked = lockedVariants.some(v => {
                     console.log(`Checking against: color='${v.color}', size='${v.size}', custom='${v.custom}'`);
                     
