@@ -503,7 +503,7 @@
         let selectedProduct = null;
         let isEditMode = false;
         let searchTimeout;
-        let lockedVariants = []; // Mevcut varyantlar
+        let lockedVariants = [];
         let selectedItems = {
             colors: [],
             brands: [],
@@ -541,7 +541,6 @@
                 document.getElementById('productSearchResults').style.display = 'none';
                 return;
             }
-            
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 fetch(`/product/search-products?q=${encodeURIComponent(query)}`)
@@ -646,7 +645,6 @@
                 resultsDiv.style.display = 'block';
                 return;
             }
-            
             resultsDiv.innerHTML = '';
             items.forEach(item => {
                 const itemDiv = document.createElement('div');
@@ -667,10 +665,8 @@
         function selectProductForEdit(product) {
             selectedProduct = product;
             isEditMode = true;
-            
             document.getElementById('productSearchResults').style.display = 'none';
             document.getElementById('productSearchInput').value = '';
-            
             document.getElementById('selectedProductDetails').innerHTML = `
                 <strong>${product.name}</strong> (${product.productIdentifier})<br>
                 <small style="color: #6c757d;">${product.description || 'Açıklama yok'}</small>
@@ -690,7 +686,6 @@
                 marketplaces: [], 
                 categories: [] 
             };
-            
             console.log('Product data:', product); // Add this line for debugging
             console.log('Size table:', product.sizeTable); // Add this line
             console.log('Used sizes:', product.usedSizes); // Add this line
@@ -698,7 +693,6 @@
             document.getElementById('productName').value = product.name || '';
             document.getElementById('productIdentifier').value = product.productIdentifier || '';
             document.getElementById('productDescription').value = product.description || '';
-            
             if (product.categoryId) {
                 selectedItems.categories = [{id: product.categoryId, name: product.categoryName}];
                 updateSelectedItems('categories');
@@ -751,16 +745,27 @@
             }
         }
 
+        function setEditMode() {
+            isEditMode = true;
+            const identifierField = document.getElementById('productIdentifier');
+            identifierField.readOnly = true;
+            identifierField.style.backgroundColor = '#e9ecef';
+            identifierField.style.cursor = 'not-allowed';
+            
+            document.getElementById('imageInput').removeAttribute('required');
+            document.getElementById('productForm').action = '{{ path('product_create') }}';
+            document.getElementById('submitBtn').textContent = '💾 Ürünü Güncelle';
+        }
+
         function populateSizeTable(sizeTable, usedSizes = []) {
             console.log('populateSizeTable called with:', sizeTable, usedSizes); // Debug
             const tbody = document.querySelector('#sizeTable tbody');
             tbody.innerHTML = '';
-            
             sizeTable.forEach(row => {
                 const sizeValue = row.beden || '';
                 const isLocked = usedSizes.some(usedSize => {
                     const extractedSize = usedSize.split(' (')[0];
-                    return extractedSize === sizeValue;
+                    return usedSize === sizeValue;
                 });
                 console.log(`Size ${sizeValue} locked: ${isLocked}`); // Debug
                 addSizeRow(row, isLocked);
@@ -801,18 +806,6 @@
             }
             
             updateCustomTablePreview(customTable);
-        }
-
-        function setEditMode() {
-            isEditMode = true;
-            const identifierField = document.getElementById('productIdentifier');
-            identifierField.readOnly = true;
-            identifierField.style.backgroundColor = '#e9ecef';
-            identifierField.style.cursor = 'not-allowed';
-            
-            document.getElementById('imageInput').removeAttribute('required');
-            document.getElementById('productForm').action = '{{ path('product_create') }}';
-            document.getElementById('submitBtn').textContent = '💾 Ürünü Güncelle';
         }
 
         function clearForm() {
@@ -963,11 +956,9 @@
         function addSizeRow(values = {}, isLocked = false) {
             const tbody = document.querySelector('#sizeTable tbody');
             const tr = document.createElement('tr');
-            
             if (isLocked) {
                 tr.classList.add('locked-row');
             }
-            
             tr.innerHTML = `
                 <td data-label="Beden">
                     <input type="text" class="form-control" value="${values.beden || ''}" ${isLocked ? 'readonly' : ''} required>
@@ -1109,7 +1100,6 @@
             }
         }
 
-        // Step Functions
         function validateStep1() {
             const step1 = document.getElementById('step1');
             const requiredInputs = step1.querySelectorAll('input[required], textarea[required], select[required]');
@@ -1274,5 +1264,6 @@
             document.getElementById('loadingOverlay').style.display = 'flex';
             document.getElementById('productForm').classList.add('form-disabled');
         }
+
     </script>
 {% endblock %}
