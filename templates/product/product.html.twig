@@ -759,18 +759,26 @@
 
         function populateSizeTable(sizeTable, usedSizes = []) {
             console.log('populateSizeTable called with:', sizeTable, usedSizes); // Debug
+
+            if (!Array.isArray(usedSizes)) {
+                usedSizes = Object.values(usedSizes);
+            }
+
             const tbody = document.querySelector('#sizeTable tbody');
             tbody.innerHTML = '';
+
             sizeTable.forEach(row => {
                 const sizeValue = row.beden || '';
+
                 const isLocked = usedSizes.some(usedSize => {
-                    const extractedSize = usedSize.split(' (')[0];
-                    return usedSize === sizeValue;
+                    const extractedSize = usedSize.split(' (')[0]; 
+                    return extractedSize === sizeValue;
                 });
-                console.log(`Size ${sizeValue} locked: ${isLocked}`); // Debug
+
+                console.log(`Size ${sizeValue} locked: ${isLocked}`);
                 addSizeRow(row, isLocked);
             });
-            
+
             document.getElementById('sizeTableData').value = JSON.stringify(sizeTable);
             updateSizeTablePreview(sizeTable);
         }
