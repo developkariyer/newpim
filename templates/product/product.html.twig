@@ -494,7 +494,7 @@
 // edit start
     let selectedProduct = null;
     let isEditMode = false;
-
+    let productSearchTimeout;
     // Ürün arama fonksiyonu
     document.getElementById('productSearchInput').addEventListener('input', function() {
         const query = this.value.trim();
