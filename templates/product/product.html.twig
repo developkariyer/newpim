@@ -765,10 +765,11 @@
         function populateCustomTable(customTable, usedCustoms = []) {
             console.log('populateCustomTable called with:', customTable, usedCustoms);
             
-            // DÜZELTME: Doğru ID kullan
             const customTitleElement = document.getElementById('customTableTitle');
             if (customTitleElement) {
                 customTitleElement.value = customTable.title || '';
+            } else {
+                console.error('customTableTitle element bulunamadı!');
             }
             
             const usedCustomsArray = Array.isArray(usedCustoms) ? usedCustoms : Object.values(usedCustoms || {});
@@ -1041,6 +1042,7 @@
                 return;
             }
 
+            // DÜZELTME: customTableTitle ID'sini kullan
             const title = document.getElementById('customTableTitle').value.trim();
             if (!title) {
                 alert('Lütfen Custom Tablo için bir başlık girin.');
@@ -1115,17 +1117,16 @@
             
             try {
                 const customData = JSON.parse(document.getElementById('customTableData').value || '{}');
-                console.log('Custom data structure:', customData); // Debug
+                console.log('Custom data structure:', customData);
                 
                 if (customData.rows && customData.rows.length > 0) {
-                    customData.rows.forEach(row => {
-                        const value = row.deger || '';
-                        if (value && value.trim() !== '') {
-                            customs.push(value);
-                        }
-                    });
+                    customs = customData.rows
+                        .map(row => row.deger)
+                        .filter(value => value && value.trim() !== '');
                 }
-            } catch {}
+            } catch (e) {
+                console.error('Custom data parse error:', e);
+            }
 
             console.log("--- VARIANT MATRIX DATA ---");
             console.log("Kilitlenecek Varyantlar (lockedVariants):", JSON.parse(JSON.stringify(lockedVariants)));
