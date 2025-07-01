@@ -281,7 +281,7 @@
             </div>
         </div>
         <input type="hidden" id="editingProductId" name="editingProductId" value="">
-
+        
         <div id="step1">
             <div class="form-section">
                 <h3>📝 Temel Ürün Bilgileri</h3>
@@ -319,7 +319,7 @@
                         <div id="categoriesHidden"></div>
                     </div>
                 </div>
-
+                
                 <div class="form-group">
                     <label for="productDescription">Açıklama</label>
                     <textarea id="productDescription" name="productDescription" class="form-control" 
@@ -573,10 +573,135 @@
             selectedItems.categories = [{id: product.categoryId, name: product.categoryName}];
             updateSelectedItems('categories');
         }
+        if (product.brands && product.brands.length > 0) {
+            selectedItems.brands = product.brands;
+            updateSelectedItems('brands');
+        }
+        if (product.marketplaces && product.marketplaces.length > 0) {
+            selectedItems.marketplaces = product.marketplaces;
+            updateSelectedItems('marketplaces');
+        }
+        if (product.variantColors && product.variantColors.length > 0) {
+            selectedItems.colors = product.variantColors;
+            updateSelectedItems('colors');
+        }
         if (product.imagePath) {
             document.getElementById('imagePreview').innerHTML = `<img src="${product.imagePath}" alt="Product Image">`;
         }
+        if (product.sizeTable && product.sizeTable.length > 0) {
+            populateSizeTable(product.sizeTable);
+        }
+        if (product.customTable && product.customTable.rows && product.customTable.rows.length > 0) {
+            populateCustomTable(product.customTable);
+        }
+        if (product.hasVariants) {
+            showVariantInfo(product);
+        }
+        applyFieldLocking(product);
         document.getElementById('productForm').action = '{{ path('product_update') }}';
+    }
+
+    function populateSizeTable(sizeTable) {
+        const tbody = document.querySelector('#sizeTable tbody');
+        tbody.innerHTML = ''; 
+        sizeTable.forEach(row => {
+            addSizeRow(row);
+        });
+        
+        document.getElementById('sizeTableData').value = JSON.stringify(sizeTable);
+        
+        const previewContainer = document.getElementById('sizeTablePreview');
+        let html = '<h6>Mevcut Beden Tablosu:</h6><div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th><th>Birim</th></tr></thead><tbody>';
+        sizeTable.forEach(row => {
+            html += `<tr><td>${row.beden}</td><td>${row.en}</td><td>${row.boy}</td><td>${row.yukseklik}</td><td>${row.birim}</td></tr>`;
+        });
+        html += '</tbody></table></div>';
+        previewContainer.innerHTML = html;
+        previewContainer.style.display = 'block';
+    }
+
+    function populateCustomTable(customTable) {
+        const tbody = document.querySelector('#customTable tbody');
+        tbody.innerHTML = ''; 
+        
+        if (customTable.rows) {
+            customTable.rows.forEach(row => {
+                addCustomRow(row.deger);
+            });
+        }
+        
+        if (customTable.title) {
+            document.getElementById('customTableTitle').value = customTable.title;
+        }
+        
+        document.getElementById('customTableData').value = JSON.stringify(customTable);
+        const previewContainer = document.getElementById('customTablePreview');
+        let html = `<h6>Mevcut Custom Tablo:</h6><div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>${customTable.title || 'Custom'}</th></tr></thead><tbody>`;
+        if (customTable.rows) {
+            customTable.rows.forEach(row => {
+                html += `<tr><td>${row.deger}</td></tr>`;
+            });
+        }
+        html += '</tbody></table></div>';
+        previewContainer.innerHTML = html;
+        previewContainer.style.display = 'block';
+    }
+
+    function showVariantInfo(product) {
+        const variantInfo = document.createElement('div');
+        variantInfo.id = 'existingVariantsInfo';
+        variantInfo.style.cssText = 'margin-top: 1rem; padding: 1rem; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px;';
+        
+        const variantColorNames = product.variantColors ? product.variantColors.map(c => c.name).join(', ') : 'Yok';
+        const variantSizes = product.variants ? [...new Set(product.variants.map(v => v.size).filter(s => s))].join(', ') : 'Yok';
+        const variantCustoms = product.variants ? [...new Set(product.variants.map(v => v.custom).filter(c => c))].join(', ') : 'Yok';
+        
+        variantInfo.innerHTML = `
+            <h6 style="color: #856404; margin: 0 0 0.5rem 0;">⚠️ Mevcut Varyantlar (${product.variants ? product.variants.length : 0} adet):</h6>
+            <div style="font-size: 0.875rem; color: #856404;">
+                <strong>Renkler:</strong> ${variantColorNames}<br>
+                <strong>Bedenler:</strong> ${variantSizes}<br>
+                <strong>Custom:</strong> ${variantCustoms}
+            </div>
+        `;
+        const variationSection = document.querySelector('.form-section h3').parentElement;
+        const existingInfo = document.getElementById('existingVariantsInfo');
+        if (existingInfo) {
+            existingInfo.remove();
+        }
+        variationSection.appendChild(variantInfo);
+    }
+
+    function applyFieldLocking(product) {
+        if (!product.canEditSizeTable) {
+            const sizeTableBtn = document.getElementById('sizeTableBtn');
+            sizeTableBtn.disabled = true;
+            sizeTableBtn.style.opacity = '0.6';
+            sizeTableBtn.style.cursor = 'not-allowed';
+            sizeTableBtn.innerHTML = '<span style="font-size:1.5rem; margin-right:0.5rem;">🔒</span> Beden Tablosu (Düzenlenemez)';
+        }
+        
+        if (!product.canEditCustomTable) {
+            const customTableBtn = document.getElementById('customTableBtn');
+            customTableBtn.disabled = true;
+            customTableBtn.style.opacity = '0.6';
+            customTableBtn.style.cursor = 'not-allowed';
+            customTableBtn.innerHTML = '<span style="font-size:1.5rem; margin-right:0.5rem;">🔒</span> Custom Tablo (Düzenlenemez)';
+        }
+        
+        const goToVariationsBtn = document.getElementById('goToVariationsBtn');
+        if (product.hasVariants) {
+            goToVariationsBtn.style.display = 'none';
+            const infoDiv = document.createElement('div');
+            infoDiv.id = 'variantWarning';
+            infoDiv.style.cssText = 'padding: 1rem; background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 4px; color: #0c5460; text-align: center; margin-top: 1rem;';
+            infoDiv.innerHTML = '💡 Bu üründe zaten varyantlar mevcut. Sadece temel bilgiler ve renkler düzenlenebilir.';
+            const existingWarning = document.getElementById('variantWarning');
+            if (existingWarning) {
+                existingWarning.remove();
+            }
+            goToVariationsBtn.parentElement.appendChild(infoDiv);
+        }
     }
 
     function lockEditableFields() {
@@ -1045,3 +1170,4 @@
     };
 
 </script>
+{% endblock %}
