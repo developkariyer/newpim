@@ -20,7 +20,7 @@ use Pimcore\Model\DataObject\Product\Listing as ProductListing;
 
 
 
-class ProductController extends AbstractController
+class EditProductController extends AbstractController
 {
 
     #[Route('/product-edit', name: 'productEdit')]
