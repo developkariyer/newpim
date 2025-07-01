@@ -551,7 +551,7 @@
             
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                fetch(`{{ path('product_search_products') }}?q=${encodeURIComponent(query)}`)
+                fetch(`{{ path('product_search') }}?q=${encodeURIComponent(query)}`)
                     .then(res => res.json())
                     .then(data => {
                         displayProductSearchResults(data.items);
@@ -588,7 +588,7 @@
                 return;
             }
             
-            fetch('{{ path('product_add_color') }}', {
+            fetch('{{ path('product_color_add') }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -674,7 +674,7 @@
 
         function selectProductForEdit(product) {
             // Ürün verilerini yeni endpoint'ten al
-            fetch(`{{ path('product_get_data', {id: '__ID__'}) }}`.replace('__ID__', product.id))
+            fetch(`{{ path('product_data', {id: '__ID__'}) }}`.replace('__ID__', product.id))
                 .then(response => response.json())
                 .then(productData => {
                     selectedProduct = productData;
