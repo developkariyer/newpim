@@ -91,6 +91,7 @@ class ProductController extends AbstractController
                 if ($hasVariants) {
                     $variantListing = new ProductListing();
                     $variantListing->setCondition('o_parentId = ?', [$product->getId()]);
+                    $variantListing->load();
                     foreach ($variantListing as $variant) {
                         $variants[] = [
                             'id' => $variant->getId(),
@@ -158,8 +159,6 @@ class ProductController extends AbstractController
             return new JsonResponse(['items' => $items]);
             
         } catch (\Exception $e) {
-            // Debug için hatayı logla
-            error_log('Search error: ' . $e->getMessage());
             return new JsonResponse(['error' => $e->getMessage()], 500);
         }
     }
