@@ -763,9 +763,8 @@
         }
 
         function populateCustomTable(customTable, usedCustoms = []) {
-            console.log('populateCustomTable called with:', customTable, usedCustoms);
+            console.log('Populating custom table:', customTable);
             
-            // DÜZELTME: Doğru ID kullan
             const customTitleElement = document.getElementById('customTableTitle');
             if (customTitleElement) {
                 customTitleElement.value = customTable.title || '';
@@ -778,6 +777,7 @@
             
             tbody.innerHTML = '';
             
+            // DÜZELTME: Sadece 'rows' dizisini işle
             if (customTable.rows && customTable.rows.length > 0) {
                 customTable.rows.forEach(row => {
                     const customValue = row.deger || '';
@@ -1115,7 +1115,6 @@
             
             try {
                 const customData = JSON.parse(document.getElementById('customTableData').value || '{}');
-                console.log('Custom data structure:', customData); // Debug
                 
                 if (customData.rows && customData.rows.length > 0) {
                     customs = customData.rows.map(row => row.deger).filter(value => value && value.trim() !== '');

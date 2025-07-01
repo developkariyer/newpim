@@ -184,18 +184,12 @@ class ProductController extends AbstractController
                 $customRows = [];
                 $customTitle = '';
                 
-                foreach ($customTableData as $index => $row) {
-                    if ($index === 0 && isset($row['isTitle']) && $row['isTitle']) {
-                        $customTitle = $row['deger'] ?? $row['value'] ?? '';
+                foreach ($customTableData as $row) {
+                    if (isset($row['isTitle']) && $row['isTitle']) {
+                        $customTitle = $row['deger'] ?? '';
                     } else {
-                        $deger = '';
-                        if (isset($row['deger'])) {
-                            $deger = is_string($row['deger']) ? $row['deger'] : (string)$row['deger'];
-                        } elseif (isset($row['value'])) {
-                            $deger = is_string($row['value']) ? $row['value'] : (string)$row['value'];
-                        }
-                        
-                        if (!empty($deger) && $deger !== '[object Object]') {
+                        $deger = $row['deger'] ?? '';
+                        if (is_string($deger) && !empty($deger) && $deger !== '[object Object]') {
                             $customRows[] = [
                                 'deger' => $deger,
                                 'locked' => in_array($deger, $usedCustoms) 
@@ -349,10 +343,10 @@ class ProductController extends AbstractController
                     && isset($customTableDecoded['rows'])
                     && is_array($customTableDecoded['rows'])
                 ) {
-                    $title = isset($customTableDecoded['title']) ? $customTableDecoded['title'] : '';
+                    $title = isset($customTableDecoded['title']) ? trim($customTableDecoded['title']) : '';
                     $customFieldTable = [];
                     
-                    // Title'ı ilk satır olarak ekle
+                    // DÜZELTME: Başlığı 'isTitle' olarak işaretleyerek ekle
                     if ($title !== '') {
                         $customFieldTable[] = ['deger' => $title, 'isTitle' => true];
                     }
@@ -360,13 +354,17 @@ class ProductController extends AbstractController
                     // Rows'ları ekle
                     foreach ($customTableDecoded['rows'] as $row) {
                         if (isset($row['deger']) && !empty($row['deger'])) {
-                            $customFieldTable[] = ['deger' => $row['deger']];
+                            // Başlık olan satırı tekrar eklemeyi önle
+                            if (strtolower(trim($row['deger'])) !== strtolower($title)) {
+                                $customFieldTable[] = ['deger' => $row['deger']];
+                            }
                         }
                     }
                     
                     $product->setCustomFieldTable($customFieldTable);
                 }
             }
+
 
             // Product code kontrol et (sadece yeni ürün için)
             if (!$isUpdate) {
