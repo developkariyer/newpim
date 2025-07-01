@@ -115,27 +115,94 @@ class ProductController extends AbstractController
             }
             
             $brands = [];
-            if ($product->getBrandItems()) {
-                foreach ($product->getBrandItems() as $brand) {
+            $brandItems = $product->getBrandItems();
+            if ($brandItems) {
+                if (is_array($brandItems)) {
+                    foreach ($brandItems as $brand) {
+                        $brands[] = [
+                            'id' => $brand->getId(),
+                            'name' => $brand->getKey()
+                        ];
+                    }
+                } elseif ($brandItems instanceof \Pimcore\Model\DataObject\Brand) {
                     $brands[] = [
-                        'id' => $brand->getId(),
-                        'name' => $brand->getKey()
+                        'id' => $brandItems->getId(),
+                        'name' => $brandItems->getKey()
                     ];
                 }
             }
             
             $marketplaces = [];
-            if ($product->getMarketplaces()) {
-                foreach ($product->getMarketplaces() as $marketplace) {
+            $marketplaceItems = $product->getMarketplaces();
+            if ($marketplaceItems) {
+                if (is_array($marketplaceItems)) {
+                    foreach ($marketplaceItems as $marketplace) {
+                        $marketplaces[] = [
+                            'id' => $marketplace->getId(),
+                            'name' => $marketplace->getKey()
+                        ];
+                    }
+                } elseif ($marketplaceItems instanceof \Pimcore\Model\DataObject\Marketplace) {
                     $marketplaces[] = [
-                        'id' => $marketplace->getId(),
-                        'name' => $marketplace->getKey()
+                        'id' => $marketplaceItems->getId(),
+                        'name' => $marketplaceItems->getKey()
                     ];
                 }
             }
             
-            $sizeTable = $product->getVariationSizeTable() ?: [];
-            $customTable = $product->getCustomFieldTable() ?: [];
+            $productColors = [];
+            $colorItems = $product->getVariationColor();
+            if ($colorItems) {
+                if (is_array($colorItems)) {
+                    foreach ($colorItems as $color) {
+                        $productColors[] = [
+                            'id' => $color->getId(),
+                            'name' => $color->getColor()
+                        ];
+                    }
+                } elseif ($colorItems instanceof \Pimcore\Model\DataObject\Color) {
+                    $productColors[] = [
+                        'id' => $colorItems->getId(),
+                        'name' => $colorItems->getColor()
+                    ];
+                }
+            }
+            
+            $sizeTable = [];
+            $sizeTableData = $product->getVariationSizeTable();
+            if ($sizeTableData && is_array($sizeTableData)) {
+                foreach ($sizeTableData as $row) {
+                    $sizeTable[] = [
+                        'beden' => $row['label'] ?? '',
+                        'en' => $row['width'] ?? '',
+                        'boy' => $row['length'] ?? '',
+                        'yukseklik' => $row['height'] ?? '',
+                        'birim' => $row['unit'] ?? ''
+                    ];
+                }
+            }
+            
+            $customTable = [];
+            $customTableData = $product->getCustomFieldTable();
+            if ($customTableData && is_array($customTableData)) {
+                $customRows = [];
+                $customTitle = '';
+                
+                foreach ($customTableData as $row) {
+                    if (isset($row['isTitle']) && $row['isTitle']) {
+                        $customTitle = $row['value'] ?? $row['deger'] ?? '';
+                    } else {
+                        $customRows[] = [
+                            'deger' => $row['value'] ?? $row['deger'] ?? ''
+                        ];
+                    }
+                }
+                
+                $customTable = [
+                    'title' => $customTitle,
+                    'rows' => $customRows
+                ];
+            }
             
             $item = [
                 'id' => $product->getId(),
@@ -146,14 +213,15 @@ class ProductController extends AbstractController
                 'categoryName' => $product->getProductCategory() ? $product->getProductCategory()->getKey() : null,
                 'brands' => $brands,
                 'marketplaces' => $marketplaces,
+                'colors' => $productColors, 
                 'imagePath' => $product->getImage() ? $product->getImage()->getFullPath() : null,
                 'hasVariants' => $hasVariants,
                 'variants' => $variants,
-                'variantColors' => array_unique($variantColors, SORT_REGULAR),
-                'sizeTable' => $sizeTable, 
+                'variantColors' => array_unique($variantColors, SORT_REGULAR), 
+                'sizeTable' => $sizeTable,
                 'customTable' => $customTable, 
-                'canEditSizeTable' => !$hasVariants, 
-                'canEditColors' => true, 
+                'canEditSizeTable' => !$hasVariants,
+                'canEditColors' => true,
                 'canEditCustomTable' => !$hasVariants,
             ];
             
@@ -161,6 +229,7 @@ class ProductController extends AbstractController
             
         } catch (\Exception $e) {
             error_log('Search error: ' . $e->getMessage());
+            error_log($e->getTraceAsString());
             return new JsonResponse(['error' => $e->getMessage()], 500);
         }
     }
