@@ -87,12 +87,74 @@ class ProductController extends AbstractController
             }
             
             $product = $products[0]; 
+            
+            $variants = [];
+            $variantColors = [];
+            $hasVariants = $product->hasChildren();
+            
+            if ($hasVariants) {
+                $productVariants = $product->getChildren([Product::OBJECT_TYPE_VARIANT]);
+                
+                foreach ($productVariants as $variant) {
+                    $variants[] = [
+                        'id' => $variant->getId(),
+                        'name' => $variant->getName(),
+                        'color' => $variant->getVariationColor() ? $variant->getVariationColor()->getColor() : null,
+                        'colorId' => $variant->getVariationColor() ? $variant->getVariationColor()->getId() : null,
+                        'size' => $variant->getVariationSize(),
+                        'custom' => $variant->getCustomField(),
+                    ];
+                    
+                    if ($variant->getVariationColor()) {
+                        $variantColors[] = [
+                            'id' => $variant->getVariationColor()->getId(),
+                            'name' => $variant->getVariationColor()->getColor()
+                        ];
+                    }
+                }
+            }
+            
+            $brands = [];
+            if ($product->getBrandItems()) {
+                foreach ($product->getBrandItems() as $brand) {
+                    $brands[] = [
+                        'id' => $brand->getId(),
+                        'name' => $brand->getKey()
+                    ];
+                }
+            }
+            
+            $marketplaces = [];
+            if ($product->getMarketplaces()) {
+                foreach ($product->getMarketplaces() as $marketplace) {
+                    $marketplaces[] = [
+                        'id' => $marketplace->getId(),
+                        'name' => $marketplace->getKey()
+                    ];
+                }
+            }
+            
+            $sizeTable = $product->getVariationSizeTable() ?: [];
+            $customTable = $product->getCustomFieldTable() ?: [];
+            
             $item = [
                 'id' => $product->getId(),
                 'name' => $product->getName(),
                 'productIdentifier' => $product->getProductIdentifier(),
                 'description' => $product->getDescription(),
-                'hasVariants' => $product->hasChildren(),
+                'categoryId' => $product->getProductCategory() ? $product->getProductCategory()->getId() : null,
+                'categoryName' => $product->getProductCategory() ? $product->getProductCategory()->getKey() : null,
+                'brands' => $brands,
+                'marketplaces' => $marketplaces,
+                'imagePath' => $product->getImage() ? $product->getImage()->getFullPath() : null,
+                'hasVariants' => $hasVariants,
+                'variants' => $variants,
+                'variantColors' => array_unique($variantColors, SORT_REGULAR),
+                'sizeTable' => $sizeTable, 
+                'customTable' => $customTable, 
+                'canEditSizeTable' => !$hasVariants, 
+                'canEditColors' => true, 
+                'canEditCustomTable' => !$hasVariants,
             ];
             
             return new JsonResponse(['items' => [$item]]);
