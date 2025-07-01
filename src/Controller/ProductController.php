@@ -68,7 +68,7 @@ class ProductController extends AbstractController
         return new JsonResponse(['items' => $results]);
     }
 
-   #[Route('/product/search-products', name: 'product_search_products', methods: ['GET'])]
+    #[Route('/product/search-products', name: 'product_search_products', methods: ['GET'])]
     public function searchProducts(Request $request): JsonResponse
     {
         try {
@@ -85,9 +85,7 @@ class ProductController extends AbstractController
             if (count($products) === 0) {
                 return new JsonResponse(['items' => []]);
             }
-            
             $product = $products[0]; 
-            
             $variants = [];
             $variantColors = [];
             $hasVariants = $product->hasChildren();
@@ -104,7 +102,6 @@ class ProductController extends AbstractController
                         'size' => $variant->getVariationSize(),
                         'custom' => $variant->getCustomField(),
                     ];
-                    
                     if ($variant->getVariationColor()) {
                         $variantColors[] = [
                             'id' => $variant->getVariationColor()->getId(),
@@ -150,24 +147,6 @@ class ProductController extends AbstractController
                 }
             }
             
-            $productColors = [];
-            $colorItems = $product->getVariationColor();
-            if ($colorItems) {
-                if (is_array($colorItems)) {
-                    foreach ($colorItems as $color) {
-                        $productColors[] = [
-                            'id' => $color->getId(),
-                            'name' => $color->getColor()
-                        ];
-                    }
-                } elseif ($colorItems instanceof \Pimcore\Model\DataObject\Color) {
-                    $productColors[] = [
-                        'id' => $colorItems->getId(),
-                        'name' => $colorItems->getColor()
-                    ];
-                }
-            }
-            
             $sizeTable = [];
             $sizeTableData = $product->getVariationSizeTable();
             if ($sizeTableData && is_array($sizeTableData)) {
@@ -181,19 +160,18 @@ class ProductController extends AbstractController
                     ];
                 }
             }
-            
             $customTable = [];
             $customTableData = $product->getCustomFieldTable();
             if ($customTableData && is_array($customTableData)) {
                 $customRows = [];
                 $customTitle = '';
                 
-                foreach ($customTableData as $row) {
-                    if (isset($row['isTitle']) && $row['isTitle']) {
-                        $customTitle = $row['value'] ?? $row['deger'] ?? '';
+                foreach ($customTableData as $index => $row) {
+                    if ($index === 0) {
+                        $customTitle = $row['value'] ?? '';
                     } else {
                         $customRows[] = [
-                            'deger' => $row['value'] ?? $row['deger'] ?? ''
+                            'deger' => $row['value'] ?? ''
                         ];
                     }
                 }
@@ -203,7 +181,6 @@ class ProductController extends AbstractController
                     'rows' => $customRows
                 ];
             }
-            
             $item = [
                 'id' => $product->getId(),
                 'name' => $product->getName(),
@@ -213,13 +190,12 @@ class ProductController extends AbstractController
                 'categoryName' => $product->getProductCategory() ? $product->getProductCategory()->getKey() : null,
                 'brands' => $brands,
                 'marketplaces' => $marketplaces,
-                'colors' => $productColors, 
                 'imagePath' => $product->getImage() ? $product->getImage()->getFullPath() : null,
                 'hasVariants' => $hasVariants,
                 'variants' => $variants,
-                'variantColors' => array_unique($variantColors, SORT_REGULAR), 
+                'variantColors' => array_values(array_unique($variantColors, SORT_REGULAR)), 
                 'sizeTable' => $sizeTable,
-                'customTable' => $customTable, 
+                'customTable' => $customTable,
                 'canEditSizeTable' => !$hasVariants,
                 'canEditColors' => true,
                 'canEditCustomTable' => !$hasVariants,
