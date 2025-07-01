@@ -683,6 +683,14 @@
         }
 
         function fillFormWithProduct(product) {
+            lockedVariants = [];
+            selectedItems = { 
+                colors: [], 
+                brands: [], 
+                marketplaces: [], 
+                categories: [] 
+            };
+            
             console.log('Product data:', product); // Add this line for debugging
             console.log('Size table:', product.sizeTable); // Add this line
             console.log('Used sizes:', product.usedSizes); // Add this line
