@@ -185,22 +185,14 @@ class ProductController extends AbstractController
                 $customTitle = '';
                 
                 foreach ($customTableData as $index => $row) {
-                    if ($index === 0 && isset($row['isTitle']) && $row['isTitle']) {
-                        $customTitle = $row['deger'] ?? $row['value'] ?? '';
+                    if ($index === 0) {
+                        $customTitle = $row['value'] ?? '';
                     } else {
-                        $deger = '';
-                        if (isset($row['deger'])) {
-                            $deger = is_string($row['deger']) ? $row['deger'] : (string)$row['deger'];
-                        } elseif (isset($row['value'])) {
-                            $deger = is_string($row['value']) ? $row['value'] : (string)$row['value'];
-                        }
-                        
-                        if (!empty($deger) && $deger !== '[object Object]') {
-                            $customRows[] = [
-                                'deger' => $deger,
-                                'locked' => in_array($deger, $usedCustoms) 
-                            ];
-                        }
+                        $deger = $row['value'] ?? '';
+                        $customRows[] = [
+                            'deger' => $deger,
+                            'locked' => in_array($deger, $usedCustoms) 
+                        ];
                     }
                 }
                 
@@ -226,7 +218,7 @@ class ProductController extends AbstractController
                 'sizeTable' => $sizeTable, 
                 'customTable' => $customTable, 
                 'usedSizes' => array_unique($usedSizes), 
-                'usedCustoms' => array_values(array_unique($usedCustoms)), 
+                'usedCustoms' => array_unique($usedCustoms), 
                 'usedColorIds' => array_unique($usedColorIds), 
                 'canEditSizeTable' => true,
                 'canEditColors' => true, 
@@ -342,6 +334,7 @@ class ProductController extends AbstractController
                 }
             }
 
+            // Custom Table güncelle
             if ($customTableData) {
                 $customTableDecoded = json_decode($customTableData, true);
                 if (
@@ -350,18 +343,10 @@ class ProductController extends AbstractController
                     && is_array($customTableDecoded['rows'])
                 ) {
                     $title = isset($customTableDecoded['title']) ? $customTableDecoded['title'] : '';
-                    $customFieldTable = [];
+                    $customFieldTable = $customTableDecoded['rows'];
                     
-                    // Title'ı ilk satır olarak ekle
                     if ($title !== '') {
-                        $customFieldTable[] = ['deger' => $title, 'isTitle' => true];
-                    }
-                    
-                    // Rows'ları ekle
-                    foreach ($customTableDecoded['rows'] as $row) {
-                        if (isset($row['deger']) && !empty($row['deger'])) {
-                            $customFieldTable[] = ['deger' => $row['deger']];
-                        }
+                        array_unshift($customFieldTable, ['deger' => $title, 'isTitle' => true]);
                     }
                     
                     $product->setCustomFieldTable($customFieldTable);
@@ -399,6 +384,118 @@ class ProductController extends AbstractController
             return $this->render('product/product.html.twig', [
                 'errors' => [$errorMessage . 'Lütfen tekrar deneyin.'],
             ]);
+        }
+    }
+
+    #[Route('/product/update', name: 'product_update', methods: ['POST'])]
+    public function update(Request $request): Response
+    {
+        $editingProductId = $request->get('editingProductId');
+        if (!$editingProductId) {
+            $this->addFlash('danger', 'Güncellenecek ürün ID\'si bulunamadı.');
+            return $this->redirectToRoute('product');
+        }
+        
+        $product = Product::getById($editingProductId);
+        if (!$product) {
+            $this->addFlash('danger', 'Güncellenecek ürün bulunamadı.');
+            return $this->redirectToRoute('product');
+        }
+        
+        try {
+            // Sadece izin verilen alanları güncelle
+            $productName = $request->get('productName');
+            $productDescription = $request->get('productDescription');
+            $imageFile = $request->files->get('productImage');
+            $categoryId = $request->get('productCategory');
+            $brandIds = $request->get('brands', []);
+            $marketplaceIds = $request->get('marketplaces', []);
+            $colorIds = $request->get('colors', []);
+            
+            // Validation
+            $errors = [];
+            $category = $this->validateSingleObject('category', $categoryId, $errors, 'Kategori');
+            $brands = $this->validateMultipleObjects('brand', $brandIds, $errors, 'Marka');
+            $marketplaces = $this->validateMultipleObjects('marketplace', $marketplaceIds, $errors, 'Pazaryeri');
+            $colors = $this->validateMultipleObjects('color', $colorIds, $errors, 'Renk');
+            
+            if (!empty($errors)) {
+                foreach ($errors as $error) {
+                    $this->addFlash('danger', $error);
+                }
+                return $this->redirectToRoute('product');
+            }
+            
+            // Ürün bilgilerini güncelle
+            if ($productName) {
+                $product->setName($productName);
+            }
+            if ($productDescription) {
+                $product->setDescription($productDescription);
+            }
+            
+            // Kategori güncelle
+            if ($category) {
+                $product->setProductCategory($category);
+            }
+            
+            // Markalar güncelle
+            if (!empty($brands)) {
+                $product->setBrandItems($brands);
+            }
+            
+            // Pazaryerleri güncelle
+            if (!empty($marketplaces)) {
+                $product->setMarketplaces($marketplaces);
+            }
+            
+            // Renkler güncelle
+            if (!empty($colors)) {
+                $product->setVariationColor($colors);
+            }
+            
+            // Resim güncelle (eğer yeni resim yüklendiyse)
+            if ($imageFile && $imageFile->isValid()) {
+                $imageAsset = $this->uploadProductImage($imageFile, $product->getProductIdentifier());
+                if ($imageAsset) {
+                    $product->setImage($imageAsset);
+                }
+            }
+            
+            // Tablolar güncelle
+            $sizeTableData = $request->get('sizeTableData');
+            if ($sizeTableData) {
+                $variationSizeTable = json_decode($sizeTableData, true);
+                if (is_array($variationSizeTable)) {
+                    $product->setVariationSizeTable($variationSizeTable);
+                }
+            }
+            
+            $customTableData = $request->get('customTableData');
+            if ($customTableData) {
+                $customFieldTable = json_decode($customTableData, true);
+                if (is_array($customFieldTable)) {
+                    $product->setCustomFieldTable($customFieldTable);
+                }
+            }
+            
+            // Yeni varyantlar ekle (eğer varsa ve daha önce varyant yoksa)
+            $variations = $request->get('variationsData');
+            if ($variations && !$product->hasChildren()) {
+                $variations = json_decode($variations, true);
+                if (is_array($variations) && count($variations) > 0) {
+                    $this->addProductVariants($product, $variations);
+                }
+            }
+            
+            $product->save();
+            
+            $this->addFlash('success', 'Ürün başarıyla güncellendi.');
+            return $this->redirectToRoute('product');
+            
+        } catch (\Throwable $e) {
+            $this->addFlash('danger', 'Ürün güncellenirken bir hata oluştu: ' . $e->getMessage());
+            return $this->redirectToRoute('product');
         }
     }
 
