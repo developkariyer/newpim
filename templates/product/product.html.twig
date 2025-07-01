@@ -574,6 +574,9 @@
     }
 
     function fillFormWithProduct(product) {
+        selectedProduct = product;
+        isEditMode = true;
+        
         document.getElementById('productName').value = product.name || '';
         document.getElementById('productIdentifier').value = product.productIdentifier || '';
         document.getElementById('productDescription').value = product.description || '';
@@ -582,73 +585,104 @@
             selectedItems.categories = [{id: product.categoryId, name: product.categoryName}];
             updateSelectedItems('categories');
         }
+        
         if (product.brands && product.brands.length > 0) {
             selectedItems.brands = product.brands;
             updateSelectedItems('brands');
         }
+        
         if (product.marketplaces && product.marketplaces.length > 0) {
             selectedItems.marketplaces = product.marketplaces;
             updateSelectedItems('marketplaces');
         }
+        
         if (product.variantColors && product.variantColors.length > 0) {
             selectedItems.colors = product.variantColors;
             updateSelectedItems('colors');
         }
+        
         if (product.imagePath) {
             document.getElementById('imagePreview').innerHTML = `<img src="${product.imagePath}" alt="Product Image">`;
         }
+        
         if (product.sizeTable && product.sizeTable.length > 0) {
             populateSizeTable(product.sizeTable);
         }
+        
         if (product.customTable && product.customTable.rows && product.customTable.rows.length > 0) {
             populateCustomTable(product.customTable);
         }
+        
         if (product.hasVariants) {
             showVariantInfo(product);
         }
+        
         applyFieldLocking(product);
         document.getElementById('productForm').action = '{{ path('product_update') }}';
+        
+        // Hidden input ekle
+        let hiddenInput = document.getElementById('editingProductId');
+        if (!hiddenInput) {
+            hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'editingProductId';
+            hiddenInput.id = 'editingProductId';
+            document.getElementById('productForm').appendChild(hiddenInput);
+        }
+        hiddenInput.value = product.id;
     }
 
+    // Beden tablosunu modal'a doldur
     function populateSizeTable(sizeTable) {
         const tbody = document.querySelector('#sizeTable tbody');
-        tbody.innerHTML = ''; 
+        tbody.innerHTML = ''; // Önce temizle
+        
         sizeTable.forEach(row => {
             addSizeRow(row);
         });
         
+        // Hidden input'a da değeri koy
         document.getElementById('sizeTableData').value = JSON.stringify(sizeTable);
         
+        // Preview'ı göster
         const previewContainer = document.getElementById('sizeTablePreview');
         let html = '<h6>Mevcut Beden Tablosu:</h6><div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th><th>Birim</th></tr></thead><tbody>';
         sizeTable.forEach(row => {
-            html += `<tr><td>${row.beden}</td><td>${row.en}</td><td>${row.boy}</td><td>${row.yukseklik}</td><td>${row.birim}</td></tr>`;
+            const lockedIcon = row.locked ? '🔒 ' : '';
+            html += `<tr><td>${lockedIcon}${row.beden}</td><td>${row.en}</td><td>${row.boy}</td><td>${row.yukseklik}</td><td>${row.birim}</td></tr>`;
         });
         html += '</tbody></table></div>';
         previewContainer.innerHTML = html;
         previewContainer.style.display = 'block';
     }
 
+    // Custom tablosunu modal'a doldur
     function populateCustomTable(customTable) {
         const tbody = document.querySelector('#customTable tbody');
-        tbody.innerHTML = ''; 
+        tbody.innerHTML = ''; // Önce temizle
         
-        if (customTable.rows) {
-            customTable.rows.forEach(row => {
-                addCustomRow(row.deger);
-            });
-        }
-        
+        // Title'ı doldur
         if (customTable.title) {
             document.getElementById('customTableTitle').value = customTable.title;
         }
         
-        document.getElementById('customTableData').value = JSON.stringify(customTable);
-        const previewContainer = document.getElementById('customTablePreview');
-        let html = `<h6>Mevcut Custom Tablo:</h6><div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>${customTable.title || 'Custom'}</th></tr></thead><tbody>`;
+        // Rows'u doldur
         if (customTable.rows) {
             customTable.rows.forEach(row => {
-                html += `<tr><td>${row.deger}</td></tr>`;
+                addCustomRow(row.deger, row.locked);
+            });
+        }
+        
+        // Hidden input'a da değeri koy
+        document.getElementById('customTableData').value = JSON.stringify(customTable);
+        
+        // Preview'ı göster
+        const previewContainer = document.getElementById('customTablePreview');
+        let html = `<h6>Mevcut Custom Tablo: ${customTable.title || 'Başlıksız'}</h6><div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>${customTable.title || 'Custom'}</th></tr></thead><tbody>`;
+        if (customTable.rows) {
+            customTable.rows.forEach(row => {
+                const lockedIcon = row.locked ? '🔒 ' : '';
+                html += `<tr><td>${lockedIcon}${row.deger}</td></tr>`;
             });
         }
         html += '</tbody></table></div>';
@@ -656,14 +690,16 @@
         previewContainer.style.display = 'block';
     }
 
+    // Varyant bilgilerini göster
     function showVariantInfo(product) {
+        // Mevcut varyantları göster
         const variantInfo = document.createElement('div');
         variantInfo.id = 'existingVariantsInfo';
         variantInfo.style.cssText = 'margin-top: 1rem; padding: 1rem; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px;';
         
         const variantColorNames = product.variantColors ? product.variantColors.map(c => c.name).join(', ') : 'Yok';
-        const variantSizes = product.variants ? [...new Set(product.variants.map(v => v.size).filter(s => s))].join(', ') : 'Yok';
-        const variantCustoms = product.variants ? [...new Set(product.variants.map(v => v.custom).filter(c => c))].join(', ') : 'Yok';
+        const variantSizes = product.usedSizes ? product.usedSizes.join(', ') : 'Yok';
+        const variantCustoms = product.usedCustoms ? product.usedCustoms.join(', ') : 'Yok';
         
         variantInfo.innerHTML = `
             <h6 style="color: #856404; margin: 0 0 0.5rem 0;">⚠️ Mevcut Varyantlar (${product.variants ? product.variants.length : 0} adet):</h6>
@@ -673,6 +709,8 @@
                 <strong>Custom:</strong> ${variantCustoms}
             </div>
         `;
+        
+        // Varyasyon bölümünün başına ekle
         const variationSection = document.querySelector('.form-section h3').parentElement;
         const existingInfo = document.getElementById('existingVariantsInfo');
         if (existingInfo) {
@@ -682,29 +720,17 @@
     }
 
     function applyFieldLocking(product) {
-        if (!product.canEditSizeTable) {
-            const sizeTableBtn = document.getElementById('sizeTableBtn');
-            sizeTableBtn.disabled = true;
-            sizeTableBtn.style.opacity = '0.6';
-            sizeTableBtn.style.cursor = 'not-allowed';
-            sizeTableBtn.innerHTML = '<span style="font-size:1.5rem; margin-right:0.5rem;">🔒</span> Beden Tablosu (Düzenlenemez)';
-        }
-        
-        if (!product.canEditCustomTable) {
-            const customTableBtn = document.getElementById('customTableBtn');
-            customTableBtn.disabled = true;
-            customTableBtn.style.opacity = '0.6';
-            customTableBtn.style.cursor = 'not-allowed';
-            customTableBtn.innerHTML = '<span style="font-size:1.5rem; margin-right:0.5rem;">🔒</span> Custom Tablo (Düzenlenemez)';
-        }
-        
         const goToVariationsBtn = document.getElementById('goToVariationsBtn');
         if (product.hasVariants) {
-            goToVariationsBtn.style.display = 'none';
+            goToVariationsBtn.innerHTML = '<span style="font-size:1.5rem; margin-right:0.5rem;">➕</span> Yeni Varyantlar Ekle';
+            goToVariationsBtn.style.background = '#17a2b8';
+            
+            // Bilgi mesajı ekle
             const infoDiv = document.createElement('div');
             infoDiv.id = 'variantWarning';
             infoDiv.style.cssText = 'padding: 1rem; background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 4px; color: #0c5460; text-align: center; margin-top: 1rem;';
-            infoDiv.innerHTML = '💡 Bu üründe zaten varyantlar mevcut. Sadece temel bilgiler ve renkler düzenlenebilir.';
+            infoDiv.innerHTML = '💡 Bu üründe varyantlar mevcut. Sadece yeni varyant kombinasyonları oluşturabilirsiniz.';
+            
             const existingWarning = document.getElementById('variantWarning');
             if (existingWarning) {
                 existingWarning.remove();
@@ -713,17 +739,136 @@
         }
     }
 
-    function lockEditableFields() {
-        const identifierField = document.getElementById('productIdentifier');
-        identifierField.readOnly = true;
-        identifierField.style.backgroundColor = '#e9ecef';
-        identifierField.style.cursor = 'not-allowed';
-        document.getElementById('imageInput').removeAttribute('required');
+    // Ürün seçme fonksiyonu
+    function selectProductForEdit(product) {
+        document.getElementById('productSearchResults').style.display = 'none';
+        document.getElementById('productSearchInput').value = `${product.productIdentifier} - ${product.name}`;
+        fillFormWithProduct(product);
+    }
+
+    // addSizeRow fonksiyonunu güncelle (locked parameter ekle)
+    function addSizeRow(rowData = null) {
+        const tbody = document.querySelector('#sizeTable tbody');
+        const row = document.createElement('tr');
+        const isLocked = rowData && rowData.locked;
         
-        const submitBtn = document.querySelector('button[type="submit"]');
-        if (submitBtn) {
-            submitBtn.textContent = '💾 Ürünü Güncelle';
+        row.innerHTML = `
+            <td><input type="text" class="form-control" name="beden" value="${rowData ? rowData.beden : ''}" ${isLocked ? 'disabled' : ''}></td>
+            <td><input type="text" class="form-control" name="en" value="${rowData ? rowData.en : ''}"></td>
+            <td><input type="text" class="form-control" name="boy" value="${rowData ? rowData.boy : ''}"></td>
+            <td><input type="text" class="form-control" name="yukseklik" value="${rowData ? rowData.yukseklik : ''}"></td>
+            <td><input type="text" class="form-control" name="birim" value="${rowData ? rowData.birim : ''}"></td>
+            <td>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeSizeRow(this)" ${isLocked ? 'disabled title="Bu beden varyantlarda kullanılıyor"' : ''}>
+                    ${isLocked ? '🔒' : '🗑️'}
+                </button>
+            </td>
+        `;
+        
+        if (isLocked) {
+            row.style.backgroundColor = '#f8f9fa';
+            row.style.opacity = '0.7';
         }
+        
+        tbody.appendChild(row);
+    }
+
+    // addCustomRow fonksiyonunu güncelle (locked parameter ekle)
+    function addCustomRow(value = '', locked = false) {
+        const tbody = document.querySelector('#customTable tbody');
+        const row = document.createElement('tr');
+        
+        row.innerHTML = `
+            <td><input type="text" class="form-control" name="deger" value="${value}" ${locked ? 'disabled' : ''}></td>
+            <td>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeCustomRow(this)" ${locked ? 'disabled title="Bu değer varyantlarda kullanılıyor"' : ''}>
+                    ${locked ? '🔒' : '🗑️'}
+                </button>
+            </td>
+        `;
+        
+        if (locked) {
+            row.style.backgroundColor = '#f8f9fa';
+            row.style.opacity = '0.7';
+        }
+        
+        tbody.appendChild(row);
+    }
+
+    // Varyasyon sayfasına gitme fonksiyonunu güncelle
+    function goToVariations() {
+        if (!selectedProduct) {
+            // Normal akış (yeni ürün)
+            const variations = generateVariations();
+            localStorage.setItem('tempVariations', JSON.stringify(variations));
+            window.location.href = '/variation';
+        } else {
+            // Edit modu - sadece mevcut olmayan kombinasyonları göster
+            const variations = generateAvailableVariations();
+            localStorage.setItem('tempVariations', JSON.stringify(variations));
+            localStorage.setItem('editingProduct', JSON.stringify(selectedProduct));
+            window.location.href = '/variation';
+        }
+    }
+
+    // Mevcut olmayan varyasyon kombinasyonlarını oluştur
+    function generateAvailableVariations() {
+        const colors = selectedItems.colors || [];
+        const sizes = getSizeTableData();
+        const customs = getCustomTableData();
+        
+        const allVariations = [];
+        
+        if (colors.length > 0 && sizes.length > 0 && customs.length > 0) {
+            colors.forEach(color => {
+                sizes.forEach(size => {
+                    customs.forEach(custom => {
+                        if (!isVariantExists(color.name, size.beden, custom.deger)) {
+                            allVariations.push({
+                                renk: color.name,
+                                beden: size.beden,
+                                custom: custom.deger
+                            });
+                        }
+                    });
+                });
+            });
+        } else if (colors.length > 0 && sizes.length > 0) {
+            colors.forEach(color => {
+                sizes.forEach(size => {
+                    if (!isVariantExists(color.name, size.beden, null)) {
+                        allVariations.push({
+                            renk: color.name,
+                            beden: size.beden
+                        });
+                    }
+                });
+            });
+        } else if (colors.length > 0 && customs.length > 0) {
+            colors.forEach(color => {
+                customs.forEach(custom => {
+                    if (!isVariantExists(color.name, null, custom.deger)) {
+                        allVariations.push({
+                            renk: color.name,
+                            custom: custom.deger
+                        });
+                    }
+                });
+            });
+        }
+        
+        return allVariations;
+    }
+
+    // Varyantın mevcut olup olmadığını kontrol et
+    function isVariantExists(color, size, custom) {
+        if (!selectedProduct || !selectedProduct.variants) return false;
+        
+        return selectedProduct.variants.some(variant => {
+            return variant.color === color && 
+                variant.size === size && 
+                variant.custom === custom;
+        });
     }
 
     document.getElementById('clearSelectedProduct').addEventListener('click', function() {
@@ -740,19 +885,6 @@
         document.getElementById('productForm').action = '{{ path('product_create') }}';
     });
 
-    function unlockEditableFields() {
-        const identifierField = document.getElementById('productIdentifier');
-        identifierField.readOnly = false;
-        identifierField.style.backgroundColor = '';
-        identifierField.style.cursor = '';
-        
-        document.getElementById('imageInput').setAttribute('required', 'required');
-        
-        const submitBtn = document.querySelector('button[type="submit"]');
-        if (submitBtn) {
-            submitBtn.textContent = 'Kaydet';
-        }
-    }
 
 // edit end
     let searchTimeout;
