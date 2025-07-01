@@ -1124,14 +1124,17 @@
             
             try {
                 const customData = JSON.parse(document.getElementById('customTableData').value || '{}');
-                customs = (customData.rows || []).map(r => r.deger);
+                // DÜZELTME: Title satırını (ilk satırı) hariç tut
+                if (customData.rows && customData.rows.length > 0) {
+                    customs = customData.rows.map(r => r.deger);
+                }
             } catch {}
 
             console.log("--- VARIANT MATRIX DATA ---");
             console.log("Kilitlenecek Varyantlar (lockedVariants):", JSON.parse(JSON.stringify(lockedVariants)));
             console.log("Matris Renkleri:", colors);
             console.log("Matris Bedenleri:", sizes);
-            console.log("Matris Custom Değerleri:", customs);
+            console.log("Matris Custom Değerleri (title hariç):", customs);
             console.log("--------------------------");
 
             function cartesianProduct(arrays) {
@@ -1172,11 +1175,12 @@
                 console.log(`\n=== COMBO ${i}: ${color}-${size}-${custom} ===`);
                 console.log(`Full size format: ${fullSizeFormat}`);
                 
+                // DÜZELTME: fullSizeFormat ile karşılaştır
                 const isLocked = lockedVariants.some(v => {
                     console.log(`Checking against: color='${v.color}', size='${v.size}', custom='${v.custom}'`);
                     
                     const colorMatch = (v.color === color);
-                    const sizeMatch = (v.size === fullSizeFormat); // ← Bu değişti
+                    const sizeMatch = (v.size === fullSizeFormat);
                     const customMatch = (v.custom === custom);
                     
                     console.log(`  colorMatch: ${colorMatch}, sizeMatch: ${sizeMatch}, customMatch: ${customMatch}`);
