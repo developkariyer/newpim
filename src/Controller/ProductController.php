@@ -24,7 +24,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/product', name: 'product')]
+#[Route('/product', name: 'product_')]
 class ProductController extends AbstractController
 {
     private const TYPE_MAPPING = [
