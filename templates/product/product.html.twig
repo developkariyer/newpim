@@ -763,23 +763,48 @@
         }
 
         function populateCustomTable(customTable, usedCustoms = []) {
+            console.log('populateCustomTable called with:', customTable, usedCustoms);
+            
+            // GÜVENLE KONTROL: Element var mı?
+            const customTitleElement = document.getElementById('customTitle');
+            if (!customTitleElement) {
+                console.error('customTitle element bulunamadı!');
+                // Element yoksa yaratmaya çalışma, sadece devam et
+            } else {
+                customTitleElement.value = customTable.title || '';
+            }
+            
+            // DÜZELTME: usedCustoms'ı array'e çevir
+            const usedCustomsArray = Array.isArray(usedCustoms) ? usedCustoms : Object.values(usedCustoms || {});
+            
             const tbody = document.querySelector('#customTable tbody');
+            if (!tbody) {
+                console.error('customTable tbody bulunamadı!');
+                return;
+            }
+            
             tbody.innerHTML = '';
             
-            if (customTable.rows) {
+            if (customTable.rows && customTable.rows.length > 0) {
                 customTable.rows.forEach(row => {
-                    const isLocked = usedCustoms.includes(row.deger);
-                    addCustomRow(row.deger, isLocked);
+                    const customValue = row.deger || '';
+                    // Array metodu kullan
+                    const isLocked = usedCustomsArray.includes(customValue);
+                    console.log(`Custom ${customValue} locked: ${isLocked}`);
+                    addCustomRow(row, isLocked);
                 });
             }
             
-            if (customTable.title) {
-                document.getElementById('customTableTitle').value = customTable.title;
+            // GÜVENLE KONTROL: Element var mı?
+            const customTableDataElement = document.getElementById('customTableData');
+            if (!customTableDataElement) {
+                console.error('customTableData element bulunamadı!');
+            } else {
+                customTableDataElement.value = JSON.stringify(customTable);
             }
             
-            document.getElementById('customTableData').value = JSON.stringify(customTable);
             updateCustomTablePreview(customTable);
-        }
+}
 
         function setEditMode() {
             isEditMode = true;
@@ -789,7 +814,7 @@
             identifierField.style.cursor = 'not-allowed';
             
             document.getElementById('imageInput').removeAttribute('required');
-            document.getElementById('productForm').action = '{{ path('product_update') }}';
+            document.getElementById('productForm').action = '{{ path('product_create') }}';
             document.getElementById('submitBtn').textContent = '💾 Ürünü Güncelle';
         }
 
@@ -1102,7 +1127,6 @@
                 customs = (customData.rows || []).map(r => r.deger);
             } catch {}
 
-            // DEBUG: Veri kaynaklarını ve tiplerini kontrol et
             console.log("--- VARIANT MATRIX DATA ---");
             console.log("Kilitlenecek Varyantlar (lockedVariants):", JSON.parse(JSON.stringify(lockedVariants)));
             console.log("Matris Renkleri:", colors);
@@ -1111,13 +1135,11 @@
             console.log("--------------------------");
 
             function cartesianProduct(arrays) {
-                // Boş array'leri filtrele
                 const filteredArrays = arrays.filter(arr => arr && arr.length > 0);
                 if (filteredArrays.length === 0) return [];
                 return filteredArrays.reduce((a, b) => a.flatMap(d => b.map(e => [...(Array.isArray(d) ? d : [d]), e])));
             }
 
-            // Renk ve Beden zorunlu olduğu için, eğer boşlarsa matris oluşturma.
             if (colors.length === 0 || sizes.length === 0) {
                 document.getElementById('variationTableContainer').innerHTML = '<div class="alert alert-warning">Varyasyon matrisini oluşturmak için lütfen en az bir Renk ve bir Beden seçin.</div>';
                 return;
@@ -1127,7 +1149,6 @@
             if (customs.length > 0) {
                 combos = cartesianProduct([colors, sizes, customs]);
             } else {
-                // Custom yoksa, her kombinasyona null ekle
                 combos = cartesianProduct([colors, sizes]).map(item => [...item, null]);
             }
 
@@ -1139,28 +1160,37 @@
             combos.forEach((combo, i) => {
                 const color = combo[0];
                 const size = combo[1];
-                const custom = combo[2]; // Artık her zaman bir değere sahip (string veya null)
+                const custom = combo[2];
                 
-                // --- KESİN EŞLEŞTİRME MANTIĞI ---
+                // DÜZELTME: Size'ı full format'a çevir eşleştirme için
+                const sizeObj = sizesData.find(s => s.beden === size);
+                let fullSizeFormat = size;
+                if (sizeObj) {
+                    fullSizeFormat = `${sizeObj.beden} (En: ${sizeObj.en}, Boy: ${sizeObj.boy}, Yükseklik: ${sizeObj.yukseklik}, ${sizeObj.birim})`;
+                }
+                
+                console.log(`\n=== COMBO ${i}: ${color}-${size}-${custom} ===`);
+                console.log(`Full size format: ${fullSizeFormat}`);
+                
                 const isLocked = lockedVariants.some(v => {
-                    // Verileri standartlaştır: string'e çevir, trim'le, null ise null kalsın
-                    const v_color = v.color ? String(v.color).trim() : null;
-                    const v_size = v.size ? String(v.size).trim() : null;
-                    const v_custom = v.custom ? String(v.custom).trim() : null;
-
-                    const combo_color = color ? String(color).trim() : null;
-                    const combo_size = size ? String(size).trim() : null;
-                    const combo_custom = custom ? String(custom).trim() : null;
-
-                    // Eşleşmeyi kontrol et
-                    const colorMatch = (v_color === combo_color);
-                    const sizeMatch = (v_size === combo_size);
-                    const customMatch = (v_custom === combo_custom); // İkisi de null ise true döner
-
-                    return colorMatch && sizeMatch && customMatch;
+                    console.log(`Checking against: color='${v.color}', size='${v.size}', custom='${v.custom}'`);
+                    
+                    const colorMatch = (v.color === color);
+                    const sizeMatch = (v.size === fullSizeFormat); // ← Bu değişti
+                    const customMatch = (v.custom === custom);
+                    
+                    console.log(`  colorMatch: ${colorMatch}, sizeMatch: ${sizeMatch}, customMatch: ${customMatch}`);
+                    
+                    const result = colorMatch && sizeMatch && customMatch;
+                    if (result) {
+                        console.log(`✅ LOCKED VARIANT FOUND!`);
+                    }
+                    
+                    return result;
                 });
 
-                const sizeObj = sizesData.find(s => s.beden === size);
+                console.log(`FINAL LOCKED STATUS: ${isLocked}`);
+
                 let sizeLabel = size;
                 if (sizeObj) {
                     sizeLabel += ` (En: ${sizeObj.en}, Boy: ${sizeObj.boy}, Yükseklik: ${sizeObj.yukseklik}, ${sizeObj.birim})`;
@@ -1169,6 +1199,8 @@
                 const rowClass = isLocked ? 'variant-locked' : '';
                 const lockIcon = isLocked ? '🔒 ' : '';
                 const checkboxAttributes = isLocked ? 'disabled checked' : '';
+
+                console.log(`HTML attributes: rowClass='${rowClass}', checkboxAttributes='${checkboxAttributes}'`);
 
                 html += `<tr class="${rowClass}">
                     <td>
@@ -1185,6 +1217,7 @@
             });
 
             html += '</tbody></table>';
+            console.log('Final HTML:', html);
             document.getElementById('variationTableContainer').innerHTML = html;
         }
 
