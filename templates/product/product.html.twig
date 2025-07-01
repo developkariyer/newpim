@@ -3,248 +3,425 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
-        .product-form-container {
-            max-width: 800px;
-            margin: 2rem auto;
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --light-gray: #f8f9fa;
+            --border-color: #dee2e6;
+            --border-radius: 8px;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
             padding: 2rem;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        
-        .form-section {
-            margin-bottom: 2rem;
+
+        .product-form {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .form-header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .form-content {
+            padding: 2rem;
+        }
+
+        .search-section {
+            background: var(--light-gray);
+            border-radius: var(--border-radius);
             padding: 1.5rem;
-            border: 1px solid #e1e5e9;
-            border-radius: 6px;
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--info-color);
         }
-        
-        .form-section h3 {
+
+        .search-section h3 {
+            color: var(--info-color);
             margin: 0 0 1rem 0;
-            color: #495057;
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 0.5rem;
-        }
-        
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #495057;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            font-size: 1rem;
-            transition: border-color 0.15s ease-in-out;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
-        }
-        
-        .form-control.is-invalid {
-            border-color: #dc3545;
-        }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        @media (max-width: 700px) {
-            .form-row {
-                grid-template-columns: 1fr !important;
-            }
-        }
-
-        .btn {
-            padding: 0.75rem 2rem;
-            border: none;
-            border-radius: 4px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: #0056b3;
-        }
-        
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-            margin-right: 1rem;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #545b62;
-        }
-        
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background-color: #c82333;
-        }
-        
-        .btn-success {
-            background-color: #28a745;
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background-color: #218838;
-        }
-        
-        .image-upload {
+            font-size: 1.25rem;
             display: flex;
-            flex-direction: column;
             align-items: center;
             gap: 0.5rem;
         }
 
-        .image-preview {
-            width: 80px;
-            height: 80px;
-            border: 2px dashed #dee2e6;
-            border-radius: 6px;
+        .form-section {
+            margin-bottom: 2.5rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background: white;
+        }
+
+        .section-title {
+            color: #333;
+            margin: 0 0 1.5rem 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-color);
             display: flex;
             align-items: center;
-            justify-content: center;
-            background: #f8f9fa;
-            overflow: hidden;
+            gap: 0.5rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .form-control.is-invalid {
+            border-color: var(--danger-color);
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .search-result-item {
+            padding: 0.75rem;
             cursor: pointer;
-            transition: all 0.2s ease;
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .search-result-item:hover {
+            background: var(--light-gray);
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .selected-items {
+            min-height: 60px;
+            padding: 0.75rem;
+            border: 2px dashed var(--border-color);
+            border-radius: var(--border-radius);
+            background: var(--light-gray);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .selected-item {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .selected-item.locked {
+            background: var(--secondary-color);
+            cursor: not-allowed;
+        }
+
+        .remove-item {
+            cursor: pointer;
+            font-weight: bold;
+            padding: 0 0.25rem;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .remove-item:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .image-upload {
+            text-align: center;
+        }
+
+        .image-preview {
+            width: 120px;
+            height: 120px;
+            border: 3px dashed var(--border-color);
+            border-radius: var(--border-radius);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--light-gray);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 2rem;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
         }
 
         .image-preview:hover {
-            border-color: #007bff;
-            background: #e3f2fd;
+            border-color: var(--primary-color);
+            background: rgba(0, 123, 255, 0.1);
         }
 
         .image-preview img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            border-radius: calc(var(--border-radius) - 3px);
         }
 
-        .input-group {
-            display: flex;
-            align-items: stretch;
-            width: 100%;
-        }
-
-        .input-group .form-control {
-            border-top-right-radius: 0;
-            border-bottom-right-radius: 0;
-        }
-
-        .input-group .btn {
-            border-top-left-radius: 0;
-            border-bottom-left-radius: 0;
-        }
-
-        .table-preview-container {
-            margin-top: 1rem;
-            padding: 1rem;
-            border: 1px solid #e1e5e9;
-            border-radius: 6px;
-            background-color: #f8f9fa;
-        }
-
-        .selected-items-container {
-            min-height: 50px;
-            border: 2px dashed #dee2e6;
-            border-radius: 4px;
-            padding: 0.5rem;
-            background: #f8f9fa;
-        }
-
-        .search-results {
-            display: none;
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            padding: 0.5rem;
-            background: white;
-            position: absolute;
-            z-index: 1000;
-            width: 100%;
-        }
-
-        .search-result-item {
-            padding: 0.5rem;
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
-            border-bottom: 1px solid #f1f3f4;
-            transition: background-color 0.2s;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
         }
 
-        .search-result-item:hover {
-            background-color: #f8f9fa;
-        }
-
-        .selected-item-badge {
-            display: inline-block;
-            background: #007bff;
+        .btn-primary {
+            background: var(--primary-color);
             color: white;
-            padding: 0.25rem 0.5rem;
-            margin: 0.25rem;
-            border-radius: 12px;
-            font-size: 0.875rem;
         }
 
-        .locked-row {
-            background-color: #f8f9fa !important;
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-block {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .table-container {
+            margin-top: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+        .table th,
+        .table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .table th {
+            background: var(--light-gray);
+            font-weight: 600;
+            color: #333;
+        }
+
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table tr.locked-row {
+            background: rgba(108, 117, 125, 0.1);
             opacity: 0.7;
         }
 
-        .locked-button {
-            background-color: #6c757d !important;
-            cursor: not-allowed !important;
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
         }
 
         .alert {
             padding: 1rem;
-            margin-bottom: 1rem;
-            border: 1px solid transparent;
-            border-radius: 4px;
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            border-left: 4px solid;
         }
 
         .alert-danger {
+            background: #f8d7da;
+            border-color: var(--danger-color);
             color: #721c24;
-            background-color: #f8d7da;
-            border-color: #f5c6cb;
         }
 
         .alert-success {
+            background: #d4edda;
+            border-color: var(--success-color);
             color: #155724;
-            background-color: #d4edda;
-            border-color: #c3e6cb;
         }
 
         .alert-info {
+            background: #d1ecf1;
+            border-color: var(--info-color);
             color: #0c5460;
-            background-color: #d1ecf1;
-            border-color: #bee5eb;
+        }
+
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+        }
+
+        .loading.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
@@ -252,397 +429,405 @@
             100% { transform: rotate(360deg); }
         }
 
-        .loading-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 9999;
-            justify-content: center;
+        .steps-nav {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
         }
 
-        .loading-content {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
+        .selected-product-info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .empty-state {
             text-align: center;
+            color: var(--secondary-color);
+            font-style: italic;
+            padding: 1rem;
         }
 
-        .spinner {
-            width: 40px;
-            height: 40px;
-            margin: 0 auto 1rem;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #007bff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .form-header {
+                padding: 1.5rem 1rem;
+            }
+
+            .form-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .form-content {
+                padding: 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .form-section {
+                padding: 1rem;
+            }
+
+            .steps-nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .table-responsive {
+                overflow-x: auto;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 1rem;
+            }
         }
 
-        /* Mobile Responsive Tables */
-        @media screen and (max-width: 768px) {
-            .modal-body .table thead {
+        @media (max-width: 480px) {
+            .table thead {
                 display: none;
             }
 
-            .modal-body .table,
-            .modal-body .table tbody,
-            .modal-body .table tr,
-            .modal-body .table td {
+            .table,
+            .table tbody,
+            .table tr,
+            .table td {
                 display: block;
                 width: 100%;
             }
 
-            .modal-body .table tr {
+            .table tr {
+                border: 1px solid var(--border-color);
+                border-radius: var(--border-radius);
                 margin-bottom: 1rem;
-                border: 1px solid #dee2e6;
-                border-radius: 4px;
                 padding: 0.5rem;
             }
 
-            .modal-body .table td {
+            .table td {
                 text-align: right;
                 padding-left: 50%;
                 position: relative;
                 border: none;
-                padding-bottom: 0.5rem;
-                padding-top: 0.5rem;
             }
 
-            .modal-body .table td::before {
+            .table td::before {
                 content: attr(data-label);
                 position: absolute;
                 left: 0.5rem;
                 width: 45%;
-                padding-right: 1rem;
                 text-align: left;
-                font-weight: 500;
-                color: #495057;
-            }
-
-            .modal-body .table td:last-child {
-                text-align: center;
-                padding-left: 0;
-            }
-
-            .modal-body .table td:last-child::before {
-                display: none;
+                font-weight: 600;
+                color: #333;
             }
         }
     </style>
 {% endblock %}
 
-{% block title %}Katalog Ürün Yönetimi{% endblock %}
+{% block title %}Ürün Yönetimi{% endblock %}
 
 {% block content %}
-    <div class="product-form-container">
-        <!-- Error Messages -->
-        {% if errors is defined and errors|length > 0 %}
-            <div class="alert alert-danger">
-                <h4 style="margin: 0 0 1rem 0;">❌ Hatalar:</h4>
-                <ul style="margin: 0; padding-left: 1.5rem;">
-                    {% for error in errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        {% endif %}
+<div class="container">
+    <div class="product-form">
+        <div class="form-header">
+            <h1>🛍️ Ürün Yönetimi Sistemi</h1>
+            <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Ürün oluşturun, düzenleyin ve varyantlarını yönetin</p>
+        </div>
 
-        <!-- Flash Messages -->
-        {% for label, messages in app.flashes %}
-            {% for message in messages %}
-                <div class="alert alert-{{ label == 'danger' ? 'danger' : (label == 'success' ? 'success' : 'info') }}">
-                    {{ message }}
+        <div class="form-content">
+            <!-- Flash Messages -->
+            {% if errors is defined and errors|length > 0 %}
+                <div class="alert alert-danger">
+                    <h4 style="margin: 0 0 1rem 0;">❌ Hatalar:</h4>
+                    <ul style="margin: 0; padding-left: 1.5rem;">
+                        {% for error in errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
                 </div>
+            {% endif %}
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ label == 'danger' ? 'danger' : (label == 'success' ? 'success' : 'info') }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
             {% endfor %}
-        {% endfor %}
 
-        <!-- Loading Overlay -->
-        <div id="loadingOverlay" class="loading-overlay">
-            <div class="loading-content">
-                <div class="spinner"></div>
-                <p style="margin: 0; font-size: 1.1rem; color: #333;">İşlem gerçekleştiriliyor...</p>
-            </div>
-        </div>
-
-        <!-- Product Form -->
-        <form id="productForm" method="POST" enctype="multipart/form-data" action="{{ path('product_create') }}">
-            <!-- Product Search Section -->
-            <div class="form-section" style="background: #f8f9fa; border-color: #17a2b8;">
-                <h3 style="border-color: #17a2b8; color: #17a2b8;">🔍 Ürün Ara ve Düzenle</h3>
-                <div class="form-group" style="position: relative;">
-                    <label for="productSearchInput">Mevcut Ürün Ara (Identifier veya İsim)</label>
-                    <input type="text" id="productSearchInput" class="form-control" 
-                           placeholder="Örn: PTS-001 veya Premium Cotton T-Shirt">
-                    <div id="productSearchResults" class="search-results"></div>
-                </div>
-                <div id="selectedProductInfo" style="display: none; padding: 1rem; background: #e3f2fd; border-radius: 4px; margin-top: 1rem;">
-                    <h5 style="margin: 0 0 0.5rem 0; color: #1976d2;">✅ Seçilen Ürün:</h5>
-                    <div id="selectedProductDetails"></div>
-                    <button type="button" id="clearSelectedProduct" class="btn btn-outline-secondary btn-sm" 
-                            style="margin-top: 0.5rem;">❌ Seçimi Temizle</button>
-                </div>
-            </div>
-
-            <input type="hidden" id="editingProductId" name="editingProductId" value="">
-
-            <!-- Step 1: Product Information -->
-            <div id="step1">
-                <!-- Basic Product Information -->
-                <div class="form-section">
-                    <h3>📝 Temel Ürün Bilgileri</h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="productName">Ürün Adı *</label>
-                            <input type="text" id="productName" name="productName" class="form-control" 
-                                   placeholder="Örn: Premium Cotton T-Shirt" required>
+            <form id="productForm" method="POST" enctype="multipart/form-data" action="{{ path('product_create') }}">
+                <!-- Product Search Section -->
+                <div class="search-section">
+                    <h3>🔍 Mevcut Ürün Ara</h3>
+                    <div class="form-group">
+                        <label class="form-label">Ürün Identifier veya İsim</label>
+                        <div class="search-container">
+                            <input type="text" id="productSearch" class="form-control" 
+                                   placeholder="Örn: PTS-001 veya Premium Cotton T-Shirt">
+                            <div id="productSearchResults" class="search-results"></div>
                         </div>
-                        <div class="form-group">
-                            <label>Ürün Resmi *</label>
-                            <div class="image-upload">
-                                <div class="image-preview" id="imagePreview" onclick="document.getElementById('imageInput').click()">
-                                    📷
+                    </div>
+                    <div id="selectedProductInfo" class="selected-product-info" style="display: none;">
+                        <h5 style="margin: 0 0 0.5rem 0; color: #1976d2;">✅ Seçilen Ürün:</h5>
+                        <div id="selectedProductDetails"></div>
+                        <button type="button" id="clearProduct" class="btn btn-outline" style="margin-top: 0.5rem;">
+                            ❌ Seçimi Temizle
+                        </button>
+                    </div>
+                </div>
+
+                <input type="hidden" id="editingProductId" name="editingProductId">
+
+                <!-- Step 1: Product Information -->
+                <div id="step1">
+                    <!-- Basic Information -->
+                    <div class="form-section">
+                        <h3 class="section-title">📝 Temel Bilgiler</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Ürün Adı *</label>
+                                <input type="text" id="productName" name="productName" class="form-control" 
+                                       placeholder="Premium Cotton T-Shirt" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Ürün Identifier *</label>
+                                <input type="text" id="productIdentifier" name="productIdentifier" class="form-control" 
+                                       placeholder="PTS-001" required>
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Ürün Resmi *</label>
+                                <div class="image-upload">
+                                    <div class="image-preview" id="imagePreview" onclick="document.getElementById('imageInput').click()">
+                                        📷
+                                    </div>
+                                    <small>Resim yüklemek için tıklayın</small>
+                                    <input type="file" id="imageInput" name="productImage" accept="image/*" style="display: none;" required>
                                 </div>
-                                <small style="color: #6c757d; text-align: center;">Resim yüklemek için tıklayın</small>
-                                <input type="file" id="imageInput" name="productImage" accept="image/*" required style="display: none;">
                             </div>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="productIdentifier">Ürün Tanıtıcı Adı *</label>
-                            <input type="text" id="productIdentifier" name="productIdentifier" class="form-control" 
-                                   placeholder="Örn: PTS-001" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="productCategory">Kategori *</label>
-                            <div style="position: relative;">
-                                <input type="text" id="categoriesSearch" placeholder="Kategori ara..." 
-                                       class="form-control" style="margin-bottom: 0.5rem;">
-                                <div id="categoriesResults" class="search-results"></div>
+                            <div class="form-group">
+                                <label class="form-label">Kategori *</label>
+                                <div class="search-container">
+                                    <input type="text" id="categorySearch" class="form-control" placeholder="Kategori ara...">
+                                    <div id="categoryResults" class="search-results"></div>
+                                </div>
+                                <div id="selectedCategories" class="selected-items">
+                                    <span class="empty-state">Kategori seçin...</span>
+                                </div>
+                                <div id="categoryHidden"></div>
                             </div>
-                            <div id="categoriesSelected" class="selected-items-container">
-                                <small style="color: #6c757d;">Seçilen kategori burada görünecek...</small>
-                            </div>
-                            <div id="categoriesHidden"></div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="productDescription">Açıklama</label>
-                        <textarea id="productDescription" name="productDescription" class="form-control" 
-                                  rows="3" placeholder="Ürün hakkında detaylı açıklama..."></textarea>
-                    </div>
-                </div>
-
-                <!-- Marketplace Information -->
-                <div class="form-section">
-                    <h3>🛒 Pazaryeri Bilgileri</h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="brands">Markalar *</label>
-                            <div style="position: relative;">
-                                <input type="text" id="brandsSearch" placeholder="Marka ara..." 
-                                       class="form-control" style="margin-bottom: 0.5rem;">
-                                <div id="brandsResults" class="search-results"></div>
-                            </div>
-                            <div id="brandsSelected" class="selected-items-container">
-                                <small style="color: #6c757d;">Seçilen markalar burada görünecek...</small>
-                            </div>
-                            <div id="brandsHidden"></div>
                         </div>
                         <div class="form-group">
-                            <label for="marketplaces">Pazaryerleri *</label>
-                            <div style="position: relative;">
-                                <input type="text" id="marketplacesSearch" placeholder="Pazaryeri ara..." 
-                                       class="form-control" style="margin-bottom: 0.5rem;">
-                                <div id="marketplacesResults" class="search-results"></div>
+                            <label class="form-label">Açıklama</label>
+                            <textarea id="productDescription" name="productDescription" class="form-control" rows="3"
+                                      placeholder="Ürün hakkında detaylı açıklama..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Marketplace Information -->
+                    <div class="form-section">
+                        <h3 class="section-title">🛒 Pazaryeri Bilgileri</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Markalar *</label>
+                                <div class="search-container">
+                                    <input type="text" id="brandSearch" class="form-control" placeholder="Marka ara...">
+                                    <div id="brandResults" class="search-results"></div>
+                                </div>
+                                <div id="selectedBrands" class="selected-items">
+                                    <span class="empty-state">Marka seçin...</span>
+                                </div>
+                                <div id="brandHidden"></div>
                             </div>
-                            <div id="marketplacesSelected" class="selected-items-container">
-                                <small style="color: #6c757d;">Seçilen pazaryerleri burada görünecek...</small>
+                            <div class="form-group">
+                                <label class="form-label">Pazaryerleri *</label>
+                                <div class="search-container">
+                                    <input type="text" id="marketplaceSearch" class="form-control" placeholder="Pazaryeri ara...">
+                                    <div id="marketplaceResults" class="search-results"></div>
+                                </div>
+                                <div id="selectedMarketplaces" class="selected-items">
+                                    <span class="empty-state">Pazaryeri seçin...</span>
+                                </div>
+                                <div id="marketplaceHidden"></div>
                             </div>
-                            <div id="marketplacesHidden"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Variation Templates -->
-                <div class="form-section">
-                    <h3>🎨 Varyasyon Şablonları</h3>
-                    <div class="form-group">
-                        <label for="colorTemplate">Renkler *</label>
-                        <div style="position: relative;">
-                            <input type="text" id="colorsSearch" placeholder="Renk ara..." 
-                                   class="form-control" style="margin-bottom: 0.5rem;">
-                            <div id="colorsResults" class="search-results"></div>
-                        </div>
-                        <div id="colorsSelected" class="selected-items-container">
-                            <small style="color: #6c757d;">Seçilen renkler burada görünecek...</small>
-                        </div>
-                        <div id="colorsHidden"></div>
-                        <div class="input-group" style="margin-top: 0.5rem; max-width: 400px;">
-                            <input type="text" id="newColorInput" placeholder="Yeni renk girin..." 
-                                   class="form-control" aria-label="Yeni renk girin">
-                            <button type="button" id="addNewColorBtn" class="btn btn-primary">+ Renk Ekle</button>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="sizeTableBtn">Beden Tablosu *</label>
-                        <button type="button" class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2"
-                                id="sizeTableBtn" data-bs-toggle="modal" data-bs-target="#sizeTableModal"
-                                style="font-size:1.1rem; font-weight:500;">
-                            <span style="font-size:1.5rem; margin-right:0.5rem;">📏</span> Beden Tablosu Oluştur/Düzenle
-                        </button>
-                        <input type="hidden" name="sizeTableData" id="sizeTableData">
-                        <div id="sizeTablePreview" class="table-preview-container" style="display: none;"></div>
-                    </div>
+                    <!-- Variations -->
+                    <div class="form-section">
+                        <h3 class="section-title">🎨 Varyasyon Ayarları</h3>
+                        <div class="form-group">
+                            <label class="form-label">Renkler *</label>
+                            <div class="form-grid">
+                                <div class="search-container">
+                                    <input type="text" id="colorSearch" class="form-control" placeholder="Renk ara...">
+                                    <div id="colorResults" class="search-results"></div>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <input type="text" id="newColorInput" class="form-control" placeholder="Yeni renk">
+                                    <button type="button" id="addColorBtn" class="btn btn-primary">+ Ekle</button>
+                                </div>
+                            </div>
+                            <div id="selectedColors" class="selected-items">
+                                <span class="empty-state">Renk seçin...</span>
+                            </div>
+                            <div id="colorHidden"></div>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="customTableBtn">Custom Tablo</label>
-                        <input type="text" id="customTableTitle" class="form-control mb-2" 
-                               placeholder="Tablo başlığı (ör: Malzeme İçeriği)">
-                        <button type="button" class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2"
-                                id="customTableBtn" data-bs-toggle="modal" data-bs-target="#customTableModal"
-                                style="font-size:1.1rem; font-weight:500;">
-                            <span style="font-size:1.5rem; margin-right:0.5rem;">⚙️</span> Custom Tablo Oluştur/Düzenle
-                        </button>
-                        <input type="hidden" name="customTableData" id="customTableData">
-                        <div id="customTablePreview" class="table-preview-container" style="display: none;"></div>
-                    </div>
-                </div>
+                        <div class="form-group">
+                            <label class="form-label">Beden Tablosu *</label>
+                            <button type="button" id="openSizeTable" class="btn btn-primary btn-block">
+                                📏 Beden Tablosu Oluştur/Düzenle
+                            </button>
+                            <input type="hidden" id="sizeTableData" name="sizeTableData">
+                            <div id="sizeTablePreview" class="table-container" style="display: none;"></div>
+                        </div>
 
-                <!-- Form Buttons -->
-                <div style="text-align: right; margin-top: 2rem;">
-                    <button type="button" class="btn btn-secondary">İptal</button>
-                    <button type="button" class="btn btn-primary" id="goToVariationsBtn">İlerle</button>
-                </div>
-            </div>
-
-            <!-- Step 2: Variations Selection -->
-            <div id="step2" style="display:none;">
-                <h3><span style="font-size:1.3rem;">🧩</span> Varyasyonları Seç</h3>
-                <div id="variationTableContainer"></div>
-                <input type="hidden" name="variationsData" id="variationsData">
-                <div style="text-align: right; margin-top: 2rem;">
-                    <button type="button" class="btn btn-secondary" id="backToStep1Btn">Geri</button>
-                    <button type="submit" class="btn btn-success">Kaydet</button>
-                </div>
-            </div>
-        </form>
-
-        <!-- Size Table Modal -->
-        <div class="modal fade" id="sizeTableModal" tabindex="-1" aria-labelledby="sizeTableModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="sizeTableModalLabel">
-                            <span style="font-size:1.3rem;">📏</span> Beden Tablosu Oluştur
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered" id="sizeTable">
-                                <thead>
-                                    <tr>
-                                        <th>Beden</th>
-                                        <th>En</th>
-                                        <th>Boy</th>
-                                        <th>Yükseklik</th>
-                                        <th>Birim</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Rows will be added by JS -->
-                                </tbody>
-                            </table>
+                        <div class="form-group">
+                            <label class="form-label">Custom Tablo</label>
+                            <input type="text" id="customTableTitle" class="form-control" placeholder="Tablo başlığı" style="margin-bottom: 0.5rem;">
+                            <button type="button" id="openCustomTable" class="btn btn-primary btn-block">
+                                ⚙️ Custom Tablo Oluştur/Düzenle
+                            </button>
+                            <input type="hidden" id="customTableData" name="customTableData">
+                            <div id="customTablePreview" class="table-container" style="display: none;"></div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
-                        <button type="button" class="btn btn-success" id="addSizeRowBtn">+ Satır Ekle</button>
-                        <button type="button" class="btn btn-primary" id="saveSizeTableBtn">Kaydet</button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Custom Table Modal -->
-        <div class="modal fade" id="customTableModal" tabindex="-1" aria-labelledby="customTableModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="customTableModalLabel">
-                            <span style="font-size:1.3rem;">⚙️</span> Custom Tablo Oluştur
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered" id="customTable">
-                                <thead>
-                                    <tr>
-                                        <th>Değer</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Rows will be added by JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
-                        <button type="button" class="btn btn-success" id="addCustomRowBtn">+ Satır Ekle</button>
-                        <button type="button" class="btn btn-primary" id="saveCustomTableBtn">Kaydet</button>
+                    <div class="steps-nav">
+                        <div></div>
+                        <button type="button" id="nextStep" class="btn btn-primary">İlerle ➡️</button>
                     </div>
                 </div>
-            </div>
+
+                <!-- Step 2: Variations -->
+                <div id="step2" style="display: none;">
+                    <div class="form-section">
+                        <h3 class="section-title">🧩 Varyasyonları Seç</h3>
+                        <div id="variationTable"></div>
+                        <input type="hidden" id="variationData" name="variationsData">
+                    </div>
+
+                    <div class="steps-nav">
+                        <button type="button" id="prevStep" class="btn btn-secondary">⬅️ Geri</button>
+                        <button type="submit" class="btn btn-success">💾 Kaydet</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
+</div>
+
+<!-- Size Table Modal -->
+<div id="sizeTableModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">📏 Beden Tablosu</h3>
+        </div>
+        <div class="modal-body">
+            <div class="table-responsive">
+                <table class="table" id="sizeTable">
+                    <thead>
+                        <tr>
+                            <th>Beden</th>
+                            <th>En</th>
+                            <th>Boy</th>
+                            <th>Yükseklik</th>
+                            <th>Birim</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" id="closeSizeModal" class="btn btn-secondary">Kapat</button>
+            <button type="button" id="addSizeRow" class="btn btn-success">+ Satır</button>
+            <button type="button" id="saveSizeTable" class="btn btn-primary">Kaydet</button>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Table Modal -->
+<div id="customTableModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">⚙️ Custom Tablo</h3>
+        </div>
+        <div class="modal-body">
+            <div class="table-responsive">
+                <table class="table" id="customTable">
+                    <thead>
+                        <tr>
+                            <th>Değer</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" id="closeCustomModal" class="btn btn-secondary">Kapat</button>
+            <button type="button" id="addCustomRow" class="btn btn-success">+ Satır</button>
+            <button type="button" id="saveCustomTable" class="btn btn-primary">Kaydet</button>
+        </div>
+    </div>
+</div>
+
+<!-- Loading -->
+<div id="loading" class="loading">
+    <div style="text-align: center; color: white;">
+        <div class="spinner"></div>
+        <p style="margin-top: 1rem;">İşlem yapılıyor...</p>
+    </div>
+</div>
 {% endblock %}
 
 {% block body_scripts %}
     {{ parent() }}
     <script>
-        class ProductManager {
+        // Application State
+        class ProductApp {
             constructor() {
-                this.selectedProduct = null;
-                this.isEditMode = false;
-                this.searchTimeout = null;
-                this.productSearchTimeout = null;
-                this.selectedItems = {
-                    colors: [],
-                    brands: [],
-                    marketplaces: [],
-                    categories: []
+                this.state = {
+                    selectedProduct: null,
+                    isEditMode: false,
+                    selections: {
+                        categories: [],
+                        brands: [],
+                        marketplaces: [],
+                        colors: []
+                    }
                 };
                 this.config = {
+                    searchEndpoints: {
+                        categories: '/product/search/categories',
+                        brands: '/product/search/brands',
+                        marketplaces: '/product/search/marketplaces',
+                        colors: '/product/search/colors'
+                    },
                     icons: {
-                        'colors': '🎨',
-                        'brands': '🏷️',
-                        'marketplaces': '🛒',
-                        'categories': '📂'
-                    },
-                    labels: {
-                        colors: 'renkler',
-                        brands: 'markalar',
-                        marketplaces: 'pazaryerleri',
-                        categories: 'kategori'
-                    },
-                    inputNames: {
-                        colors: 'colors[]',
-                        brands: 'brands[]',
-                        marketplaces: 'marketplaces[]',
-                        categories: 'productCategory'
-                    },
-                    searchTypes: ['colors', 'brands', 'marketplaces', 'categories']
+                        categories: '📂',
+                        brands: '🏷️',
+                        marketplaces: '🛒',
+                        colors: '🎨'
+                    }
                 };
+                this.searchTimeouts = {};
                 this.init();
             }
 
@@ -651,15 +836,16 @@
                 this.initializeSearches();
             }
 
+            // Event Handlers
             bindEvents() {
                 // Product search
-                document.getElementById('productSearchInput').addEventListener('input', (e) => {
+                document.getElementById('productSearch').addEventListener('input', (e) => {
                     this.handleProductSearch(e.target.value);
                 });
 
-                // Clear selected product
-                document.getElementById('clearSelectedProduct').addEventListener('click', () => {
-                    this.clearSelectedProduct();
+                // Clear product
+                document.getElementById('clearProduct').addEventListener('click', () => {
+                    this.clearProduct();
                 });
 
                 // Image upload
@@ -667,332 +853,364 @@
                     this.handleImageUpload(e);
                 });
 
-                // Add new color
-                document.getElementById('addNewColorBtn').addEventListener('click', () => {
+                // Add color
+                document.getElementById('addColorBtn').addEventListener('click', () => {
                     this.addNewColor();
                 });
 
+                // Navigation
+                document.getElementById('nextStep').addEventListener('click', () => {
+                    this.goToStep2();
+                });
+
+                document.getElementById('prevStep').addEventListener('click', () => {
+                    this.goToStep1();
+                });
+
+                // Tables
+                document.getElementById('openSizeTable').addEventListener('click', () => {
+                    this.openModal('sizeTableModal');
+                });
+
+                document.getElementById('openCustomTable').addEventListener('click', () => {
+                    this.openModal('customTableModal');
+                });
+
+                // Modal events
+                this.bindModalEvents();
+
                 // Form submission
                 document.getElementById('productForm').addEventListener('submit', (e) => {
-                    this.handleFormSubmit(e);
+                    this.handleSubmit(e);
                 });
-
-                // Navigation buttons
-                document.getElementById('goToVariationsBtn').addEventListener('click', () => {
-                    this.goToVariations();
-                });
-
-                document.getElementById('backToStep1Btn').addEventListener('click', () => {
-                    this.backToStep1();
-                });
-
-                // Table management
-                this.initTableEvents();
             }
 
-            initTableEvents() {
-                // Size table events
-                document.getElementById('addSizeRowBtn').addEventListener('click', () => {
+            bindModalEvents() {
+                // Size table modal
+                document.getElementById('closeSizeModal').addEventListener('click', () => {
+                    this.closeModal('sizeTableModal');
+                });
+
+                document.getElementById('addSizeRow').addEventListener('click', () => {
                     this.addSizeRow();
                 });
 
-                document.getElementById('saveSizeTableBtn').addEventListener('click', () => {
+                document.getElementById('saveSizeTable').addEventListener('click', () => {
                     this.saveSizeTable();
                 });
 
-                document.querySelector('#sizeTable tbody').addEventListener('click', (e) => {
-                    if (e.target.classList.contains('remove-row-btn') && !e.target.disabled) {
+                // Custom table modal
+                document.getElementById('closeCustomModal').addEventListener('click', () => {
+                    this.closeModal('customTableModal');
+                });
+
+                document.getElementById('addCustomRow').addEventListener('click', () => {
+                    this.addCustomRow();
+                });
+
+                document.getElementById('saveCustomTable').addEventListener('click', () => {
+                    this.saveCustomTable();
+                });
+
+                // Table row removal
+                document.getElementById('sizeTable').addEventListener('click', (e) => {
+                    if (e.target.classList.contains('remove-btn') && !e.target.disabled) {
                         e.target.closest('tr').remove();
                     }
                 });
 
-                // Custom table events
-                document.getElementById('addCustomRowBtn').addEventListener('click', () => {
-                    this.addCustomRow();
-                });
-
-                document.getElementById('saveCustomTableBtn').addEventListener('click', () => {
-                    this.saveCustomTable();
-                });
-
-                document.querySelector('#customTable tbody').addEventListener('click', (e) => {
-                    if (e.target.classList.contains('remove-row-btn') && !e.target.disabled) {
+                document.getElementById('customTable').addEventListener('click', (e) => {
+                    if (e.target.classList.contains('remove-btn') && !e.target.disabled) {
                         e.target.closest('tr').remove();
                     }
                 });
             }
 
             initializeSearches() {
-                this.config.searchTypes.forEach(type => {
-                    const searchElement = document.getElementById(`${type}Search`);
-                    if (searchElement) {
-                        searchElement.addEventListener('input', () => {
-                            clearTimeout(this.searchTimeout);
-                            this.searchTimeout = setTimeout(() => {
-                                this.performSearch(type);
-                            }, 300);
-                        });
-                    }
+                const searchTypes = ['categorySearch', 'brandSearch', 'marketplaceSearch', 'colorSearch'];
+                
+                searchTypes.forEach(searchId => {
+                    const searchInput = document.getElementById(searchId);
+                    const type = searchId.replace('Search', '').replace('category', 'categories').replace('brand', 'brands').replace('marketplace', 'marketplaces').replace('color', 'colors');
+                    
+                    searchInput.addEventListener('input', () => {
+                        this.handleSearch(type, searchInput.value);
+                    });
                 });
             }
 
-            // Product Search Methods
+            // Product Search
             handleProductSearch(query) {
                 if (query.length < 2) {
-                    document.getElementById('productSearchResults').style.display = 'none';
+                    this.hideSearchResults('productSearchResults');
                     return;
                 }
 
-                clearTimeout(this.productSearchTimeout);
-                this.productSearchTimeout = setTimeout(() => {
-                    fetch(`/product/search-products?q=${encodeURIComponent(query)}`)
-                        .then(res => {
-                            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                            return res.json();
-                        })
-                        .then(data => {
-                            this.displayProductSearchResults(data.items || []);
-                        })
-                        .catch(err => {
-                            console.error('Product search error:', err);
-                            this.displayProductSearchResults([]);
-                        });
+                clearTimeout(this.searchTimeouts.product);
+                this.searchTimeouts.product = setTimeout(async () => {
+                    try {
+                        const response = await fetch(`/product/search-products?q=${encodeURIComponent(query)}`);
+                        const data = await response.json();
+                        this.displayProductResults(data.items || []);
+                    } catch (error) {
+                        console.error('Product search error:', error);
+                        this.displayProductResults([]);
+                    }
                 }, 300);
             }
 
-            displayProductSearchResults(items) {
+            displayProductResults(items) {
                 const resultsDiv = document.getElementById('productSearchResults');
-
-                if (!items || !Array.isArray(items) || items.length === 0) {
-                    resultsDiv.innerHTML = '<div style="padding: 1rem; text-align: center; color: #6c757d;">Ürün bulunamadı</div>';
-                    resultsDiv.style.display = 'block';
+                
+                if (!items.length) {
+                    resultsDiv.innerHTML = '<div class="search-result-item">Ürün bulunamadı</div>';
+                    this.showSearchResults('productSearchResults');
                     return;
                 }
 
-                resultsDiv.innerHTML = '';
-                items.forEach(item => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'search-result-item';
-                    itemDiv.innerHTML = `
-                        <div style="font-weight: 500;">${item.name}</div>
-                        <div style="font-size: 0.875rem; color: #6c757d;">${item.productIdentifier}</div>
-                        <div style="font-size: 0.75rem; color: #28a745;">
+                resultsDiv.innerHTML = items.map(item => `
+                    <div class="search-result-item" onclick="app.selectProduct(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+                        <div style="font-weight: 600;">${item.name}</div>
+                        <div style="font-size: 0.9rem; color: #666;">${item.productIdentifier}</div>
+                        <div style="font-size: 0.8rem; color: ${item.hasVariants ? '#28a745' : '#ffc107'};">
                             ${item.hasVariants ? '✅ Varyantları var' : '⚠️ Varyant yok'}
                         </div>
-                    `;
-                    itemDiv.addEventListener('click', () => {
-                        this.selectProductForEdit(item);
-                    });
-                    resultsDiv.appendChild(itemDiv);
-                });
-                resultsDiv.style.display = 'block';
+                    </div>
+                `).join('');
+
+                this.showSearchResults('productSearchResults');
             }
 
-            selectProductForEdit(product) {
-                this.selectedProduct = product;
-                this.isEditMode = true;
+            selectProduct(product) {
+                this.state.selectedProduct = product;
+                this.state.isEditMode = true;
 
-                document.getElementById('productSearchResults').style.display = 'none';
-                document.getElementById('productSearchInput').value = '';
+                this.hideSearchResults('productSearchResults');
+                document.getElementById('productSearch').value = '';
 
                 document.getElementById('selectedProductDetails').innerHTML = `
                     <strong>${product.name}</strong> (${product.productIdentifier})<br>
-                    <small style="color: #6c757d;">${product.description || 'Açıklama yok'}</small>
+                    <small style="color: #666;">${product.description || 'Açıklama yok'}</small>
                 `;
                 document.getElementById('selectedProductInfo').style.display = 'block';
                 document.getElementById('editingProductId').value = product.id;
 
-                this.fillFormWithProduct(product);
-                this.lockEditableFields();
+                this.fillForm(product);
+                this.lockFields();
+
+                document.getElementById('productForm').action = '{{ path('product_update') }}';
             }
 
-            clearSelectedProduct() {
-                this.selectedProduct = null;
-                this.isEditMode = false;
+            clearProduct() {
+                this.state.selectedProduct = null;
+                this.state.isEditMode = false;
+                this.state.selections = { categories: [], brands: [], marketplaces: [], colors: [] };
 
                 document.getElementById('selectedProductInfo').style.display = 'none';
                 document.getElementById('editingProductId').value = '';
                 document.getElementById('productForm').reset();
-                this.selectedItems = { colors: [], brands: [], marketplaces: [], categories: [] };
-
-                this.unlockEditableFields();
                 document.getElementById('productForm').action = '{{ path('product_create') }}';
 
-                // Clear previews
+                this.unlockFields();
+                this.clearPreviews();
+                this.updateAllSelections();
+            }
+
+            fillForm(product) {
+                // Basic info
+                document.getElementById('productName').value = product.name || '';
+                document.getElementById('productIdentifier').value = product.productIdentifier || '';
+                document.getElementById('productDescription').value = product.description || '';
+
+                // Selections
+                if (product.categoryId) {
+                    this.state.selections.categories = [{id: product.categoryId, name: product.categoryName}];
+                }
+                if (product.brands?.length) {
+                    this.state.selections.brands = product.brands;
+                }
+                if (product.marketplaces?.length) {
+                    this.state.selections.marketplaces = product.marketplaces;
+                }
+                if (product.variantColors?.length) {
+                    this.state.selections.colors = product.variantColors;
+                }
+
+                // Image
+                if (product.imagePath) {
+                    document.getElementById('imagePreview').innerHTML = `<img src="${product.imagePath}" alt="Product">`;
+                }
+
+                // Tables
+                if (product.sizeTable?.length) {
+                    this.populateSizeTable(product.sizeTable);
+                }
+                if (product.customTable) {
+                    this.populateCustomTable(product.customTable);
+                }
+
+                this.updateAllSelections();
+            }
+
+            lockFields() {
+                const identifier = document.getElementById('productIdentifier');
+                identifier.disabled = true;
+                identifier.style.background = '#f8f9fa';
+            }
+
+            unlockFields() {
+                const identifier = document.getElementById('productIdentifier');
+                identifier.disabled = false;
+                identifier.style.background = '';
+            }
+
+            clearPreviews() {
+                document.getElementById('imagePreview').innerHTML = '📷';
                 document.getElementById('sizeTablePreview').style.display = 'none';
                 document.getElementById('customTablePreview').style.display = 'none';
-                document.getElementById('imagePreview').innerHTML = '📷';
-
-                // Update selected items displays
-                this.config.searchTypes.forEach(type => {
-                    this.updateSelectedItems(type);
-                });
             }
 
-            fillFormWithProduct(product) {
-                try {
-                    // Basic information
-                    document.getElementById('productName').value = product.name || '';
-                    document.getElementById('productIdentifier').value = product.productIdentifier || '';
-                    document.getElementById('productDescription').value = product.description || '';
-
-                    // Category
-                    if (product.categoryId) {
-                        this.selectedItems.categories = [{id: product.categoryId, name: product.categoryName}];
-                        this.updateSelectedItems('categories');
-                    }
-
-                    // Brands
-                    if (product.brands && product.brands.length > 0) {
-                        this.selectedItems.brands = product.brands;
-                        this.updateSelectedItems('brands');
-                    }
-
-                    // Marketplaces
-                    if (product.marketplaces && product.marketplaces.length > 0) {
-                        this.selectedItems.marketplaces = product.marketplaces;
-                        this.updateSelectedItems('marketplaces');
-                    }
-
-                    // Colors from variants
-                    if (product.variantColors && product.variantColors.length > 0) {
-                        this.selectedItems.colors = product.variantColors;
-                        this.updateSelectedItems('colors');
-                    }
-
-                    // Image
-                    if (product.imagePath) {
-                        document.getElementById('imagePreview').innerHTML = `<img src="${product.imagePath}" alt="Product Image">`;
-                    }
-
-                    // Size table
-                    if (product.sizeTable && product.sizeTable.length > 0) {
-                        this.populateSizeTable(product.sizeTable);
-                    }
-
-                    // Custom table
-                    if (product.customTable) {
-                        this.populateCustomTable(product.customTable);
-                    }
-
-                    // Update form action
-                    document.getElementById('productForm').action = '{{ path('product_update') }}';
-                } catch (error) {
-                    console.error('Error filling form with product data:', error);
-                }
-            }
-
-            lockEditableFields() {
-                const identifierField = document.getElementById('productIdentifier');
-                identifierField.disabled = true;
-                identifierField.style.backgroundColor = '#f8f9fa';
-            }
-
-            unlockEditableFields() {
-                const identifierField = document.getElementById('productIdentifier');
-                identifierField.disabled = false;
-                identifierField.style.backgroundColor = '';
-            }
-
-            // Search Methods
-            async performSearch(type) {
-                const searchInput = document.getElementById(`${type}Search`);
-                if (!searchInput) return;
-
-                const query = searchInput.value.trim();
+            // Generic Search Handler
+            async handleSearch(type, query) {
                 if (query.length < 1) {
-                    document.getElementById(`${type}Results`).style.display = 'none';
+                    this.hideSearchResults(`${type.replace('s', '')}Results`);
                     return;
                 }
 
-                try {
-                    const response = await fetch(`/product/search/${type}?q=${encodeURIComponent(query)}`);
-                    const data = await response.json();
-                    this.displayResults(type, data.items);
-                } catch (error) {
-                    console.error(`${type} search error:`, error);
-                    this.displayResults(type, []);
-                }
+                clearTimeout(this.searchTimeouts[type]);
+                this.searchTimeouts[type] = setTimeout(async () => {
+                    try {
+                        const response = await fetch(`${this.config.searchEndpoints[type]}?q=${encodeURIComponent(query)}`);
+                        const data = await response.json();
+                        this.displaySearchResults(type, data.items || []);
+                    } catch (error) {
+                        console.error(`${type} search error:`, error);
+                        this.displaySearchResults(type, []);
+                    }
+                }, 300);
             }
 
-            displayResults(type, items) {
-                const resultsDiv = document.getElementById(`${type}Results`);
+            displaySearchResults(type, items) {
+                const resultType = type.replace('s', '');
+                const resultsDiv = document.getElementById(`${resultType}Results`);
                 
-                if (!items || items.length === 0) {
-                    resultsDiv.innerHTML = '<div style="padding: 1rem; text-align: center; color: #6c757d;">Sonuç bulunamadı</div>';
-                    resultsDiv.style.display = 'block';
+                if (!items.length) {
+                    resultsDiv.innerHTML = '<div class="search-result-item">Sonuç bulunamadı</div>';
+                    this.showSearchResults(`${resultType}Results`);
                     return;
                 }
 
-                resultsDiv.innerHTML = '';
-                items.forEach(item => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'search-result-item';
-                    itemDiv.innerHTML = `${this.config.icons[type] || '📋'} ${item.name}`;
-                    itemDiv.addEventListener('click', () => {
-                        this.addSelectedItem(type, item);
-                    });
-                    resultsDiv.appendChild(itemDiv);
-                });
-                resultsDiv.style.display = 'block';
+                resultsDiv.innerHTML = items.map(item => `
+                    <div class="search-result-item" onclick="app.addSelection('${type}', ${JSON.stringify(item).replace(/"/g, '&quot;')})">
+                        ${this.config.icons[type]} ${item.name}
+                    </div>
+                `).join('');
+
+                this.showSearchResults(`${resultType}Results`);
             }
 
-            addSelectedItem(type, item) {
-                const singleSelectTypes = ['categories'];
+            addSelection(type, item) {
+                const singleTypes = ['categories'];
                 
-                if (singleSelectTypes.includes(type)) {
-                    this.selectedItems[type] = [item];
+                if (singleTypes.includes(type)) {
+                    this.state.selections[type] = [item];
                 } else {
-                    if (this.selectedItems[type].some(selectedItem => selectedItem.id === item.id)) {
-                        return;
+                    if (!this.state.selections[type].some(sel => sel.id === item.id)) {
+                        this.state.selections[type].push(item);
                     }
-                    this.selectedItems[type].push(item);
                 }
 
-                this.updateSelectedItems(type);
-                document.getElementById(`${type}Search`).value = '';
-                document.getElementById(`${type}Results`).style.display = 'none';
+                this.updateSelectionDisplay(type);
+                this.hideSearchResults(`${type.replace('s', '')}Results`);
+                document.getElementById(`${type.replace('s', '')}Search`).value = '';
             }
 
-            updateSelectedItems(type) {
-                const selectedDiv = document.getElementById(`${type}Selected`);
-                const hiddenDiv = document.getElementById(`${type}Hidden`);
-                
-                if (!selectedDiv || !hiddenDiv) return;
+            removeSelection(type, itemId) {
+                this.state.selections[type] = this.state.selections[type].filter(item => item.id !== itemId);
+                this.updateSelectionDisplay(type);
+            }
 
-                if (this.selectedItems[type].length === 0) {
-                    selectedDiv.innerHTML = `<small style="color: #6c757d;">Seçilen ${this.config.labels[type] || type} burada görünecek...</small>`;
-                    hiddenDiv.innerHTML = '';
+            updateSelectionDisplay(type) {
+                const container = document.getElementById(`selected${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                const hiddenContainer = document.getElementById(`${type.replace('s', '')}Hidden`);
+                
+                if (!this.state.selections[type].length) {
+                    container.innerHTML = `<span class="empty-state">${this.getEmptyMessage(type)}</span>`;
+                    hiddenContainer.innerHTML = '';
                     return;
                 }
 
-                selectedDiv.innerHTML = this.selectedItems[type].map(item => {
-                    // Check if locked (for colors)
-                    let isLocked = false;
-                    if (type === 'colors' && this.selectedProduct && this.selectedProduct.usedColorIds) {
-                        isLocked = this.selectedProduct.usedColorIds.includes(item.id);
-                    }
-
+                container.innerHTML = this.state.selections[type].map(item => {
+                    const isLocked = this.isItemLocked(type, item);
                     return `
-                        <span class="selected-item-badge">
-                            ${this.config.icons[type] || '📋'} ${item.name}
-                            ${isLocked ? 
-                                '<span style="margin-left: 0.5rem; color: #ffc107;">🔒</span>' : 
-                                `<span onclick="productManager.removeSelectedItem('${type}', ${item.id})" 
-                                       style="margin-left: 0.5rem; cursor: pointer; font-weight: bold;">×</span>`
-                            }
+                        <span class="selected-item ${isLocked ? 'locked' : ''}">
+                            ${this.config.icons[type]} ${item.name}
+                            ${isLocked ? '🔒' : `<span class="remove-item" onclick="app.removeSelection('${type}', ${item.id})">×</span>`}
                         </span>
                     `;
                 }).join('');
 
-                hiddenDiv.innerHTML = this.selectedItems[type].map(item => 
-                    `<input type="hidden" name="${this.config.inputNames[type] || type + '[]'}" value="${item.id}">`
+                hiddenContainer.innerHTML = this.state.selections[type].map(item => 
+                    `<input type="hidden" name="${this.getInputName(type)}" value="${item.id}">`
                 ).join('');
             }
 
-            removeSelectedItem(type, itemId) {
-                this.selectedItems[type] = this.selectedItems[type].filter(item => item.id !== itemId);
-                this.updateSelectedItems(type);
+            updateAllSelections() {
+                Object.keys(this.state.selections).forEach(type => {
+                    this.updateSelectionDisplay(type);
+                });
+            }
+
+            isItemLocked(type, item) {
+                if (type === 'colors' && this.state.selectedProduct?.usedColorIds) {
+                    return this.state.selectedProduct.usedColorIds.includes(item.id);
+                }
+                return false;
+            }
+
+            getEmptyMessage(type) {
+                const messages = {
+                    categories: 'Kategori seçin...',
+                    brands: 'Marka seçin...',
+                    marketplaces: 'Pazaryeri seçin...',
+                    colors: 'Renk seçin...'
+                };
+                return messages[type];
+            }
+
+            getInputName(type) {
+                const names = {
+                    categories: 'productCategory',
+                    brands: 'brands[]',
+                    marketplaces: 'marketplaces[]',
+                    colors: 'colors[]'
+                };
+                return names[type];
+            }
+
+            // Utility Methods
+            showSearchResults(id) {
+                document.getElementById(id).style.display = 'block';
+            }
+
+            hideSearchResults(id) {
+                document.getElementById(id).style.display = 'none';
+            }
+
+            openModal(id) {
+                document.getElementById(id).classList.add('show');
+            }
+
+            closeModal(id) {
+                document.getElementById(id).classList.remove('show');
+            }
+
+            showLoading() {
+                document.getElementById('loading').classList.add('show');
+            }
+
+            hideLoading() {
+                document.getElementById('loading').classList.remove('show');
             }
 
             // Image Upload
@@ -1008,273 +1226,265 @@
             }
 
             // Color Management
-            addNewColor() {
-                const newColor = document.getElementById('newColorInput').value.trim();
-                if (!newColor) {
-                    alert('Lütfen bir renk girin.');
+            async addNewColor() {
+                const colorName = document.getElementById('newColorInput').value.trim();
+                if (!colorName) {
+                    alert('Lütfen bir renk adı girin.');
                     return;
                 }
 
-                fetch('/product/add-color', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({ name: newColor })
-                })
-                .then(response => response.json())
-                .then(data => {
+                try {
+                    const response = await fetch('/product/add-color', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ name: colorName })
+                    });
+
+                    const data = await response.json();
                     if (data.success) {
-                        this.addSelectedItem('colors', { id: data.id, name: newColor });
+                        this.addSelection('colors', { id: data.id, name: colorName });
                         document.getElementById('newColorInput').value = '';
                     } else {
                         alert(data.message || 'Renk eklenemedi.');
                     }
-                })
-                .catch(() => alert('Sunucu hatası!'));
+                } catch (error) {
+                    console.error('Color add error:', error);
+                    alert('Sunucu hatası!');
+                }
             }
 
             // Table Management
-            addSizeRow(values = {}) {
+            addSizeRow(data = {}) {
                 const tbody = document.querySelector('#sizeTable tbody');
-                const tr = document.createElement('tr');
-                const isLocked = values.locked || false;
-
-                if (isLocked) {
-                    tr.classList.add('locked-row');
-                }
-
-                tr.innerHTML = `
+                const isLocked = data.locked || false;
+                
+                const row = document.createElement('tr');
+                if (isLocked) row.classList.add('locked-row');
+                
+                row.innerHTML = `
                     <td data-label="Beden">
-                        <input type="text" class="form-control" value="${values.beden || ''}" 
-                               ${isLocked ? 'disabled' : ''} required>
+                        <input type="text" class="form-control" value="${data.beden || ''}" ${isLocked ? 'disabled' : ''} required>
                     </td>
                     <td data-label="En">
-                        <input type="number" class="form-control" value="${values.en || ''}" 
-                               step="any" required>
+                        <input type="number" class="form-control" value="${data.en || ''}" step="any" required>
                     </td>
                     <td data-label="Boy">
-                        <input type="number" class="form-control" value="${values.boy || ''}" 
-                               step="any" required>
+                        <input type="number" class="form-control" value="${data.boy || ''}" step="any" required>
                     </td>
                     <td data-label="Yükseklik">
-                        <input type="number" class="form-control" value="${values.yukseklik || ''}" 
-                               step="any" required>
+                        <input type="number" class="form-control" value="${data.yukseklik || ''}" step="any" required>
                     </td>
                     <td data-label="Birim">
                         <select class="form-control">
-                            <option value="cm" ${values.birim === 'cm' ? 'selected' : ''}>cm</option>
-                            <option value="mm" ${values.birim === 'mm' ? 'selected' : ''}>mm</option>
-                            <option value="m" ${values.birim === 'm' ? 'selected' : ''}>m</option>
+                            <option value="cm" ${data.birim === 'cm' ? 'selected' : ''}>cm</option>
+                            <option value="mm" ${data.birim === 'mm' ? 'selected' : ''}>mm</option>
+                            <option value="m" ${data.birim === 'm' ? 'selected' : ''}>m</option>
                         </select>
                     </td>
                     <td>
-                        <button type="button" class="btn ${isLocked ? 'btn-secondary locked-button' : 'btn-danger'} btn-sm remove-row-btn w-100" 
-                                ${isLocked ? 'disabled' : ''}>
-                            ${isLocked ? '🔒 Kilitli' : 'Sil'}
+                        <button type="button" class="btn ${isLocked ? 'btn-secondary' : 'btn-danger'} remove-btn" ${isLocked ? 'disabled' : ''}>
+                            ${isLocked ? '🔒' : '❌'}
                         </button>
                     </td>
                 `;
-
-                tbody.appendChild(tr);
-            }
-
-            populateSizeTable(sizeTable) {
-                const tbody = document.querySelector('#sizeTable tbody');
-                tbody.innerHTML = '';
-
-                sizeTable.forEach(row => {
-                    this.addSizeRow(row);
-                });
-
-                document.getElementById('sizeTableData').value = JSON.stringify(sizeTable);
-
-                // Show preview
-                const previewContainer = document.getElementById('sizeTablePreview');
-                let html = '<div class="table-responsive"><table class="table table-sm table-bordered">';
-                html += '<thead><tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th><th>Birim</th></tr></thead><tbody>';
-                sizeTable.forEach(row => {
-                    const lockedIcon = row.locked ? '🔒 ' : '';
-                    html += `<tr><td>${lockedIcon}${row.beden}</td><td>${row.en}</td><td>${row.boy}</td><td>${row.yukseklik}</td><td>${row.birim}</td></tr>`;
-                });
-                html += '</tbody></table></div>';
-                previewContainer.innerHTML = html;
-                previewContainer.style.display = 'block';
+                
+                tbody.appendChild(row);
             }
 
             saveSizeTable() {
                 const rows = [];
+                const tableRows = document.querySelectorAll('#sizeTable tbody tr');
+                
                 let isValid = true;
-
-                document.querySelectorAll('#sizeTable tbody tr').forEach(tr => {
+                tableRows.forEach(row => {
+                    const cells = row.querySelectorAll('input, select');
                     const rowData = {
-                        beden: tr.children[0].querySelector('input').value,
-                        en: tr.children[1].querySelector('input').value,
-                        boy: tr.children[2].querySelector('input').value,
-                        yukseklik: tr.children[3].querySelector('input').value,
-                        birim: tr.children[4].querySelector('select').value,
+                        beden: cells[0].value,
+                        en: cells[1].value,
+                        boy: cells[2].value,
+                        yukseklik: cells[3].value,
+                        birim: cells[4].value
                     };
-
+                    
                     if (!rowData.beden || !rowData.en || !rowData.boy || !rowData.yukseklik) {
                         isValid = false;
                     }
+                    
                     rows.push(rowData);
                 });
 
                 if (!isValid) {
-                    alert('Lütfen tablodaki tüm alanları doldurun.');
+                    alert('Lütfen tüm alanları doldurun.');
                     return;
                 }
 
                 document.getElementById('sizeTableData').value = JSON.stringify(rows);
+                this.updateSizeTablePreview(rows);
+                this.closeModal('sizeTableModal');
+            }
 
-                // Update preview
-                const previewContainer = document.getElementById('sizeTablePreview');
-                if (rows.length > 0) {
-                    let html = '<div class="table-responsive"><table class="table table-sm table-bordered">';
-                    html += '<thead><tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th><th>Birim</th></tr></thead><tbody>';
-                    rows.forEach(row => {
-                        html += `<tr><td>${row.beden}</td><td>${row.en}</td><td>${row.boy}</td><td>${row.yukseklik}</td><td>${row.birim}</td></tr>`;
-                    });
-                    html += '</tbody></table></div>';
-                    previewContainer.innerHTML = html;
-                    previewContainer.style.display = 'block';
-                } else {
-                    previewContainer.style.display = 'none';
-                    previewContainer.innerHTML = '';
+            updateSizeTablePreview(data) {
+                const preview = document.getElementById('sizeTablePreview');
+                if (!data.length) {
+                    preview.style.display = 'none';
+                    return;
                 }
 
-                const modal = bootstrap.Modal.getInstance(document.getElementById('sizeTableModal'));
-                modal.hide();
+                const html = `
+                    <table class="table">
+                        <thead>
+                            <tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th><th>Birim</th></tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(row => `
+                                <tr>
+                                    <td>${row.locked ? '🔒 ' : ''}${row.beden}</td>
+                                    <td>${row.en}</td>
+                                    <td>${row.boy}</td>
+                                    <td>${row.yukseklik}</td>
+                                    <td>${row.birim}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+                preview.innerHTML = html;
+                preview.style.display = 'block';
+            }
+
+            populateSizeTable(data) {
+                const tbody = document.querySelector('#sizeTable tbody');
+                tbody.innerHTML = '';
+                
+                data.forEach(row => this.addSizeRow(row));
+                document.getElementById('sizeTableData').value = JSON.stringify(data);
+                this.updateSizeTablePreview(data);
             }
 
             addCustomRow(value = '', locked = false) {
                 const tbody = document.querySelector('#customTable tbody');
-                const tr = document.createElement('tr');
-
-                if (locked) {
-                    tr.classList.add('locked-row');
-                }
-
-                tr.innerHTML = `
+                
+                const row = document.createElement('tr');
+                if (locked) row.classList.add('locked-row');
+                
+                row.innerHTML = `
                     <td data-label="Değer">
-                        <input type="text" class="form-control" value="${value}" 
-                               ${locked ? 'disabled' : ''} required>
+                        <input type="text" class="form-control" value="${value}" ${locked ? 'disabled' : ''} required>
                     </td>
                     <td>
-                        <button type="button" class="btn ${locked ? 'btn-secondary locked-button' : 'btn-danger'} btn-sm remove-row-btn" 
-                                ${locked ? 'disabled' : ''}>
-                            ${locked ? '🔒 Kilitli' : 'Sil'}
+                        <button type="button" class="btn ${locked ? 'btn-secondary' : 'btn-danger'} remove-btn" ${locked ? 'disabled' : ''}>
+                            ${locked ? '🔒' : '❌'}
                         </button>
                     </td>
                 `;
-
-                tbody.appendChild(tr);
-            }
-
-            populateCustomTable(customTable) {
-                if (customTable.title) {
-                    document.getElementById('customTableTitle').value = customTable.title;
-                }
-
-                if (customTable.rows && customTable.rows.length > 0) {
-                    const tbody = document.querySelector('#customTable tbody');
-                    tbody.innerHTML = '';
-                    customTable.rows.forEach(row => {
-                        this.addCustomRow(row.deger, row.locked);
-                    });
-                    document.getElementById('customTableData').value = JSON.stringify(customTable);
-
-                    // Show preview
-                    const previewContainer = document.getElementById('customTablePreview');
-                    let html = `<div class="table-responsive"><table class="table table-sm table-bordered">`;
-                    html += `<thead><tr><th>${customTable.title}</th></tr></thead><tbody>`;
-                    customTable.rows.forEach(row => {
-                        const lockedIcon = row.locked ? '🔒 ' : '';
-                        html += `<tr><td>${lockedIcon}${row.deger}</td></tr>`;
-                    });
-                    html += '</tbody></table></div>';
-                    previewContainer.innerHTML = html;
-                    previewContainer.style.display = 'block';
-                }
+                
+                tbody.appendChild(row);
             }
 
             saveCustomTable() {
-                const rows = [];
-                let isValid = true;
+                const title = document.getElementById('customTableTitle').value.trim();
+                if (!title) {
+                    alert('Lütfen tablo başlığını girin.');
+                    return;
+                }
 
-                document.querySelectorAll('#customTable tbody tr').forEach(tr => {
-                    const value = tr.children[0].querySelector('input').value;
+                const rows = [];
+                const tableRows = document.querySelectorAll('#customTable tbody tr');
+                
+                let isValid = true;
+                tableRows.forEach(row => {
+                    const input = row.querySelector('input');
+                    const value = input.value.trim();
+                    
                     if (!value) {
                         isValid = false;
                     }
+                    
                     rows.push({ deger: value });
                 });
 
                 if (!isValid) {
-                    alert('Lütfen tablodaki tüm değer alanlarını doldurun.');
+                    alert('Lütfen tüm değerleri doldurun.');
                     return;
                 }
 
-                const title = document.getElementById('customTableTitle').value.trim();
-                if (!title) {
-                    alert('Lütfen Custom Tablo için bir başlık girin.');
-                    return;
-                }
-
-                document.getElementById('customTableData').value = JSON.stringify({ title, rows });
-
-                // Update preview
-                const previewContainer = document.getElementById('customTablePreview');
-                if (rows.length > 0) {
-                    let html = `<div class="table-responsive"><table class="table table-sm table-bordered">`;
-                    html += `<thead><tr><th>${title}</th></tr></thead><tbody>`;
-                    rows.forEach(row => {
-                        html += `<tr><td>${row.deger}</td></tr>`;
-                    });
-                    html += '</tbody></table></div>';
-                    previewContainer.innerHTML = html;
-                    previewContainer.style.display = 'block';
-                } else {
-                    previewContainer.style.display = 'none';
-                    previewContainer.innerHTML = '';
-                }
-
-                const modal = bootstrap.Modal.getInstance(document.getElementById('customTableModal'));
-                modal.hide();
+                const tableData = { title, rows };
+                document.getElementById('customTableData').value = JSON.stringify(tableData);
+                this.updateCustomTablePreview(tableData);
+                this.closeModal('customTableModal');
             }
 
-            // Navigation Methods
-            goToVariations() {
-                if (!this.validateStep1()) {
+            updateCustomTablePreview(data) {
+                const preview = document.getElementById('customTablePreview');
+                if (!data.rows?.length) {
+                    preview.style.display = 'none';
                     return;
                 }
 
-                const variations = this.generateVariations();
-                const html = this.generateVariationTable(variations);
+                const html = `
+                    <table class="table">
+                        <thead>
+                            <tr><th>${data.title}</th></tr>
+                        </thead>
+                        <tbody>
+                            ${data.rows.map(row => `
+                                <tr>
+                                    <td>${row.locked ? '🔒 ' : ''}${row.deger}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+                preview.innerHTML = html;
+                preview.style.display = 'block';
+            }
 
-                document.getElementById('variationTableContainer').innerHTML = html;
+            populateCustomTable(data) {
+                if (data.title) {
+                    document.getElementById('customTableTitle').value = data.title;
+                }
+
+                if (data.rows?.length) {
+                    const tbody = document.querySelector('#customTable tbody');
+                    tbody.innerHTML = '';
+                    
+                    data.rows.forEach(row => this.addCustomRow(row.deger, row.locked));
+                    document.getElementById('customTableData').value = JSON.stringify(data);
+                    this.updateCustomTablePreview(data);
+                }
+            }
+
+            // Navigation
+            goToStep2() {
+                if (!this.validateStep1()) return;
+
+                const variations = this.generateVariations();
+                this.displayVariations(variations);
+                
                 document.getElementById('step1').style.display = 'none';
                 document.getElementById('step2').style.display = 'block';
             }
 
-            backToStep1() {
+            goToStep1() {
                 document.getElementById('step2').style.display = 'none';
                 document.getElementById('step1').style.display = 'block';
             }
 
             validateStep1() {
-                const step1 = document.getElementById('step1');
-                const requiredInputs = step1.querySelectorAll('input[required], textarea[required], select[required]');
+                const requiredFields = document.querySelectorAll('#step1 [required]');
                 let isValid = true;
 
-                requiredInputs.forEach(input => {
-                    if (!input.value.trim()) {
-                        input.classList.add('is-invalid');
+                requiredFields.forEach(field => {
+                    if (!field.value.trim()) {
+                        field.classList.add('is-invalid');
                         isValid = false;
                     } else {
-                        input.classList.remove('is-invalid');
+                        field.classList.remove('is-invalid');
                     }
                 });
 
@@ -1286,129 +1496,130 @@
             }
 
             generateVariations() {
-                const colors = this.selectedItems.colors.map(c => c.name);
-                const sizesData = JSON.parse(document.getElementById('sizeTableData').value || '[]');
-                const sizes = sizesData.map(s => s.beden);
-                let customs = [];
-
+                const colors = this.state.selections.colors.map(c => c.name);
+                const sizeData = JSON.parse(document.getElementById('sizeTableData').value || '[]');
+                const sizes = sizeData.map(s => s.beden);
+                
+                let customData = [];
                 try {
-                    const customData = JSON.parse(document.getElementById('customTableData').value || '{}');
-                    customs = (customData.rows || []).map(r => r.deger);
+                    const customTable = JSON.parse(document.getElementById('customTableData').value || '{}');
+                    customData = customTable.rows?.map(r => r.deger) || [];
                 } catch (e) {
-                    customs = [];
+                    customData = [];
                 }
 
-                const cartesianProduct = (arrays) => {
+                const cartesian = (arrays) => {
                     return arrays.reduce((a, b) => a.flatMap(d => b.map(e => [...(Array.isArray(d) ? d : [d]), e])));
                 };
 
-                let combos = cartesianProduct([colors, sizes]);
-                if (customs.length > 0) {
-                    combos = cartesianProduct([colors, sizes, customs]);
+                let combinations = cartesian([colors, sizes]);
+                if (customData.length) {
+                    combinations = cartesian([colors, sizes, customData]);
                 }
 
-                return combos.map((combo, index) => ({
+                return combinations.map((combo, index) => ({
                     index,
                     color: combo[0],
                     size: combo[1],
-                    custom: customs.length > 0 ? combo[2] : null,
-                    sizeDetails: sizesData.find(s => s.beden === combo[1])
+                    custom: customData.length ? combo[2] : null,
+                    sizeDetails: sizeData.find(s => s.beden === combo[1])
                 }));
             }
 
-            generateVariationTable(variations) {
+            displayVariations(variations) {
                 let html = '';
 
-                // Add warning for existing variants
-                if (this.selectedProduct && this.selectedProduct.hasVariants) {
+                if (this.state.selectedProduct?.hasVariants) {
                     html += `
                         <div class="alert alert-info">
                             💡 <strong>Bu üründe mevcut varyantlar var.</strong> 
-                            Sadece yeni varyant kombinasyonları seçebilirsiniz.
+                            Sadece yeni kombinasyonları seçebilirsiniz.
                         </div>
                     `;
                 }
 
-                html += '<table class="table table-bordered"><thead><tr>';
-                html += '<th>Seç</th><th>Renk</th><th>Beden</th>';
-                if (variations.some(v => v.custom)) html += '<th>Custom</th>';
-                html += '</tr></thead><tbody>';
+                html += `
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Seç</th>
+                                    <th>Renk</th>
+                                    <th>Beden</th>
+                                    ${variations.some(v => v.custom) ? '<th>Custom</th>' : ''}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${variations.map(variation => {
+                                    const exists = this.variationExists(variation);
+                                    const sizeLabel = this.formatSizeLabel(variation);
+                                    
+                                    return `
+                                        <tr ${exists ? 'class="locked-row"' : ''}>
+                                            <td>
+                                                ${exists ? 
+                                                    '<span style="color: var(--success-color); font-weight: 600;">✅ Mevcut</span>' : 
+                                                    `<input type="checkbox" class="variation-check" data-index="${variation.index}">`
+                                                }
+                                            </td>
+                                            <td>${variation.color}</td>
+                                            <td>${sizeLabel}</td>
+                                            ${variation.custom ? `<td>${variation.custom}</td>` : ''}
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
 
-                variations.forEach(variation => {
-                    const isExisting = this.isVariantExists(variation);
-                    const sizeLabel = this.formatSizeLabel(variation);
-
-                    html += `<tr ${isExisting ? 'class="locked-row"' : ''}>
-                        <td>
-                            ${isExisting ? 
-                                '<span style="color: #28a745; font-weight: bold;">✅ Mevcut</span>' : 
-                                `<input type="checkbox" class="variation-checkbox" data-index="${variation.index}">`
-                            }
-                        </td>
-                        <td>${variation.color}</td>
-                        <td>${sizeLabel}</td>`;
-                    if (variation.custom) html += `<td>${variation.custom}</td>`;
-                    html += '</tr>';
-                });
-
-                html += '</tbody></table>';
-                return html;
+                document.getElementById('variationTable').innerHTML = html;
             }
 
-            isVariantExists(variation) {
-                if (!this.selectedProduct || !this.selectedProduct.variants) return false;
-
-                return this.selectedProduct.variants.some(variant => {
-                    return variant.color === variation.color && 
-                           variant.size === variation.size && 
-                           (!variation.custom || variant.custom === variation.custom);
-                });
+            variationExists(variation) {
+                if (!this.state.selectedProduct?.variants) return false;
+                
+                return this.state.selectedProduct.variants.some(variant => 
+                    variant.color === variation.color && 
+                    variant.size === variation.size && 
+                    (!variation.custom || variant.custom === variation.custom)
+                );
             }
 
             formatSizeLabel(variation) {
                 let label = variation.size;
                 if (variation.sizeDetails) {
                     const { en, boy, yukseklik, birim } = variation.sizeDetails;
-                    label += ` (En: ${en}, Boy: ${boy}, Yükseklik: ${yukseklik}, ${birim})`;
+                    label += ` (${en}×${boy}×${yukseklik} ${birim})`;
                 }
                 return label;
             }
 
             // Form Submission
-            handleFormSubmit(event) {
+            handleSubmit(event) {
                 this.showLoading();
 
                 // Collect selected variations
                 const selectedVariations = [];
-                document.querySelectorAll('.variation-checkbox:checked').forEach(checkbox => {
+                document.querySelectorAll('.variation-check:checked').forEach(checkbox => {
                     const row = checkbox.closest('tr');
-                    const cells = row.querySelectorAll('td');
+                    const cells = row.cells;
                     
-                    const variation = {
+                    selectedVariations.push({
                         renk: cells[1].textContent,
-                        beden: cells[2].textContent.split(' (')[0], // Remove size details
+                        beden: cells[2].textContent.split(' (')[0],
                         custom: cells.length > 3 ? cells[3].textContent : null
-                    };
-                    
-                    selectedVariations.push(variation);
+                    });
                 });
 
-                document.getElementById('variationsData').value = JSON.stringify(selectedVariations);
-            }
-
-            showLoading() {
-                document.getElementById('loadingOverlay').style.display = 'flex';
-            }
-
-            hideLoading() {
-                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('variationData').value = JSON.stringify(selectedVariations);
             }
         }
 
-        // Initialize the application
-        const productManager = new ProductManager();
-
-        // Global functions for onclick handlers
-        window.productManager = productManager;
+        // Initialize Application
+        const app = new ProductApp();
+        
+        // Global access for onclick handlers
+        window.app = app;
     </script>
 {% endblock %}
