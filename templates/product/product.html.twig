@@ -789,7 +789,7 @@
             identifierField.style.cursor = 'not-allowed';
             
             document.getElementById('imageInput').removeAttribute('required');
-            document.getElementById('productForm').action = '{{ path('product_update') }}';
+            document.getElementById('productForm').action = '{{ path('product_create') }}';
             document.getElementById('submitBtn').textContent = '💾 Ürünü Güncelle';
         }
 
