@@ -716,16 +716,24 @@
             if (product.customTable && product.customTable.rows && product.customTable.rows.length > 0) {
                 populateCustomTable(product.customTable, product.usedCustoms || []);
             }
-           if (product.variants && product.variants.length > 0) {
+            if (product.variants && product.variants.length > 0) {
                 lockedVariants = product.variants.map(v => {
-                    console.log('Processing variant:', v); // Debug individual variant
+                    console.log('Processing variant:', v);
+                    let sizeValue = v.size || v.sizeName || v.beden;
+                    if (sizeValue && product.sizeTable) {
+                        const sizeObj = product.sizeTable.find(s => s.beden === sizeValue);
+                        if (sizeObj) {
+                            sizeValue = `${sizeObj.beden} (En: ${sizeObj.en}, Boy: ${sizeObj.boy}, Yükseklik: ${sizeObj.yukseklik}, ${sizeObj.birim})`;
+                        }
+                    }
                     return {
                         color: v.color || v.colorName || v.renk || v.productVariantColor?.name,
-                        size: v.size || v.sizeName || v.beden || v.productVariantSize?.beden,
+                        size: sizeValue, 
                         custom: v.custom || v.customName || v.customValue || v.productVariantCustom?.deger
                     };
                 });
-                console.log('Mapped locked variants:', lockedVariants);
+                console.log('Mapped locked variants (with full size format):', lockedVariants);
+                
                 if (product.variantColors && product.variantColors.length > 0) {
                     updateSelectedItems('colors');
                 }
@@ -1094,6 +1102,7 @@
                 customs = (customData.rows || []).map(r => r.deger);
             } catch {}
 
+            // DEBUG: Veri kaynaklarını ve tiplerini kontrol et
             console.log("--- VARIANT MATRIX DATA ---");
             console.log("Kilitlenecek Varyantlar (lockedVariants):", JSON.parse(JSON.stringify(lockedVariants)));
             console.log("Matris Renkleri:", colors);
@@ -1102,11 +1111,13 @@
             console.log("--------------------------");
 
             function cartesianProduct(arrays) {
+                // Boş array'leri filtrele
                 const filteredArrays = arrays.filter(arr => arr && arr.length > 0);
                 if (filteredArrays.length === 0) return [];
                 return filteredArrays.reduce((a, b) => a.flatMap(d => b.map(e => [...(Array.isArray(d) ? d : [d]), e])));
             }
 
+            // Renk ve Beden zorunlu olduğu için, eğer boşlarsa matris oluşturma.
             if (colors.length === 0 || sizes.length === 0) {
                 document.getElementById('variationTableContainer').innerHTML = '<div class="alert alert-warning">Varyasyon matrisini oluşturmak için lütfen en az bir Renk ve bir Beden seçin.</div>';
                 return;
@@ -1116,6 +1127,7 @@
             if (customs.length > 0) {
                 combos = cartesianProduct([colors, sizes, customs]);
             } else {
+                // Custom yoksa, her kombinasyona null ekle
                 combos = cartesianProduct([colors, sizes]).map(item => [...item, null]);
             }
 
@@ -1127,29 +1139,26 @@
             combos.forEach((combo, i) => {
                 const color = combo[0];
                 const size = combo[1];
-                const custom = combo[2];
+                const custom = combo[2]; // Artık her zaman bir değere sahip (string veya null)
                 
-                console.log(`\n=== COMBO ${i}: ${color}-${size}-${custom} ===`);
-                
-                // DÜZELTME: Basit ve kesin eşleştirme
+                // --- KESİN EŞLEŞTİRME MANTIĞI ---
                 const isLocked = lockedVariants.some(v => {
-                    console.log(`Checking against locked variant: color='${v.color}', size='${v.size}', custom='${v.custom}'`);
-                    
-                    const colorMatch = (v.color === color);
-                    const sizeMatch = (v.size === size);
-                    const customMatch = (v.custom === custom);
-                    
-                    console.log(`  colorMatch: ${colorMatch} (${v.color} === ${color})`);
-                    console.log(`  sizeMatch: ${sizeMatch} (${v.size} === ${size})`);
-                    console.log(`  customMatch: ${customMatch} (${v.custom} === ${custom})`);
-                    
-                    const result = colorMatch && sizeMatch && customMatch;
-                    console.log(`  FINAL RESULT: ${result}`);
-                    
-                    return result;
-                });
+                    // Verileri standartlaştır: string'e çevir, trim'le, null ise null kalsın
+                    const v_color = v.color ? String(v.color).trim() : null;
+                    const v_size = v.size ? String(v.size).trim() : null;
+                    const v_custom = v.custom ? String(v.custom).trim() : null;
 
-                console.log(`LOCKED STATUS FOR ${color}-${size}-${custom}: ${isLocked}`);
+                    const combo_color = color ? String(color).trim() : null;
+                    const combo_size = size ? String(size).trim() : null;
+                    const combo_custom = custom ? String(custom).trim() : null;
+
+                    // Eşleşmeyi kontrol et
+                    const colorMatch = (v_color === combo_color);
+                    const sizeMatch = (v_size === combo_size);
+                    const customMatch = (v_custom === combo_custom); // İkisi de null ise true döner
+
+                    return colorMatch && sizeMatch && customMatch;
+                });
 
                 const sizeObj = sizesData.find(s => s.beden === size);
                 let sizeLabel = size;
@@ -1160,8 +1169,6 @@
                 const rowClass = isLocked ? 'variant-locked' : '';
                 const lockIcon = isLocked ? '🔒 ' : '';
                 const checkboxAttributes = isLocked ? 'disabled checked' : '';
-
-                console.log(`HTML attributes: rowClass='${rowClass}', checkboxAttributes='${checkboxAttributes}'`);
 
                 html += `<tr class="${rowClass}">
                     <td>
@@ -1178,7 +1185,6 @@
             });
 
             html += '</tbody></table>';
-            console.log('Final generated HTML:', html);
             document.getElementById('variationTableContainer').innerHTML = html;
         }
 
