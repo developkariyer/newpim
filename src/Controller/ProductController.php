@@ -75,16 +75,59 @@ class ProductController extends AbstractController
         if (strlen($query) < 2) {
             return new JsonResponse(['items' => []]);
         }
-        
         $listing = new ProductListing();
         $listing->setCondition('productIdentifier LIKE ? OR name LIKE ?', ["%$query%", "%$query%"]);
         $listing->setLimit(1);
-        
         $product = $listing->current(); 
         
         if (!$product) {
             return new JsonResponse(['items' => []]);
         }
+        $variants = [];
+        $variantColors = [];
+        $hasVariants = $product->hasChildren();
+        
+        if ($hasVariants) {
+            $variantListing = new ProductListing();
+            $variantListing->setCondition('o_parentId = ?', [$product->getId()]);
+            foreach ($variantListing as $variant) {
+                $variants[] = [
+                    'id' => $variant->getId(),
+                    'name' => $variant->getName(),
+                    'color' => $variant->getVariationColor() ? $variant->getVariationColor()->getColor() : null,
+                    'colorId' => $variant->getVariationColor() ? $variant->getVariationColor()->getId() : null,
+                    'size' => $variant->getVariationSize(),
+                    'custom' => $variant->getCustomField(),
+                ];
+                
+                if ($variant->getVariationColor()) {
+                    $variantColors[] = [
+                        'id' => $variant->getVariationColor()->getId(),
+                        'name' => $variant->getVariationColor()->getColor()
+                    ];
+                }
+            }
+        }
+        $brands = [];
+        if ($product->getBrandItems()) {
+            foreach ($product->getBrandItems() as $brand) {
+                $brands[] = [
+                    'id' => $brand->getId(),
+                    'name' => $brand->getKey()
+                ];
+            }
+        }
+        $marketplaces = [];
+        if ($product->getMarketplaces()) {
+            foreach ($product->getMarketplaces() as $marketplace) {
+                $marketplaces[] = [
+                    'id' => $marketplace->getId(),
+                    'name' => $marketplace->getKey()
+                ];
+            }
+        }
+        $sizeTable = $product->getVariationSizeTable() ?: [];
+        $customTable = $product->getCustomFieldTable() ?: [];
         
         $item = [
             'id' => $product->getId(),
@@ -94,10 +137,18 @@ class ProductController extends AbstractController
             'categoryId' => $product->getProductCategory() ? $product->getProductCategory()->getId() : null,
             'categoryName' => $product->getProductCategory() ? $product->getProductCategory()->getKey() : null,
             'brandIds' => array_map(fn($brand) => $brand->getId(), $product->getBrandItems() ?: []),
+            'brands' => $brands,
             'marketplaceIds' => array_map(fn($mp) => $mp->getId(), $product->getMarketplaces() ?: []),
-            'colorIds' => array_map(fn($color) => $color->getId(), $product->getVariationColor() ?: []),
+            'marketplaces' => $marketplaces,
             'imagePath' => $product->getImage() ? $product->getImage()->getFullPath() : null,
-            'hasVariants' => $product->hasChildren(),
+            'hasVariants' => $hasVariants,
+            'variants' => $variants,
+            'variantColors' => array_unique($variantColors, SORT_REGULAR), 
+            'sizeTable' => $sizeTable, 
+            'customTable' => $customTable, 
+            'canEditSizeTable' => !$hasVariants, 
+            'canEditColors' => true,
+            'canEditCustomTable' => !$hasVariants,
         ];
         
         return new JsonResponse(['items' => [$item]]);
