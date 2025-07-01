@@ -765,39 +765,29 @@
         function populateCustomTable(customTable, usedCustoms = []) {
             console.log('populateCustomTable called with:', customTable, usedCustoms);
             
-            const customTitleElement = document.getElementById('customTitle'); // customTitle değil customTableTitle
-            if (!customTitleElement) {
-                console.error('customTableTitle element bulunamadı!');
-            } else {
+            // DÜZELTME: Doğru ID kullan
+            const customTitleElement = document.getElementById('customTableTitle');
+            if (customTitleElement) {
                 customTitleElement.value = customTable.title || '';
             }
             
-            // DÜZELTME: usedCustoms'ı array'e çevir
             const usedCustomsArray = Array.isArray(usedCustoms) ? usedCustoms : Object.values(usedCustoms || {});
             
             const tbody = document.querySelector('#customTable tbody');
-            if (!tbody) {
-                console.error('customTable tbody bulunamadı!');
-                return;
-            }
+            if (!tbody) return;
             
             tbody.innerHTML = '';
             
             if (customTable.rows && customTable.rows.length > 0) {
                 customTable.rows.forEach(row => {
                     const customValue = row.deger || '';
-                    // Array metodu kullan
                     const isLocked = usedCustomsArray.includes(customValue);
-                    console.log(`Custom ${customValue} locked: ${isLocked}`);
                     addCustomRow(row, isLocked);
                 });
             }
             
-            // GÜVENLE KONTROL: Element var mı?
             const customTableDataElement = document.getElementById('customTableData');
-            if (!customTableDataElement) {
-                console.error('customTableData element bulunamadı!');
-            } else {
+            if (customTableDataElement) {
                 customTableDataElement.value = JSON.stringify(customTable);
             }
             
@@ -1051,7 +1041,7 @@
                 return;
             }
 
-            const title = document.getElementById('customTableTitle').value.trim();
+            const title = document.getElementById('customTableTitle').value.trim(); // DÜZELTME: Doğru ID
             if (!title) {
                 alert('Lütfen Custom Tablo için bir başlık girin.');
                 return;
@@ -1128,12 +1118,7 @@
                 console.log('Custom data structure:', customData); // Debug
                 
                 if (customData.rows && customData.rows.length > 0) {
-                    customData.rows.forEach(row => {
-                        const value = row.deger || '';
-                        if (value && value.trim() !== '') {
-                            customs.push(value);
-                        }
-                    });
+                    customs = customData.rows.map(row => row.deger).filter(value => value && value.trim() !== '');
                 }
             } catch {}
 
