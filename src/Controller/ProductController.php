@@ -205,6 +205,118 @@ class ProductController extends AbstractController
         
     }
 
+    #[Route('/product/update', name: 'product_update', methods: ['POST'])]
+    public function update(Request $request): Response
+    {
+        $editingProductId = $request->get('editingProductId');
+        if (!$editingProductId) {
+            $this->addFlash('danger', 'Güncellenecek ürün ID\'si bulunamadı.');
+            return $this->redirectToRoute('product');
+        }
+        
+        $product = Product::getById($editingProductId);
+        if (!$product) {
+            $this->addFlash('danger', 'Güncellenecek ürün bulunamadı.');
+            return $this->redirectToRoute('product');
+        }
+        
+        try {
+            // Sadece izin verilen alanları güncelle
+            $productName = $request->get('productName');
+            $productDescription = $request->get('productDescription');
+            $imageFile = $request->files->get('productImage');
+            $categoryId = $request->get('productCategory');
+            $brandIds = $request->get('brands', []);
+            $marketplaceIds = $request->get('marketplaces', []);
+            $colorIds = $request->get('colors', []);
+            
+            // Validation
+            $errors = [];
+            $category = $this->validateSingleObject('category', $categoryId, $errors, 'Kategori');
+            $brands = $this->validateMultipleObjects('brand', $brandIds, $errors, 'Marka');
+            $marketplaces = $this->validateMultipleObjects('marketplace', $marketplaceIds, $errors, 'Pazaryeri');
+            $colors = $this->validateMultipleObjects('color', $colorIds, $errors, 'Renk');
+            
+            if (!empty($errors)) {
+                foreach ($errors as $error) {
+                    $this->addFlash('danger', $error);
+                }
+                return $this->redirectToRoute('product');
+            }
+            
+            // Ürün bilgilerini güncelle
+            if ($productName) {
+                $product->setName($productName);
+            }
+            if ($productDescription) {
+                $product->setDescription($productDescription);
+            }
+            
+            // Kategori güncelle
+            if ($category) {
+                $product->setProductCategory($category);
+            }
+            
+            // Markalar güncelle
+            if (!empty($brands)) {
+                $product->setBrandItems($brands);
+            }
+            
+            // Pazaryerleri güncelle
+            if (!empty($marketplaces)) {
+                $product->setMarketplaces($marketplaces);
+            }
+            
+            // Renkler güncelle
+            if (!empty($colors)) {
+                $product->setVariationColor($colors);
+            }
+            
+            // Resim güncelle (eğer yeni resim yüklendiyse)
+            if ($imageFile && $imageFile->isValid()) {
+                $imageAsset = $this->uploadProductImage($imageFile, $product->getProductIdentifier());
+                if ($imageAsset) {
+                    $product->setImage($imageAsset);
+                }
+            }
+            
+            // Tablolar güncelle
+            $sizeTableData = $request->get('sizeTableData');
+            if ($sizeTableData) {
+                $variationSizeTable = json_decode($sizeTableData, true);
+                if (is_array($variationSizeTable)) {
+                    $product->setVariationSizeTable($variationSizeTable);
+                }
+            }
+            
+            $customTableData = $request->get('customTableData');
+            if ($customTableData) {
+                $customFieldTable = json_decode($customTableData, true);
+                if (is_array($customFieldTable)) {
+                    $product->setCustomFieldTable($customFieldTable);
+                }
+            }
+            
+            // Yeni varyantlar ekle (eğer varsa ve daha önce varyant yoksa)
+            $variations = $request->get('variationsData');
+            if ($variations && !$product->hasChildren()) {
+                $variations = json_decode($variations, true);
+                if (is_array($variations) && count($variations) > 0) {
+                    $this->addProductVariants($product, $variations);
+                }
+            }
+            
+            $product->save();
+            
+            $this->addFlash('success', 'Ürün başarıyla güncellendi.');
+            return $this->redirectToRoute('product');
+            
+        } catch (\Throwable $e) {
+            $this->addFlash('danger', 'Ürün güncellenirken bir hata oluştu: ' . $e->getMessage());
+            return $this->redirectToRoute('product');
+        }
+    }
+
     private function addProductVariants(Product $parentProduct, array $variations): void
     {
         foreach ($variations as $variantData) {
