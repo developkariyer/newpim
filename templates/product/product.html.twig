@@ -721,60 +721,6 @@
         ).join('');
     }
 
-    function addSizeRow(values = {}) {
-        const tbody = document.querySelector('#sizeTable tbody');
-        const tr = document.createElement('tr');
-        const isLocked = values.locked || false;
-        
-        tr.innerHTML = `
-            <td data-label="Beden"><input type="text" class="form-control" value="${values.beden || ''}" ${isLocked ? 'disabled' : ''} required></td>
-            <td data-label="En"><input type="number" class="form-control" value="${values.en || ''}" step="any" required></td>
-            <td data-label="Boy"><input type="number" class="form-control" value="${values.boy || ''}" step="any" required></td>
-            <td data-label="Yükseklik"><input type="number" class="form-control" value="${values.yukseklik || ''}" step="any" required></td>
-            <td data-label="Birim">
-                <select class="form-select">
-                    <option value="cm" ${values.birim === 'cm' ? 'selected' : ''}>cm</option>
-                    <option value="mm" ${values.birim === 'mm' ? 'selected' : ''}>mm</option>
-                    <option value="m" ${values.birim === 'm' ? 'selected' : ''}>m</option>
-                </select>
-            </td>
-            <td>
-                <button type="button" class="btn ${isLocked ? 'btn-secondary' : 'btn-danger'} btn-sm remove-row-btn w-100" ${isLocked ? 'disabled' : ''}>
-                    ${isLocked ? '🔒 Kilitli' : 'Sil'}
-                </button>
-            </td>
-        `;
-        
-        if (isLocked) {
-            tr.style.backgroundColor = '#f8f9fa';
-            tr.style.opacity = '0.7';
-        }
-        
-        tbody.appendChild(tr);
-    }
-
-    function addCustomRow(value = '', locked = false) {
-        const tbody = document.querySelector('#customTable tbody');
-        const tr = document.createElement('tr');
-        
-        tr.innerHTML = `
-            <td data-label="Değer"><input type="text" class="form-control" value="${value}" ${locked ? 'disabled' : ''} required></td>
-            <td>
-                <button type="button" class="btn ${locked ? 'btn-secondary' : 'btn-danger'} btn-sm remove-row-btn" ${locked ? 'disabled' : ''}>
-                    ${locked ? '🔒 Kilitli' : 'Sil'}
-                </button>
-            </td>
-        `;
-        
-        if (locked) {
-            tr.style.backgroundColor = '#f8f9fa';
-            tr.style.opacity = '0.7';
-        }
-        
-        tbody.appendChild(tr);
-    }
-
-
 // edit end
     let searchTimeout;
     let selectedItems = {
@@ -1119,17 +1065,6 @@
         var modal = bootstrap.Modal.getInstance(document.getElementById('sizeTableModal'));
         modal.hide();
     });
-    
-    // Custom Table Functions
-    function addCustomRow(value = '') {
-        const tbody = document.querySelector('#customTable tbody');
-        const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td data-label="Değer"><input type="text" class="form-control" value="${value}" required></td>
-                <td><button type="button" class="btn btn-danger btn-sm remove-row-btn">Sil</button></td>
-            `;
-            tbody.appendChild(tr);
-    }
 
     document.getElementById('addCustomRowBtn').addEventListener('click', function() {
         addCustomRow();
