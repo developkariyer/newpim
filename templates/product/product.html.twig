@@ -332,6 +332,63 @@
                 display: none;
             }
         }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1050;
+        }
+
+        .modal[style*="block"] {
+            display: flex !important;
+        }
+
+        .modal-dialog {
+            max-width: 90%;
+            width: 800px;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
     </style>
 {% endblock %}
 
@@ -492,7 +549,7 @@
                     <div class="form-group">
                         <label for="sizeTableBtn">Beden Tablosu *</label>
                         <button type="button" class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2"
-                                id="sizeTableBtn" data-bs-toggle="modal" data-bs-target="#sizeTableModal"
+                                id="sizeTableBtn"
                                 style="font-size:1.1rem; font-weight:500;">
                             <span style="font-size:1.5rem; margin-right:0.5rem;">📏</span> Beden Tablosu Oluştur/Düzenle
                         </button>
@@ -505,7 +562,7 @@
                         <input type="text" id="customTableTitle" class="form-control mb-2" 
                                placeholder="Tablo başlığı (ör: Malzeme İçeriği)">
                         <button type="button" class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2"
-                                id="customTableBtn" data-bs-toggle="modal" data-bs-target="#customTableModal"
+                                id="customTableBtn"
                                 style="font-size:1.1rem; font-weight:500;">
                             <span style="font-size:1.5rem; margin-right:0.5rem;">⚙️</span> Custom Tablo Oluştur/Düzenle
                         </button>
@@ -563,7 +620,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                        <button type="button" class="btn btn-secondary" id="closeSizeTableModal">Kapat</button>
                         <button type="button" class="btn btn-success" id="addSizeRowBtn">+ Satır Ekle</button>
                         <button type="button" class="btn btn-primary" id="saveSizeTableBtn">Kaydet</button>
                     </div>
@@ -597,7 +654,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                        <button type="button" class="btn btn-secondary" id="closeCustomTableModal">Kapat</button>
                         <button type="button" class="btn btn-success" id="addCustomRowBtn">+ Satır Ekle</button>
                         <button type="button" class="btn btn-primary" id="saveCustomTableBtn">Kaydet</button>
                     </div>
@@ -649,6 +706,39 @@
             init() {
                 this.bindEvents();
                 this.initializeSearches();
+                
+                // Load existing table data if available (for edit mode)
+                this.loadExistingTableData();
+            }
+            
+            loadExistingTableData() {
+                // Check for existing size table data
+                const sizeTableData = document.getElementById('sizeTableData').value;
+                if (sizeTableData && sizeTableData.trim() !== '') {
+                    try {
+                        const sizeTable = JSON.parse(sizeTableData);
+                        if (sizeTable && sizeTable.length > 0) {
+                            console.log('Loading existing size table data on init:', sizeTable);
+                            this.updateSizeTablePreview(sizeTable);
+                        }
+                    } catch (e) {
+                        console.error('Error parsing existing size table data on init:', e);
+                    }
+                }
+
+                // Check for existing custom table data
+                const customTableData = document.getElementById('customTableData').value;
+                if (customTableData && customTableData.trim() !== '') {
+                    try {
+                        const customTable = JSON.parse(customTableData);
+                        if (customTable && (customTable.rows || customTable.title)) {
+                            console.log('Loading existing custom table data on init:', customTable);
+                            this.updateCustomTablePreview(customTable);
+                        }
+                    } catch (e) {
+                        console.error('Error parsing existing custom table data on init:', e);
+                    }
+                }
             }
 
             bindEvents() {
@@ -684,6 +774,50 @@
 
                 document.getElementById('backToStep1Btn').addEventListener('click', () => {
                     this.backToStep1();
+                });
+
+                // Size table modal
+                document.getElementById('sizeTableBtn').addEventListener('click', () => {
+                    document.getElementById('sizeTableModal').style.display = 'block';
+                    
+                    // Load existing data when modal opens
+                    const existingData = document.getElementById('sizeTableData').value;
+                    if (existingData) {
+                        try {
+                            const sizeTable = JSON.parse(existingData);
+                            if (sizeTable && sizeTable.length > 0) {
+                                this.populateSizeTable(sizeTable);
+                            }
+                        } catch (e) {
+                            console.error('Error parsing existing size table data:', e);
+                        }
+                    }
+                });
+
+                document.getElementById('closeSizeTableModal').addEventListener('click', () => {
+                    document.getElementById('sizeTableModal').style.display = 'none';
+                });
+
+                // Custom table modal
+                document.getElementById('customTableBtn').addEventListener('click', () => {
+                    document.getElementById('customTableModal').style.display = 'block';
+                    
+                    // Load existing data when modal opens
+                    const existingData = document.getElementById('customTableData').value;
+                    if (existingData) {
+                        try {
+                            const customTable = JSON.parse(existingData);
+                            if (customTable) {
+                                this.populateCustomTable(customTable);
+                            }
+                        } catch (e) {
+                            console.error('Error parsing existing custom table data:', e);
+                        }
+                    }
+                });
+
+                document.getElementById('closeCustomTableModal').addEventListener('click', () => {
+                    document.getElementById('customTableModal').style.display = 'none';
                 });
 
                 // Table management
@@ -818,6 +952,27 @@
                 this.unlockEditableFields();
                 document.getElementById('productForm').action = '{{ path('product_create') }}';
 
+                // Clear table data
+                document.getElementById('sizeTableData').value = '';
+                document.getElementById('customTableData').value = '';
+                
+                // Clear table bodies
+                const sizeTableBody = document.querySelector('#sizeTable tbody');
+                if (sizeTableBody) {
+                    sizeTableBody.innerHTML = '';
+                }
+                
+                const customTableBody = document.querySelector('#customTable tbody');
+                if (customTableBody) {
+                    customTableBody.innerHTML = '';
+                }
+                
+                // Clear custom table title
+                const customTableTitle = document.getElementById('customTableTitle');
+                if (customTableTitle) {
+                    customTableTitle.value = '';
+                }
+
                 // Clear previews
                 document.getElementById('sizeTablePreview').style.display = 'none';
                 document.getElementById('customTablePreview').style.display = 'none';
@@ -867,12 +1022,24 @@
 
                     // Size table
                     if (product.sizeTable && product.sizeTable.length > 0) {
+                        console.log('Loading size table:', product.sizeTable);
+                        // Save to hidden input first
+                        document.getElementById('sizeTableData').value = JSON.stringify(product.sizeTable);
+                        // Then populate the table
                         this.populateSizeTable(product.sizeTable);
+                    } else {
+                        console.log('No size table data found in product');
                     }
 
                     // Custom table
                     if (product.customTable) {
+                        console.log('Loading custom table:', product.customTable);
+                        // Save to hidden input first
+                        document.getElementById('customTableData').value = JSON.stringify(product.customTable);
+                        // Then populate the table
                         this.populateCustomTable(product.customTable);
+                    } else {
+                        console.log('No custom table data found in product');
                     }
 
                     // Update form action
@@ -1038,6 +1205,11 @@
             // Table Management
             addSizeRow(values = {}) {
                 const tbody = document.querySelector('#sizeTable tbody');
+                if (!tbody) {
+                    console.error('Size table tbody not found when adding row');
+                    return;
+                }
+                
                 const tr = document.createElement('tr');
                 const isLocked = values.locked || false;
 
@@ -1078,25 +1250,63 @@
                 `;
 
                 tbody.appendChild(tr);
+                
+                // Add remove event listener for non-locked rows
+                if (!isLocked) {
+                    const removeBtn = tr.querySelector('.remove-row-btn');
+                    if (removeBtn) {
+                        removeBtn.addEventListener('click', () => {
+                            tr.remove();
+                        });
+                    }
+                }
             }
 
             populateSizeTable(sizeTable) {
+                console.log('populateSizeTable called with:', sizeTable);
+                
+                if (!sizeTable || !Array.isArray(sizeTable) || sizeTable.length === 0) {
+                    console.log('No size table data to populate');
+                    return;
+                }
+
+                // Clear existing rows
                 const tbody = document.querySelector('#sizeTable tbody');
+                if (!tbody) {
+                    console.error('Size table tbody not found');
+                    return;
+                }
+                
                 tbody.innerHTML = '';
 
-                sizeTable.forEach(row => {
+                // Add each row with proper data
+                sizeTable.forEach((row, index) => {
+                    console.log(`Adding size row ${index}:`, row);
                     this.addSizeRow(row);
                 });
 
+                // Save to hidden input
                 document.getElementById('sizeTableData').value = JSON.stringify(sizeTable);
 
-                // Show preview
+                // Update preview
+                this.updateSizeTablePreview(sizeTable);
+                
+                console.log('Size table populated successfully');
+            }
+
+            updateSizeTablePreview(sizeTable) {
                 const previewContainer = document.getElementById('sizeTablePreview');
+                
+                if (!sizeTable || sizeTable.length === 0) {
+                    previewContainer.style.display = 'none';
+                    return;
+                }
+
                 let html = '<div class="table-responsive"><table class="table table-sm table-bordered">';
                 html += '<thead><tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th><th>Birim</th></tr></thead><tbody>';
                 sizeTable.forEach(row => {
                     const lockedIcon = row.locked ? '🔒 ' : '';
-                    html += `<tr><td>${lockedIcon}${row.beden}</td><td>${row.en}</td><td>${row.boy}</td><td>${row.yukseklik}</td><td>${row.birim}</td></tr>`;
+                    html += `<tr class="${row.locked ? 'locked-row' : ''}"><td>${lockedIcon}${row.beden}</td><td>${row.en}</td><td>${row.boy}</td><td>${row.yukseklik}</td><td>${row.birim}</td></tr>`;
                 });
                 html += '</tbody></table></div>';
                 previewContainer.innerHTML = html;
@@ -1114,6 +1324,7 @@
                         boy: tr.children[2].querySelector('input').value,
                         yukseklik: tr.children[3].querySelector('input').value,
                         birim: tr.children[4].querySelector('select').value,
+                        locked: tr.classList.contains('locked-row')
                     };
 
                     if (!rowData.beden || !rowData.en || !rowData.boy || !rowData.yukseklik) {
@@ -1130,27 +1341,19 @@
                 document.getElementById('sizeTableData').value = JSON.stringify(rows);
 
                 // Update preview
-                const previewContainer = document.getElementById('sizeTablePreview');
-                if (rows.length > 0) {
-                    let html = '<div class="table-responsive"><table class="table table-sm table-bordered">';
-                    html += '<thead><tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th><th>Birim</th></tr></thead><tbody>';
-                    rows.forEach(row => {
-                        html += `<tr><td>${row.beden}</td><td>${row.en}</td><td>${row.boy}</td><td>${row.yukseklik}</td><td>${row.birim}</td></tr>`;
-                    });
-                    html += '</tbody></table></div>';
-                    previewContainer.innerHTML = html;
-                    previewContainer.style.display = 'block';
-                } else {
-                    previewContainer.style.display = 'none';
-                    previewContainer.innerHTML = '';
-                }
+                this.updateSizeTablePreview(rows);
 
-                const modal = bootstrap.Modal.getInstance(document.getElementById('sizeTableModal'));
-                modal.hide();
+                // Close modal
+                document.getElementById('sizeTableModal').style.display = 'none';
             }
 
             addCustomRow(value = '', locked = false) {
                 const tbody = document.querySelector('#customTable tbody');
+                if (!tbody) {
+                    console.error('Custom table tbody not found when adding row');
+                    return;
+                }
+                
                 const tr = document.createElement('tr');
 
                 if (locked) {
@@ -1171,33 +1374,76 @@
                 `;
 
                 tbody.appendChild(tr);
+                
+                // Add remove event listener for non-locked rows
+                if (!locked) {
+                    const removeBtn = tr.querySelector('.remove-row-btn');
+                    if (removeBtn) {
+                        removeBtn.addEventListener('click', () => {
+                            tr.remove();
+                        });
+                    }
+                }
             }
 
             populateCustomTable(customTable) {
-                if (customTable.title) {
-                    document.getElementById('customTableTitle').value = customTable.title;
+                console.log('populateCustomTable called with:', customTable);
+                
+                if (!customTable) {
+                    console.log('No custom table data to populate');
+                    return;
                 }
 
-                if (customTable.rows && customTable.rows.length > 0) {
+                // Set title if available
+                if (customTable.title) {
+                    const titleInput = document.getElementById('customTableTitle');
+                    if (titleInput) {
+                        titleInput.value = customTable.title;
+                    }
+                }
+
+                // Clear and populate rows if available
+                if (customTable.rows && Array.isArray(customTable.rows) && customTable.rows.length > 0) {
                     const tbody = document.querySelector('#customTable tbody');
+                    if (!tbody) {
+                        console.error('Custom table tbody not found');
+                        return;
+                    }
+                    
                     tbody.innerHTML = '';
-                    customTable.rows.forEach(row => {
-                        this.addCustomRow(row.deger, row.locked);
+                    
+                    customTable.rows.forEach((row, index) => {
+                        console.log(`Adding custom row ${index}:`, row);
+                        this.addCustomRow(row.deger || row.value || '', row.locked || false);
                     });
+                    
+                    // Save to hidden input
                     document.getElementById('customTableData').value = JSON.stringify(customTable);
 
                     // Show preview
-                    const previewContainer = document.getElementById('customTablePreview');
-                    let html = `<div class="table-responsive"><table class="table table-sm table-bordered">`;
-                    html += `<thead><tr><th>${customTable.title}</th></tr></thead><tbody>`;
-                    customTable.rows.forEach(row => {
-                        const lockedIcon = row.locked ? '🔒 ' : '';
-                        html += `<tr><td>${lockedIcon}${row.deger}</td></tr>`;
-                    });
-                    html += '</tbody></table></div>';
-                    previewContainer.innerHTML = html;
-                    previewContainer.style.display = 'block';
+                    this.updateCustomTablePreview(customTable);
+                    
+                    console.log('Custom table populated successfully');
                 }
+            }
+
+            updateCustomTablePreview(customTable) {
+                const previewContainer = document.getElementById('customTablePreview');
+                
+                if (!customTable || !customTable.rows || customTable.rows.length === 0) {
+                    previewContainer.style.display = 'none';
+                    return;
+                }
+
+                let html = `<div class="table-responsive"><table class="table table-sm table-bordered">`;
+                html += `<thead><tr><th>${customTable.title}</th></tr></thead><tbody>`;
+                customTable.rows.forEach(row => {
+                    const lockedIcon = row.locked ? '🔒 ' : '';
+                    html += `<tr class="${row.locked ? 'locked-row' : ''}"><td>${lockedIcon}${row.deger}</td></tr>`;
+                });
+                html += '</tbody></table></div>';
+                previewContainer.innerHTML = html;
+                previewContainer.style.display = 'block';
             }
 
             saveCustomTable() {
@@ -1206,10 +1452,11 @@
 
                 document.querySelectorAll('#customTable tbody tr').forEach(tr => {
                     const value = tr.children[0].querySelector('input').value;
+                    const locked = tr.classList.contains('locked-row');
                     if (!value) {
                         isValid = false;
                     }
-                    rows.push({ deger: value });
+                    rows.push({ deger: value, locked: locked });
                 });
 
                 if (!isValid) {
@@ -1223,26 +1470,14 @@
                     return;
                 }
 
-                document.getElementById('customTableData').value = JSON.stringify({ title, rows });
+                const tableData = { title, rows };
+                document.getElementById('customTableData').value = JSON.stringify(tableData);
 
                 // Update preview
-                const previewContainer = document.getElementById('customTablePreview');
-                if (rows.length > 0) {
-                    let html = `<div class="table-responsive"><table class="table table-sm table-bordered">`;
-                    html += `<thead><tr><th>${title}</th></tr></thead><tbody>`;
-                    rows.forEach(row => {
-                        html += `<tr><td>${row.deger}</td></tr>`;
-                    });
-                    html += '</tbody></table></div>';
-                    previewContainer.innerHTML = html;
-                    previewContainer.style.display = 'block';
-                } else {
-                    previewContainer.style.display = 'none';
-                    previewContainer.innerHTML = '';
-                }
+                this.updateCustomTablePreview(tableData);
 
-                const modal = bootstrap.Modal.getInstance(document.getElementById('customTableModal'));
-                modal.hide();
+                // Close modal
+                document.getElementById('customTableModal').style.display = 'none';
             }
 
             // Navigation Methods
