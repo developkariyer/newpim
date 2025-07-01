@@ -187,6 +187,10 @@
         .upload-btn:hover {
             background: #0056b3;
         }
+        
+        #imageInput {
+            display: none;
+        }
 
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -235,6 +239,7 @@
             background-color: #f8f9fa;
         }
 
+        /* Locked table row styles */
         .locked-row {
             background-color: #f8f9fa;
             opacity: 0.7;
@@ -251,6 +256,7 @@
             pointer-events: none;
         }
 
+        /* Variant matrix styles */
         .variant-locked {
             background-color: #fff3cd;
             color: #856404;
@@ -383,7 +389,7 @@
                         </div>
                         <div id="colorsHidden"></div>
                         <div class="input-group" style="margin-top: 0.5rem; max-width: 400px;">
-                            <input type="text" id="newColorInput" placeholder="Yeni renk girin..." class="form-control">
+                            <input type="text" id="newColorInput" placeholder="Yeni renk girin..." class="form-control" aria-label="Yeni renk girin">
                             <button type="button" id="addNewColorBtn" class="btn btn-primary" style="min-width: 120px;">+ Renk Ekle</button>
                         </div>
                     </div>
@@ -425,13 +431,13 @@
             </div>
         </form>
 
-        <!-- Modals -->
-        <div class="modal fade" id="sizeTableModal" tabindex="-1">
+        <!-- Beden Tablosu Modal -->
+        <div class="modal fade" id="sizeTableModal" tabindex="-1" aria-labelledby="sizeTableModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">📏 Beden Tablosu Oluştur</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <h5 class="modal-title" id="sizeTableModalLabel"><span style="font-size:1.3rem;">📏</span> Beden Tablosu Oluştur</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
                     </div>
                     <div class="modal-body">
                         <div class="table-responsive">
@@ -459,12 +465,13 @@
             </div>
         </div>
 
-        <div class="modal fade" id="customTableModal" tabindex="-1">
+        <!-- Custom Tablo Modal -->
+        <div class="modal fade" id="customTableModal" tabindex="-1" aria-labelledby="customTableModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">⚙️ Custom Tablo Oluştur</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <h5 class="modal-title" id="customTableModalLabel"><span style="font-size:1.3rem;">⚙️</span> Custom Tablo Oluştur</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
                     </div>
                     <div class="modal-body">
                         <div class="table-responsive">
@@ -493,11 +500,10 @@
 {% block body_scripts %}
     {{ parent() }}
     <script>
-        // Global State
         let selectedProduct = null;
         let isEditMode = false;
         let searchTimeout;
-        let lockedVariants = [];
+        let lockedVariants = []; // Mevcut varyantlar
         let selectedItems = {
             colors: [],
             brands: [],
@@ -505,7 +511,6 @@
             categories: []
         };
 
-        // Constants
         const ICONS = {
             'colors': '🎨',
             'brands': '🏷️',
@@ -529,49 +534,8 @@
 
         const searchTypes = ['colors', 'brands', 'marketplaces', 'categories'];
 
-        // Initialize Event Listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeEventListeners();
-        });
-
-        function initializeEventListeners() {
-            // Product search
-            document.getElementById('productSearchInput').addEventListener('input', handleProductSearch);
-            
-            // Search inputs for all types
-            searchTypes.forEach(type => {
-                const searchElement = document.getElementById(`${type}Search`);
-                if (searchElement) {
-                    searchElement.addEventListener('input', () => {
-                        clearTimeout(searchTimeout);
-                        searchTimeout = setTimeout(() => performSearch(type), 300);
-                    });
-                }
-            });
-
-            // Image upload
-            document.getElementById('imageInput').addEventListener('change', handleImageUpload);
-            
-            // Buttons
-            document.getElementById('addNewColorBtn').addEventListener('click', addNewColor);
-            document.getElementById('clearSelectedProduct').addEventListener('click', clearForm);
-            document.getElementById('goToVariationsBtn').addEventListener('click', goToStep2);
-            document.getElementById('backToStep1Btn').addEventListener('click', showStep1);
-            document.getElementById('productForm').addEventListener('submit', handleFormSubmit);
-            
-            // Table buttons
-            document.getElementById('addSizeRowBtn').addEventListener('click', () => addSizeRow());
-            document.getElementById('addCustomRowBtn').addEventListener('click', () => addCustomRow());
-            document.getElementById('saveSizeTableBtn').addEventListener('click', saveSizeTable);
-            document.getElementById('saveCustomTableBtn').addEventListener('click', saveCustomTable);
-            
-            // Table row removal
-            document.querySelector('#sizeTable tbody').addEventListener('click', handleTableRowRemoval);
-            document.querySelector('#customTable tbody').addEventListener('click', handleTableRowRemoval);
-        }
-
-        // Product Search Functions
-        function handleProductSearch() {
+        // Event Listeners
+        document.getElementById('productSearchInput').addEventListener('input', function() {
             const query = this.value.trim();
             if (query.length < 2) {
                 document.getElementById('productSearchResults').style.display = 'none';
@@ -582,11 +546,99 @@
             searchTimeout = setTimeout(() => {
                 fetch(`/product/search-products?q=${encodeURIComponent(query)}`)
                     .then(res => res.json())
-                    .then(data => displayProductSearchResults(data.items))
+                    .then(data => {
+                        displayProductSearchResults(data.items);
+                    })
                     .catch(err => console.error('Ürün arama hatası:', err));
             }, 300);
-        }
+        });
 
+        searchTypes.forEach(type => {
+            const searchElement = document.getElementById(`${type}Search`);
+            if (searchElement) {
+                searchElement.addEventListener('input', () => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => performSearch(type), 300);
+                });
+            }
+        });
+
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imagePreview').innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('addNewColorBtn').addEventListener('click', function() {
+            const newColor = document.getElementById('newColorInput').value.trim();
+            if (!newColor) {
+                alert('Lütfen bir renk girin.');
+                return;
+            }
+            fetch('/product/add-color', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ name: newColor })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addSelectedItem('colors', { id: data.id, name: newColor });
+                    document.getElementById('newColorInput').value = '';
+                } else {
+                    alert(data.message || 'Renk eklenemedi.');
+                }
+            })
+            .catch(() => alert('Sunucu hatası!'));
+        });
+
+        document.getElementById('clearSelectedProduct').addEventListener('click', function() {
+            clearForm();
+        });
+
+        document.getElementById('goToVariationsBtn').addEventListener('click', function() {
+            if (validateStep1()) {
+                generateVariationMatrix();
+                showStep2();
+            }
+        });
+
+        document.getElementById('backToStep1Btn').addEventListener('click', function() {
+            showStep1();
+        });
+
+        document.getElementById('productForm').addEventListener('submit', function(e) {
+            showLoading();
+            collectVariationsData();
+        });
+
+        // Table event listeners
+        document.getElementById('addSizeRowBtn').addEventListener('click', () => addSizeRow());
+        document.getElementById('addCustomRowBtn').addEventListener('click', () => addCustomRow());
+        document.getElementById('saveSizeTableBtn').addEventListener('click', saveSizeTable);
+        document.getElementById('saveCustomTableBtn').addEventListener('click', saveCustomTable);
+
+        document.querySelector('#sizeTable tbody').addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-row-btn') && !e.target.closest('tr').classList.contains('locked-row')) {
+                e.target.closest('tr').remove();
+            }
+        });
+
+        document.querySelector('#customTable tbody').addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-row-btn') && !e.target.closest('tr').classList.contains('locked-row')) {
+                e.target.closest('tr').remove();
+            }
+        });
+
+        // Functions
         function displayProductSearchResults(items) {
             const resultsDiv = document.getElementById('productSearchResults');
             if (items.length === 0) {
@@ -631,16 +683,22 @@
         }
 
         function fillFormWithProduct(product) {
-            // Reset state
             lockedVariants = [];
-            selectedItems = { colors: [], brands: [], marketplaces: [], categories: [] };
+            selectedItems = { 
+                colors: [], 
+                brands: [], 
+                marketplaces: [], 
+                categories: [] 
+            };
             
-            // Fill basic fields
+            console.log('Product data:', product); // Add this line for debugging
+            console.log('Size table:', product.sizeTable); // Add this line
+            console.log('Used sizes:', product.usedSizes); // Add this line
+            console.log('Variants:', product.variants); // Add this line
             document.getElementById('productName').value = product.name || '';
             document.getElementById('productIdentifier').value = product.productIdentifier || '';
             document.getElementById('productDescription').value = product.description || '';
             
-            // Fill selected items
             if (product.categoryId) {
                 selectedItems.categories = [{id: product.categoryId, name: product.categoryName}];
                 updateSelectedItems('categories');
@@ -657,87 +715,152 @@
                 selectedItems.colors = product.variantColors;
                 updateSelectedItems('colors');
             }
-            
-            // Image
             if (product.imagePath) {
                 document.getElementById('imagePreview').innerHTML = `<img src="${product.imagePath}" alt="Product Image">`;
             }
-            
-            // Tables
             if (product.sizeTable && product.sizeTable.length > 0) {
                 populateSizeTable(product.sizeTable, product.usedSizes || []);
             }
             if (product.customTable && product.customTable.rows && product.customTable.rows.length > 0) {
                 populateCustomTable(product.customTable, product.usedCustoms || []);
             }
-            
-            // Variants for locking
             if (product.variants && product.variants.length > 0) {
                 lockedVariants = product.variants.map(v => {
-                    let sizeValue = v.size || '';
+                    console.log('Processing variant:', v);
+                    let sizeValue = v.size || v.sizeName || v.beden;
                     if (sizeValue && product.sizeTable) {
-                        const sizeObj = product.sizeTable.find(s => s.beden === sizeValue.split(' (')[0]);
+                        const sizeObj = product.sizeTable.find(s => s.beden === sizeValue);
                         if (sizeObj) {
                             sizeValue = `${sizeObj.beden} (En: ${sizeObj.en}, Boy: ${sizeObj.boy}, Yükseklik: ${sizeObj.yukseklik}, ${sizeObj.birim})`;
                         }
                     }
                     return {
-                        color: v.color || '',
-                        size: sizeValue,
-                        custom: v.custom || null
+                        color: v.color || v.colorName || v.renk || v.productVariantColor?.name,
+                        size: sizeValue, 
+                        custom: v.custom || v.customName || v.customValue || v.productVariantCustom?.deger
                     };
                 });
+                console.log('Mapped locked variants (with full size format):', lockedVariants);
+                
+                if (product.variantColors && product.variantColors.length > 0) {
+                    updateSelectedItems('colors');
+                }
+            } else {
+                console.log('No variants found in product data');
+                lockedVariants = [];
             }
         }
 
+        function populateSizeTable(sizeTable, usedSizes = []) {
+            console.log('populateSizeTable called with:', sizeTable, usedSizes); // Debug
+            const tbody = document.querySelector('#sizeTable tbody');
+            tbody.innerHTML = '';
+            
+            sizeTable.forEach(row => {
+                const sizeValue = row.beden || '';
+                const isLocked = usedSizes.some(usedSize => {
+                    const extractedSize = usedSize.split(' (')[0];
+                    return extractedSize === sizeValue;
+                });
+                console.log(`Size ${sizeValue} locked: ${isLocked}`); // Debug
+                addSizeRow(row, isLocked);
+            });
+            
+            document.getElementById('sizeTableData').value = JSON.stringify(sizeTable);
+            updateSizeTablePreview(sizeTable);
+        }
+
+        function populateCustomTable(customTable, usedCustoms = []) {
+            console.log('populateCustomTable called with:', customTable, usedCustoms);
+            
+            const customTitleElement = document.getElementById('customTableTitle');
+            if (customTitleElement) {
+                customTitleElement.value = customTable.title || '';
+            } else {
+                console.error('customTableTitle element bulunamadı!');
+            }
+            
+            const usedCustomsArray = Array.isArray(usedCustoms) ? usedCustoms : Object.values(usedCustoms || {});
+            
+            const tbody = document.querySelector('#customTable tbody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            if (customTable.rows && customTable.rows.length > 0) {
+                customTable.rows.forEach(row => {
+                    const customValue = row.deger || '';
+                    const isLocked = usedCustomsArray.includes(customValue);
+                    addCustomRow(row, isLocked);
+                });
+            }
+            
+            const customTableDataElement = document.getElementById('customTableData');
+            if (customTableDataElement) {
+                customTableDataElement.value = JSON.stringify(customTable);
+            }
+            
+            updateCustomTablePreview(customTable);
+        }
+
         function setEditMode() {
+            isEditMode = true;
             const identifierField = document.getElementById('productIdentifier');
             identifierField.readOnly = true;
             identifierField.style.backgroundColor = '#e9ecef';
             identifierField.style.cursor = 'not-allowed';
             
             document.getElementById('imageInput').removeAttribute('required');
+            document.getElementById('productForm').action = '{{ path('product_create') }}';
             document.getElementById('submitBtn').textContent = '💾 Ürünü Güncelle';
         }
 
         function clearForm() {
-            // Reset all state
             selectedProduct = null;
             isEditMode = false;
-            lockedVariants = [];
-            selectedItems = { colors: [], brands: [], marketplaces: [], categories: [] };
+            lockedVariants = []; // ÖNEMLI: State'i temizle
             
-            // Reset UI
+            // DÜZELTME: Tüm state'leri sıfırla
+            selectedItems = { 
+                colors: [], 
+                brands: [], 
+                marketplaces: [], 
+                categories: [] 
+            };
+            
             document.getElementById('selectedProductInfo').style.display = 'none';
             document.getElementById('editingProductId').value = '';
             document.getElementById('productForm').reset();
             
-            // Clear tables
+            // Form field'larını sıfırla
             document.getElementById('customTableTitle').value = '';
             document.getElementById('sizeTableData').value = '';
             document.getElementById('customTableData').value = '';
+            
+            // Table'ları temizle
             document.querySelector('#sizeTable tbody').innerHTML = '';
             document.querySelector('#customTable tbody').innerHTML = '';
             
-            // Reset identifier field
             const identifierField = document.getElementById('productIdentifier');
             identifierField.readOnly = false;
             identifierField.style.backgroundColor = '';
             identifierField.style.cursor = '';
             
-            // Reset other fields
             document.getElementById('imageInput').setAttribute('required', 'required');
             document.getElementById('submitBtn').textContent = 'Kaydet';
+            
+            // Preview'ları temizle
             document.getElementById('sizeTablePreview').style.display = 'none';
             document.getElementById('customTablePreview').style.display = 'none';
             document.getElementById('imagePreview').innerHTML = '📷';
             
-            // Update all selected items displays
+            // Selected items'ları güncelle
             searchTypes.forEach(type => updateSelectedItems(type));
+            
+            // Step'i sıfırla
             showStep1();
         }
 
-        // Search Functions
         async function performSearch(type) {
             const searchInput = document.getElementById(`${type}Search`);
             const query = searchInput.value.trim();
@@ -798,18 +921,18 @@
             }
             
             selectedDiv.innerHTML = selectedItems[type].map(item => {
-                let isLocked = false;
+                let isColorLocked = false;
                 if (type === 'colors' && lockedVariants.length > 0) {
-                    isLocked = lockedVariants.some(v => v.color === item.name);
+                    isColorLocked = lockedVariants.some(v => v.color === item.name);
                 }
                 
-                const lockIcon = isLocked ? '🔒 ' : '';
-                const removeButton = isLocked ? 
+                const lockIcon = isColorLocked ? '🔒 ' : '';
+                const removeButton = isColorLocked ? 
                     `<span style="margin-left: 0.5rem; color: #6c757d; cursor: not-allowed;" title="Bu renk varyantlarda kullanıldığı için kaldırılamaz">🔒</span>` :
                     `<span onclick="removeSelectedItem('${type}', ${item.id})" style="margin-left: 0.5rem; cursor: pointer; font-weight: bold;">×</span>`;
                     
                 return `
-                    <span style="display: inline-block; background: ${isLocked ? '#6c757d' : '#007bff'}; color: white; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 12px; font-size: 0.875rem;">
+                    <span style="display: inline-block; background: ${isColorLocked ? '#6c757d' : '#007bff'}; color: white; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 12px; font-size: 0.875rem;">
                         ${lockIcon}${ICONS[type] || '📋'} ${item.name}
                         ${removeButton}
                     </span>
@@ -825,8 +948,8 @@
             if (type === 'colors' && lockedVariants.length > 0) {
                 const item = selectedItems[type].find(item => item.id == itemId);
                 if (item) {
-                    const isLocked = lockedVariants.some(v => v.color === item.name);
-                    if (isLocked) {
+                    const isColorLocked = lockedVariants.some(v => v.color === item.name);
+                    if (isColorLocked) {
                         alert('Bu renk varyantlarda kullanıldığı için kaldırılamaz.');
                         return;
                     }
@@ -836,108 +959,7 @@
             updateSelectedItems(type);
         }
 
-        // Other Event Handlers
-        function handleImageUpload(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('imagePreview').innerHTML = `<img src="${e.target.result}" alt="Preview">`;
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        async function addNewColor() {
-            const newColor = document.getElementById('newColorInput').value.trim();
-            if (!newColor) {
-                alert('Lütfen bir renk girin.');
-                return;
-            }
-            
-            try {
-                const response = await fetch('/product/add-color', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({ name: newColor })
-                });
-                
-                const data = await response.json();
-                if (data.success) {
-                    addSelectedItem('colors', { id: data.id, name: newColor });
-                    document.getElementById('newColorInput').value = '';
-                } else {
-                    alert(data.message || 'Renk eklenemedi.');
-                }
-            } catch {
-                alert('Sunucu hatası!');
-            }
-        }
-
-        function goToStep2() {
-            if (validateStep1()) {
-                generateVariationMatrix();
-                showStep2();
-            }
-        }
-
-        function handleFormSubmit(e) {
-            showLoading();
-            collectVariationsData();
-        }
-
-        function handleTableRowRemoval(e) {
-            if (e.target.classList.contains('remove-row-btn') && !e.target.closest('tr').classList.contains('locked-row')) {
-                e.target.closest('tr').remove();
-            }
-        }
-
         // Table Functions
-        function populateSizeTable(sizeTable, usedSizes = []) {
-            const tbody = document.querySelector('#sizeTable tbody');
-            tbody.innerHTML = '';
-            
-            sizeTable.forEach(row => {
-                const sizeValue = row.beden || '';
-                const isLocked = usedSizes.some(usedSize => {
-                    const extractedSize = usedSize.split(' (')[0];
-                    return extractedSize === sizeValue;
-                });
-                addSizeRow(row, isLocked);
-            });
-            
-            document.getElementById('sizeTableData').value = JSON.stringify(sizeTable);
-            updateSizeTablePreview(sizeTable);
-        }
-
-        function populateCustomTable(customTable, usedCustoms = []) {
-            const customTitleElement = document.getElementById('customTableTitle');
-            if (customTitleElement) {
-                customTitleElement.value = customTable.title || '';
-            }
-            
-            const usedCustomsArray = Array.isArray(usedCustoms) ? usedCustoms : Object.values(usedCustoms || {});
-            
-            const tbody = document.querySelector('#customTable tbody');
-            if (tbody) {
-                tbody.innerHTML = '';
-                
-                if (customTable.rows && customTable.rows.length > 0) {
-                    customTable.rows.forEach(row => {
-                        const customValue = row.deger || '';
-                        const isLocked = usedCustomsArray.includes(customValue);
-                        addCustomRow(row, isLocked);
-                    });
-                }
-            }
-            
-            document.getElementById('customTableData').value = JSON.stringify(customTable);
-            updateCustomTablePreview(customTable);
-        }
-
         function addSizeRow(values = {}, isLocked = false) {
             const tbody = document.querySelector('#sizeTable tbody');
             const tr = document.createElement('tr');
@@ -978,6 +1000,7 @@
                 tr.classList.add('locked-row');
             }
             
+            // DÜZELTME: value object'i veya string olabilir
             const degerValue = typeof value === 'object' ? (value.deger || '') : value;
             
             tr.innerHTML = `
@@ -1041,6 +1064,7 @@
                 return;
             }
 
+            // DÜZELTME: customTableTitle ID'sini kullan
             const title = document.getElementById('customTableTitle').value.trim();
             if (!title) {
                 alert('Lütfen Custom Tablo için bir başlık girin.');
@@ -1115,6 +1139,8 @@
             
             try {
                 const customData = JSON.parse(document.getElementById('customTableData').value || '{}');
+                console.log('Custom data structure:', customData);
+                
                 if (customData.rows && customData.rows.length > 0) {
                     customs = customData.rows
                         .map(row => row.deger)
@@ -1123,6 +1149,13 @@
             } catch (e) {
                 console.error('Custom data parse error:', e);
             }
+
+            console.log("--- VARIANT MATRIX DATA ---");
+            console.log("Kilitlenecek Varyantlar (lockedVariants):", JSON.parse(JSON.stringify(lockedVariants)));
+            console.log("Matris Renkleri:", colors);
+            console.log("Matris Bedenleri:", sizes);
+            console.log("Matris Custom Değerleri (title hariç):", customs);
+            console.log("--------------------------");
 
             function cartesianProduct(arrays) {
                 const filteredArrays = arrays.filter(arr => arr && arr.length > 0);
@@ -1152,15 +1185,35 @@
                 const size = combo[1];
                 const custom = combo[2];
                 
+                // DÜZELTME: Size'ı full format'a çevir eşleştirme için
                 const sizeObj = sizesData.find(s => s.beden === size);
                 let fullSizeFormat = size;
                 if (sizeObj) {
                     fullSizeFormat = `${sizeObj.beden} (En: ${sizeObj.en}, Boy: ${sizeObj.boy}, Yükseklik: ${sizeObj.yukseklik}, ${sizeObj.birim})`;
                 }
                 
+                console.log(`\n=== COMBO ${i}: ${color}-${size}-${custom} ===`);
+                console.log(`Full size format: ${fullSizeFormat}`);
+                
+                // DÜZELTME: fullSizeFormat ile karşılaştır
                 const isLocked = lockedVariants.some(v => {
-                    return (v.color === color) && (v.size === fullSizeFormat) && (v.custom === custom);
+                    console.log(`Checking against: color='${v.color}', size='${v.size}', custom='${v.custom}'`);
+                    
+                    const colorMatch = (v.color === color);
+                    const sizeMatch = (v.size === fullSizeFormat);
+                    const customMatch = (v.custom === custom);
+                    
+                    console.log(`  colorMatch: ${colorMatch}, sizeMatch: ${sizeMatch}, customMatch: ${customMatch}`);
+                    
+                    const result = colorMatch && sizeMatch && customMatch;
+                    if (result) {
+                        console.log(`✅ LOCKED VARIANT FOUND!`);
+                    }
+                    
+                    return result;
                 });
+
+                console.log(`FINAL LOCKED STATUS: ${isLocked}`);
 
                 let sizeLabel = size;
                 if (sizeObj) {
@@ -1170,6 +1223,8 @@
                 const rowClass = isLocked ? 'variant-locked' : '';
                 const lockIcon = isLocked ? '🔒 ' : '';
                 const checkboxAttributes = isLocked ? 'disabled checked' : '';
+
+                console.log(`HTML attributes: rowClass='${rowClass}', checkboxAttributes='${checkboxAttributes}'`);
 
                 html += `<tr class="${rowClass}">
                     <td>
@@ -1186,6 +1241,7 @@
             });
 
             html += '</tbody></table>';
+            console.log('Final HTML:', html);
             document.getElementById('variationTableContainer').innerHTML = html;
         }
 
