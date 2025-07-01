@@ -13,6 +13,24 @@
 {% block content %}
 
 <h2>Katalog Ürün Düzenle</h2>
+<form method="get" action="{{ path('product_search') }}" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="q" class="form-control" placeholder="Ürün adı veya kodu ile ara..." value="{{ app.request.get('q') }}">
+        <button class="btn btn-primary" type="submit">Ara</button>
+    </div>
+</form>
+
+{% if products is defined %}
+    <ul class="list-group">
+        {% for product in products %}
+            <li class="list-group-item">
+                {{ product.name }} ({{ product.productIdentifier }})
+            </li>
+        {% else %}
+            <li class="list-group-item">Sonuç bulunamadı.</li>
+        {% endfor %}
+    </ul>
+{% endif %}
 
 {% endblock %}
 

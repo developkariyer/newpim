@@ -23,10 +23,23 @@ use Pimcore\Model\DataObject\Product\Listing as ProductListing;
 class EditProductController extends AbstractController
 {
 
+    
     #[Route('/product-edit', name: 'productEdit')]
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        return $this->render('product/edit.html.twig');
+        $products = null;
+        $q = trim($request->query->get('q', ''));
+        if ($q !== '') {
+            $listing = new ProductListing();
+            $listing->setCondition('productIdentifier LIKE ?', ['%' . $q . '%']);
+            $listing->setLimit(20);
+            $products = iterator_to_array($listing);
+        }
+
+        return $this->render('product/edit.html.twig', [
+            'products' => $products,
+            'q' => $q,
+        ]);
     }
 
 }
