@@ -551,7 +551,7 @@
             
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                fetch(`{{ path('product_search') }}?q=${encodeURIComponent(query)}`)
+                fetch(`{{ path('product_search_products') }}?q=${encodeURIComponent(query)}`)
                     .then(res => res.json())
                     .then(data => {
                         displayProductSearchResults(data.items);
@@ -588,7 +588,7 @@
                 return;
             }
             
-            fetch('{{ path('product_color_add') }}', {
+            fetch('{{ path('product_add_color') }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
