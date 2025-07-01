@@ -8,7 +8,7 @@
             cursor: not-allowed !important;
             pointer-events: none !important;
         }
-        
+
         .product-form-container {
             max-width: 800px;
             margin: 2rem auto;
@@ -1115,6 +1115,8 @@
                 const size = combo[1];
                 const custom = customs.length > 0 ? combo[2] : null;
                 
+                console.log(`Checking combo: ${color}-${size}-${custom}`); // Debug her combo için
+                
                 const isLocked = lockedVariants.some(v => {
                     const colorMatch = (v.color === color);
                     const sizeMatch = (v.size === size);
@@ -1125,11 +1127,14 @@
                         customMatch = (!v.custom || v.custom === null || v.custom === undefined);
                     }
                     const result = colorMatch && sizeMatch && customMatch;
+                    console.log(`  Variant check: color=${colorMatch}, size=${sizeMatch}, custom=${customMatch}, result=${result}`); // Debug
                     if (result) {
-                        console.log(`✅ LOCKED variant found: ${color}-${size}-${custom}`); // Debug
+                        console.log(`✅ LOCKED variant found: ${color}-${size}-${custom}`);
                     }
                     return result;
                 });
+
+                console.log(`Final isLocked for ${color}-${size}-${custom}: ${isLocked}`); // Debug final result
 
                 const sizeObj = sizesData.find(s => s.beden === size);
                 let sizeLabel = size;
@@ -1139,10 +1144,13 @@
 
                 const rowClass = isLocked ? 'variant-locked' : '';
                 const lockIcon = isLocked ? '🔒 ' : '';
+                const checkboxAttributes = isLocked ? 'disabled checked' : '';
+
+                console.log(`HTML for ${color}-${size}-${custom}: rowClass="${rowClass}", checkboxAttributes="${checkboxAttributes}"`); // Debug HTML
 
                 html += `<tr class="${rowClass}">
                     <td>
-                        <input type="checkbox" class="variation-checkbox" data-index="${i}" ${isLocked ? 'disabled checked' : ''}>
+                        <input type="checkbox" class="variation-checkbox" data-index="${i}" ${checkboxAttributes}>
                         ${isLocked ? '<br><small>Mevcut varyant</small>' : ''}
                     </td>
                     <td>${lockIcon}${color}</td>
@@ -1152,6 +1160,7 @@
             });
 
             html += '</tbody></table>';
+            console.log('Final HTML:', html); // Debug final HTML
             document.getElementById('variationTableContainer').innerHTML = html;
         }
 
