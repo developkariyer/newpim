@@ -166,17 +166,18 @@ class ProductController extends AbstractController
             $sizeTableData = $product->getVariationSizeTable();
             if ($sizeTableData && is_array($sizeTableData)) {
                 foreach ($sizeTableData as $row) {
-                    $beden = $row['label'] ?? '';
+                    $beden = $row['beden'] ?? $row['label'] ?? '';
                     $sizeTable[] = [
                         'beden' => $beden,
-                        'en' => $row['width'] ?? '',
-                        'boy' => $row['length'] ?? '',
-                        'yukseklik' => $row['height'] ?? '',
-                        'birim' => $row['unit'] ?? '',
+                        'en' => $row['en'] ?? $row['width'] ?? '',     
+                        'boy' => $row['boy'] ?? $row['length'] ?? '',    
+                        'yukseklik' => $row['yukseklik'] ?? $row['height'] ?? '', 
+                        'birim' => $row['birim'] ?? $row['unit'] ?? '',  
                         'locked' => in_array($beden, $usedSizes) 
                     ];
                 }
             }
+
             
             $customTable = [];
             $customTableData = $product->getCustomFieldTable();
