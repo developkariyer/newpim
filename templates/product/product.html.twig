@@ -1615,17 +1615,24 @@
                     console.log('❌ No variants to lock for existing product');
                     return;
                 }
+
                 this.state.lockedVariants = product.variants.map(v => {
                     let sizeValue = v.size || v.sizeName || v.beden || v.productVariantSize?.name || v.productVariantSize?.beden;
                     let colorValue = v.color || v.colorName || v.renk || v.productVariantColor?.name;
                     let customValue = v.custom || v.customName || v.customValue || v.productVariantCustom?.deger;
 
+                    // Size normalizasyonu
                     if (sizeValue && typeof sizeValue === 'string') {
                         if (sizeValue.includes(' (En:')) {
                             sizeValue = sizeValue.split(' (En:')[0];
                         } else if (sizeValue.includes(' (')) {
                             sizeValue = sizeValue.split(' (')[0];
                         }
+                    }
+
+                    // DÜZELTME: Custom normalizasyonu - undefined/empty'yi null'a çevir
+                    if (customValue === undefined || customValue === '' || customValue === 'undefined') {
+                        customValue = null;
                     }
 
                     const normalizedVariant = {
@@ -1744,15 +1751,20 @@
                 const isLocked = this.state.lockedVariants.some(v => {
                     const colorMatch = (v.color === color);
                     const sizeMatch = (v.size === size);
-                    const customMatch = (v.custom === custom);
+                    
+                    // DÜZELTME: Custom karşılaştırmasını normalize et
+                    const normalizedLockedCustom = (v.custom === undefined || v.custom === null) ? null : v.custom;
+                    const normalizedCheckingCustom = (custom === undefined || custom === null) ? null : custom;
+                    const customMatch = (normalizedLockedCustom === normalizedCheckingCustom);
+                    
                     console.log(`🔍 Checking variant lock:`, {
-                        checking: { color, size, custom },
-                        against: { color: v.color, size: v.size, custom: v.custom },
+                        checking: { color, size, custom: normalizedCheckingCustom },
+                        against: { color: v.color, size: v.size, custom: normalizedLockedCustom },
                         matches: { colorMatch, sizeMatch, customMatch }
                     });
                     
                     if (colorMatch && sizeMatch && customMatch) {
-                        console.log(`🔒 VARIANT LOCKED: ${color}-${size}-${custom}`);
+                        console.log(`🔒 VARIANT LOCKED: ${color}-${size}-${normalizedCheckingCustom}`);
                         return true;
                     }
                     return false;
