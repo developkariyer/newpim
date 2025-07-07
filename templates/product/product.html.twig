@@ -1261,16 +1261,30 @@
 
             fillTables(product) {
                 if (product.sizeTable && Array.isArray(product.sizeTable)) {
+                    let processedUsedSizes = [];
+                    if (product.usedSizes && Array.isArray(product.usedSizes)) {
+                        processedUsedSizes = product.usedSizes;
+                    } else if (product.usedSizes && typeof product.usedSizes === 'object') {
+                        processedUsedSizes = Object.values(product.usedSizes);
+                    }
+                    
                     window.productFormManager.tableService.populateSizeTable(
                         product.sizeTable, 
-                        product.usedSizes || []
+                        processedUsedSizes
                     );
                 }
 
                 if (product.customTable && product.customTable.rows) {
+                    let processedUsedCustoms = [];
+                    if (product.usedCustoms && Array.isArray(product.usedCustoms)) {
+                        processedUsedCustoms = product.usedCustoms;
+                    } else if (product.usedCustoms && typeof product.usedCustoms === 'object') {
+                        processedUsedCustoms = Object.values(product.usedCustoms);
+                    }
+                    
                     window.productFormManager.tableService.populateCustomTable(
                         product.customTable, 
-                        product.usedCustoms || []
+                        processedUsedCustoms
                     );
                 }
             }
@@ -1522,20 +1536,27 @@
             }
 
             populateSizeTable(sizeTable, usedSizes = []) {
-                if (!Array.isArray(usedSizes)) {
-                    usedSizes = Object.values(usedSizes);
+                let normalizedUsedSizes = [];
+                if (Array.isArray(usedSizes)) {
+                    normalizedUsedSizes = usedSizes;
+                } else if (typeof usedSizes === 'object' && usedSizes !== null) {
+                    normalizedUsedSizes = Object.values(usedSizes);
                 }
 
                 const tbody = document.querySelector('#sizeTable tbody');
                 if (tbody) {
                     tbody.innerHTML = '';
                 }
-
                 sizeTable.forEach(row => {
                     const sizeValue = row.beden || '';
-                    const isLocked = usedSizes.some(usedSize => {
-                        const extractedSize = usedSize.split(' (')[0];
-                        return extractedSize === sizeValue;
+                    const isLocked = normalizedUsedSizes.some(usedSize => {
+                        if (typeof usedSize === 'string') {
+                            const extractedSize = usedSize.includes(' (En:') 
+                                ? usedSize.split(' (En:')[0]
+                                : usedSize.split(' (')[0];
+                            return extractedSize === sizeValue;
+                        }
+                        return usedSize === sizeValue;
                     });
                     this.addSizeRow(row, isLocked);
                 });
@@ -1598,9 +1619,12 @@
                     let colorValue = v.color || v.colorName || v.renk || v.productVariantColor?.name;
                     let customValue = v.custom || v.customName || v.customValue || v.productVariantCustom?.deger;
 
-                    // Size normalizasyonu
-                    if (sizeValue && typeof sizeValue === 'string' && sizeValue.includes(' (En:')) {
-                        sizeValue = sizeValue.split(' (')[0];
+                    if (sizeValue && typeof sizeValue === 'string') {
+                        if (sizeValue.includes(' (En:')) {
+                            sizeValue = sizeValue.split(' (En:')[0];
+                        } else if (sizeValue.includes(' (')) {
+                            sizeValue = sizeValue.split(' (')[0];
+                        }
                     }
 
                     return {
