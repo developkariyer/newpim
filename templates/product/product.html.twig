@@ -754,22 +754,21 @@
             }
             if (product.variants && product.variants.length > 0) {
                 lockedVariants = product.variants.map(v => {
-                    console.log('🔍 Processing variant RAW:', v);
+                    console.log('Processing variant:', v);
                     let sizeValue = v.size || v.sizeName || v.beden;
-                    let colorValue = v.color || v.colorName || v.renk || v.productVariantColor?.name;
-                    let customValue = v.custom || v.customName || v.customValue || v.productVariantCustom?.deger;
-                    if (sizeValue && typeof sizeValue === 'string' && sizeValue.includes(' (En:')) {
+                    if (sizeValue && sizeValue.includes(' (En:')) {
                         sizeValue = sizeValue.split(' (')[0];
                     }
-                    const processedVariant = {
-                        color: colorValue,
+                
+                
+                    return {
+                        color: v.color || v.colorName || v.renk || v.productVariantColor?.name,
                         size: sizeValue, 
-                        custom: customValue
+                        custom: v.custom || v.customName || v.customValue || v.productVariantCustom?.deger
                     };
-                    console.log('✅ Processed variant (basic format):', processedVariant);
-                    return processedVariant;
                 });
-                console.log('🎯 ALL LOCKED VARIANTS (basic format):', lockedVariants);
+                console.log('Mapped locked variants (with full size format):', lockedVariants);
+                
                 if (product.variantColors && product.variantColors.length > 0) {
                     updateSelectedItems('colors');
                 }
