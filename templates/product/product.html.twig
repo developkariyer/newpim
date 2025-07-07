@@ -1706,9 +1706,11 @@
             }
 
             generateMatrixHTML(combos, sizesData, customs) {
+                const hasCustomData = customs.length > 0;
+                
                 let html = '<table class="table table-bordered"><thead><tr>';
                 html += '<th>Seç</th><th>Renk</th><th>Beden</th>';
-                if (customs.length > 0) html += '<th>Custom</th>';
+                if (hasCustomData) html += '<th>Custom</th>';
                 html += '</tr></thead><tbody>';
 
                 combos.forEach((combo, i) => {
@@ -1728,7 +1730,7 @@
                         <td>${lockIcon}${color}</td>
                         <td>${lockIcon}${sizeLabel}</td>`;
                     
-                    if (customs.length > 0) {
+                    if (hasCustomData) {
                         html += `<td>${lockIcon}${custom || ''}</td>`;
                     }
                     html += '</tr>';
@@ -1776,22 +1778,39 @@
 
             collectVariationsData() {
                 const rows = [];
+                
+                const customData = this.getCustomsData();
+                const hasCustomData = customData.length > 0;
+                
                 document.querySelectorAll('#variationTableContainer tbody tr').forEach(tr => {
                     const checkbox = tr.querySelector('.variation-checkbox');
                     if (checkbox && checkbox.checked && !checkbox.disabled) {
                         const tds = tr.querySelectorAll('td');
                         const renk = tds[1].innerText.replace('🔒 ', '');
                         const beden = tds[2].innerText.replace('🔒 ', '').split(' (')[0];
-                        const custom = tds.length > 3 ? tds[3].innerText.replace('🔒 ', '') : null;
-                        rows.push({ renk, beden, custom });
+                        
+                        // DÜZELTME: Custom sadece gerçekten varsa ekle
+                        const rowData = { renk, beden };
+                        
+                        if (hasCustomData && tds.length > 3) {
+                            const customValue = tds[3].innerText.replace('🔒 ', '').trim();
+                            if (customValue && customValue !== '') {
+                                rowData.custom = customValue;
+                            }
+                        }
+                        
+                        rows.push(rowData);
                     }
                 });
+                
+                console.log('🔧 Collected variations data:', rows); // DEBUG
                 
                 const variationsInput = document.getElementById('variationsData');
                 if (variationsInput) {
                     variationsInput.value = JSON.stringify(rows);
                 }
             }
+
         }
 
         /**
