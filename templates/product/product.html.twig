@@ -1608,12 +1608,13 @@
                 this.state = state;
             }
 
+            
             updateLockedVariants(product) {
                 if (!product || !product.variants || product.variants.length === 0) {
                     this.state.lockedVariants = [];
+                    console.log('❌ No variants to lock for existing product');
                     return;
                 }
-
                 this.state.lockedVariants = product.variants.map(v => {
                     let sizeValue = v.size || v.sizeName || v.beden || v.productVariantSize?.name || v.productVariantSize?.beden;
                     let colorValue = v.color || v.colorName || v.renk || v.productVariantColor?.name;
@@ -1627,14 +1628,17 @@
                         }
                     }
 
-                    return {
+                    const normalizedVariant = {
                         color: colorValue,
                         size: sizeValue,
                         custom: customValue
                     };
+
+                    console.log('🔒 Processing variant for locking:', v, '➡️ Normalized:', normalizedVariant);
+                    return normalizedVariant;
                 });
 
-                console.log('Locked variants updated:', this.state.lockedVariants);
+                console.log('✅ Locked variants updated for existing product:', this.state.lockedVariants);
             }
 
             generateMatrix() {
@@ -1735,12 +1739,24 @@
             }
 
             isVariantLocked(color, size, custom) {
-                return this.state.lockedVariants.some(v => {
+                const isLocked = this.state.lockedVariants.some(v => {
                     const colorMatch = (v.color === color);
                     const sizeMatch = (v.size === size);
                     const customMatch = (v.custom === custom);
-                    return colorMatch && sizeMatch && customMatch;
+                    console.log(`🔍 Checking variant lock:`, {
+                        checking: { color, size, custom },
+                        against: { color: v.color, size: v.size, custom: v.custom },
+                        matches: { colorMatch, sizeMatch, customMatch }
+                    });
+                    
+                    if (colorMatch && sizeMatch && customMatch) {
+                        console.log(`🔒 VARIANT LOCKED: ${color}-${size}-${custom}`);
+                        return true;
+                    }
+                    return false;
                 });
+
+                return isLocked;
             }
 
             formatSizeLabel(size, sizesData) {
