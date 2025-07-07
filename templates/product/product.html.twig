@@ -802,6 +802,7 @@
                     this.displaySelectedProduct(product);
                     this.formService.fillForm(product);
                     this.formService.setEditMode();
+                    this.variationService.updateLockedVariants(product);
                 } catch (error) {
                     console.error('Product selection failed:', error);
                     this.uiService.showError('Ürün seçimi başarısız.');
@@ -1073,7 +1074,6 @@
                 }
 
                 try {
-                    this.variationService.updateLockedVariants(this.state.selectedProduct);
                     this.variationService.generateMatrix();
                     this.showStep(2);
                 } catch (error) {
