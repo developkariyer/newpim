@@ -492,6 +492,46 @@ class ProductController extends AbstractController
         }
     }
 
+    /**
+    * @Route("/product/get-product-data/{id}", name="product_get_data", methods={"GET"})
+    */
+    public function getProductData(int $id): JsonResponse
+    {
+        try {
+            $product = Product::getById($id);
+            if (!$product) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Ürün bulunamadı'
+                ], 404);
+            }
+
+            $variants = [];
+            $children = $product->getChildren([Product::OBJECT_TYPE_VARIANT]);
+            foreach ($children as $variant) {
+                if ($variant->getPublished()) { 
+                    $variantData = [
+                        'id' => $variant->getId(),
+                        'color' => $variant->getVariationColor() ? $variant->getVariationColor()->getColor() : null,
+                        'size' => $variant->getVariationSize(),
+                        'custom' => $variant->getCustomField()
+                    ];
+                    $variants[] = $variantData;
+                }
+            }
+            return new JsonResponse([
+                'id' => $product->getId(),
+                'variants' => $variants
+            ]);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Ürün verisi alınamadı: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     private function findVariantByData($productId, $variantData)
     {
         $product = Product::getById($productId);

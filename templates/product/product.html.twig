@@ -18,7 +18,7 @@
         .variant-locked .delete-variant-btn {
             opacity: 1;
         }
-        
+
         .variant-locked input[type="checkbox"]:disabled {
             opacity: 0.5 !important;
             cursor: not-allowed !important;
@@ -811,14 +811,9 @@
                     const result = await response.json();
                     
                     if (result.success) {
-                        this.uiService.showSuccess(`Varyant silindi ve ürün yayından kaldırıldı.`);
-                        
-                        if (result.redirectUrl) {
-                            window.location.href = result.redirectUrl;
-                        } else {
-                            await this.refreshProductData();
-                            this.variationService.generateMatrix();
-                        }
+                        this.uiService.showSuccess(`Varyant silindi.`);
+                        this.removeVariantFromLocked(color, size, custom);
+                        this.variationService.generateMatrix();
                     } else {
                         throw new Error(result.message || 'Variant silme başarısız');
                     }
@@ -837,13 +832,36 @@
                 try {
                     const response = await fetch(`/product/get-product-data/${this.state.selectedProduct.id}`);
                     if (response.ok) {
-                        const updatedProduct = await response.json();
-                        this.state.selectedProduct = updatedProduct;
-                        this.variationService.updateLockedVariants(updatedProduct);
+                        const updatedData = await response.json();
+                        this.state.selectedProduct.variants = updatedData.variants || [];
+                        this.variationService.updateLockedVariants(this.state.selectedProduct);
+                        console.log('✅ Product data refreshed:', this.state.selectedProduct);
                     }
                 } catch (error) {
                     console.error('Refresh product data failed:', error);
                 }
+            }
+
+            /**
+            * Silinen variant'ı locked listesinden çıkar
+            */
+            removeVariantFromLocked(color, size, custom) {
+                const normalizedCustom = (custom === undefined || custom === null || custom === '') ? null : custom;
+                this.state.lockedVariants = this.state.lockedVariants.filter(v => {
+                    const normalizedLockedCustom = (v.custom === undefined || v.custom === null) ? null : v.custom;
+                    const isMatch = (
+                        v.color === color &&
+                        v.size === size &&
+                        normalizedLockedCustom === normalizedCustom
+                    );
+                    console.log(`🗑️ Checking for removal:`, {
+                        variant: v,
+                        deleteTarget: { color, size, custom: normalizedCustom },
+                        isMatch: isMatch
+                    });
+                    return !isMatch; 
+                });
+                console.log('✅ Updated locked variants after deletion:', this.state.lockedVariants);
             }
 
             /**
