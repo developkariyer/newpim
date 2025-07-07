@@ -549,7 +549,7 @@
             categories: 'productCategory'
         };
 
-        const searchTypes = ['colors', 'brands', 'marketplaces', 'categories'];
+        const searchTypes = ['colors'];
 
         // Event Listeners
         document.getElementById('productSearchInput').addEventListener('input', function() {
@@ -670,7 +670,6 @@
                 });
             }
         });
-
 
         // Functions
         function displayProductSearchResults(items) {
@@ -1209,7 +1208,6 @@
                 const size = combo[1];
                 const custom = combo[2];
                 
-                // DÜZELTME: Size'ı full format'a çevir eşleştirme için
                 const sizeObj = sizesData.find(s => s.beden === size);
                 let fullSizeFormat = size;
                 if (sizeObj) {
@@ -1256,7 +1254,7 @@
                         ${isLocked ? '<br><small>Mevcut varyant</small>' : ''}
                     </td>
                     <td>${lockIcon}${color}</td>
-                    <td>${lockIcon}${sizeLabel}</td>`;
+                    <td>${lockIcon}</td>`;
                 
                 if (customs.length > 0) {
                     html += `<td>${lockIcon}${custom || ''}</td>`;
