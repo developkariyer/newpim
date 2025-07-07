@@ -3,6 +3,12 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
+        .variant-locked input[type="checkbox"]:disabled {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+            pointer-events: none !important;
+        }
+
         .product-form-container {
             max-width: 800px;
             margin: 2rem auto;
@@ -61,6 +67,56 @@
         @media (max-width: 700px) {
             .form-row {
                 grid-template-columns: 1fr !important;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .modal-body .table thead {
+                display: none;
+            }
+
+            .modal-body .table,
+            .modal-body .table tbody,
+            .modal-body .table tr,
+            .modal-body .table td {
+                display: block;
+                width: 100%;
+            }
+
+            .modal-body .table tr {
+                margin-bottom: 1rem;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                padding: 0.5rem;
+            }
+
+            .modal-body .table td {
+                text-align: right;
+                padding-left: 50%; 
+                position: relative;
+                border: none;
+                padding-bottom: 0.5rem;
+                padding-top: 0.5rem;
+            }
+            
+            .modal-body .table td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 0.5rem;
+                width: 45%;
+                padding-right: 1rem;
+                text-align: left;
+                font-weight: 500;
+                color: #495057;
+            }
+            
+            .modal-body .table td:last-child {
+                text-align: center;
+                padding-left: 0;
+            }
+
+            .modal-body .table td:last-child::before {
+                display: none; 
             }
         }
         
@@ -163,8 +219,6 @@
             display: flex;
             align-items: stretch;
             width: 100%;
-            max-width: 400px;
-            gap: 0;
         }
 
         .input-group .form-control {
@@ -176,9 +230,44 @@
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
         }
+
+        .table-preview-container {
+            margin-top: 1rem;
+            padding: 1rem;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            background-color: #f8f9fa;
+        }
+
+        /* Locked table row styles */
+        .locked-row {
+            background-color: #f8f9fa;
+            opacity: 0.7;
+        }
+
+        .locked-row input, .locked-row select {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+
+        .locked-row .remove-row-btn {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* Variant matrix styles */
+        .variant-locked {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .variant-locked input[type="checkbox"] {
+            cursor: not-allowed;
+            pointer-events: none;
+        }
     </style>
 {% endblock %}
-
 
 {% block title %}Katalog Yeni Ürün Girişi{% endblock %}
 
@@ -198,7 +287,7 @@
         <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
             <div style="background: white; padding: 2rem; border-radius: 8px; text-align: center;">
                 <div style="width: 40px; height: 40px; margin: 0 auto 1rem; border: 4px solid #f3f3f3; border-top: 4px solid #007bff; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                <p style="margin: 0; font-size: 1.1rem; color: #333;">Ürün oluşturuluyor...</p>
+                <p style="margin: 0; font-size: 1.1rem; color: #333;">Ürün işleniyor...</p>
             </div>
         </div>
 
@@ -209,58 +298,79 @@
                 </div>
             {% endfor %}
         {% endfor %}
-        <form id="productForm" method="POST" enctype="multipart/form-data" action="{{ path('product_create') }}" >
-            <div class="form-section">
-                <h3>📝 Temel Ürün Bilgileri</h3>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="productName">Ürün Adı *</label>
-                        <input type="text" id="productName" name="productName" class="form-control" 
-                            placeholder="Örn: Premium Cotton T-Shirt" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Ürün Resmi *</label>
-                        <div class="image-upload">
-                            <div class="image-preview" id="imagePreview" onclick="document.getElementById('imageInput').click()">
-                                📷
-                            </div>
-                            <small style="color: #6c757d; text-align: center;">Resim yüklemek için tıklayın</small>
-                            <input type="file" id="imageInput" name="productImage" accept="image/*" required>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="productIdentifier">Ürün Tanıtıcı Adı *</label>
-                        <input type="text" id="productIdentifier" name="productIdentifier" class="form-control" 
-                               placeholder="Örn: PTS-001" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="productCategory">Kategori *</label>
-                        <input type="text" id="categoriesSearch" placeholder="Kategori ara..." class="form-control" style="margin-bottom: 0.5rem;">
-                        <div id="categoriesResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; background: white;">
-                        </div>
-                        <div id="categoriesSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
-                            <small style="color: #6c757d;">Seçilen kategori burada görünecek...</small>
-                        </div>
-                        <div id="categoriesHidden"></div>
-                    </div>
-                </div>
-                
+
+        <form id="productForm" method="POST" enctype="multipart/form-data" action="{{ path('product_create') }}">
+            <!-- Search Product Start -->
+            <div class="form-section" style="background: #f8f9fa; border-color: #17a2b8;">
+                <h3 style="border-color: #17a2b8; color: #17a2b8;">🔍 Ürün Ara ve Düzenle</h3>
                 <div class="form-group">
-                    <label for="productDescription">Açıklama</label>
-                    <textarea id="productDescription" name="productDescription" class="form-control" 
-                              rows="3" placeholder="Ürün hakkında detaylı açıklama..."></textarea>
+                    <label for="productSearchInput">Mevcut Ürün Ara (Identifier veya İsim)</label>
+                    <input type="text" id="productSearchInput" class="form-control" placeholder="Örn: PTS-001 veya Premium Cotton T-Shirt">
+                    <div id="productSearchResults" style="display: none; position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; background: white; border-radius: 4px; margin-top: 2px;"></div>
+                </div>
+                <div id="selectedProductInfo" style="display: none; padding: 1rem; background: #e3f2fd; border-radius: 4px; margin-top: 1rem;">
+                    <h5 style="margin: 0 0 0.5rem 0; color: #1976d2;">✅ Seçilen Ürün:</h5>
+                    <div id="selectedProductDetails"></div>
+                    <button type="button" id="clearSelectedProduct" class="btn btn-outline-secondary btn-sm" style="margin-top: 0.5rem;">❌ Seçimi Temizle</button>
                 </div>
             </div>
-            <div class="form-section">
-                <h3>🛒 Pazaryeri Bilgileri</h3>
+            <input type="hidden" id="editingProductId" name="editingProductId" value="">   
+            <!-- Search Product End -->
+
+            <!-- Form Step1:Product Info Start -->
+            <div id="step1">
+                <div class="form-section">
+                    <h3>📝 Temel Ürün Bilgileri</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productName">Ürün Adı *</label>
+                            <input type="text" id="productName" name="productName" class="form-control" placeholder="Örn: Premium Cotton T-Shirt" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Ürün Resmi *</label>
+                            <div class="image-upload">
+                                <div class="image-preview" id="imagePreview" onclick="document.getElementById('imageInput').click()">📷</div>
+                                <small style="color: #6c757d; text-align: center;">Resim yüklemek için tıklayın</small>
+                                <input type="file" id="imageInput" name="productImage" accept="image/*" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productIdentifier">Ürün Tanıtıcı Adı *</label>
+                            <input type="text" id="productIdentifier" name="productIdentifier" class="form-control" placeholder="Örn: PTS-001" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productCategory">Kategori *</label>
+                            <select id="categoriesSearch" class="form-control" style="margin-bottom: 0.5rem;">
+                                <option value="">Kategori seçin...</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div id="categoriesSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
+                                <small style="color: #6c757d;">Seçilen kategori burada görünecek...</small>
+                            </div>
+                            <div id="categoriesHidden"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="productDescription">Açıklama</label>
+                        <textarea id="productDescription" name="productDescription" class="form-control" rows="3" placeholder="Ürün hakkında detaylı açıklama..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>🛒 Pazaryeri Bilgileri</h3>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="brands">Markalar *</label>
-                            <input type="text" id="brandsSearch" placeholder="Marka ara..." class="form-control" style="margin-bottom: 0.5rem;">
-                            <div id="brandsResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; background: white;">
-                            </div>
+                            <select id="brandsSearch" class="form-control" style="margin-bottom: 0.5rem;">
+                                <option value="">Marka seçin...</option>
+                                {% for brand in brands %}
+                                    <option value="{{ brand.id }}">{{ brand.name }}</option>
+                                {% endfor %}
+                            </select>
                             <div id="brandsSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
                                 <small style="color: #6c757d;">Seçilen markalar burada görünecek...</small>
                             </div>
@@ -268,24 +378,26 @@
                         </div>
                         <div class="form-group">
                             <label for="marketplaces">Pazaryerleri *</label>
-                            <input type="text" id="marketplacesSearch" placeholder="Pazaryeri ara..." class="form-control" style="margin-bottom: 0.5rem;"> 
-                            <div id="marketplacesResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; background: white;">
-                            </div>
+                            <select id="marketplacesSearch" class="form-control" style="margin-bottom: 0.5rem;">
+                                <option value="">Pazaryeri seçin...</option>
+                                {% for marketplace in marketplaces %}
+                                    <option value="{{ marketplace.id }}">{{ marketplace.name }}</option>
+                                {% endfor %}
+                            </select>
                             <div id="marketplacesSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
                                 <small style="color: #6c757d;">Seçilen pazaryerleri burada görünecek...</small>
                             </div>
                             <div id="marketplacesHidden"></div>
                         </div>
                     </div>
-            </div>
-            <div class="form-section">
-                <h3>🎨 Varyasyon Şablonları</h3>
-                <div class="form-row">
+                </div>
+
+                <div class="form-section">
+                    <h3>🎨 Varyasyon Şablonları</h3>
                     <div class="form-group">
                         <label for="colorTemplate">Renkler *</label>
                         <input type="text" id="colorsSearch" placeholder="Renk ara..." class="form-control" style="margin-bottom: 0.5rem;">
-                        <div id="colorsResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; background: white;">
-                        </div>
+                        <div id="colorsResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; background: white;"></div>
                         <div id="colorsSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
                             <small style="color: #6c757d;">Seçilen renkler burada görünecek...</small>
                         </div>
@@ -295,441 +407,1478 @@
                             <button type="button" id="addNewColorBtn" class="btn btn-primary" style="min-width: 120px;">+ Renk Ekle</button>
                         </div>
                     </div>
-                </div>
-                <div class="form-row">
                     <div class="form-group">
                         <label for="sizeTableBtn">Beden Tablosu *</label>
-                        <button type="button"
-                                class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2"
-                                id="sizeTableBtn"
-                                data-bs-toggle="modal"
-                                data-bs-target="#sizeTableModal"
-                                style="font-size:1.1rem; font-weight:500;">
-                            <span style="font-size:1.5rem; margin-right:0.5rem;">📏</span> Beden Tablosu Oluştur
+                        <button type="button" class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2" id="sizeTableBtn" data-bs-toggle="modal" data-bs-target="#sizeTableModal" style="font-size:1.1rem; font-weight:500;">
+                            <span style="font-size:1.5rem; margin-right:0.5rem;">📏</span> Beden Tablosu Oluştur/Düzenle
                         </button>
                         <input type="hidden" name="sizeTableData" id="sizeTableData">
-                        <div id="sizeTablePreview" style="margin-top: 1rem;"></div>
+                        <div id="sizeTablePreview" class="table-preview-container" style="display: none;"></div>
                     </div>
-                    
-                </div>
-                <div class="form-row">
                     <div class="form-group">
                         <label for="customTableBtn">Custom Tablo</label>
                         <input type="text" id="customTableTitle" class="form-control mb-2" placeholder="Tablo başlığı (ör: Malzeme İçeriği)">
-                        <button type="button"
-                                class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2"
-                                id="customTableBtn"
-                                data-bs-toggle="modal"
-                                data-bs-target="#customTableModal"
-                                style="font-size:1.1rem; font-weight:500;">
-                            <span style="font-size:1.5rem; margin-right:0.5rem;">⚙️</span> Custom Tablo Oluştur
+                        <button type="button" class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2" id="customTableBtn" data-bs-toggle="modal" data-bs-target="#customTableModal" style="font-size:1.1rem; font-weight:500;">
+                            <span style="font-size:1.5rem; margin-right:0.5rem;">⚙️</span> Custom Tablo Oluştur/Düzenle
                         </button>
                         <input type="hidden" name="customTableData" id="customTableData">
-                        <div id="customTablePreview" style="margin-top: 1rem;"></div>
+                        <div id="customTablePreview" class="table-preview-container" style="display: none;"></div>
                     </div>
                 </div>
+
+                <div style="text-align: right; margin-top: 2rem;">
+                    <button type="button" class="btn btn-secondary">İptal</button>
+                    <button type="button" class="btn btn-primary" id="goToVariationsBtn">İlerle</button>
+                </div>
             </div>
-            <!-- Form Butonları -->
-            <div style="text-align: right; margin-top: 2rem;">
-                <button type="button" class="btn btn-secondary">İptal</button>
-                <button type="submit" class="btn btn-primary">Ürün Oluştur</button>
+            <!-- Form Step1 End -->
+
+            <!-- Form Step2:Select Variations Start -->
+            <div id="step2" style="display:none;">
+                <h3><span style="font-size:1.3rem;">🧩</span> Varyasyonları Seç</h3>
+                <div id="variationTableContainer"></div>
+                <input type="hidden" name="variationsData" id="variationsData">
+                <div style="text-align: right; margin-top: 2rem;">
+                    <button type="button" class="btn btn-secondary" id="backToStep1Btn">Geri</button>
+                    <button type="submit" class="btn btn-success" id="submitBtn">Kaydet</button>
+                </div>
             </div>
+            <!-- Form Step2 End -->
+
         </form>
 
-        <!-- Beden Tablosu Modal -->
+        <!-- Size Table Model Start -->
         <div class="modal fade" id="sizeTableModal" tabindex="-1" aria-labelledby="sizeTableModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="sizeTableModalLabel"><span style="font-size:1.3rem;">📏</span> Beden Tablosu Oluştur</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-bordered" id="sizeTable">
-                    <thead>
-                        <tr>
-                        <th>Beden</th>
-                        <th>En</th>
-                        <th>Boy</th>
-                        <th>Yükseklik</th>
-                        <th>Birim</th>
-                        <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Satırlar JS ile eklenecek -->
-                    </tbody>
-                    </table>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
-                    <button type="button" class="btn btn-success" id="addSizeRowBtn">+ Satır Ekle</button>
-                    <button type="button" class="btn btn-primary" id="saveSizeTableBtn">Kaydet</button>
-                </div>
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="sizeTableModalLabel"><span style="font-size:1.3rem;">📏</span> Beden Tablosu Oluştur</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="sizeTable">
+                                <thead>
+                                    <tr>
+                                        <th>Beden</th>
+                                        <th>En</th>
+                                        <th>Boy</th>
+                                        <th>Yükseklik</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                        <button type="button" class="btn btn-success" id="addSizeRowBtn">+ Satır Ekle</button>
+                        <button type="button" class="btn btn-primary" id="saveSizeTableBtn">Kaydet</button>
+                    </div>
                 </div>
             </div>
         </div>
-        <!-- Beden Tablosu Modal End -->
-        <!-- Custom Tablo Modal -->
+        <!-- Size Table Model End -->
+
+        <!-- Custom Table Model Start -->
         <div class="modal fade" id="customTableModal" tabindex="-1" aria-labelledby="customTableModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="customTableModalLabel"><span style="font-size:1.3rem;">⚙️</span> Custom Tablo Oluştur</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-bordered" id="customTable">
-                    <thead>
-                        <tr>
-                        <th>Değer</th>
-                        <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Satırlar JS ile eklenecek -->
-                    </tbody>
-                    </table>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
-                    <button type="button" class="btn btn-success" id="addCustomRowBtn">+ Satır Ekle</button>
-                    <button type="button" class="btn btn-primary" id="saveCustomTableBtn">Kaydet</button>
-                </div>
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="customTableModalLabel"><span style="font-size:1.3rem;">⚙️</span> Custom Tablo Oluştur</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="customTable">
+                                <thead>
+                                    <tr>
+                                        <th>Değer</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                        <button type="button" class="btn btn-success" id="addCustomRowBtn">+ Satır Ekle</button>
+                        <button type="button" class="btn btn-primary" id="saveCustomTableBtn">Kaydet</button>
+                    </div>
                 </div>
             </div>
         </div>
-        <!-- Custom Tablo Modal End -->
-
+        <!-- Custom Table Model End -->
     </div>
 {% endblock %}
 
-
 {% block body_scripts %}
     {{ parent() }}
-<script>
+    <script>
+        'use strict';
 
-    let searchTimeout;
-    let selectedItems = {
-        colors: [],
-        brands: [],
-        marketplaces: [],
-        //sizeCharts: [],
-        //customCharts: [],
-        categories: []
-    };
-    const ICONS = {
-        'colors': '🎨',
-        'brands': '🏷️',
-        'marketplaces': '🛒',
-        //'sizeCharts': '📏',
-        //'customCharts': '⚙️',
-        'categories': '📂'
-    };
-    const TYPE_LABELS = {
-        colors: 'renkler',
-        brands: 'markalar',
-        marketplaces: 'pazaryerleri',
-        //sizeCharts: 'beden şablonları',
-        //customCharts: 'custom şablonları',
-        categories: 'kategori'
-    };
-    const INPUT_NAMES = {
-        colors: 'colorTemplate[]',
-        brands: 'brands[]',
-        marketplaces: 'marketplaces[]',
-        //sizeCharts: 'sizeTemplate[]',
-        //customCharts: 'customTemplate[]',
-        categories: 'productCategory'
-    };
-    const searchTypes = ['colors', 'brands', 'marketplaces', 'categories'];
-
-    async function performSearch(type) {
-        const searchInput = document.getElementById(`${type}Search`);
-        if (!searchInput) {
-            console.error('Search input not found:', `${type}Search`);
-            return;
-        }
-        const query = searchInput.value.trim();
-        try {
-            const response = await fetch(`/product/search/${type}?q=${encodeURIComponent(query)}`);
-            const data = await response.json();
-            console.log(`${type} search results:`, data.items);
-            displayResults(type, data.items);
-        } catch (error) {
-            console.error(`${type} search error:`, error);
-        }
-    }
-
-    function displayResults(type, items) {
-        const resultsDiv = document.getElementById(`${type}Results`);
-        if (items.length === 0) {
-            resultsDiv.innerHTML = '<div style="padding: 1rem; text-align: center; color: #6c757d;">Sonuç bulunamadı</div>';
-            resultsDiv.style.display = 'block';
-            return;
-        }
-        resultsDiv.innerHTML = '';
-        items.forEach(item => {
-            const itemDiv = document.createElement('div');
-            itemDiv.style.cssText = 'padding: 0.5rem; cursor: pointer; border-bottom: 1px solid #f1f3f4;';
-            itemDiv.innerHTML = `${ICONS[type] || '📋'} ${item.name}`;
-            itemDiv.addEventListener('click', () => {
-                addSelectedItem(type, item);
-            });
-            itemDiv.addEventListener('mouseenter', () => {
-                itemDiv.style.backgroundColor = '#f8f9fa';
-            });
-            itemDiv.addEventListener('mouseleave', () => {
-                itemDiv.style.backgroundColor = '';
-            });
-            resultsDiv.appendChild(itemDiv);
-        });
-        resultsDiv.style.display = 'block';
-    }
-
-    function addSelectedItem(type, item) {
-        console.log('Adding item:', type, item);
-        const singleSelectTypes = ['categories'];
-        if (singleSelectTypes.includes(type)) {
-            selectedItems[type] = [item];
-        } else {
-            if (selectedItems[type].some(selectedItem => selectedItem.id === item.id)) {
-                console.log('Item already selected');
-                return;
+        /**
+         * Product Form Manager - Ana uygulama sınıfı
+         */
+        class ProductFormManager {
+            constructor() {
+                this.initializeConfig();
+                this.initializeState();
+                this.initializeServices();
+                this.bindEvents();
+                this.validateEnvironment();
             }
-            selectedItems[type].push(item);
-        }
-        console.log(`Selected ${type}:`, selectedItems[type]);
-        updateSelectedItems(type);
-        document.getElementById(`${type}Search`).value = '';
-        document.getElementById(`${type}Results`).style.display = 'none';
-    }
 
-    function updateSelectedItems(type) {
-        console.log(`Selected ${type}:`, selectedItems[type]);
-        const selectedDiv = document.getElementById(`${type}Selected`);
-        const hiddenDiv = document.getElementById(`${type}Hidden`);
-        if (!selectedDiv || !hiddenDiv) {
-            console.error(`Elements not found for type: ${type}`);
-            return;
-        }
-        if (selectedItems[type].length === 0) {
-            selectedDiv.innerHTML = `<small style="color: #6c757d;">Seçilen ${TYPE_LABELS[type] || type} burada görünecek...</small>`;
-            hiddenDiv.innerHTML = '';
-            return;
-        }
-        selectedDiv.innerHTML = selectedItems[type].map(item => `
-            <span style="display: inline-block; background: #007bff; color: white; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 12px; font-size: 0.875rem;">
-                ${ICONS[type] || '📋'} ${item.name}
-                <span onclick="removeSelectedItem('${type}', ${item.id})" style="margin-left: 0.5rem; cursor: pointer; font-weight: bold;">×</span>
-            </span>
-        `).join('');
-        hiddenDiv.innerHTML = selectedItems[type].map(item => 
-            `<input type="hidden" name="${INPUT_NAMES[type] || type + '[]'}" value="${item.id}">`
-        ).join('');
-    }
-
-    function removeSelectedItem(type, itemId) {
-        selectedItems[type] = selectedItems[type].filter(item => item.id !== itemId);
-        updateSelectedItems(type);
-    }
-    
-    function showLoading() {
-        document.getElementById('loadingOverlay').style.display = 'flex';
-        document.getElementById('productForm').classList.add('form-disabled');
-        const submitBtn = document.querySelector('.btn-primary');
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '⏳ İşleniyor...';
-        }
-    }
-
-    function hideLoading() {
-        document.getElementById('loadingOverlay').style.display = 'none';
-        document.getElementById('productForm').classList.remove('form-disabled');
-        const submitBtn = document.querySelector('.btn-primary');
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = 'Ürün Oluştur';
-        }
-    }
-
-    searchTypes.forEach(type => {
-        const searchElement = document.getElementById(`${type}Search`);
-        if (searchElement) {
-            searchElement.addEventListener('input', () => {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    performSearch(type); 
-                }, 300);
-            });
-            console.log(`Event listener added for ${type}`);
-        } else {
-            console.warn(`Search element not found: ${type}Search`);
-        }
-    });
-
-    let imageFile = null;
-    document.getElementById('imageInput').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        imageFile = file;
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.getElementById('imagePreview');
-                preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    document.getElementById('productForm').addEventListener('submit', function(e) {
-        showLoading();
-        const formData = {
-            productName: document.getElementById('productName').value,
-            productIdentifier: document.getElementById('productIdentifier').value,
-            productDescription: document.getElementById('productDescription').value,
-            productImage: imageFile ? {
-                name: imageFile.name,
-                size: imageFile.size,
-                type: imageFile.type
-            } : 'Seçili değil',
-            categories: selectedItems.categories,
-            brands: selectedItems.brands,
-            marketplaces: selectedItems.marketplaces,
-            sizeCharts: selectedItems.sizeCharts,
-            colors: selectedItems.colors,
-            customCharts: selectedItems.customCharts
-        };
-        console.log('Form submitted with data:', formData);
-        this.submit();
-    });
-
-    document.getElementById('addNewColorBtn').addEventListener('click', function() {
-        const newColor = document.getElementById('newColorInput').value.trim();
-        if (!newColor) {
-            alert('Lütfen bir renk girin.');
-            return;
-        }
-        fetch('/product/add-color', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': '{{ csrf_token("add_color") }}'
-            },
-            body: JSON.stringify({ name: newColor })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                addSelectedItem('colors', { id: data.id, name: newColor });
-                document.getElementById('newColorInput').value = '';
-            } else {
-                alert(data.message || 'Renk eklenemedi.');
+            /**
+             * Konfigürasyon ayarları
+             */
+            initializeConfig() {
+                this.config = {
+                    searchDelay: 300,
+                    minSearchLength: 2,
+                    endpoints: {
+                        productSearch: '/product/search-products',
+                        itemSearch: '/product/search',
+                        addColor: '/product/add-color'
+                    },
+                    icons: {
+                        colors: '🎨',
+                        brands: '🏷️',
+                        marketplaces: '🛒',
+                        categories: '📂'
+                    },
+                    typeLabels: {
+                        colors: 'renkler',
+                        brands: 'markalar', 
+                        marketplaces: 'pazaryerleri',
+                        categories: 'kategori'
+                    },
+                    inputNames: {
+                        colors: 'colors[]',
+                        brands: 'brands[]',
+                        marketplaces: 'marketplaces[]',
+                        categories: 'productCategory'
+                    },
+                    searchableTypes: ['colors'],
+                    selectableTypes: ['categories', 'brands', 'marketplaces']
+                };
             }
-        })
-        .catch(() => alert('Sunucu hatası!'));
-    });
 
+            /**
+             * Uygulama state'ini başlat
+             */
+            initializeState() {
+                this.state = {
+                    selectedProduct: null,
+                    isEditMode: false,
+                    lockedVariants: [],
+                    selectedItems: {
+                        colors: [],
+                        brands: [],
+                        marketplaces: [],
+                        categories: []
+                    },
+                    searchTimeout: null,
+                    currentStep: 1
+                };
+            }
 
-    // Size Table Functions
-    function addSizeRow(values = {}) {
-        const tbody = document.querySelector('#sizeTable tbody');
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><input type="text" class="form-control" value="${values.beden || ''}" required></td>
-            <td><input type="number" class="form-control" value="${values.en || ''}" step="any" required></td>
-            <td><input type="number" class="form-control" value="${values.boy || ''}" step="any" required></td>
-            <td><input type="number" class="form-control" value="${values.yukseklik || ''}" step="any" required></td>
-            <td>
-                <select class="form-select">
-                    <option value="cm" ${values.birim === 'cm' ? 'selected' : ''}>cm</option>
-                    <option value="mm" ${values.birim === 'mm' ? 'selected' : ''}>mm</option>
-                    <option value="m" ${values.birim === 'm' ? 'selected' : ''}>m</option>
-                </select>
-            </td>
-            <td><button type="button" class="btn btn-danger btn-sm remove-row-btn">Sil</button></td>
-        `;
-        tbody.appendChild(tr);
-    }
+            /**
+             * Servis sınıflarını başlat
+             */
+            initializeServices() {
+                this.searchService = new SearchService(this.config);
+                this.formService = new FormService(this.config, this.state);
+                this.tableService = new TableService();
+                this.variationService = new VariationService(this.state);
+                this.validationService = new ValidationService();
+                this.uiService = new UIService();
+            }
 
-    document.getElementById('addSizeRowBtn').addEventListener('click', function() {
-        addSizeRow();
-    });
+            /**
+             * Event listener'ları bağla
+             */
+            bindEvents() {
+                try {
+                    this.bindProductSearchEvents();
+                    this.bindFormEvents();
+                    this.bindSelectionEvents();
+                    this.bindNavigationEvents();
+                    this.bindTableEvents();
+                } catch (error) {
+                    console.error('Event binding failed:', error);
+                    this.uiService.showError('Uygulama başlatılırken bir hata oluştu.');
+                }
+            }
 
-    document.querySelector('#sizeTable tbody').addEventListener('click', function(e) {
-        if (e.target.classList.contains('remove-row-btn')) {
-            e.target.closest('tr').remove();
+            /**
+             * Ürün arama event'leri
+             */
+            bindProductSearchEvents() {
+                const searchInput = this.getElement('productSearchInput');
+                if (searchInput) {
+                    searchInput.addEventListener('input', this.debounce(
+                        (e) => this.handleProductSearch(e.target.value), 
+                        this.config.searchDelay
+                    ));
+                }
+
+                const clearButton = this.getElement('clearSelectedProduct');
+                if (clearButton) {
+                    clearButton.addEventListener('click', () => this.clearForm());
+                }
+            }
+
+            /**
+             * Form event'leri
+             */
+            bindFormEvents() {
+                // Resim yükleme
+                const imageInput = this.getElement('imageInput');
+                if (imageInput) {
+                    imageInput.addEventListener('change', (e) => this.handleImageUpload(e));
+                }
+
+                // Renk ekleme
+                const addColorBtn = this.getElement('addNewColorBtn');
+                if (addColorBtn) {
+                    addColorBtn.addEventListener('click', () => this.handleAddNewColor());
+                }
+
+                // Form submit
+                const form = this.getElement('productForm');
+                if (form) {
+                    form.addEventListener('submit', (e) => this.handleFormSubmit(e));
+                }
+            }
+
+            /**
+             * Seçim event'leri
+             */
+            bindSelectionEvents() {
+                // Searchable types (AJAX arama)
+                this.config.searchableTypes.forEach(type => {
+                    const searchElement = this.getElement(`${type}Search`);
+                    if (searchElement) {
+                        searchElement.addEventListener('input', this.debounce(
+                            () => this.handleItemSearch(type), 
+                            this.config.searchDelay
+                        ));
+                    }
+                });
+
+                // Selectable types (Select dropdown)
+                this.config.selectableTypes.forEach(type => {
+                    const selectElement = this.getElement(`${type}Search`);
+                    if (selectElement) {
+                        selectElement.addEventListener('change', (e) => this.handleItemSelect(type, e));
+                    }
+                });
+            }
+
+            /**
+             * Navigasyon event'leri
+             */
+            bindNavigationEvents() {
+                const goToVariationsBtn = this.getElement('goToVariationsBtn');
+                if (goToVariationsBtn) {
+                    goToVariationsBtn.addEventListener('click', () => this.handleGoToVariations());
+                }
+
+                const backToStep1Btn = this.getElement('backToStep1Btn');
+                if (backToStep1Btn) {
+                    backToStep1Btn.addEventListener('click', () => this.showStep(1));
+                }
+            }
+
+            /**
+             * Tablo event'leri
+             */
+            bindTableEvents() {
+                const tableButtons = [
+                    { id: 'addSizeRowBtn', handler: () => this.tableService.addSizeRow() },
+                    { id: 'addCustomRowBtn', handler: () => this.tableService.addCustomRow() },
+                    { id: 'saveSizeTableBtn', handler: () => this.tableService.saveSizeTable() },
+                    { id: 'saveCustomTableBtn', handler: () => this.tableService.saveCustomTable() }
+                ];
+
+                tableButtons.forEach(({ id, handler }) => {
+                    const element = this.getElement(id);
+                    if (element) {
+                        element.addEventListener('click', handler);
+                    }
+                });
+
+                // Tablo satır silme
+                this.bindTableRowDeletion('sizeTable');
+                this.bindTableRowDeletion('customTable');
+            }
+
+            /**
+             * Tablo satır silme event'i
+             */
+            bindTableRowDeletion(tableId) {
+                const table = this.getElement(tableId);
+                if (table) {
+                    const tbody = table.querySelector('tbody');
+                    if (tbody) {
+                        tbody.addEventListener('click', (e) => {
+                            if (e.target.classList.contains('remove-row-btn') && 
+                                !e.target.closest('tr').classList.contains('locked-row')) {
+                                e.target.closest('tr').remove();
+                            }
+                        });
+                    }
+                }
+            }
+
+            /**
+             * Ürün arama işlemi
+             */
+            async handleProductSearch(query) {
+                if (query.length < this.config.minSearchLength) {
+                    this.uiService.hideElement('productSearchResults');
+                    return;
+                }
+
+                try {
+                    const results = await this.searchService.searchProducts(query);
+                    this.displayProductSearchResults(results);
+                } catch (error) {
+                    console.error('Product search failed:', error);
+                    this.uiService.showError('Ürün arama başarısız.');
+                }
+            }
+
+            /**
+             * Ürün arama sonuçlarını göster
+             */
+            displayProductSearchResults(items) {
+                const resultsDiv = this.getElement('productSearchResults');
+                if (!resultsDiv) return;
+
+                if (items.length === 0) {
+                    resultsDiv.innerHTML = '<div style="padding: 1rem; text-align: center; color: #6c757d;">Ürün bulunamadı</div>';
+                    this.uiService.showElement('productSearchResults');
+                    return;
+                }
+
+                resultsDiv.innerHTML = items.map(item => `
+                    <div class="search-result-item" data-product-id="${item.id}" style="padding: 0.75rem; cursor: pointer; border-bottom: 1px solid #f1f3f4;">
+                        <div style="font-weight: 500;">${this.escapeHtml(item.name)}</div>
+                        <div style="font-size: 0.875rem; color: #6c757d;">${this.escapeHtml(item.productIdentifier)}</div>
+                        <div style="font-size: 0.75rem; color: #28a745;">${item.hasVariants ? '✅ Varyantları var' : '⚠️ Varyant yok'}</div>
+                    </div>
+                `).join('');
+
+                // Event delegation ile click event'i ekle
+                resultsDiv.addEventListener('click', (e) => {
+                    const resultItem = e.target.closest('.search-result-item');
+                    if (resultItem) {
+                        const productId = resultItem.dataset.productId;
+                        const product = items.find(item => item.id == productId);
+                        if (product) {
+                            this.selectProductForEdit(product);
+                        }
+                    }
+                });
+
+                this.uiService.showElement('productSearchResults');
+            }
+
+            /**
+             * Düzenleme için ürün seç
+             */
+            selectProductForEdit(product) {
+                try {
+                    this.state.selectedProduct = product;
+                    this.state.isEditMode = true;
+                    
+                    this.uiService.hideElement('productSearchResults');
+                    this.getElement('productSearchInput').value = '';
+                    
+                    this.displaySelectedProduct(product);
+                    this.formService.fillForm(product);
+                    this.formService.setEditMode();
+                } catch (error) {
+                    console.error('Product selection failed:', error);
+                    this.uiService.showError('Ürün seçimi başarısız.');
+                }
+            }
+
+            /**
+             * Seçilen ürünü göster
+             */
+            displaySelectedProduct(product) {
+                const detailsElement = this.getElement('selectedProductDetails');
+                if (detailsElement) {
+                    detailsElement.innerHTML = `
+                        <strong>${this.escapeHtml(product.name)}</strong> (${this.escapeHtml(product.productIdentifier)})<br>
+                        <small style="color: #6c757d;">${this.escapeHtml(product.description || 'Açıklama yok')}</small>
+                    `;
+                }
+                this.uiService.showElement('selectedProductInfo');
+                this.getElement('editingProductId').value = product.id;
+            }
+
+            /**
+             * Item arama (AJAX)
+             */
+            async handleItemSearch(type) {
+                const searchInput = this.getElement(`${type}Search`);
+                if (!searchInput) return;
+
+                const query = searchInput.value.trim();
+                if (query.length < this.config.minSearchLength) {
+                    this.uiService.hideElement(`${type}Results`);
+                    return;
+                }
+
+                try {
+                    const results = await this.searchService.searchItems(type, query);
+                    this.displayItemSearchResults(type, results);
+                } catch (error) {
+                    console.error(`${type} search failed:`, error);
+                }
+            }
+
+            /**
+             * Item arama sonuçlarını göster
+             */
+            displayItemSearchResults(type, items) {
+                const resultsDiv = this.getElement(`${type}Results`);
+                if (!resultsDiv) return;
+
+                if (items.length === 0) {
+                    resultsDiv.innerHTML = '<div style="padding: 1rem; text-align: center; color: #6c757d;">Sonuç bulunamadı</div>';
+                    this.uiService.showElement(`${type}Results`);
+                    return;
+                }
+
+                resultsDiv.innerHTML = items.map(item => `
+                    <div class="item-result" data-item-id="${item.id}" data-item-name="${this.escapeHtml(item.name)}" 
+                         style="padding: 0.5rem; cursor: pointer; border-bottom: 1px solid #f1f3f4;">
+                        ${this.config.icons[type] || '📋'} ${this.escapeHtml(item.name)}
+                    </div>
+                `).join('');
+
+                // Event delegation
+                resultsDiv.addEventListener('click', (e) => {
+                    const resultItem = e.target.closest('.item-result');
+                    if (resultItem) {
+                        const item = {
+                            id: resultItem.dataset.itemId,
+                            name: resultItem.dataset.itemName
+                        };
+                        this.addSelectedItem(type, item);
+                    }
+                });
+
+                this.uiService.showElement(`${type}Results`);
+            }
+
+            /**
+             * Item seçimi (Select)
+             */
+            handleItemSelect(type, event) {
+                const selectedOption = event.target.options[event.target.selectedIndex];
+                if (selectedOption.value) {
+                    const item = {
+                        id: selectedOption.value,
+                        name: selectedOption.text
+                    };
+                    this.addSelectedItem(type, item);
+                    event.target.selectedIndex = 0;
+                }
+            }
+
+            /**
+             * Seçilen item'ı ekle
+             */
+            addSelectedItem(type, item) {
+                try {
+                    const singleSelectTypes = ['categories'];
+                    
+                    if (singleSelectTypes.includes(type)) {
+                        this.state.selectedItems[type] = [item];
+                    } else {
+                        if (this.state.selectedItems[type].some(selectedItem => selectedItem.id === item.id)) {
+                            return;
+                        }
+                        this.state.selectedItems[type].push(item);
+                    }
+                    
+                    this.updateSelectedItems(type);
+                    this.clearSearchInput(type);
+                } catch (error) {
+                    console.error('Add selected item failed:', error);
+                }
+            }
+
+            /**
+             * Seçilen item'ları güncelle
+             */
+            updateSelectedItems(type) {
+                const selectedDiv = this.getElement(`${type}Selected`);
+                const hiddenDiv = this.getElement(`${type}Hidden`);
+                
+                if (!selectedDiv || !hiddenDiv) return;
+
+                if (this.state.selectedItems[type].length === 0) {
+                    selectedDiv.innerHTML = `<small style="color: #6c757d;">Seçilen ${this.config.typeLabels[type] || type} burada görünecek...</small>`;
+                    hiddenDiv.innerHTML = '';
+                    return;
+                }
+
+                selectedDiv.innerHTML = this.state.selectedItems[type].map(item => {
+                    const isLocked = this.isItemLocked(type, item);
+                    const lockIcon = isLocked ? '🔒 ' : '';
+                    const removeButton = isLocked ? 
+                        `<span style="margin-left: 0.5rem; color: #6c757d; cursor: not-allowed;" title="Bu ${this.config.typeLabels[type]} varyantlarda kullanıldığı için kaldırılamaz">🔒</span>` :
+                        `<span onclick="productFormManager.removeSelectedItem('${type}', ${item.id})" style="margin-left: 0.5rem; cursor: pointer; font-weight: bold;">×</span>`;
+                        
+                    return `
+                        <span style="display: inline-block; background: ${isLocked ? '#6c757d' : '#007bff'}; color: white; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 12px; font-size: 0.875rem;">
+                            ${lockIcon}${this.config.icons[type] || '📋'} ${this.escapeHtml(item.name)}
+                            ${removeButton}
+                        </span>
+                    `;
+                }).join('');
+
+                hiddenDiv.innerHTML = this.state.selectedItems[type].map(item => 
+                    `<input type="hidden" name="${this.config.inputNames[type] || type + '[]'}" value="${item.id}">`
+                ).join('');
+            }
+
+            /**
+             * Item'ın kilitli olup olmadığını kontrol et
+             */
+            isItemLocked(type, item) {
+                if (type === 'colors' && this.state.lockedVariants.length > 0) {
+                    return this.state.lockedVariants.some(v => v.color === item.name);
+                }
+                return false;
+            }
+
+            /**
+             * Seçilen item'ı kaldır
+             */
+            removeSelectedItem(type, itemId) {
+                if (this.isItemLocked(type, { id: itemId })) {
+                    this.uiService.showError(`Bu ${this.config.typeLabels[type]} varyantlarda kullanıldığı için kaldırılamaz.`);
+                    return;
+                }
+                
+                this.state.selectedItems[type] = this.state.selectedItems[type].filter(item => item.id != itemId);
+                this.updateSelectedItems(type);
+            }
+
+            /**
+             * Arama input'unu temizle
+             */
+            clearSearchInput(type) {
+                const searchInput = this.getElement(`${type}Search`);
+                if (searchInput) {
+                    searchInput.value = '';
+                }
+                this.uiService.hideElement(`${type}Results`);
+            }
+
+            /**
+             * Resim yükleme
+             */
+            handleImageUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                if (!file.type.startsWith('image/')) {
+                    this.uiService.showError('Lütfen geçerli bir resim dosyası seçin.');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const preview = this.getElement('imagePreview');
+                    if (preview) {
+                        preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                    }
+                };
+                reader.onerror = () => {
+                    this.uiService.showError('Resim yüklenirken bir hata oluştu.');
+                };
+                reader.readAsDataURL(file);
+            }
+
+            /**
+             * Yeni renk ekleme
+             */
+            async handleAddNewColor() {
+                const colorInput = this.getElement('newColorInput');
+                if (!colorInput) return;
+
+                const newColor = colorInput.value.trim();
+                if (!newColor) {
+                    this.uiService.showError('Lütfen bir renk girin.');
+                    return;
+                }
+
+                try {
+                    const result = await this.searchService.addColor(newColor);
+                    this.addSelectedItem('colors', { id: result.id, name: newColor });
+                    colorInput.value = '';
+                    this.uiService.showSuccess('Renk başarıyla eklendi.');
+                } catch (error) {
+                    console.error('Add color failed:', error);
+                    this.uiService.showError('Renk eklenemedi.');
+                }
+            }
+
+            /**
+             * Varyasyonlara git
+             */
+            handleGoToVariations() {
+                if (!this.validationService.validateStep1()) {
+                    return;
+                }
+
+                try {
+                    this.variationService.updateLockedVariants(this.state.selectedProduct);
+                    this.variationService.generateMatrix();
+                    this.showStep(2);
+                } catch (error) {
+                    console.error('Generate variations failed:', error);
+                    this.uiService.showError('Varyasyon matrisi oluşturulamadı.');
+                }
+            }
+
+            /**
+             * Form submit
+             */
+            handleFormSubmit(event) {
+                try {
+                    this.uiService.showLoading();
+                    this.variationService.collectVariationsData();
+                } catch (error) {
+                    console.error('Form submit failed:', error);
+                    event.preventDefault();
+                    this.uiService.hideLoading();
+                    this.uiService.showError('Form gönderilirken bir hata oluştu.');
+                }
+            }
+
+            /**
+             * Formu temizle
+             */
+            clearForm() {
+                try {
+                    this.formService.clearForm();
+                    this.showStep(1);
+                } catch (error) {
+                    console.error('Clear form failed:', error);
+                    this.uiService.showError('Form temizlenirken bir hata oluştu.');
+                }
+            }
+
+            /**
+             * Step göster
+             */
+            showStep(stepNumber) {
+                this.state.currentStep = stepNumber;
+                
+                for (let i = 1; i <= 2; i++) {
+                    const stepElement = this.getElement(`step${i}`);
+                    if (stepElement) {
+                        stepElement.style.display = i === stepNumber ? 'block' : 'none';
+                    }
+                }
+            }
+
+            /**
+             * Utility metodlar
+             */
+            getElement(id) {
+                const element = document.getElementById(id);
+                if (!element) {
+                    console.warn(`Element not found: ${id}`);
+                }
+                return element;
+            }
+
+            escapeHtml(text) {
+                if (typeof text !== 'string') return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            debounce(func, wait) {
+                return (...args) => {
+                    clearTimeout(this.state.searchTimeout);
+                    this.state.searchTimeout = setTimeout(() => func.apply(this, args), wait);
+                };
+            }
+
+            /**
+             * Çevre doğrulaması
+             */
+            validateEnvironment() {
+                const requiredElements = [
+                    'productForm', 'step1', 'step2'
+                ];
+
+                const missingElements = requiredElements.filter(id => !document.getElementById(id));
+                
+                if (missingElements.length > 0) {
+                    console.error('Missing required elements:', missingElements);
+                    this.uiService.showError('Uygulama düzgün yüklenemedi. Sayfayı yenileyin.');
+                    return false;
+                }
+                
+                return true;
+            }
         }
-    });
 
-    document.getElementById('saveSizeTableBtn').addEventListener('click', function() {
-        const rows = [];
-        document.querySelectorAll('#sizeTable tbody tr').forEach(tr => {
-            rows.push({
-                beden: tr.children[0].querySelector('input').value,
-                en: tr.children[1].querySelector('input').value,
-                boy: tr.children[2].querySelector('input').value,
-                yukseklik: tr.children[3].querySelector('input').value,
-                birim: tr.children[4].querySelector('select').value,
-            });
-        });
-        document.getElementById('sizeTableData').value = JSON.stringify(rows);
-        // Önizleme için tabloyu göster
-        let html = '<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th><th>Birim</th></tr></thead><tbody>';
-        rows.forEach(row => {
-            html += `<tr><td>${row.beden}</td><td>${row.en}</td><td>${row.boy}</td><td>${row.yukseklik}</td><td>${row.birim}</td></tr>`;
-        });
-        html += '</tbody></table></div>';
-        document.getElementById('sizeTablePreview').innerHTML = html;
-        // Modalı kapat
-        var modal = bootstrap.Modal.getInstance(document.getElementById('sizeTableModal'));
-        modal.hide();
-    });
-    // Size Table Functions End
-    // Custom Table Functions
-    function addCustomRow(value = '') {
-    const tbody = document.querySelector('#customTable tbody');
-    const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><input type="text" class="form-control" value="${value}" required></td>
-            <td><button type="button" class="btn btn-danger btn-sm remove-row-btn">Sil</button></td>
-        `;
-        tbody.appendChild(tr);
-    }
+        /**
+         * Arama Servisi
+         */
+        class SearchService {
+            constructor(config) {
+                this.config = config;
+            }
 
-    document.getElementById('addCustomRowBtn').addEventListener('click', function() {
-        addCustomRow();
-    });
+            async searchProducts(query) {
+                const response = await fetch(`${this.config.endpoints.productSearch}?q=${encodeURIComponent(query)}`);
+                if (!response.ok) throw new Error('Product search failed');
+                const data = await response.json();
+                return data.items || [];
+            }
 
-    document.querySelector('#customTable tbody').addEventListener('click', function(e) {
-        if (e.target.classList.contains('remove-row-btn')) {
-            e.target.closest('tr').remove();
+            async searchItems(type, query) {
+                const response = await fetch(`${this.config.endpoints.itemSearch}/${type}?q=${encodeURIComponent(query)}`);
+                if (!response.ok) throw new Error(`${type} search failed`);
+                const data = await response.json();
+                return data.items || [];
+            }
+
+            async addColor(name) {
+                const response = await fetch(this.config.endpoints.addColor, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ name })
+                });
+
+                if (!response.ok) throw new Error('Add color failed');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.message || 'Add color failed');
+                }
+                
+                return data;
+            }
         }
-    });
 
-    document.getElementById('saveCustomTableBtn').addEventListener('click', function() {
-        const rows = [];
-        document.querySelectorAll('#customTable tbody tr').forEach(tr => {
-            rows.push({
-                deger: tr.children[0].querySelector('input').value
-            });
-        });
-        const title = document.getElementById('customTableTitle').value.trim();
-        document.getElementById('customTableData').value = JSON.stringify({ title, rows });
-        // Önizleme için tabloyu göster
-        let html = `<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>${title || 'Değer'}</th></tr></thead><tbody>`;
-        rows.forEach(row => {
-            html += `<tr><td>${row.deger}</td></tr>`;
-        });
-        html += '</tbody></table></div>';
-        document.getElementById('customTablePreview').innerHTML = html;
-        // Modalı kapat
-        var modal = bootstrap.Modal.getInstance(document.getElementById('customTableModal'));
-        modal.hide();
-    });
-    // Custom Table Functions End
+        /**
+         * Form Servisi
+         */
+        class FormService {
+            constructor(config, state) {
+                this.config = config;
+                this.state = state;
+            }
 
-</script>
+            fillForm(product) {
+                try {
+                    // State'i temizle
+                    this.state.lockedVariants = [];
+                    this.state.selectedItems = {
+                        colors: [],
+                        brands: [],
+                        marketplaces: [],
+                        categories: []
+                    };
+
+                    // Temel form alanlarını doldur
+                    this.setFieldValue('productName', product.name);
+                    this.setFieldValue('productIdentifier', product.productIdentifier);
+                    this.setFieldValue('productDescription', product.description);
+
+                    // Selected items'ları ayarla
+                    this.setupSelectedItems(product);
+
+                    // Resim
+                    if (product.imagePath) {
+                        const preview = document.getElementById('imagePreview');
+                        if (preview) {
+                            preview.innerHTML = `<img src="${product.imagePath}" alt="Product Image">`;
+                        }
+                    }
+
+                    // Tabloları doldur
+                    this.fillTables(product);
+
+                    console.log('Form filled successfully for product:', product.id);
+                } catch (error) {
+                    console.error('Fill form failed:', error);
+                    throw error;
+                }
+            }
+
+            setFieldValue(fieldId, value) {
+                const field = document.getElementById(fieldId);
+                if (field && value !== undefined && value !== null) {
+                    field.value = value;
+                }
+            }
+
+            setupSelectedItems(product) {
+                if (product.categoryId) {
+                    this.state.selectedItems.categories = [{
+                        id: product.categoryId,
+                        name: product.categoryName
+                    }];
+                }
+
+                ['brands', 'marketplaces', 'variantColors'].forEach(key => {
+                    if (product[key] && Array.isArray(product[key])) {
+                        const targetKey = key === 'variantColors' ? 'colors' : key;
+                        this.state.selectedItems[targetKey] = product[key];
+                    }
+                });
+
+                // UI'ı güncelle
+                Object.keys(this.state.selectedItems).forEach(type => {
+                    if (window.productFormManager) {
+                        window.productFormManager.updateSelectedItems(type);
+                    }
+                });
+            }
+
+            fillTables(product) {
+                if (product.sizeTable && Array.isArray(product.sizeTable)) {
+                    let processedUsedSizes = [];
+                    if (product.usedSizes && Array.isArray(product.usedSizes)) {
+                        processedUsedSizes = product.usedSizes;
+                    } else if (product.usedSizes && typeof product.usedSizes === 'object') {
+                        processedUsedSizes = Object.values(product.usedSizes);
+                    }
+                    
+                    window.productFormManager.tableService.populateSizeTable(
+                        product.sizeTable, 
+                        processedUsedSizes
+                    );
+                }
+
+                if (product.customTable && product.customTable.rows) {
+                    let processedUsedCustoms = [];
+                    if (product.usedCustoms && Array.isArray(product.usedCustoms)) {
+                        processedUsedCustoms = product.usedCustoms;
+                    } else if (product.usedCustoms && typeof product.usedCustoms === 'object') {
+                        processedUsedCustoms = Object.values(product.usedCustoms);
+                    }
+                    
+                    window.productFormManager.tableService.populateCustomTable(
+                        product.customTable, 
+                        processedUsedCustoms
+                    );
+                }
+            }
+
+            setEditMode() {
+                const identifierField = document.getElementById('productIdentifier');
+                if (identifierField) {
+                    identifierField.readOnly = true;
+                    identifierField.style.backgroundColor = '#e9ecef';
+                    identifierField.style.cursor = 'not-allowed';
+                }
+
+                const imageInput = document.getElementById('imageInput');
+                if (imageInput) {
+                    imageInput.removeAttribute('required');
+                }
+
+                const submitBtn = document.getElementById('submitBtn');
+                if (submitBtn) {
+                    submitBtn.textContent = '💾 Ürünü Güncelle';
+                }
+            }
+
+            clearForm() {
+                // State'i temizle
+                this.state.selectedProduct = null;
+                this.state.isEditMode = false;
+                this.state.lockedVariants = [];
+                this.state.selectedItems = {
+                    colors: [],
+                    brands: [],
+                    marketplaces: [],
+                    categories: []
+                };
+
+                // Form'u sıfırla
+                const form = document.getElementById('productForm');
+                if (form) {
+                    form.reset();
+                }
+
+                // UI elementlerini temizle
+                this.clearUIElements();
+
+                // Edit mode'u kapat
+                this.clearEditMode();
+
+                console.log('Form cleared successfully');
+            }
+
+            clearUIElements() {
+                const elementsToHide = [
+                    'selectedProductInfo',
+                    'sizeTablePreview',
+                    'customTablePreview'
+                ];
+
+                elementsToHide.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.style.display = 'none';
+                    }
+                });
+
+                // Hidden input'ları temizle
+                const hiddenInputs = ['editingProductId', 'sizeTableData', 'customTableData'];
+                hiddenInputs.forEach(id => {
+                    const input = document.getElementById(id);
+                    if (input) {
+                        input.value = '';
+                    }
+                });
+
+                // Resim preview'ı temizle
+                const imagePreview = document.getElementById('imagePreview');
+                if (imagePreview) {
+                    imagePreview.innerHTML = '📷';
+                }
+
+                // Tabloları temizle
+                const tableBodies = ['#sizeTable tbody', '#customTable tbody'];
+                tableBodies.forEach(selector => {
+                    const tbody = document.querySelector(selector);
+                    if (tbody) {
+                        tbody.innerHTML = '';
+                    }
+                });
+            }
+
+            clearEditMode() {
+                const identifierField = document.getElementById('productIdentifier');
+                if (identifierField) {
+                    identifierField.readOnly = false;
+                    identifierField.style.backgroundColor = '';
+                    identifierField.style.cursor = '';
+                }
+
+                const imageInput = document.getElementById('imageInput');
+                if (imageInput) {
+                    imageInput.setAttribute('required', 'required');
+                }
+
+                const submitBtn = document.getElementById('submitBtn');
+                if (submitBtn) {
+                    submitBtn.textContent = 'Kaydet';
+                }
+            }
+        }
+
+        /**
+         * Tablo Servisi
+         */
+        class TableService {
+            addSizeRow(values = {}, isLocked = false) {
+                const tbody = document.querySelector('#sizeTable tbody');
+                if (!tbody) return;
+
+                const tr = document.createElement('tr');
+                if (isLocked) {
+                    tr.classList.add('locked-row');
+                }
+
+                tr.innerHTML = `
+                    <td data-label="Beden">
+                        <input type="text" class="form-control" value="${values.beden || ''}" ${isLocked ? 'readonly' : ''} required>
+                        ${isLocked ? '<small class="text-muted">🔒 Varyantlarda kullanılıyor</small>' : ''}
+                    </td>
+                    <td data-label="En"><input type="number" class="form-control" value="${values.en || ''}" step="any" ${isLocked ? 'readonly' : ''} required></td>
+                    <td data-label="Boy"><input type="number" class="form-control" value="${values.boy || ''}" step="any" ${isLocked ? 'readonly' : ''} required></td>
+                    <td data-label="Yükseklik"><input type="number" class="form-control" value="${values.yukseklik || ''}" step="any" ${isLocked ? 'readonly' : ''} required></td>
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm remove-row-btn w-100" ${isLocked ? 'style="opacity: 0.5; cursor: not-allowed;" title="Bu beden varyantlarda kullanıldığı için silinemez"' : ''}>
+                            ${isLocked ? '🔒 Sil' : 'Sil'}
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            }
+
+            addCustomRow(value = {}, isLocked = false) {
+                const tbody = document.querySelector('#customTable tbody');
+                if (!tbody) return;
+
+                const tr = document.createElement('tr');
+                if (isLocked) {
+                    tr.classList.add('locked-row');
+                }
+
+                const degerValue = typeof value === 'object' ? (value.deger || '') : value;
+
+                tr.innerHTML = `
+                    <td data-label="Değer">
+                        <input type="text" class="form-control" value="${degerValue}" ${isLocked ? 'readonly' : ''} required>
+                        ${isLocked ? '<small class="text-muted">🔒 Varyantlarda kullanılıyor</small>' : ''}
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm remove-row-btn" ${isLocked ? 'style="opacity: 0.5; cursor: not-allowed;" title="Bu değer varyantlarda kullanıldığı için silinemez"' : ''}>
+                            ${isLocked ? '🔒 Sil' : 'Sil'}
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            }
+
+            saveSizeTable() {
+                const rows = this.collectTableData('#sizeTable tbody tr', ['beden', 'en', 'boy', 'yukseklik']);
+                
+                if (!this.validateTableData(rows)) {
+                    window.productFormManager.uiService.showError('Lütfen tablodaki tüm alanları doldurun.');
+                    return;
+                }
+
+                document.getElementById('sizeTableData').value = JSON.stringify(rows);
+                this.updateSizeTablePreview(rows);
+                this.closeModal('sizeTableModal');
+            }
+
+            saveCustomTable() {
+                const titleInput = document.getElementById('customTableTitle');
+                const title = titleInput ? titleInput.value.trim() : '';
+                
+                if (!title) {
+                    window.productFormManager.uiService.showError('Lütfen Custom Tablo için bir başlık girin.');
+                    return;
+                }
+
+                const rows = this.collectTableData('#customTable tbody tr', ['deger']);
+                
+                if (!this.validateTableData(rows)) {
+                    window.productFormManager.uiService.showError('Lütfen tablodaki tüm değer alanlarını doldurun.');
+                    return;
+                }
+
+                const tableData = { title, rows };
+                document.getElementById('customTableData').value = JSON.stringify(tableData);
+                this.updateCustomTablePreview(tableData);
+                this.closeModal('customTableModal');
+            }
+
+            collectTableData(selector, fields) {
+                const rows = [];
+                document.querySelectorAll(selector).forEach(tr => {
+                    const rowData = {};
+                    fields.forEach((field, index) => {
+                        const input = tr.children[index]?.querySelector('input');
+                        rowData[field] = input ? input.value.trim() : '';
+                    });
+                    rows.push(rowData);
+                });
+                return rows;
+            }
+
+            validateTableData(rows) {
+                return rows.every(row => Object.values(row).every(value => value !== ''));
+            }
+
+            updateSizeTablePreview(rows) {
+                const previewContainer = document.getElementById('sizeTablePreview');
+                if (!previewContainer) return;
+
+                if (rows.length > 0) {
+                    let html = '<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th></tr></thead><tbody>';
+                    rows.forEach(row => {
+                        html += `<tr><td>${row.beden}</td><td>${row.en}</td><td>${row.boy}</td><td>${row.yukseklik}</td></tr>`;
+                    });
+                    html += '</tbody></table></div>';
+                    previewContainer.innerHTML = html;
+                    previewContainer.style.display = 'block';
+                } else {
+                    previewContainer.style.display = 'none';
+                }
+            }
+
+            updateCustomTablePreview(tableData) {
+                const previewContainer = document.getElementById('customTablePreview');
+                if (!previewContainer) return;
+
+                if (tableData.rows && tableData.rows.length > 0) {
+                    let html = `<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>${tableData.title || 'Custom'}</th></tr></thead><tbody>`;
+                    tableData.rows.forEach(row => {
+                        html += `<tr><td>${row.deger}</td></tr>`;
+                    });
+                    html += '</tbody></table></div>';
+                    previewContainer.innerHTML = html;
+                    previewContainer.style.display = 'block';
+                } else {
+                    previewContainer.style.display = 'none';
+                }
+            }
+
+            populateSizeTable(sizeTable, usedSizes = []) {
+                let normalizedUsedSizes = [];
+                if (Array.isArray(usedSizes)) {
+                    normalizedUsedSizes = usedSizes;
+                } else if (typeof usedSizes === 'object' && usedSizes !== null) {
+                    normalizedUsedSizes = Object.values(usedSizes);
+                }
+
+                const tbody = document.querySelector('#sizeTable tbody');
+                if (tbody) {
+                    tbody.innerHTML = '';
+                }
+                sizeTable.forEach(row => {
+                    const sizeValue = row.beden || '';
+                    const isLocked = normalizedUsedSizes.some(usedSize => {
+                        if (typeof usedSize === 'string') {
+                            const extractedSize = usedSize.includes(' (En:') 
+                                ? usedSize.split(' (En:')[0]
+                                : usedSize.split(' (')[0];
+                            return extractedSize === sizeValue;
+                        }
+                        return usedSize === sizeValue;
+                    });
+                    this.addSizeRow(row, isLocked);
+                });
+
+                document.getElementById('sizeTableData').value = JSON.stringify(sizeTable);
+                this.updateSizeTablePreview(sizeTable);
+            }
+
+            populateCustomTable(customTable, usedCustoms = []) {
+                const customTitleElement = document.getElementById('customTableTitle');
+                if (customTitleElement) {
+                    customTitleElement.value = customTable.title || '';
+                }
+
+                const usedCustomsArray = Array.isArray(usedCustoms) ? usedCustoms : Object.values(usedCustoms || {});
+                const tbody = document.querySelector('#customTable tbody');
+                if (tbody) {
+                    tbody.innerHTML = '';
+                }
+
+                if (customTable.rows && customTable.rows.length > 0) {
+                    customTable.rows.forEach(row => {
+                        const customValue = row.deger || '';
+                        const isLocked = usedCustomsArray.includes(customValue);
+                        this.addCustomRow(row, isLocked);
+                    });
+                }
+
+                document.getElementById('customTableData').value = JSON.stringify(customTable);
+                this.updateCustomTablePreview(customTable);
+            }
+
+            closeModal(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal && window.bootstrap) {
+                    const bsModal = bootstrap.Modal.getInstance(modal);
+                    if (bsModal) {
+                        bsModal.hide();
+                    }
+                }
+            }
+        }
+
+        /**
+         * Varyasyon Servisi
+         */
+        class VariationService {
+            constructor(state) {
+                this.state = state;
+            }
+
+            
+            updateLockedVariants(product) {
+                if (!product || !product.variants || product.variants.length === 0) {
+                    this.state.lockedVariants = [];
+                    console.log('❌ No variants to lock for existing product');
+                    return;
+                }
+                this.state.lockedVariants = product.variants.map(v => {
+                    let sizeValue = v.size || v.sizeName || v.beden || v.productVariantSize?.name || v.productVariantSize?.beden;
+                    let colorValue = v.color || v.colorName || v.renk || v.productVariantColor?.name;
+                    let customValue = v.custom || v.customName || v.customValue || v.productVariantCustom?.deger;
+
+                    if (sizeValue && typeof sizeValue === 'string') {
+                        if (sizeValue.includes(' (En:')) {
+                            sizeValue = sizeValue.split(' (En:')[0];
+                        } else if (sizeValue.includes(' (')) {
+                            sizeValue = sizeValue.split(' (')[0];
+                        }
+                    }
+
+                    const normalizedVariant = {
+                        color: colorValue,
+                        size: sizeValue,
+                        custom: customValue
+                    };
+
+                    console.log('🔒 Processing variant for locking:', v, '➡️ Normalized:', normalizedVariant);
+                    return normalizedVariant;
+                });
+
+                console.log('✅ Locked variants updated for existing product:', this.state.lockedVariants);
+            }
+
+            generateMatrix() {
+                try {
+                    const colors = this.state.selectedItems.colors.map(c => c.name);
+                    const sizesData = this.getSizesData();
+                    const sizes = sizesData.map(s => s.beden);
+                    const customs = this.getCustomsData();
+
+                    if (colors.length === 0 || sizes.length === 0) {
+                        this.showMatrixError('Varyasyon matrisini oluşturmak için lütfen en az bir Renk ve bir Beden seçin.');
+                        return;
+                    }
+
+                    const combos = this.generateCombinations(colors, sizes, customs);
+                    const html = this.generateMatrixHTML(combos, sizesData, customs);
+                    
+                    const container = document.getElementById('variationTableContainer');
+                    if (container) {
+                        container.innerHTML = html;
+                    }
+
+                    console.log('Variation matrix generated successfully');
+                } catch (error) {
+                    console.error('Generate matrix failed:', error);
+                    this.showMatrixError('Varyasyon matrisi oluşturulurken bir hata oluştu.');
+                }
+            }
+
+            getSizesData() {
+                try {
+                    return JSON.parse(document.getElementById('sizeTableData').value || '[]');
+                } catch (error) {
+                    console.error('Parse sizes data failed:', error);
+                    return [];
+                }
+            }
+
+            getCustomsData() {
+                try {
+                    const customData = JSON.parse(document.getElementById('customTableData').value || '{}');
+                    if (customData.rows && customData.rows.length > 0) {
+                        return customData.rows
+                            .map(row => row.deger)
+                            .filter(value => value && value.trim() !== '');
+                    }
+                } catch (error) {
+                    console.error('Parse customs data failed:', error);
+                }
+                return [];
+            }
+
+            generateCombinations(colors, sizes, customs) {
+                const cartesianProduct = (arrays) => {
+                    const filteredArrays = arrays.filter(arr => arr && arr.length > 0);
+                    if (filteredArrays.length === 0) return [];
+                    return filteredArrays.reduce((a, b) => a.flatMap(d => b.map(e => [...(Array.isArray(d) ? d : [d]), e])));
+                };
+
+                if (customs.length > 0) {
+                    return cartesianProduct([colors, sizes, customs]);
+                } else {
+                    return cartesianProduct([colors, sizes]).map(item => [...item, null]);
+                }
+            }
+
+            generateMatrixHTML(combos, sizesData, customs) {
+                let html = '<table class="table table-bordered"><thead><tr>';
+                html += '<th>Seç</th><th>Renk</th><th>Beden</th>';
+                if (customs.length > 0) html += '<th>Custom</th>';
+                html += '</tr></thead><tbody>';
+
+                combos.forEach((combo, i) => {
+                    const [color, size, custom] = combo;
+                    const isLocked = this.isVariantLocked(color, size, custom);
+                    const sizeLabel = this.formatSizeLabel(size, sizesData);
+
+                    const rowClass = isLocked ? 'variant-locked' : '';
+                    const lockIcon = isLocked ? '🔒 ' : '';
+                    const checkboxAttributes = isLocked ? 'disabled checked' : '';
+
+                    html += `<tr class="${rowClass}">
+                        <td>
+                            <input type="checkbox" class="variation-checkbox" data-index="${i}" ${checkboxAttributes}>
+                            ${isLocked ? '<br><small>Mevcut varyant</small>' : ''}
+                        </td>
+                        <td>${lockIcon}${color}</td>
+                        <td>${lockIcon}${sizeLabel}</td>`;
+                    
+                    if (customs.length > 0) {
+                        html += `<td>${lockIcon}${custom || ''}</td>`;
+                    }
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table>';
+                return html;
+            }
+
+            isVariantLocked(color, size, custom) {
+                const isLocked = this.state.lockedVariants.some(v => {
+                    const colorMatch = (v.color === color);
+                    const sizeMatch = (v.size === size);
+                    const customMatch = (v.custom === custom);
+                    console.log(`🔍 Checking variant lock:`, {
+                        checking: { color, size, custom },
+                        against: { color: v.color, size: v.size, custom: v.custom },
+                        matches: { colorMatch, sizeMatch, customMatch }
+                    });
+                    
+                    if (colorMatch && sizeMatch && customMatch) {
+                        console.log(`🔒 VARIANT LOCKED: ${color}-${size}-${custom}`);
+                        return true;
+                    }
+                    return false;
+                });
+
+                return isLocked;
+            }
+
+            formatSizeLabel(size, sizesData) {
+                const sizeObj = sizesData.find(s => s.beden === size);
+                if (sizeObj) {
+                    return `${size} (En: ${sizeObj.en}, Boy: ${sizeObj.boy}, Yükseklik: ${sizeObj.yukseklik})`;
+                }
+                return size;
+            }
+
+            showMatrixError(message) {
+                const container = document.getElementById('variationTableContainer');
+                if (container) {
+                    container.innerHTML = `<div class="alert alert-warning">${message}</div>`;
+                }
+            }
+
+            collectVariationsData() {
+                const rows = [];
+                document.querySelectorAll('#variationTableContainer tbody tr').forEach(tr => {
+                    const checkbox = tr.querySelector('.variation-checkbox');
+                    if (checkbox && checkbox.checked && !checkbox.disabled) {
+                        const tds = tr.querySelectorAll('td');
+                        const renk = tds[1].innerText.replace('🔒 ', '');
+                        const beden = tds[2].innerText.replace('🔒 ', '').split(' (')[0];
+                        const custom = tds.length > 3 ? tds[3].innerText.replace('🔒 ', '') : null;
+                        rows.push({ renk, beden, custom });
+                    }
+                });
+                
+                const variationsInput = document.getElementById('variationsData');
+                if (variationsInput) {
+                    variationsInput.value = JSON.stringify(rows);
+                }
+            }
+        }
+
+        /**
+         * Doğrulama Servisi
+         */
+        class ValidationService {
+            validateStep1() {
+                const step1 = document.getElementById('step1');
+                if (!step1) return false;
+
+                const requiredInputs = step1.querySelectorAll('input[required], textarea[required], select[required]');
+                let isValid = true;
+
+                requiredInputs.forEach(input => {
+                    if (!input.value.trim()) {
+                        input.classList.add('is-invalid');
+                        isValid = false;
+                    } else {
+                        input.classList.remove('is-invalid');
+                    }
+                });
+
+                if (!isValid) {
+                    if (window.productFormManager) {
+                        window.productFormManager.uiService.showError('Lütfen tüm zorunlu alanları doldurun.');
+                    }
+                }
+
+                return isValid;
+            }
+        }
+
+        /**
+         * UI Servisi
+         */
+        class UIService {
+            showElement(elementId) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.style.display = 'block';
+                }
+            }
+
+            hideElement(elementId) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.style.display = 'none';
+                }
+            }
+
+            showLoading() {
+                this.showElement('loadingOverlay');
+                const form = document.getElementById('productForm');
+                if (form) {
+                    form.classList.add('form-disabled');
+                }
+            }
+
+            hideLoading() {
+                this.hideElement('loadingOverlay');
+                const form = document.getElementById('productForm');
+                if (form) {
+                    form.classList.remove('form-disabled');
+                }
+            }
+
+            showError(message) {
+                alert(`❌ Hata: ${message}`);
+            }
+
+            showSuccess(message) {
+                alert(`✅ Başarılı: ${message}`);
+            }
+        }
+
+        /**
+         * Uygulama Başlatma
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                window.productFormManager = new ProductFormManager();
+                console.log('Product Form Manager initialized successfully');
+            } catch (error) {
+                console.error('Product Form Manager initialization failed:', error);
+                alert('Uygulama başlatılamadı. Lütfen sayfayı yenileyin.');
+            }
+        });
+
+    </script>
 {% endblock %}
