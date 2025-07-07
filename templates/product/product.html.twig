@@ -1708,13 +1708,10 @@
                     console.log('❌ No variants to lock for existing product');
                     return;
                 }
-
                 this.state.lockedVariants = product.variants.map(v => {
                     let sizeValue = v.size || v.sizeName || v.beden || v.productVariantSize?.name || v.productVariantSize?.beden;
                     let colorValue = v.color || v.colorName || v.renk || v.productVariantColor?.name;
                     let customValue = v.custom || v.customName || v.customValue || v.productVariantCustom?.deger;
-
-                    // Size normalizasyonu
                     if (sizeValue && typeof sizeValue === 'string') {
                         if (sizeValue.includes(' (En:')) {
                             sizeValue = sizeValue.split(' (En:')[0];
@@ -1722,18 +1719,14 @@
                             sizeValue = sizeValue.split(' (')[0];
                         }
                     }
-
-                    // DÜZELTME: Custom normalizasyonu - undefined/empty'yi null'a çevir
                     if (customValue === undefined || customValue === '' || customValue === 'undefined') {
                         customValue = null;
                     }
-
                     const normalizedVariant = {
                         color: colorValue,
                         size: sizeValue,
                         custom: customValue
                     };
-
                     console.log('🔒 Processing variant for locking:', v, '➡️ Normalized:', normalizedVariant);
                     return normalizedVariant;
                 });
@@ -1747,20 +1740,16 @@
                     const sizesData = this.getSizesData();
                     const sizes = sizesData.map(s => s.beden);
                     const customs = this.getCustomsData();
-
                     if (colors.length === 0 || sizes.length === 0) {
                         this.showMatrixError('Varyasyon matrisini oluşturmak için lütfen en az bir Renk ve bir Beden seçin.');
                         return;
                     }
-
                     const combos = this.generateCombinations(colors, sizes, customs);
                     const html = this.generateMatrixHTML(combos, sizesData, customs);
-                    
                     const container = document.getElementById('variationTableContainer');
                     if (container) {
                         container.innerHTML = html;
                     }
-
                     console.log('Variation matrix generated successfully');
                 } catch (error) {
                     console.error('Generate matrix failed:', error);
@@ -1807,22 +1796,18 @@
 
             generateMatrixHTML(combos, sizesData, customs) {
                 const hasCustomData = customs.length > 0;
-                
                 let html = '<table class="table table-bordered"><thead><tr>';
                 html += '<th>Seç</th><th>Renk</th><th>Beden</th>';
                 if (hasCustomData) html += '<th>Custom</th>';
                 html += '<th>İşlem</th>'; 
                 html += '</tr></thead><tbody>';
-
                 combos.forEach((combo, i) => {
                     const [color, size, custom] = combo;
                     const isLocked = this.isVariantLocked(color, size, custom);
                     const sizeLabel = this.formatSizeLabel(size, sizesData);
-
                     const rowClass = isLocked ? 'variant-locked' : '';
                     const lockIcon = isLocked ? '🔒 ' : '';
                     const checkboxAttributes = isLocked ? 'disabled checked' : '';
-
                     html += `<tr class="${rowClass}">
                         <td>
                             <input type="checkbox" class="variation-checkbox" data-index="${i}" ${checkboxAttributes}>
@@ -1834,7 +1819,6 @@
                     if (hasCustomData) {
                         html += `<td>${lockIcon}${custom || ''}</td>`;
                     }
-                    
                     html += `<td>`;
                     if (isLocked) {
                         html += `<button type="button" class="btn btn-danger btn-sm delete-variant-btn" 
@@ -1858,18 +1842,14 @@
                 const isLocked = this.state.lockedVariants.some(v => {
                     const colorMatch = (v.color === color);
                     const sizeMatch = (v.size === size);
-                    
-                    // DÜZELTME: Custom karşılaştırmasını normalize et
                     const normalizedLockedCustom = (v.custom === undefined || v.custom === null) ? null : v.custom;
                     const normalizedCheckingCustom = (custom === undefined || custom === null) ? null : custom;
                     const customMatch = (normalizedLockedCustom === normalizedCheckingCustom);
-                    
                     console.log(`🔍 Checking variant lock:`, {
                         checking: { color, size, custom: normalizedCheckingCustom },
                         against: { color: v.color, size: v.size, custom: normalizedLockedCustom },
                         matches: { colorMatch, sizeMatch, customMatch }
                     });
-                    
                     if (colorMatch && sizeMatch && customMatch) {
                         console.log(`🔒 VARIANT LOCKED: ${color}-${size}-${normalizedCheckingCustom}`);
                         return true;
@@ -1897,39 +1877,29 @@
 
             collectVariationsData() {
                 const rows = [];
-                
                 const customData = this.getCustomsData();
                 const hasCustomData = customData.length > 0;
-                
                 document.querySelectorAll('#variationTableContainer tbody tr').forEach(tr => {
                     const checkbox = tr.querySelector('.variation-checkbox');
                     if (checkbox && checkbox.checked && !checkbox.disabled) {
                         const tds = tr.querySelectorAll('td');
                         const renk = tds[1].innerText.replace('🔒 ', '');
                         const beden = tds[2].innerText.replace('🔒 ', '').split(' (')[0];
-                        
-                        // DÜZELTME: Custom sadece gerçekten varsa ekle
                         const rowData = { renk, beden };
-                        
                         if (hasCustomData && tds.length > 3) {
                             const customValue = tds[3].innerText.replace('🔒 ', '').trim();
                             if (customValue && customValue !== '') {
                                 rowData.custom = customValue;
                             }
                         }
-                        
                         rows.push(rowData);
                     }
                 });
-                
-                console.log('🔧 Collected variations data:', rows); // DEBUG
-                
                 const variationsInput = document.getElementById('variationsData');
                 if (variationsInput) {
                     variationsInput.value = JSON.stringify(rows);
                 }
             }
-
         }
 
         /**
@@ -1939,10 +1909,8 @@
             validateStep1() {
                 const step1 = document.getElementById('step1');
                 if (!step1) return false;
-
                 const requiredInputs = step1.querySelectorAll('input[required], textarea[required], select[required]');
                 let isValid = true;
-
                 requiredInputs.forEach(input => {
                     if (!input.value.trim()) {
                         input.classList.add('is-invalid');
@@ -1951,13 +1919,11 @@
                         input.classList.remove('is-invalid');
                     }
                 });
-
                 if (!isValid) {
                     if (window.productFormManager) {
                         window.productFormManager.uiService.showError('Lütfen tüm zorunlu alanları doldurun.');
                     }
                 }
-
                 return isValid;
             }
         }
