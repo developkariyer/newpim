@@ -651,22 +651,26 @@
              * Form event'leri
              */
             bindFormEvents() {
-                // Resim yükleme
                 const imageInput = this.getElement('imageInput');
                 if (imageInput) {
                     imageInput.addEventListener('change', (e) => this.handleImageUpload(e));
                 }
-
-                // Renk ekleme
                 const addColorBtn = this.getElement('addNewColorBtn');
                 if (addColorBtn) {
                     addColorBtn.addEventListener('click', () => this.handleAddNewColor());
                 }
-
-                // Form submit
                 const form = this.getElement('productForm');
                 if (form) {
-                    form.addEventListener('submit', (e) => this.handleFormSubmit(e));
+                    form.removeEventListener('submit', this.handleFormSubmit);
+                    form.addEventListener('submit', (e) => {
+                        console.log('🔥 Form submit event triggered');
+                        e.preventDefault();
+                        this.handleFormSubmit(e);
+                    });
+                    
+                    console.log('✅ Form submit listener bound successfully');
+                } else {
+                    console.error('❌ Form element not found');
                 }
             }
 
@@ -702,10 +706,18 @@
                 if (goToVariationsBtn) {
                     goToVariationsBtn.addEventListener('click', () => this.handleGoToVariations());
                 }
-
                 const backToStep1Btn = this.getElement('backToStep1Btn');
                 if (backToStep1Btn) {
                     backToStep1Btn.addEventListener('click', () => this.showStep(1));
+                }
+
+                const submitBtn = this.getElement('submitBtn');
+                if (submitBtn) {
+                    submitBtn.addEventListener('click', (e) => {
+                        console.log('🔥 Submit button clicked');
+                        e.preventDefault();
+                        this.handleFormSubmit(e);
+                    });
                 }
 
                 document.addEventListener('click', (e) => {
@@ -1204,12 +1216,15 @@
              * Form submit
              */
             handleFormSubmit(event) {
-                event.preventDefault(); 
+                console.log('🔥 handleFormSubmit called');
+                
                 try {
                     if (!this.validationService.validateStep1()) {
+                        console.log('❌ Validation failed');
                         return;
                     }
                     
+                    console.log('✅ Validation passed, starting submit process');
                     this.uiService.showLoading();
                     this.variationService.collectVariationsData();
                     
@@ -1222,43 +1237,42 @@
                 }
             }
 
+
             async submitFormWithFormData() {
                 try {
+                    console.log('🚀 Starting FormData submission');
                     const form = document.getElementById('productForm');
                     const formData = new FormData();
-                    
                     const imageInput = document.getElementById('imageInput');
                     if (imageInput && imageInput.files && imageInput.files.length > 0) {
                         formData.append('productImage', imageInput.files[0]);
-                        console.log('✅ Image file added to FormData:', imageInput.files[0].name);
-                    } else if (!this.state.isEditMode) {
-                        throw new Error('Lütfen bir resim seçin.');
+                        console.log('✅ Image file added to FormData:', {
+                            name: imageInput.files[0].name,
+                            size: imageInput.files[0].size,
+                            type: imageInput.files[0].type
+                        });
+                    } else {
+                        console.log('⚠️ No image file selected');
+                        if (!this.state.isEditMode) {
+                            throw new Error('Lütfen bir resim seçin.');
+                        }
                     }
-                    
-                    const textFields = [
-                        'productName', 'productIdentifier', 'productDescription'
-                    ];
-                    
+                    const textFields = ['productName', 'productIdentifier', 'productDescription'];
                     textFields.forEach(fieldId => {
                         const field = document.getElementById(fieldId);
-                        if (field && field.value) {
-                            formData.append(fieldId, field.value);
-                            console.log(`✅ Added ${fieldId}:`, field.value);
+                        if (field) {
+                            formData.append(fieldId, field.value || '');
+                            console.log(`✅ Added ${fieldId}:`, field.value || '(empty)');
                         }
                     });
-                    
-                    const hiddenFields = [
-                        'editingProductId', 'sizeTableData', 'customTableData', 'variationsData'
-                    ];
-                    
+                    const hiddenFields = ['editingProductId', 'sizeTableData', 'customTableData', 'variationsData'];
                     hiddenFields.forEach(fieldId => {
                         const field = document.getElementById(fieldId);
-                        if (field && field.value) {
-                            formData.append(fieldId, field.value);
-                            console.log(`✅ Added ${fieldId}:`, field.value);
+                        if (field) {
+                            formData.append(fieldId, field.value || '');
+                            console.log(`✅ Added ${fieldId}:`, field.value || '(empty)');
                         }
                     });
-                    
                     const hiddenInputs = document.querySelectorAll('#productForm input[type="hidden"][name$="[]"], #productForm input[type="hidden"][name="productCategory"]');
                     hiddenInputs.forEach(input => {
                         if (input.name && input.value) {
@@ -1266,12 +1280,11 @@
                             console.log(`✅ Added ${input.name}:`, input.value);
                         }
                     });
-                    
-                    console.log('📝 FormData contents:');
+                    console.log('📝 Complete FormData:');
                     for (let [key, value] of formData.entries()) {
-                        console.log(`${key}:`, value);
+                        console.log(`  ${key}:`, typeof value === 'object' ? `[File: ${value.name}]` : value);
                     }
-                    
+                    console.log('📡 Sending request to:', form.action);
                     const response = await fetch(form.action, {
                         method: 'POST',
                         body: formData,
@@ -1279,14 +1292,14 @@
                             'X-Requested-With': 'XMLHttpRequest'
                         }
                     });
-                    
-                    console.log('📡 Response status:', response.status);
-                    
+                    console.log('📡 Response received:', response.status, response.statusText);
                     if (response.ok) {
                         const contentType = response.headers.get('content-type');
-                        
+                        console.log('📄 Content-Type:', contentType);
                         if (contentType && contentType.includes('application/json')) {
                             const result = await response.json();
+                            console.log('📄 JSON Response:', result);
+                            
                             if (result.success) {
                                 this.uiService.showSuccess('Ürün başarıyla kaydedildi!');
                                 if (result.redirectUrl) {
@@ -1296,15 +1309,17 @@
                                 throw new Error(result.message || 'Ürün kaydedilemedi.');
                             }
                         } else {
+                            console.log('📄 HTML Response - probably redirected');
                             this.uiService.showSuccess('Ürün başarıyla kaydedildi!');
                             window.location.reload();
                         }
                     } else {
+                        const errorText = await response.text();
+                        console.error('❌ Server Error Response:', errorText);
                         throw new Error(`Server error: ${response.status}`);
                     }
-                    
                 } catch (error) {
-                    console.error('Submit form with FormData failed:', error);
+                    console.error('❌ Submit failed:', error);
                     this.uiService.showError(`Form gönderilirken hata: ${error.message}`);
                 } finally {
                     this.uiService.hideLoading();
