@@ -933,23 +933,28 @@
                 }
 
                 selectedDiv.innerHTML = this.state.selectedItems[type].map(item => {
-                    const isLocked = this.isItemLocked(type, item);
-                    const lockIcon = isLocked ? '🔒 ' : '';
-                    const removeButton = isLocked ? 
-                        `<span style="margin-left: 0.5rem; color: #6c757d; cursor: not-allowed;" title="Bu ${this.config.typeLabels[type]} varyantlarda kullanıldığı için kaldırılamaz">🔒</span>` :
-                        `<span onclick="productFormManager.removeSelectedItem('${type}', ${item.id})" style="margin-left: 0.5rem; cursor: pointer; font-weight: bold;">×</span>`;
-                        
-                    return `
-                        <span style="display: inline-block; background: ${isLocked ? '#6c757d' : '#007bff'}; color: white; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 12px; font-size: 0.875rem;">
-                            ${lockIcon}${this.config.icons[type] || '📋'} ${this.escapeHtml(item.name)}
-                            ${removeButton}
-                        </span>
-                    `;
-                }).join('');
+                const isLocked = this.isItemLocked(type, item);
+                console.log(`🔍 Item lock check for ${type}:`, {
+                    item: item,
+                    isLocked: isLocked,
+                    lockedVariants: this.state.lockedVariants
+                });
+                const lockIcon = isLocked ? '🔒 ' : '';
+                const removeButton = isLocked ? 
+                    `<span style="margin-left: 0.5rem; color: #6c757d; cursor: not-allowed;" title="Bu ${this.config.typeLabels[type]} varyantlarda kullanıldığı için kaldırılamaz">🔒</span>` :
+                    `<span onclick="productFormManager.removeSelectedItem('${type}', ${item.id})" style="margin-left: 0.5rem; cursor: pointer; font-weight: bold;">×</span>`;
+                    
+                return `
+                    <span style="display: inline-block; background: ${isLocked ? '#6c757d' : '#007bff'}; color: white; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 12px; font-size: 0.875rem;">
+                        ${lockIcon}${this.config.icons[type] || '📋'} ${this.escapeHtml(item.name)}
+                        ${removeButton}
+                    </span>
+                `;
+            }).join('');
 
-                hiddenDiv.innerHTML = this.state.selectedItems[type].map(item => 
-                    `<input type="hidden" name="${this.config.inputNames[type] || type + '[]'}" value="${item.id}">`
-                ).join('');
+            hiddenDiv.innerHTML = this.state.selectedItems[type].map(item => 
+                `<input type="hidden" name="${this.config.inputNames[type] || type + '[]'}" value="${item.id}">`
+            ).join('');
             }
 
             /**
@@ -972,7 +977,10 @@
              * Seçilen item'ı kaldır
              */
             removeSelectedItem(type, itemId) {
-                if (this.isItemLocked(type, { id: itemId })) {
+                const item = this.state.selectedItems[type].find(item => item.id == itemId);
+                if (!item) return;
+                
+                if (this.isItemLocked(type, item)) {
                     this.uiService.showError(`Bu ${this.config.typeLabels[type]} varyantlarda kullanıldığı için kaldırılamaz.`);
                     return;
                 }
