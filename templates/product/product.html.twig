@@ -759,7 +759,7 @@
                     if (sizeValue && product.sizeTable) {
                         const sizeObj = product.sizeTable.find(s => s.beden === sizeValue);
                         if (sizeObj) {
-                            sizeValue = `${sizeObj.beden} (En: ${sizeObj.en}, Boy: ${sizeObj.boy}, Yükseklik: ${sizeObj.yukseklik}, ${sizeObj.birim})`;
+                            sizeValue = `${sizeObj.beden} (En: ${sizeObj.en}, Boy: ${sizeObj.boy}, Yükseklik: ${sizeObj.yukseklik})`;
                         }
                     }
                     return {
@@ -1106,7 +1106,7 @@
         function updateSizeTablePreview(rows) {
             const previewContainer = document.getElementById('sizeTablePreview');
             if (rows.length > 0) {
-                let html = '<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th><th>Birim</th></tr></thead><tbody>';
+                let html = '<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th></tr></thead><tbody>';
                 rows.forEach(row => {
                     html += `<tr><td>${row.beden}</td><td>${row.en}</td><td>${row.boy}</td><td>${row.yukseklik}</td></tr>`;
                 });
@@ -1211,7 +1211,7 @@
                 const sizeObj = sizesData.find(s => s.beden === size);
                 let fullSizeFormat = size;
                 if (sizeObj) {
-                    fullSizeFormat = `${sizeObj.beden} (En: ${sizeObj.en}, Boy: ${sizeObj.boy}, Yükseklik: ${sizeObj.yukseklik}, ${sizeObj.birim})`;
+                    fullSizeFormat = `${sizeObj.beden} (En: ${sizeObj.en}, Boy: ${sizeObj.boy}, Yükseklik: ${sizeObj.yukseklik})`;
                 }
                 
                 console.log(`\n=== COMBO ${i}: ${color}-${size}-${custom} ===`);
@@ -1239,7 +1239,7 @@
 
                 let sizeLabel = size;
                 if (sizeObj) {
-                    sizeLabel += ` (En: ${sizeObj.en}, Boy: ${sizeObj.boy}, Yükseklik: ${sizeObj.yukseklik}, ${sizeObj.birim})`;
+                    sizeLabel += ` (En: ${sizeObj.en}, Boy: ${sizeObj.boy}, Yükseklik: ${sizeObj.yukseklik})`;
                 }
 
                 const rowClass = isLocked ? 'variant-locked' : '';
