@@ -481,8 +481,7 @@ class ProductController extends AbstractController
             $variant->save();
             return new JsonResponse([
                 'success' => true,
-                'message' => 'Varyant silindi ve ürün yayından kaldırıldı',
-                'redirectUrl' => $this->generateUrl('product_create', ['id' => $productId])
+                'message' => 'Varyant silindi ve ürün yayından kaldırıldı'
             ]);
             
         } catch (\Exception $e) {
