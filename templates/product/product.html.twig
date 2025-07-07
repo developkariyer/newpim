@@ -957,7 +957,13 @@
              */
             isItemLocked(type, item) {
                 if (type === 'colors' && this.state.lockedVariants.length > 0) {
-                    return this.state.lockedVariants.some(v => v.color === item.name);
+                    const isLocked = this.state.lockedVariants.some(v => v.color === item.name);
+                    console.log(`🎨 Color lock check for "${item.name}":`, {
+                        lockedVariants: this.state.lockedVariants,
+                        itemName: item.name,
+                        isLocked: isLocked
+                    });
+                    return isLocked;
                 }
                 return false;
             }
