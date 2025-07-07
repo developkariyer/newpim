@@ -759,12 +759,6 @@
                     if (sizeValue && sizeValue.includes(' (En:')) {
                         sizeValue = sizeValue.split(' (')[0];
                     }
-                    if (sizeValue && product.sizeTable) {
-                        const sizeObj = product.sizeTable.find(s => s.beden === sizeValue);
-                        if (sizeObj) {
-                            sizeValue = `${sizeObj.beden} (En: ${sizeObj.en}, Boy: ${sizeObj.boy}, Yükseklik: ${sizeObj.yukseklik})`;
-                        }
-                    }
                     return {
                         color: v.color || v.colorName || v.renk || v.productVariantColor?.name,
                         size: sizeValue, 
@@ -1225,7 +1219,7 @@
                     console.log(`Checking against: color='${v.color}', size='${v.size}', custom='${v.custom}'`);
                     
                     const colorMatch = (v.color === color);
-                    const sizeMatch = (v.size === fullSizeFormat);
+                    const sizeMatch = (v.size === size);
                     const customMatch = (v.custom === custom);
                     
                     console.log(`  colorMatch: ${colorMatch}, sizeMatch: ${sizeMatch}, customMatch: ${customMatch}`);
