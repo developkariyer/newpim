@@ -435,7 +435,7 @@
 
         </form>
 
-        <!-- Size Table Model -->
+        <!-- Size Table Model Start -->
         <div class="modal fade" id="sizeTableModal" tabindex="-1" aria-labelledby="sizeTableModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
@@ -452,7 +452,6 @@
                                         <th>En</th>
                                         <th>Boy</th>
                                         <th>Yükseklik</th>
-                                        <th>Birim</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -468,8 +467,9 @@
                 </div>
             </div>
         </div>
+        <!-- Size Table Model End -->
 
-        <!-- Custom Table Model -->
+        <!-- Custom Table Model Start -->
         <div class="modal fade" id="customTableModal" tabindex="-1" aria-labelledby="customTableModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
@@ -498,6 +498,7 @@
                 </div>
             </div>
         </div>
+        <!-- Custom Table Model End -->
     </div>
 {% endblock %}
 
@@ -979,13 +980,6 @@
                 <td data-label="En"><input type="number" class="form-control" value="${values.en || ''}" step="any" ${isLocked ? 'readonly' : ''} required></td>
                 <td data-label="Boy"><input type="number" class="form-control" value="${values.boy || ''}" step="any" ${isLocked ? 'readonly' : ''} required></td>
                 <td data-label="Yükseklik"><input type="number" class="form-control" value="${values.yukseklik || ''}" step="any" ${isLocked ? 'readonly' : ''} required></td>
-                <td data-label="Birim">
-                    <select class="form-select" ${isLocked ? 'disabled' : ''}>
-                        <option value="cm" ${values.birim === 'cm' ? 'selected' : ''}>cm</option>
-                        <option value="mm" ${values.birim === 'mm' ? 'selected' : ''}>mm</option>
-                        <option value="m" ${values.birim === 'm' ? 'selected' : ''}>m</option>
-                    </select>
-                </td>
                 <td>
                     <button type="button" class="btn btn-danger btn-sm remove-row-btn w-100" ${isLocked ? 'style="opacity: 0.5; cursor: not-allowed;" title="Bu beden varyantlarda kullanıldığı için silinemez"' : ''}>
                         ${isLocked ? '🔒 Sil' : 'Sil'}
@@ -1029,7 +1023,6 @@
                     en: tr.children[1].querySelector('input').value,
                     boy: tr.children[2].querySelector('input').value,
                     yukseklik: tr.children[3].querySelector('input').value,
-                    birim: tr.children[4].querySelector('select').value,
                 };
                 if (!rowData.beden || !rowData.en || !rowData.boy || !rowData.yukseklik) {
                     isValid = false;
@@ -1086,7 +1079,7 @@
             if (rows.length > 0) {
                 let html = '<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th><th>Birim</th></tr></thead><tbody>';
                 rows.forEach(row => {
-                    html += `<tr><td>${row.beden}</td><td>${row.en}</td><td>${row.boy}</td><td>${row.yukseklik}</td><td>${row.birim}</td></tr>`;
+                    html += `<tr><td>${row.beden}</td><td>${row.en}</td><td>${row.boy}</td><td>${row.yukseklik}</td></tr>`;
                 });
                 html += '</tbody></table></div>';
                 previewContainer.innerHTML = html;
