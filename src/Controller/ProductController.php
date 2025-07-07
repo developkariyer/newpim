@@ -248,21 +248,30 @@ class ProductController extends AbstractController
     #[Route('/product/create', name: 'product_create', methods: ['POST'])]
     public function create(Request $request): Response
     {
+        error_log('=== PRODUCT CREATE DEBUG ===');
+        error_log('Request method: ' . $request->getMethod());
+        error_log('Content type: ' . $request->headers->get('Content-Type'));
+        error_log('Request data: ' . json_encode($request->request->all()));
+        error_log('Files data: ' . json_encode($request->files->all()));
         $editingProductId = $request->get('editingProductId');
         $isUpdate = !empty($editingProductId);
         
         $productName = $request->get('productName');
         $productIdentifier = $request->get('productIdentifier');
         $productDescription = $request->get('productDescription');
+        
         $imageFile = $request->files->get('productImage');
         if ($imageFile) {
             error_log('Image file found: ' . $imageFile->getClientOriginalName());
             error_log('Image file size: ' . $imageFile->getSize());
             error_log('Image file type: ' . $imageFile->getMimeType());
+            error_log('Image file error: ' . $imageFile->getError());
+            error_log('Image file valid: ' . ($imageFile->isValid() ? 'YES' : 'NO'));
         } else {
             error_log('NO IMAGE FILE FOUND!');
             error_log('Available files: ' . json_encode(array_keys($request->files->all())));
         }
+
         $categoryId = $request->get('productCategory');
         $brandIds = $request->get('brands', []);
         $marketplaceIds = $request->get('marketplaces', []);
@@ -275,7 +284,6 @@ class ProductController extends AbstractController
             $variations = json_decode($variations, true);
         }
 
-        // Validation
         $errors = [];
         $category = $this->validateSingleObject('category', $categoryId, $errors, 'Kategori');
         $brands = $this->validateMultipleObjects('brand', $brandIds, $errors, 'Marka');
@@ -283,6 +291,14 @@ class ProductController extends AbstractController
         $colors = $this->validateMultipleObjects('color', $colorIds, $errors, 'Renk');
 
         if (!empty($errors)) {
+            error_log('Validation errors: ' . json_encode($errors));
+            if ($request->isXmlHttpRequest()) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Validation hatası: ' . implode(', ', $errors),
+                    'errors' => $errors
+                ], 400);
+            }
             foreach ($errors as $error) {
                 $this->addFlash('danger', $error);
             }
@@ -290,21 +306,24 @@ class ProductController extends AbstractController
         }
 
         try {
-            // Mevcut ürün varsa al, yoksa yeni oluştur
             if ($isUpdate) {
                 $product = Product::getById($editingProductId);
                 if (!$product) {
-                    $this->addFlash('danger', 'Güncellenecek ürün bulunamadı.');
-                    return $this->redirectToRoute('product');
+                    throw new \Exception('Güncellenecek ürün bulunamadı.');
                 }
-                dump('Ürün güncelleniyor:', $product->getId());
+                error_log('Ürün güncelleniyor: ' . $product->getId());
             } else {
-                // Yeni ürün oluştur
                 $imageAsset = null;
                 if ($imageFile && $imageFile->isValid()) {
+                    error_log('Resim yükleniyor...');
                     $imageAsset = $this->uploadProductImage($imageFile, $productIdentifier ?: $productName);
+                    error_log('Resim yüklendi, asset ID: ' . ($imageAsset ? $imageAsset->getId() : 'NULL'));
+                } else {
+                    error_log('Resim dosyası geçersiz veya yok');
+                    if (!$isUpdate) {
+                        throw new \Exception('Geçerli bir resim dosyası gerekli.');
+                    }
                 }
-
                 $mainFolderId = 1246;
                 $identifierPrefix = strtoupper(explode('-', $productIdentifier)[0]);
                 $productsFolder = \Pimcore\Model\DataObject\Folder::getById($mainFolderId);
@@ -327,25 +346,24 @@ class ProductController extends AbstractController
                     $product->setImage($imageAsset);
                 }
                 
-                dump('Yeni ürün oluşturuluyor...');
+                error_log('Yeni ürün oluşturuluyor...');
             }
 
-            // Ürün bilgilerini güncelle (hem yeni hem mevcut için)
             $product->setName($productName);
             $product->setDescription($productDescription);
             $product->setProductCategory($category);
             $product->setBrandItems($brands);
             $product->setMarketplaces($marketplaces);
 
-            // Resim güncelle (sadece update modunda ve yeni resim yüklendiyse)
             if ($isUpdate && $imageFile && $imageFile->isValid()) {
+                error_log('Update modunda resim güncelleniyor...');
                 $imageAsset = $this->uploadProductImage($imageFile, $product->getProductIdentifier());
                 if ($imageAsset) {
                     $product->setImage($imageAsset);
+                    error_log('Update resim başarılı, asset ID: ' . $imageAsset->getId());
                 }
             }
 
-            // Size Table güncelle
             if ($sizeTableData) {
                 $variationSizeTable = json_decode($sizeTableData, true);
                 if (is_array($variationSizeTable)) {
@@ -375,7 +393,6 @@ class ProductController extends AbstractController
                 }
             }
 
-            // Product code kontrol et (sadece yeni ürün için)
             if (!$isUpdate) {
                 $this->checkProductCode($product);
             }
@@ -383,14 +400,20 @@ class ProductController extends AbstractController
             $product->setPublished(true);
             $product->save();
 
-            dump('Ürün kaydedildi:', $product->getId());
+            error_log('Ürün kaydedildi: ' . $product->getId());
 
-            // Varyantları ekle (hem yeni hem mevcut ürün için)
             if (is_array($variations) && count($variations) > 0) {
                 $this->addProductVariants($product, $variations);
             }
 
-            // Başarı mesajı
+            if ($request->isXmlHttpRequest()) {
+                return new JsonResponse([
+                    'success' => true,
+                    'message' => $isUpdate ? 'Ürün başarıyla güncellendi' : 'Ürün başarıyla oluşturuldu',
+                    'productId' => $product->getId()
+                ]);
+            }
+
             if ($isUpdate) {
                 $this->addFlash('success', 'Ürün başarıyla güncellendi ve yeni varyantlar eklendi.');
             } else {
@@ -401,6 +424,16 @@ class ProductController extends AbstractController
 
         } catch (\Throwable $e) {
             $errorMessage = $isUpdate ? 'Ürün güncellenirken bir hata oluştu: ' : 'Ürün oluşturulurken bir hata oluştu: ';
+            error_log('Product create/update error: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            
+            if ($request->isXmlHttpRequest()) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => $errorMessage . $e->getMessage()
+                ], 500);
+            }
+            
             $this->addFlash('danger', $errorMessage . $e->getMessage());
             
             return $this->render('product/product.html.twig', [
@@ -681,45 +714,60 @@ class ProductController extends AbstractController
     private function uploadProductImage($imageFile, string $productKey): ?\Pimcore\Model\Asset\Image
     {
         try {
-            dump('uploadProductImage başlıyor...');
-            dump('File info:', [
+            error_log('uploadProductImage başlıyor...');
+            error_log('File info: ' . json_encode([
                 'name' => $imageFile->getClientOriginalName(),
                 'size' => $imageFile->getSize(),
                 'mime' => $imageFile->getMimeType(),
                 'temp_path' => $imageFile->getPathname()
-            ]);
+            ]));
             $assetFolder = \Pimcore\Model\Asset::getByPath('/products');
             if (!$assetFolder) {
-                dump('Products klasörü yok, oluşturuluyor...');
+                error_log('Products klasörü yok, oluşturuluyor...');
                 $assetFolder = new \Pimcore\Model\Asset\Folder();
                 $assetFolder->setFilename('products');
                 $assetFolder->setParent(\Pimcore\Model\Asset::getByPath('/'));
                 $assetFolder->save();
-                dump('Products klasörü oluşturuldu:', $assetFolder->getFullPath());
+                error_log('Products klasörü oluşturuldu: ' . $assetFolder->getFullPath());
             } else {
-                dump('Products klasörü mevcut:', $assetFolder->getFullPath());
+                error_log('Products klasörü mevcut: ' . $assetFolder->getFullPath());
             }
-            $extension = $imageFile->getClientOriginalExtension() ?: 'jpg';
+            $originalName = $imageFile->getClientOriginalName();
+            $extension = pathinfo($originalName, PATHINFO_EXTENSION) ?: 'jpg';
             $filename = $this->generateSafeFilename($productKey) . '_' . time() . '.' . $extension;
-            dump('Generated filename:', $filename);
+            error_log('Generated filename: ' . $filename);
+            $existingAsset = \Pimcore\Model\Asset::getByPath('/products/' . $filename);
+            if ($existingAsset) {
+                $filename = $this->generateSafeFilename($productKey) . '_' . time() . '_' . rand(1000, 9999) . '.' . $extension;
+                error_log('Filename updated to avoid conflict: ' . $filename);
+            }
             $imageAsset = new \Pimcore\Model\Asset\Image();
             $imageAsset->setFilename($filename);
             $imageAsset->setParent($assetFolder);
-            $fileContent = file_get_contents($imageFile->getPathname());
-            if ($fileContent === false) {
-                throw new \Exception('Dosya içeriği okunamadı');
+            $tempPath = $imageFile->getPathname();
+            if (!file_exists($tempPath)) {
+                throw new \Exception('Temporary file not found: ' . $tempPath);
             }
+            $fileContent = file_get_contents($tempPath);
+            if ($fileContent === false) {
+                throw new \Exception('Cannot read file content from: ' . $tempPath);
+            }
+            if (strlen($fileContent) === 0) {
+                throw new \Exception('File content is empty');
+            }
+            error_log('File content size: ' . strlen($fileContent) . ' bytes');
             $imageAsset->setData($fileContent);
             $imageAsset->save();
-            dump('Image asset oluşturuldu:', [
+            error_log('Image asset oluşturuldu: ' . json_encode([
                 'ID' => $imageAsset->getId(),
                 'Path' => $imageAsset->getFullPath(),
                 'Size' => $imageAsset->getFileSize()
-            ]);
+            ]));
             return $imageAsset;
         } catch (\Exception $e) {
-            dump('Image upload HATA:', $e->getMessage());
-            return null;
+            error_log('Image upload HATA: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            throw new \Exception('Resim yüklenirken hata oluştu: ' . $e->getMessage());
         }
     }
 
