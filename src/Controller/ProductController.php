@@ -499,14 +499,24 @@ class ProductController extends AbstractController
         if (!$product) {
             return null;
         }
-
+        $color = $variantData['color'] ?? null;
+        $size = $variantData['size'] ?? null;
+        $custom = $variantData['custom'] ?? null;
+        if ($custom === '') {
+            $custom = null;
+        }
         $variants = $product->getChildren([Product::OBJECT_TYPE_VARIANT]);
         foreach ($variants as $variant) {
+            $variantColor = $variant->getVariationColor() ? $variant->getVariationColor()->getColor() : null;
+            $variantSize = $variant->getVariationSize();
+            $variantCustom = $variant->getCustomField();
+            if ($variantCustom === '') {
+                $variantCustom = null;
+            }
             if (
-                $variant->getVariationColor() && 
-                $variant->getVariationColor()->getColor() == $variantData['renk'] &&
-                $variant->getVariationSize() == $variantData['beden'] &&
-                $variant->getCustomField() == $variantData['custom']
+                $variantColor === $color &&
+                $variantSize === $size &&
+                $variantCustom === $custom
             ) {
                 return $variant;
             }
