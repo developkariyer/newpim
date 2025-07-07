@@ -300,6 +300,7 @@
         {% endfor %}
 
         <form id="productForm" method="POST" enctype="multipart/form-data" action="{{ path('product_create') }}">
+            <!-- Search Product Start -->
             <div class="form-section" style="background: #f8f9fa; border-color: #17a2b8;">
                 <h3 style="border-color: #17a2b8; color: #17a2b8;">🔍 Ürün Ara ve Düzenle</h3>
                 <div class="form-group">
@@ -313,8 +314,10 @@
                     <button type="button" id="clearSelectedProduct" class="btn btn-outline-secondary btn-sm" style="margin-top: 0.5rem;">❌ Seçimi Temizle</button>
                 </div>
             </div>
-            <input type="hidden" id="editingProductId" name="editingProductId" value="">
-            
+            <input type="hidden" id="editingProductId" name="editingProductId" value="">   
+            <!-- Search Product End -->
+
+            <!-- Form Step1:Product Info Start -->
             <div id="step1">
                 <div class="form-section">
                     <h3>📝 Temel Ürün Bilgileri</h3>
@@ -347,7 +350,6 @@
                             <div id="categoriesHidden"></div>
                         </div>
                     </div>
-                    
                     <div class="form-group">
                         <label for="productDescription">Açıklama</label>
                         <textarea id="productDescription" name="productDescription" class="form-control" rows="3" placeholder="Ürün hakkında detaylı açıklama..."></textarea>
@@ -393,7 +395,6 @@
                             <button type="button" id="addNewColorBtn" class="btn btn-primary" style="min-width: 120px;">+ Renk Ekle</button>
                         </div>
                     </div>
-
                     <div class="form-group">
                         <label for="sizeTableBtn">Beden Tablosu *</label>
                         <button type="button" class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2" id="sizeTableBtn" data-bs-toggle="modal" data-bs-target="#sizeTableModal" style="font-size:1.1rem; font-weight:500;">
@@ -402,7 +403,6 @@
                         <input type="hidden" name="sizeTableData" id="sizeTableData">
                         <div id="sizeTablePreview" class="table-preview-container" style="display: none;"></div>
                     </div>
-
                     <div class="form-group">
                         <label for="customTableBtn">Custom Tablo</label>
                         <input type="text" id="customTableTitle" class="form-control mb-2" placeholder="Tablo başlığı (ör: Malzeme İçeriği)">
@@ -419,7 +419,9 @@
                     <button type="button" class="btn btn-primary" id="goToVariationsBtn">İlerle</button>
                 </div>
             </div>
+            <!-- Form Step1 End -->
 
+            <!-- Form Step2:Select Variations Start -->
             <div id="step2" style="display:none;">
                 <h3><span style="font-size:1.3rem;">🧩</span> Varyasyonları Seç</h3>
                 <div id="variationTableContainer"></div>
@@ -429,9 +431,11 @@
                     <button type="submit" class="btn btn-success" id="submitBtn">Kaydet</button>
                 </div>
             </div>
+            <!-- Form Step2 End -->
+
         </form>
 
-        <!-- Beden Tablosu Modal -->
+        <!-- Size Table Model -->
         <div class="modal fade" id="sizeTableModal" tabindex="-1" aria-labelledby="sizeTableModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
@@ -465,7 +469,7 @@
             </div>
         </div>
 
-        <!-- Custom Tablo Modal -->
+        <!-- Custom Table Model -->
         <div class="modal fade" id="customTableModal" tabindex="-1" aria-labelledby="customTableModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
@@ -1019,7 +1023,6 @@
         function saveSizeTable() {
             const rows = [];
             let isValid = true;
-            
             document.querySelectorAll('#sizeTable tbody tr').forEach(tr => {
                 const rowData = {
                     beden: tr.children[0].querySelector('input').value,
