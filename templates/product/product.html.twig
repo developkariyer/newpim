@@ -802,7 +802,13 @@
                     this.displaySelectedProduct(product);
                     this.formService.fillForm(product);
                     this.formService.setEditMode();
+                    
                     this.variationService.updateLockedVariants(product);
+                    
+                    Object.keys(this.state.selectedItems).forEach(type => {
+                        this.updateSelectedItems(type);
+                    });
+                    
                 } catch (error) {
                     console.error('Product selection failed:', error);
                     this.uiService.showError('Ürün seçimi başarısız.');
@@ -1277,13 +1283,6 @@
                     if (product[key] && Array.isArray(product[key])) {
                         const targetKey = key === 'variantColors' ? 'colors' : key;
                         this.state.selectedItems[targetKey] = product[key];
-                    }
-                });
-
-                // UI'ı güncelle
-                Object.keys(this.state.selectedItems).forEach(type => {
-                    if (window.productFormManager) {
-                        window.productFormManager.updateSelectedItems(type);
                     }
                 });
             }
