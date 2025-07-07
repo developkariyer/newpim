@@ -801,9 +801,20 @@
             sizeTable.forEach(row => {
                 const sizeValue = row.beden || '';
 
-                const isLocked = usedSizes.some(usedSize => {
-                    const extractedSize = usedSize.split(' (')[0]; 
-                    return extractedSize === sizeValue;
+                const isLocked = lockedVariants.some(v => {
+                    console.log(`Checking against: color='${v.color}', size='${v.size}', custom='${v.custom}'`);
+                    const colorMatch = (v.color === color);
+                    const sizeMatch = (v.size === size);
+                    const customMatch = (v.custom === custom);
+                    
+                    console.log(`  colorMatch: ${colorMatch}, sizeMatch: ${sizeMatch}, customMatch: ${customMatch}`);
+                    
+                    const result = colorMatch && sizeMatch && customMatch;
+                    if (result) {
+                        console.log(`✅ LOCKED VARIANT FOUND!`);
+                    }
+                    
+                    return result;
                 });
 
                 console.log(`Size ${sizeValue} locked: ${isLocked}`);
