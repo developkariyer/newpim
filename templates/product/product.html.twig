@@ -757,8 +757,16 @@
                     console.log('Processing variant:', v);
                     let sizeValue = v.size || v.sizeName || v.beden;
                     if (sizeValue && sizeValue.includes(' (En:')) {
-                        sizeValue = sizeValue.split(' (')[0];
+                    sizeValue = sizeValue.split(' (')[0];
+                }
+                
+                // Sonra tam formatı oluştur
+                if (sizeValue && product.sizeTable) {
+                    const sizeObj = product.sizeTable.find(s => s.beden === sizeValue);
+                    if (sizeObj) {
+                        sizeValue = `${sizeObj.beden} (En: ${sizeObj.en}, Boy: ${sizeObj.boy}, Yükseklik: ${sizeObj.yukseklik})`;
                     }
+                }
                     return {
                         color: v.color || v.colorName || v.renk || v.productVariantColor?.name,
                         size: sizeValue, 
@@ -801,20 +809,9 @@
             sizeTable.forEach(row => {
                 const sizeValue = row.beden || '';
 
-                const isLocked = lockedVariants.some(v => {
-                    console.log(`Checking against: color='${v.color}', size='${v.size}', custom='${v.custom}'`);
-                    const colorMatch = (v.color === color);
-                    const sizeMatch = (v.size === size);
-                    const customMatch = (v.custom === custom);
-                    
-                    console.log(`  colorMatch: ${colorMatch}, sizeMatch: ${sizeMatch}, customMatch: ${customMatch}`);
-                    
-                    const result = colorMatch && sizeMatch && customMatch;
-                    if (result) {
-                        console.log(`✅ LOCKED VARIANT FOUND!`);
-                    }
-                    
-                    return result;
+                const isLocked = usedSizes.some(usedSize => {
+                    const extractedSize = usedSize.split(' (')[0]; 
+                    return extractedSize === sizeValue;
                 });
 
                 console.log(`Size ${sizeValue} locked: ${isLocked}`);
@@ -1230,7 +1227,7 @@
                     console.log(`Checking against: color='${v.color}', size='${v.size}', custom='${v.custom}'`);
                     
                     const colorMatch = (v.color === color);
-                    const sizeMatch = (v.size === size);
+                    const sizeMatch = (v.size === fullSizeFormat);
                     const customMatch = (v.custom === custom);
                     
                     console.log(`  colorMatch: ${colorMatch}, sizeMatch: ${sizeMatch}, customMatch: ${customMatch}`);
