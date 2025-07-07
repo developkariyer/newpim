@@ -460,6 +460,60 @@ class ProductController extends AbstractController
         return new JsonResponse(['success' => true, 'id' => $color->getId()]);
     }
 
+    /**
+    * @Route("/product/delete-variant", name="product_delete_variant", methods={"POST"})
+    */
+    public function deleteVariant(Request $request): JsonResponse
+    {
+        try {
+            $data = json_decode($request->getContent(), true);
+            $productId = $data['productId'];
+            $variantData = $data['variantData'];
+            
+            $variant = $this->findVariantByData($productId, $variantData);
+            if (!$variant) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Varyant bulunamadı'
+                ]);
+            }
+            $variant->setPublished(false);
+            $variant->save();
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Varyant silindi ve ürün yayından kaldırıldı',
+                'redirectUrl' => $this->generateUrl('product_create', ['id' => $productId])
+            ]);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Bir hata oluştu: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    private function findVariantByData($productId, $variantData)
+    {
+        $product = Product::getById($productId);
+        if (!$product) {
+            return null;
+        }
+
+        $variants = $product->getChildren([Product::OBJECT_TYPE_VARIANT]);
+        foreach ($variants as $variant) {
+            if (
+                $variant->getVariationColor() && 
+                $variant->getVariationColor()->getColor() == $variantData['renk'] &&
+                $variant->getVariationSize() == $variantData['beden'] &&
+                $variant->getCustomField() == $variantData['custom']
+            ) {
+                return $variant;
+            }
+        }
+        return null;
+    }
+
     public function checkIwasku($parentIdentifier, $product): bool
     {
         if (

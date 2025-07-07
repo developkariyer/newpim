@@ -3,6 +3,22 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
+        .delete-variant-btn {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+
+        .delete-variant-btn:hover {
+            background-color: #dc3545 !important;
+            transform: scale(1.05);
+        }
+
+        .variant-locked .delete-variant-btn {
+            opacity: 1;
+        }
+        
         .variant-locked input[type="checkbox"]:disabled {
             opacity: 0.5 !important;
             cursor: not-allowed !important;
@@ -691,6 +707,12 @@
                 if (backToStep1Btn) {
                     backToStep1Btn.addEventListener('click', () => this.showStep(1));
                 }
+
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('delete-variant-btn')) {
+                        this.handleDeleteVariant(e.target);
+                    }
+                });
             }
 
             /**
@@ -749,6 +771,78 @@
                 } catch (error) {
                     console.error('Product search failed:', error);
                     this.uiService.showError('Ürün arama başarısız.');
+                }
+            }
+
+            async handleDeleteVariant(button) {
+                const color = button.dataset.color;
+                const size = button.dataset.size;
+                const custom = button.dataset.custom || null;
+                
+                const confirmMessage = `"${color} - ${size}${custom ? ' - ' + custom : ''}" varyantını silmek istediğinizden emin misiniz?\n\nBu işlem ürünü yayından kaldıracaktır (unpublish).`;
+                
+                if (!confirm(confirmMessage)) {
+                    return;
+                }
+
+                try {
+                    this.uiService.showLoading();
+                    
+                    const response = await fetch('/product/delete-variant', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            productId: this.state.selectedProduct.id,
+                            variantData: {
+                                color: color,
+                                size: size,
+                                custom: custom
+                            }
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Variant silme başarısız');
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.uiService.showSuccess(`Varyant silindi ve ürün yayından kaldırıldı.`);
+                        
+                        if (result.redirectUrl) {
+                            window.location.href = result.redirectUrl;
+                        } else {
+                            await this.refreshProductData();
+                            this.variationService.generateMatrix();
+                        }
+                    } else {
+                        throw new Error(result.message || 'Variant silme başarısız');
+                    }
+                    
+                } catch (error) {
+                    console.error('Delete variant failed:', error);
+                    this.uiService.showError(`Variant silinemedi: ${error.message}`);
+                } finally {
+                    this.uiService.hideLoading();
+                }
+            }
+
+            async refreshProductData() {
+                if (!this.state.selectedProduct) return;
+                
+                try {
+                    const response = await fetch(`/product/get-product-data/${this.state.selectedProduct.id}`);
+                    if (response.ok) {
+                        const updatedProduct = await response.json();
+                        this.state.selectedProduct = updatedProduct;
+                        this.variationService.updateLockedVariants(updatedProduct);
+                    }
+                } catch (error) {
+                    console.error('Refresh product data failed:', error);
                 }
             }
 
@@ -1746,6 +1840,7 @@
                 let html = '<table class="table table-bordered"><thead><tr>';
                 html += '<th>Seç</th><th>Renk</th><th>Beden</th>';
                 if (hasCustomData) html += '<th>Custom</th>';
+                html += '<th>İşlem</th>'; 
                 html += '</tr></thead><tbody>';
 
                 combos.forEach((combo, i) => {
@@ -1768,6 +1863,19 @@
                     if (hasCustomData) {
                         html += `<td>${lockIcon}${custom || ''}</td>`;
                     }
+                    
+                    html += `<td>`;
+                    if (isLocked) {
+                        html += `<button type="button" class="btn btn-danger btn-sm delete-variant-btn" 
+                                    data-color="${color}" data-size="${size}" data-custom="${custom || ''}"
+                                    title="Bu varyantı sil ve ürünü unpublish yap">
+                                    🗑️ Sil
+                                </button>`;
+                    } else {
+                        html += '<span class="text-muted">-</span>';
+                    }
+                    html += `</td>`;
+                    
                     html += '</tr>';
                 });
 
