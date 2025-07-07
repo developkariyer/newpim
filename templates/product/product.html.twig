@@ -342,8 +342,12 @@
                         </div>
                         <div class="form-group">
                             <label for="productCategory">Kategori *</label>
-                            <input type="text" id="categoriesSearch" placeholder="Kategori ara..." class="form-control" style="margin-bottom: 0.5rem;">
-                            <div id="categoriesResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; background: white;"></div>
+                            <select id="categoriesSearch" class="form-control" style="margin-bottom: 0.5rem;">
+                                <option value="">Kategori seçin...</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
                             <div id="categoriesSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
                                 <small style="color: #6c757d;">Seçilen kategori burada görünecek...</small>
                             </div>
@@ -361,8 +365,12 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="brands">Markalar *</label>
-                            <input type="text" id="brandsSearch" placeholder="Marka ara..." class="form-control" style="margin-bottom: 0.5rem;">
-                            <div id="brandsResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; background: white;"></div>
+                            <select id="brandsSearch" class="form-control" style="margin-bottom: 0.5rem;">
+                                <option value="">Marka seçin...</option>
+                                {% for brand in brands %}
+                                    <option value="{{ brand.id }}">{{ brand.name }}</option>
+                                {% endfor %}
+                            </select>
                             <div id="brandsSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
                                 <small style="color: #6c757d;">Seçilen markalar burada görünecek...</small>
                             </div>
@@ -370,8 +378,12 @@
                         </div>
                         <div class="form-group">
                             <label for="marketplaces">Pazaryerleri *</label>
-                            <input type="text" id="marketplacesSearch" placeholder="Pazaryeri ara..." class="form-control" style="margin-bottom: 0.5rem;"> 
-                            <div id="marketplacesResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; background: white;"></div>
+                            <select id="marketplacesSearch" class="form-control" style="margin-bottom: 0.5rem;">
+                                <option value="">Pazaryeri seçin...</option>
+                                {% for marketplace in marketplaces %}
+                                    <option value="{{ marketplace.id }}">{{ marketplace.name }}</option>
+                                {% endfor %}
+                            </select>
                             <div id="marketplacesSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
                                 <small style="color: #6c757d;">Seçilen pazaryerleri burada görünecek...</small>
                             </div>
@@ -641,6 +653,24 @@
                 e.target.closest('tr').remove();
             }
         });
+
+        ['categories', 'brands', 'marketplaces'].forEach(type => {
+            const selectElement = document.getElementById(`${type}Search`);
+            if (selectElement) {
+                selectElement.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    if (selectedOption.value) {
+                        const item = {
+                            id: selectedOption.value,
+                            name: selectedOption.text
+                        };
+                        addSelectedItem(type, item);
+                        this.selectedIndex = 0; 
+                    }
+                });
+            }
+        });
+
 
         // Functions
         function displayProductSearchResults(items) {
