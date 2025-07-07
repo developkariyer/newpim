@@ -756,6 +756,9 @@
                 lockedVariants = product.variants.map(v => {
                     console.log('Processing variant:', v);
                     let sizeValue = v.size || v.sizeName || v.beden;
+                    if (sizeValue && sizeValue.includes(' (En:')) {
+                        sizeValue = sizeValue.split(' (')[0];
+                    }
                     if (sizeValue && product.sizeTable) {
                         const sizeObj = product.sizeTable.find(s => s.beden === sizeValue);
                         if (sizeObj) {
