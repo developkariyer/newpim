@@ -255,6 +255,14 @@ class ProductController extends AbstractController
         $productIdentifier = $request->get('productIdentifier');
         $productDescription = $request->get('productDescription');
         $imageFile = $request->files->get('productImage');
+        if ($imageFile) {
+            error_log('Image file found: ' . $imageFile->getClientOriginalName());
+            error_log('Image file size: ' . $imageFile->getSize());
+            error_log('Image file type: ' . $imageFile->getMimeType());
+        } else {
+            error_log('NO IMAGE FILE FOUND!');
+            error_log('Available files: ' . json_encode(array_keys($request->files->all())));
+        }
         $categoryId = $request->get('productCategory');
         $brandIds = $request->get('brands', []);
         $marketplaceIds = $request->get('marketplaces', []);
