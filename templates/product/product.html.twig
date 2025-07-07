@@ -962,12 +962,27 @@
              */
             isItemLocked(type, item) {
                 if (type === 'colors' && this.state.lockedVariants.length > 0) {
-                    const isLocked = this.state.lockedVariants.some(v => v.color === item.name);
-                    console.log(`🎨 Color lock check for "${item.name}":`, {
+                    console.log(`🔍 DETAILED Color lock check for "${item.name}":`, {
                         lockedVariants: this.state.lockedVariants,
                         itemName: item.name,
-                        isLocked: isLocked
+                        itemId: item.id,
+                        itemObject: item,
+                        checkingEach: this.state.lockedVariants.map(v => ({
+                            variantColor: v.color,
+                            itemName: item.name,
+                            exactMatch: v.color === item.name,
+                            typeOfVariantColor: typeof v.color,
+                            typeOfItemName: typeof item.name
+                        }))
                     });
+                    
+                    const isLocked = this.state.lockedVariants.some(v => {
+                        const match = v.color === item.name;
+                        console.log(`🎯 Comparing: "${v.color}" === "${item.name}" = ${match}`);
+                        return match;
+                    });
+                    
+                    console.log(`🎨 Final result for "${item.name}": ${isLocked}`);
                     return isLocked;
                 }
                 return false;
