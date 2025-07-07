@@ -754,27 +754,22 @@
             }
             if (product.variants && product.variants.length > 0) {
                 lockedVariants = product.variants.map(v => {
-                    console.log('Processing variant:', v);
+                    console.log('🔍 Processing variant RAW:', v);
                     let sizeValue = v.size || v.sizeName || v.beden;
-                    if (sizeValue && sizeValue.includes(' (En:')) {
-                    sizeValue = sizeValue.split(' (')[0];
-                }
-                
-                // Sonra tam formatı oluştur
-                if (sizeValue && product.sizeTable) {
-                    const sizeObj = product.sizeTable.find(s => s.beden === sizeValue);
-                    if (sizeObj) {
-                        sizeValue = `${sizeObj.beden} (En: ${sizeObj.en}, Boy: ${sizeObj.boy}, Yükseklik: ${sizeObj.yukseklik})`;
+                    let colorValue = v.color || v.colorName || v.renk || v.productVariantColor?.name;
+                    let customValue = v.custom || v.customName || v.customValue || v.productVariantCustom?.deger;
+                    if (sizeValue && typeof sizeValue === 'string' && sizeValue.includes(' (En:')) {
+                        sizeValue = sizeValue.split(' (')[0];
                     }
-                }
-                    return {
-                        color: v.color || v.colorName || v.renk || v.productVariantColor?.name,
+                    const processedVariant = {
+                        color: colorValue,
                         size: sizeValue, 
-                        custom: v.custom || v.customName || v.customValue || v.productVariantCustom?.deger
+                        custom: customValue
                     };
+                    console.log('✅ Processed variant (basic format):', processedVariant);
+                    return processedVariant;
                 });
-                console.log('Mapped locked variants (with full size format):', lockedVariants);
-                
+                console.log('🎯 ALL LOCKED VARIANTS (basic format):', lockedVariants);
                 if (product.variantColors && product.variantColors.length > 0) {
                     updateSelectedItems('colors');
                 }
@@ -1227,7 +1222,7 @@
                     console.log(`Checking against: color='${v.color}', size='${v.size}', custom='${v.custom}'`);
                     
                     const colorMatch = (v.color === color);
-                    const sizeMatch = (v.size === fullSizeFormat);
+                    const sizeMatch = (v.size === size);
                     const customMatch = (v.custom === custom);
                     
                     console.log(`  colorMatch: ${colorMatch}, sizeMatch: ${sizeMatch}, customMatch: ${customMatch}`);
