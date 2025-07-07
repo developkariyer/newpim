@@ -1204,12 +1204,20 @@
              * Form submit
              */
             handleFormSubmit(event) {
+                event.preventDefault();
+                
                 try {
+                    if (!this.validationService.validateStep1()) {
+                        return;
+                    }
+                    
                     this.uiService.showLoading();
                     this.variationService.collectVariationsData();
+                    
+                    this.submitFormWithFormData();
+                    
                 } catch (error) {
                     console.error('Form submit failed:', error);
-                    event.preventDefault();
                     this.uiService.hideLoading();
                     this.uiService.showError('Form gönderilirken bir hata oluştu.');
                 }
