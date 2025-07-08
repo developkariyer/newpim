@@ -738,6 +738,28 @@ class ProductController extends AbstractController
         }
     }
 
+    private function getOrCreateAssetFolder(): \Pimcore\Model\Asset\Folder
+    {
+        $assetFolder = \Pimcore\Model\Asset::getByPath('/products');
+        
+        if (!$assetFolder) {
+            $assetFolder = new \Pimcore\Model\Asset\Folder();
+            $assetFolder->setFilename('products');
+            $assetFolder->setParent(\Pimcore\Model\Asset::getByPath('/'));
+            $assetFolder->save();
+        }
+
+        return $assetFolder;
+    }
+
+    private function generateImageFilename($imageFile, string $productKey): string
+    {
+        $extension = $imageFile->getClientOriginalExtension() ?: 'jpg';
+        $safeFilename = $this->generateSafeFilename($productKey);
+        
+        return $safeFilename . '_' . time() . '.' . $extension;
+    }
+
     private function generateSafeFilename(string $input): string
     {
         $filename = mb_strtolower($input);
