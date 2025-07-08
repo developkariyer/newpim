@@ -199,13 +199,53 @@ class CatalogController extends AbstractController
 
             // Search filter
             if (!empty($searchQuery) && strlen($searchQuery) >= self::SEARCH_MIN_LENGTH) {
-                $searchCondition = "(name LIKE ? OR productIdentifier LIKE ? OR description LIKE ? OR iwasku LIKE ?)";
-                $conditions[] = $searchCondition;
                 $searchParam = "%" . $searchQuery . "%";
-                $params[] = $searchParam;
-                $params[] = $searchParam;
-                $params[] = $searchParam;
-                $params[] = $searchParam;
+                
+                $searchConditions = [
+                    // Ana ürün alanları
+                    "name LIKE ?",
+                    "productIdentifier LIKE ?", 
+                    "description LIKE ?",
+                    "productCode LIKE ?",
+                    
+                    // IWASKU araması - variant'larda arama
+                    "o_id IN (
+                        SELECT DISTINCT o_parentId 
+                        FROM object_ProductVariant 
+                        WHERE iwasku LIKE ? AND published = 1 AND o_parentId IS NOT NULL
+                    )",
+                    
+                    // EAN araması - variant'larda
+                    "o_id IN (
+                        SELECT DISTINCT v.o_parentId 
+                        FROM object_ProductVariant v 
+                        JOIN object_relations_ProductVariant_eans re ON v.o_id = re.src_id 
+                        JOIN object_EAN e ON re.dest_id = e.o_id 
+                        WHERE e.gTIN LIKE ? AND v.published = 1 AND v.o_parentId IS NOT NULL
+                    )",
+                    
+                    // Variant diğer alanları
+                    "o_id IN (
+                        SELECT DISTINCT o_parentId 
+                        FROM object_ProductVariant 
+                        WHERE (name LIKE ? OR variationSize LIKE ? OR customField LIKE ?) 
+                        AND published = 1 AND o_parentId IS NOT NULL
+                    )"
+                ];
+                
+                $searchCondition = "(" . implode(" OR ", $searchConditions) . ")";
+                $conditions[] = $searchCondition;
+                
+                // Parametreleri sırayla ekle
+                $params[] = $searchParam; // name
+                $params[] = $searchParam; // productIdentifier
+                $params[] = $searchParam; // description
+                $params[] = $searchParam; // productCode
+                $params[] = $searchParam; // iwasku (variant'da)
+                $params[] = $searchParam; // EAN gTIN (variant'da)
+                $params[] = $searchParam; // variant name
+                $params[] = $searchParam; // variant size
+                $params[] = $searchParam; // variant customField
             }
 
             // Set conditions
