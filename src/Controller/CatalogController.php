@@ -185,7 +185,7 @@ class CatalogController extends AbstractController
             $listing = new ProductListing();
             
             // Base condition - only main products (not variants)
-            $conditions = ["published = 1", "type IS NULL OR type != 'variant'"];
+            $conditions = ["published = 1"];
             $params = [];
 
             // Category filter
@@ -197,35 +197,15 @@ class CatalogController extends AbstractController
                 }
             }
 
+            // Search filter
             if (!empty($searchQuery) && strlen($searchQuery) >= self::SEARCH_MIN_LENGTH) {
-                $searchParam = "%" . $searchQuery . "%";
-                
-                $searchConditions = [
-                    // Ana ürün alanları
-                    "name LIKE ?",
-                    "productIdentifier LIKE ?", 
-                    "description LIKE ?",
-                    "productCode LIKE ?",
-                    
-                    // Variant IWASKU araması - parent ürünleri döndür
-                    "oo_id IN (
-                        SELECT DISTINCT oo_id 
-                        FROM object_query_product 
-                        WHERE iwasku LIKE ? 
-                        AND published = 1 
-                        AND type = 'variant'
-                    )"
-                ];
-                
-                $searchCondition = "(" . implode(" OR ", $searchConditions) . ")";
+                $searchCondition = "(name LIKE ? OR productIdentifier LIKE ? OR description LIKE ? OR iwasku LIKE ?)";
                 $conditions[] = $searchCondition;
-                
-                // Parametreler
-                $params[] = $searchParam; // name
-                $params[] = $searchParam; // productIdentifier
-                $params[] = $searchParam; // description
-                $params[] = $searchParam; // productCode
-                $params[] = $searchParam; // iwasku (variant'da)
+                $searchParam = "%" . $searchQuery . "%";
+                $params[] = $searchParam;
+                $params[] = $searchParam;
+                $params[] = $searchParam;
+                $params[] = $searchParam;
             }
 
             // Set conditions
@@ -239,16 +219,30 @@ class CatalogController extends AbstractController
             $listing->setOrderKey('creationDate');
             $listing->setOrder('DESC');
 
-            // Load products
-            $products = $listing->load();
-            $total = $listing->getTotalCount();
-
-            // Format products
-            $formattedProducts = [];
-            foreach ($products as $product) {
-                $formattedProducts[] = $this->formatProductForCatalog($product);
+            $allProducts = $listing->load();
+            $productGroups = [];
+            foreach ($allProducts as $product) {
+                if ($product->getType() === 'variant') {
+                    $parentId = $product->getO_parentId();
+                    if ($parentId) {
+                        $parent = Product::getById($parentId);
+                        if ($parent && $parent->getPublished()) {
+                            $productGroups[$parentId] = $parent;
+                        }
+                    }
+                } else {
+                    $productGroups[$product->getId()] = $product;
+                }
             }
 
+            $uniqueProducts = array_values($productGroups);
+          
+            $total = count($uniqueProducts);
+            $paginatedProducts = array_slice($uniqueProducts, $offset, $limit);
+            $formattedProducts = [];
+            foreach ($paginatedProducts as $product) {
+                $formattedProducts[] = $this->formatProductForCatalog($product);
+            }
             return [
                 'products' => $formattedProducts,
                 'total' => $total,
