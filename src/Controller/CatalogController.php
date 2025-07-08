@@ -327,8 +327,8 @@ class CatalogController extends AbstractController
                 $eans = [];
                 if (is_array($eansObjects)) {
                     foreach ($eansObjects as $eanObject) {
-                        if ($eanObject->getKey()) {
-                            $eans[] = $eanObject->getKey();
+                        if ($eanObject->getGTIN()) {
+                            $eans[] = $eanObject->getGTIN();
                         }
                     }
                 }
