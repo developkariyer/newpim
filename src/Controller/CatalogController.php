@@ -325,7 +325,7 @@ class CatalogController extends AbstractController
 
                 $eansObjects = $variant->getEans() ?? [];
                 $eans = [];
-                if (!is_array($eansObjects)) {
+                if (is_array($eansObjects)) {
                     foreach ($eansObjects as $eanObject) {
                         if ($eanObject->getKey()) {
                             $eans[] = $eanObject->getKey();
