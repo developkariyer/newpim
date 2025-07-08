@@ -325,21 +325,45 @@ class ProductController extends AbstractController
                         throw new \Exception('Geçerli bir resim dosyası gerekli.');
                     }
                 }
-                $mainFolderId = 1246;
-                $identifierPrefix = strtoupper(explode('-', $productIdentifier)[0]);
+                $mainFolderId = 1246; // Products main folder
                 $productsFolder = \Pimcore\Model\DataObject\Folder::getById($mainFolderId);
-                $parentFolderPath = $productsFolder->getFullPath() . '/' . $identifierPrefix;
-                $parentFolder = \Pimcore\Model\DataObject\Folder::getByPath($parentFolderPath);
                 
-                if (!$parentFolder) {
-                    $parentFolder = new \Pimcore\Model\DataObject\Folder();
-                    $parentFolder->setKey($identifierPrefix);
-                    $parentFolder->setParent($productsFolder);
-                    $parentFolder->save();
+                if (!$productsFolder) {
+                    throw new \Exception('Products main folder not found (ID: ' . $mainFolderId . ')');
+                }
+                
+                $categoryName = $category->getKey(); 
+                $categoryFolderPath = $productsFolder->getFullPath() . '/' . $categoryName;
+                $categoryFolder = \Pimcore\Model\DataObject\Folder::getByPath($categoryFolderPath);
+                
+                if (!$categoryFolder) {
+                    error_log('Creating category folder: ' . $categoryName);
+                    $categoryFolder = new \Pimcore\Model\DataObject\Folder();
+                    $categoryFolder->setKey($categoryName);
+                    $categoryFolder->setParent($productsFolder);
+                    $categoryFolder->save();
+                    error_log('Category folder created: ' . $categoryFolder->getFullPath());
+                } else {
+                    error_log('Category folder exists: ' . $categoryFolder->getFullPath());
+                }
+                
+                $identifierPrefix = strtoupper(explode('-', $productIdentifier)[0]);
+                $identifierFolderPath = $categoryFolder->getFullPath() . '/' . $identifierPrefix;
+                $identifierFolder = \Pimcore\Model\DataObject\Folder::getByPath($identifierFolderPath);
+                
+                if (!$identifierFolder) {
+                    error_log('Creating identifier folder: ' . $identifierPrefix . ' under category: ' . $categoryName);
+                    $identifierFolder = new \Pimcore\Model\DataObject\Folder();
+                    $identifierFolder->setKey($identifierPrefix);
+                    $identifierFolder->setParent($categoryFolder);
+                    $identifierFolder->save();
+                    error_log('Identifier folder created: ' . $identifierFolder->getFullPath());
+                } else {
+                    error_log('Identifier folder exists: ' . $identifierFolder->getFullPath());
                 }
 
                 $product = new Product();
-                $product->setParent($parentFolder);
+                $product->setParent($identifierFolder);
                 $product->setKey($productIdentifier . ' ' . $productName);
                 $product->setProductIdentifier($productIdentifier);
                 
@@ -713,7 +737,6 @@ class ProductController extends AbstractController
     }
 
      private function uploadProductImage($imageFile, string $productKey): ?\Pimcore\Model\Asset\Image
-
     {
         try {
             $assetFolder = $this->getOrCreateAssetFolder();
