@@ -211,14 +211,14 @@ class CatalogController extends AbstractController
                     // IWASKU araması - variant'larda arama
                     "o_id IN (
                         SELECT DISTINCT o_parentId 
-                        FROM object_ProductVariant 
+                        FROM object_query_product 
                         WHERE iwasku LIKE ? AND published = 1 AND o_parentId IS NOT NULL
                     )",
                     
                     // EAN araması - variant'larda
                     "o_id IN (
                         SELECT DISTINCT v.o_parentId 
-                        FROM object_ProductVariant v 
+                        FROM object_query_product v 
                         JOIN object_relations_ProductVariant_eans re ON v.o_id = re.src_id 
                         JOIN object_EAN e ON re.dest_id = e.o_id 
                         WHERE e.gTIN LIKE ? AND v.published = 1 AND v.o_parentId IS NOT NULL
@@ -227,7 +227,7 @@ class CatalogController extends AbstractController
                     // Variant diğer alanları
                     "o_id IN (
                         SELECT DISTINCT o_parentId 
-                        FROM object_ProductVariant 
+                        FROM object_query_product 
                         WHERE (name LIKE ? OR variationSize LIKE ? OR customField LIKE ?) 
                         AND published = 1 AND o_parentId IS NOT NULL
                     )"
