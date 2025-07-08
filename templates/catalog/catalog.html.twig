@@ -3,91 +3,1423 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
+        /* ===========================================
+           MODERN CATALOG SYSTEM STYLES
+           ========================================== */
+        
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-bg: #f8fafc;
+            --border-color: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Header Section */
+        .catalog-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .catalog-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .catalog-subtitle {
+            text-align: center;
+            opacity: 0.9;
+            margin-top: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        /* Controls Section */
+        .catalog-controls {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .controls-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto auto;
+            gap: 1rem;
+            align-items: end;
+        }
+
+        @media (max-width: 768px) {
+            .controls-row {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .form-control {
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            padding-left: 2.5rem;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .stats-info {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .stats-count {
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        /* Product Grid */
+        .products-container {
+            background: white;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .products-grid {
+            display: grid;
+            gap: 0;
+        }
+
         .product-row {
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .product-row:hover {
+            background: rgba(37, 99, 235, 0.02);
+        }
+
+        .product-row:last-child {
+            border-bottom: none;
+        }
+
+        .product-content {
+            display: grid;
+            grid-template-columns: 80px 1fr auto;
+            gap: 1rem;
+            padding: 1.5rem;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .product-content {
+                grid-template-columns: 60px 1fr;
+                gap: 0.75rem;
+                padding: 1rem;
+            }
+        }
+
+        .product-image {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: var(--light-bg);
+            border: 2px solid var(--border-color);
+            position: relative;
+        }
+
+        @media (max-width: 768px) {
+            .product-image {
+                width: 60px;
+                height: 60px;
+            }
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .no-image {
             display: flex;
             align-items: center;
-            cursor: pointer;
-            margin-bottom: 10px;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            background: var(--light-bg);
         }
-        .product-image {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            margin-right: 20px;
+
+        .product-info {
+            min-width: 0;
         }
-        .product-details {
-            flex-grow: 1;
-        }
+
         .product-name {
-            font-weight: bold;
-            font-size: 1.2em;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin: 0 0 0.25rem 0;
+            line-height: 1.4;
         }
-        .variant-row {
+
+        .product-identifier {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-category {
+            display: inline-block;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-color);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-description {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .product-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            text-align: right;
+        }
+
+        @media (max-width: 768px) {
+            .product-meta {
+                grid-column: 1 / -1;
+                justify-content: space-between;
+                margin-top: 0.75rem;
+            }
+        }
+
+        .variant-badge {
+            background: var(--success-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .no-variant-badge {
+            background: var(--text-secondary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .expand-icon {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            transition: transform 0.2s ease;
+        }
+
+        .product-row.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Variants Section */
+        .variants-section {
+            background: var(--light-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 1.5rem;
             display: none;
-            margin-top: 10px;
         }
-        .variant-row.show {
+
+        .product-row.expanded .variants-section {
             display: block;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
+
+        .variants-title {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
+
+        .variants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .variants-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .variant-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .variant-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-md);
+        }
+
+        .variant-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .variant-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+
+        .variant-status {
+            background: var(--success-color);
+            color: white;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.75rem;
+            font-size: 0.625rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .variant-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .variant-detail {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .variant-label {
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .variant-value {
+            color: var(--text-primary);
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        /* Loading States */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-products {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .loading-products .loading-spinner {
+            margin: 0 auto 1rem;
+        }
+
+        /* Empty States */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-message {
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        /* Load More Button */
+        .load-more-container {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+        }
+
+        .load-more-btn {
+            padding: 1rem 2rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+        }
+
+        .load-more-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .load-more-btn:disabled {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1rem;
+            border: 1px solid;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--success-color);
+            color: #065f46;
+        }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--danger-color);
+            color: #991b1b;
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: var(--warning-color);
+            color: #92400e;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 640px) {
+            .catalog-title {
+                font-size: 2rem;
+            }
+            
+            .catalog-header {
+                padding: 1.5rem 0;
+            }
+            
+            .catalog-controls {
+                padding: 1rem;
+            }
+            
+            .controls-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-bar {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            .catalog-controls,
+            .load-more-container,
+            .btn {
+                display: none !important;
+            }
+            
+            .product-row {
+                break-inside: avoid;
+            }
+        }
+
+        /* Animation for smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Focus styles for accessibility */
+        .btn:focus,
+        .form-control:focus,
+        .product-row:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            :root {
+                --border-color: #000;
+                --text-secondary: #000;
+                --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+            }
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
 {% endblock %}
 
-
 {% block title %}Ürün Kataloğu{% endblock %}
 
 {% block content %}
-    <h1>Ürün Kataloğu</h1>
-    {% for product in products %}
-        <div class="product-row" data-product-id="{{ product.id }}">
-            <img src="{{ product.image ? asset(product.image.path) : 'https://via.placeholder.com/100' }}" alt="{{ product.name }}" class="product-image">
-            <div class="product-details">
-                <div class="product-name">{{ product.name }}</div>
-                <div>Kategori: {{ product.category ? product.category.key : 'Belirtilmemiş' }}</div>
-                <div>Ürün Kodu: {{ product.productIdentifier }}</div>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p>Yükleniyor...</p>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <div class="catalog-header">
+        <div class="container">
+            <h1 class="catalog-title">📚 Ürün Kataloğu</h1>
+            <p class="catalog-subtitle">Tüm ürünlerinizi ve varyantlarını tek yerden yönetin</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Flash Messages -->
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label == 'danger' ? 'danger' : (label == 'success' ? 'success' : 'warning') }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <!-- Controls Section -->
+        <div class="catalog-controls">
+            <div class="controls-row">
+                <!-- Search -->
+                <div class="form-group">
+                    <label for="searchInput" class="form-label">🔍 Arama</label>
+                    <div class="search-container">
+                        <span class="search-icon">🔍</span>
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            class="form-control search-input" 
+                            placeholder="Ürün adı, identifier veya açıklama..."
+                            value="{{ currentSearch }}"
+                        >
+                    </div>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="form-group">
+                    <label for="categoryFilter" class="form-label">📂 Kategori</label>
+                    <select id="categoryFilter" class="form-control">
+                        <option value="">Tüm Kategoriler</option>
+                        {% for category in categories %}
+                            <option value="{{ category.key }}" {{ currentCategory == category.key ? 'selected' : '' }}>
+                                {{ category.name }} ({{ category.productCount }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Clear Filters -->
+                <div class="form-group">
+                    <button type="button" id="clearFilters" class="btn btn-outline">
+                        🗑️ Temizle
+                    </button>
+                </div>
+
+                <!-- Export Excel -->
+                <div class="form-group">
+                    <a href="#" id="exportExcel" class="btn btn-success">
+                        📊 Excel İndir
+                    </a>
+                </div>
             </div>
         </div>
-        <div class="variant-row" data-product-id="{{ product.id }}">
-            {% if product.variants is not empty %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Varyant Adı</th>
-                            <th>Iwasku</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for variant in product.variants %}
-                            <tr>
-                                <td>{{ variant.name }}</td>
-                                <td>{{ variant.iwasku }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p>Bu ürünün varyantı bulunmamaktadır.</p>
-            {% endif %}
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stats-info">
+                <span class="stats-count" id="totalCount">{{ totalProducts }}</span> ürün listeleniyor
+                <span id="filterInfo"></span>
+            </div>
+            <div class="stats-info">
+                <small>Son güncelleme: {{ "now"|date("d.m.Y H:i") }}</small>
+            </div>
         </div>
-    {% endfor %}
+
+        <!-- Products Container -->
+        <div class="products-container">
+            <div class="products-grid" id="productsGrid">
+                <!-- Initial products will be loaded here -->
+            </div>
+            
+            <!-- Load More Button -->
+            <div class="load-more-container" id="loadMoreContainer" style="display: none;">
+                <button type="button" id="loadMoreBtn" class="load-more-btn">
+                    📦 Daha Fazla Ürün Yükle
+                </button>
+            </div>
+
+            <!-- Loading State -->
+            <div class="loading-products" id="loadingProducts" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>Ürünler yükleniyor...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <div class="empty-icon">📦</div>
+                <h3 class="empty-title">Ürün bulunamadı</h3>
+                <p class="empty-message">
+                    Arama kriterlerinizi değiştirmeyi deneyin veya yeni ürün ekleyin.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden data for JavaScript -->
+    <script type="application/json" id="catalogData">
+        {
+            "initialProducts": {{ initialProducts|json_encode|raw }},
+            "totalProducts": {{ totalProducts }},
+            "hasMore": {{ hasMore ? 'true' : 'false' }},
+            "currentCategory": {{ currentCategory|json_encode|raw }},
+            "currentSearch": {{ currentSearch|json_encode|raw }},
+            "limit": {{ limit }},
+            "apiEndpoints": {
+                "products": "{{ path('catalog_api_products') }}",
+                "search": "{{ path('catalog_api_search') }}",
+                "export": "{{ path('catalog_export_excel') }}"
+            }
+        }
+    </script>
 {% endblock %}
 
 {% block body_scripts %}
     {{ parent() }}
     <script>
-        document.querySelectorAll('.product-row').forEach(row => {
-            row.addEventListener('click', () => {
-                const productId = row.dataset.productId;
-                const variantRow = document.querySelector(`.variant-row[data-product-id="${productId}"]`);
-                variantRow.classList.toggle('show');
-            });
+        'use strict';
+
+        /**
+         * Modern Catalog System
+         * Professional, responsive, and performant product catalog
+         */
+        class CatalogSystem {
+            constructor() {
+                this.config = this.loadConfig();
+                this.state = {
+                    products: [...this.config.initialProducts],
+                    totalProducts: this.config.totalProducts,
+                    hasMore: this.config.hasMore,
+                    currentOffset: this.config.limit,
+                    isLoading: false,
+                    currentSearch: this.config.currentSearch,
+                    currentCategory: this.config.currentCategory,
+                    expandedProducts: new Set(),
+                    debounceTimer: null
+                };
+
+                this.elements = this.initializeElements();
+                this.bindEvents();
+                this.renderInitialProducts();
+                this.updateUI();
+
+                console.log('✅ Catalog System initialized successfully');
+            }
+
+            loadConfig() {
+                try {
+                    const configElement = document.getElementById('catalogData');
+                    return JSON.parse(configElement.textContent);
+                } catch (error) {
+                    console.error('❌ Failed to load catalog config:', error);
+                    return {
+                        initialProducts: [],
+                        totalProducts: 0,
+                        hasMore: false,
+                        currentCategory: null,
+                        currentSearch: '',
+                        limit: 20,
+                        apiEndpoints: {}
+                    };
+                }
+            }
+
+            initializeElements() {
+                return {
+                    searchInput: document.getElementById('searchInput'),
+                    categoryFilter: document.getElementById('categoryFilter'),
+                    clearFilters: document.getElementById('clearFilters'),
+                    exportExcel: document.getElementById('exportExcel'),
+                    productsGrid: document.getElementById('productsGrid'),
+                    loadMoreBtn: document.getElementById('loadMoreBtn'),
+                    loadMoreContainer: document.getElementById('loadMoreContainer'),
+                    loadingProducts: document.getElementById('loadingProducts'),
+                    emptyState: document.getElementById('emptyState'),
+                    totalCount: document.getElementById('totalCount'),
+                    filterInfo: document.getElementById('filterInfo'),
+                    loadingOverlay: document.getElementById('loadingOverlay')
+                };
+            }
+
+            bindEvents() {
+                // Search with debounce
+                if (this.elements.searchInput) {
+                    this.elements.searchInput.addEventListener('input', (e) => {
+                        this.debounceSearch(e.target.value);
+                    });
+
+                    this.elements.searchInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            this.performSearch(e.target.value);
+                        }
+                    });
+                }
+
+                // Category filter
+                if (this.elements.categoryFilter) {
+                    this.elements.categoryFilter.addEventListener('change', (e) => {
+                        this.state.currentCategory = e.target.value;
+                        this.resetAndReload();
+                    });
+                }
+
+                // Clear filters
+                if (this.elements.clearFilters) {
+                    this.elements.clearFilters.addEventListener('click', () => {
+                        this.clearAllFilters();
+                    });
+                }
+
+                // Export Excel
+                if (this.elements.exportExcel) {
+                    this.elements.exportExcel.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.exportToExcel();
+                    });
+                }
+
+                // Load more
+                if (this.elements.loadMoreBtn) {
+                    this.elements.loadMoreBtn.addEventListener('click', () => {
+                        this.loadMoreProducts();
+                    });
+                }
+
+                // Product row clicks (for expanding variants)
+                if (this.elements.productsGrid) {
+                    this.elements.productsGrid.addEventListener('click', (e) => {
+                        const productRow = e.target.closest('.product-row');
+                        if (productRow && !e.target.closest('.variants-section')) {
+                            this.toggleProductExpansion(productRow);
+                        }
+                    });
+                }
+
+                // Keyboard navigation
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        this.clearAllFilters();
+                    }
+                });
+
+                // Infinite scroll (optional)
+                window.addEventListener('scroll', this.throttle(() => {
+                    if (this.shouldLoadMore()) {
+                        this.loadMoreProducts();
+                    }
+                }, 200));
+            }
+
+            debounceSearch(query) {
+                clearTimeout(this.state.debounceTimer);
+                this.state.debounceTimer = setTimeout(() => {
+                    this.performSearch(query);
+                }, 300);
+            }
+
+            async performSearch(query) {
+                try {
+                    this.state.currentSearch = query.trim();
+                    this.resetAndReload();
+                } catch (error) {
+                    console.error('Search failed:', error);
+                    this.showError('Arama işlemi başarısız oldu.');
+                }
+            }
+
+            async resetAndReload() {
+                try {
+                    this.state.products = [];
+                    this.state.currentOffset = 0;
+                    this.state.hasMore = true;
+                    this.state.expandedProducts.clear();
+                    
+                    this.showLoading();
+                    await this.loadProducts(true);
+                    this.hideLoading();
+                    this.updateUI();
+                    this.updateURL();
+                } catch (error) {
+                    console.error('Reset and reload failed:', error);
+                    this.hideLoading();
+                    this.showError('Ürünler yüklenirken hata oluştu.');
+                }
+            }
+
+            async loadProducts(isReset = false) {
+                if (this.state.isLoading && !isReset) return;
+
+                try {
+                    this.state.isLoading = true;
+                    
+                    if (!isReset) {
+                        this.showLoadingProducts();
+                    }
+
+                    const params = new URLSearchParams({
+                        limit: this.config.limit,
+                        offset: isReset ? 0 : this.state.currentOffset
+                    });
+
+                    if (this.state.currentSearch) {
+                        params.append('search', this.state.currentSearch);
+                    }
+
+                    if (this.state.currentCategory) {
+                        params.append('category', this.state.currentCategory);
+                    }
+
+                    const response = await fetch(`${this.config.apiEndpoints.products}?${params}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        if (isReset) {
+                            this.state.products = data.products;
+                            this.state.currentOffset = data.limit;
+                        } else {
+                            this.state.products.push(...data.products);
+                            this.state.currentOffset += data.limit;
+                        }
+
+                        this.state.totalProducts = data.total;
+                        this.state.hasMore = data.hasMore;
+
+                        this.renderProducts(isReset);
+                    } else {
+                        throw new Error(data.message || 'API error');
+                    }
+
+                } catch (error) {
+                    console.error('Load products failed:', error);
+                    this.showError('Ürünler yüklenemedi. Lütfen tekrar deneyin.');
+                } finally {
+                    this.state.isLoading = false;
+                    this.hideLoadingProducts();
+                }
+            }
+
+            async loadMoreProducts() {
+                if (!this.state.hasMore || this.state.isLoading) return;
+                await this.loadProducts(false);
+                this.updateUI();
+            }
+
+            renderInitialProducts() {
+                if (this.state.products.length > 0) {
+                    this.renderProducts(true);
+                } else {
+                    this.showEmptyState();
+                }
+            }
+
+            renderProducts(isReset = false) {
+                if (!this.elements.productsGrid) return;
+
+                if (isReset) {
+                    this.elements.productsGrid.innerHTML = '';
+                }
+
+                if (this.state.products.length === 0) {
+                    this.showEmptyState();
+                    return;
+                }
+
+                const startIndex = isReset ? 0 : this.elements.productsGrid.children.length;
+                const productsToRender = this.state.products.slice(startIndex);
+
+                const fragment = document.createDocumentFragment();
+
+                productsToRender.forEach(product => {
+                    const productRow = this.createProductRow(product);
+                    fragment.appendChild(productRow);
+                });
+
+                this.elements.productsGrid.appendChild(fragment);
+                this.hideEmptyState();
+            }
+
+            createProductRow(product) {
+                const row = document.createElement('div');
+                row.className = 'product-row';
+                row.dataset.productId = product.id;
+                row.setAttribute('tabindex', '0');
+                row.setAttribute('role', 'button');
+                row.setAttribute('aria-expanded', 'false');
+
+                const hasVariants = product.hasVariants;
+                const variantBadge = hasVariants 
+                    ? `<span class="variant-badge">✅ ${product.variantCount} Varyant</span>`
+                    : `<span class="no-variant-badge">➖ Varyant Yok</span>`;
+
+                row.innerHTML = `
+                    <div class="product-content">
+                        <div class="product-image">
+                            ${product.imageUrl 
+                                ? `<img src="${this.escapeHtml(product.imageUrl)}" alt="${this.escapeHtml(product.name)}" loading="lazy">` 
+                                : '<div class="no-image">📷</div>'
+                            }
+                        </div>
+                        
+                        <div class="product-info">
+                            <h3 class="product-name">${this.escapeHtml(product.name)}</h3>
+                            <div class="product-identifier">${this.escapeHtml(product.productIdentifier)}</div>
+                            ${product.category ? `<span class="product-category">${this.escapeHtml(product.category.displayName)}</span>` : ''}
+                            ${product.description ? `<p class="product-description">${this.escapeHtml(product.description)}</p>` : ''}
+                        </div>
+                        
+                        <div class="product-meta">
+                            ${variantBadge}
+                            ${hasVariants ? '<span class="expand-icon">▼</span>' : ''}
+                        </div>
+                    </div>
+                    
+                    ${hasVariants ? this.createVariantsSection(product.variants) : ''}
+                `;
+
+                return row;
+            }
+
+            createVariantsSection(variants) {
+                if (!variants || variants.length === 0) return '';
+
+                const variantCards = variants.map(variant => `
+                    <div class="variant-card">
+                        <div class="variant-header">
+                            <div class="variant-name">${this.escapeHtml(variant.name || 'Varyant')}</div>
+                            <span class="variant-status">Aktif</span>
+                        </div>
+                        <div class="variant-details">
+                            ${variant.ean ? `
+                                <div class="variant-detail">
+                                    <span class="variant-label">EAN</span>
+                                    <span class="variant-value">${this.escapeHtml(variant.ean)}</span>
+                                </div>
+                            ` : ''}
+                            ${variant.iwasku ? `
+                                <div class="variant-detail">
+                                    <span class="variant-label">IWASKU</span>
+                                    <span class="variant-value">${this.escapeHtml(variant.iwasku)}</span>
+                                </div>
+                            ` : ''}
+                            ${variant.productCode ? `
+                                <div class="variant-detail">
+                                    <span class="variant-label">Kod</span>
+                                    <span class="variant-value">${this.escapeHtml(variant.productCode)}</span>
+                                </div>
+                            ` : ''}
+                            ${variant.variationSize ? `
+                                <div class="variant-detail">
+                                    <span class="variant-label">Beden</span>
+                                    <span class="variant-value">${this.escapeHtml(variant.variationSize)}</span>
+                                </div>
+                            ` : ''}
+                            ${variant.color?.name ? `
+                                <div class="variant-detail">
+                                    <span class="variant-label">Renk</span>
+                                    <span class="variant-value">${this.escapeHtml(variant.color.name)}</span>
+                                </div>
+                            ` : ''}
+                            ${variant.customField ? `
+                                <div class="variant-detail">
+                                    <span class="variant-label">Custom</span>
+                                    <span class="variant-value">${this.escapeHtml(variant.customField)}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="variants-section">
+                        <h4 class="variants-title">
+                            🧩 Ürün Varyantları
+                            <span style="font-weight: 400; color: var(--text-secondary);">(${variants.length} adet)</span>
+                        </h4>
+                        <div class="variants-grid">
+                            ${variantCards}
+                        </div>
+                    </div>
+                `;
+            }
+
+            toggleProductExpansion(productRow) {
+                const productId = productRow.dataset.productId;
+                const isExpanded = this.state.expandedProducts.has(productId);
+
+                if (isExpanded) {
+                    this.state.expandedProducts.delete(productId);
+                    productRow.classList.remove('expanded');
+                    productRow.setAttribute('aria-expanded', 'false');
+                } else {
+                    this.state.expandedProducts.add(productId);
+                    productRow.classList.add('expanded');
+                    productRow.setAttribute('aria-expanded', 'true');
+                }
+            }
+
+            clearAllFilters() {
+                if (this.elements.searchInput) {
+                    this.elements.searchInput.value = '';
+                }
+                
+                if (this.elements.categoryFilter) {
+                    this.elements.categoryFilter.selectedIndex = 0;
+                }
+
+                this.state.currentSearch = '';
+                this.state.currentCategory = '';
+                
+                this.resetAndReload();
+            }
+
+            async exportToExcel() {
+                try {
+                    this.showLoading();
+
+                    const params = new URLSearchParams();
+                    
+                    if (this.state.currentSearch) {
+                        params.append('search', this.state.currentSearch);
+                    }
+                    
+                    if (this.state.currentCategory) {
+                        params.append('category', this.state.currentCategory);
+                    }
+
+                    const url = `${this.config.apiEndpoints.export}?${params}`;
+                    
+                    // Create invisible download link
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = '';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    this.showSuccess('Excel dosyası indiriliyor...');
+
+                } catch (error) {
+                    console.error('Excel export failed:', error);
+                    this.showError('Excel dosyası oluşturulamadı.');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            updateUI() {
+                this.updateStats();
+                this.updateLoadMoreButton();
+                this.updateFilterInfo();
+            }
+
+            updateStats() {
+                if (this.elements.totalCount) {
+                    this.elements.totalCount.textContent = this.state.totalProducts;
+                }
+            }
+
+            updateLoadMoreButton() {
+                if (!this.elements.loadMoreContainer || !this.elements.loadMoreBtn) return;
+
+                if (this.state.hasMore && this.state.products.length > 0) {
+                    this.elements.loadMoreContainer.style.display = 'block';
+                    this.elements.loadMoreBtn.disabled = this.state.isLoading;
+                    this.elements.loadMoreBtn.textContent = this.state.isLoading 
+                        ? '📦 Yükleniyor...' 
+                        : '📦 Daha Fazla Ürün Yükle';
+                } else {
+                    this.elements.loadMoreContainer.style.display = 'none';
+                }
+            }
+
+            updateFilterInfo() {
+                if (!this.elements.filterInfo) return;
+
+                const filters = [];
+                
+                if (this.state.currentSearch) {
+                    filters.push(`arama: "${this.state.currentSearch}"`);
+                }
+                
+                if (this.state.currentCategory) {
+                    const categoryOption = this.elements.categoryFilter?.querySelector(`option[value="${this.state.currentCategory}"]`);
+                    if (categoryOption) {
+                        filters.push(`kategori: "${categoryOption.textContent.split(' (')[0]}"`);
+                    }
+                }
+
+                this.elements.filterInfo.textContent = filters.length > 0 
+                    ? ` (${filters.join(', ')})` 
+                    : '';
+            }
+
+            updateURL() {
+                const params = new URLSearchParams();
+                
+                if (this.state.currentSearch) {
+                    params.append('search', this.state.currentSearch);
+                }
+                
+                if (this.state.currentCategory) {
+                    params.append('category', this.state.currentCategory);
+                }
+
+                const newURL = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+                window.history.replaceState({}, '', newURL);
+            }
+
+            shouldLoadMore() {
+                if (!this.state.hasMore || this.state.isLoading) return false;
+                
+                const scrollPosition = window.innerHeight + window.scrollY;
+                const documentHeight = document.documentElement.offsetHeight;
+                
+                return scrollPosition >= documentHeight - 1000; // 1000px threshold
+            }
+
+            // UI State Management
+            showLoading() {
+                if (this.elements.loadingOverlay) {
+                    this.elements.loadingOverlay.style.display = 'flex';
+                }
+            }
+
+            hideLoading() {
+                if (this.elements.loadingOverlay) {
+                    this.elements.loadingOverlay.style.display = 'none';
+                }
+            }
+
+            showLoadingProducts() {
+                if (this.elements.loadingProducts) {
+                    this.elements.loadingProducts.style.display = 'block';
+                }
+            }
+
+            hideLoadingProducts() {
+                if (this.elements.loadingProducts) {
+                    this.elements.loadingProducts.style.display = 'none';
+                }
+            }
+
+            showEmptyState() {
+                if (this.elements.emptyState) {
+                    this.elements.emptyState.style.display = 'block';
+                }
+            }
+
+            hideEmptyState() {
+                if (this.elements.emptyState) {
+                    this.elements.emptyState.style.display = 'none';
+                }
+            }
+
+            showSuccess(message) {
+                this.showNotification(message, 'success');
+            }
+
+            showError(message) {
+                this.showNotification(message, 'error');
+            }
+
+            showNotification(message, type = 'info') {
+                // Create notification element
+                const notification = document.createElement('div');
+                notification.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'warning'}`;
+                notification.textContent = message;
+                notification.style.position = 'fixed';
+                notification.style.top = '20px';
+                notification.style.right = '20px';
+                notification.style.zIndex = '10000';
+                notification.style.maxWidth = '400px';
+
+                document.body.appendChild(notification);
+
+                // Remove after 5 seconds
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 5000);
+            }
+
+            // Utility Methods
+            escapeHtml(text) {
+                if (typeof text !== 'string') return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            throttle(func, limit) {
+                let inThrottle;
+                return function() {
+                    const args = arguments;
+                    const context = this;
+                    if (!inThrottle) {
+                        func.apply(context, args);
+                        inThrottle = true;
+                        setTimeout(() => inThrottle = false, limit);
+                    }
+                };
+            }
+
+            debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                window.catalogSystem = new CatalogSystem();
+                console.log('✅ Catalog System ready');
+            } catch (error) {
+                console.error('❌ Failed to initialize Catalog System:', error);
+                
+                // Show fallback error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'alert alert-danger';
+                errorDiv.textContent = 'Katalog sistemi yüklenemedi. Lütfen sayfayı yenileyin.';
+                document.querySelector('.container')?.prepend(errorDiv);
+            }
         });
     </script>
 {% endblock %}
