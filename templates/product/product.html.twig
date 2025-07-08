@@ -1126,43 +1126,112 @@
 
             async submitFormWithFormData() {
                 try {
+                    console.log('🚀 Starting FormData submission');
+                    
                     const form = this.getElement('productForm');
-                    const formData = new FormData();
-
-                    // Image file
-                    const imageInput = this.getElement('imageInput');
-                    if (imageInput && imageInput.files && imageInput.files.length > 0) {
-                        formData.append('productImage', imageInput.files[0]);
-                    } else if (!this.state.isEditMode) {
-                        throw new Error('Lütfen bir resim seçin.');
+                    if (!form) {
+                        throw new Error('Form element not found');
                     }
-
-                    // Text fields
-                    const textFields = ['productName', 'productIdentifier', 'productDescription'];
-                    textFields.forEach(fieldId => {
-                        const field = this.getElement(fieldId);
+                    
+                    const formData = new FormData();
+                    
+                    const imageInput = this.getElement('imageInput');
+                    console.log('🔍 Image input check:', {
+                        element: !!imageInput,
+                        files: imageInput ? imageInput.files : null,
+                        filesLength: imageInput && imageInput.files ? imageInput.files.length : 0,
+                        hasFile: !!(imageInput && imageInput.files && imageInput.files.length > 0)
+                    });
+                    
+                    if (imageInput && imageInput.files && imageInput.files.length > 0) {
+                        const file = imageInput.files[0];
+                        console.log('🔍 File details:', {
+                            name: file.name,
+                            size: file.size,
+                            type: file.type,
+                            lastModified: file.lastModified
+                        });
+                        
+                        formData.append('productImage', file, file.name);
+                        console.log('✅ File appended to FormData');
+                        
+                        const hasImageInFormData = formData.has('productImage');
+                        const imageFromFormData = formData.get('productImage');
+                        console.log('🔍 FormData verification:', {
+                            hasImage: hasImageInFormData,
+                            retrievedFile: imageFromFormData,
+                            isFileInstance: imageFromFormData instanceof File
+                        });
+                        
+                    } else {
+                        console.log('⚠️ No image file found');
+                        if (!this.state.isEditMode) {
+                            console.log('❌ Not in edit mode, image required');
+                            throw new Error('Lütfen bir resim seçin.');
+                        }
+                    }
+                    
+                    const textFields = [
+                        { id: 'productName', name: 'productName' },
+                        { id: 'productIdentifier', name: 'productIdentifier' }, 
+                        { id: 'productDescription', name: 'productDescription' }
+                    ];
+                    
+                    textFields.forEach(({ id, name }) => {
+                        const field = this.getElement(id);
                         if (field) {
-                            formData.append(fieldId, field.value || '');
+                            formData.append(name, field.value || '');
+                            console.log(`✅ Added ${name}:`, field.value || '(empty)');
+                        }
+                    });
+                    
+                    const hiddenFields = [
+                        { id: 'editingProductId', name: 'editingProductId' },
+                        { id: 'sizeTableData', name: 'sizeTableData' },
+                        { id: 'customTableData', name: 'customTableData' },
+                        { id: 'variationsData', name: 'variationsData' }
+                    ];
+                    
+                    hiddenFields.forEach(({ id, name }) => {
+                        const field = this.getElement(id);
+                        if (field) {
+                            formData.append(name, field.value || '');
+                            console.log(`✅ Added ${name}:`, (field.value || '').substring(0, 50) + '...');
                         }
                     });
 
-                    // Hidden fields
-                    const hiddenFields = ['editingProductId', 'sizeTableData', 'customTableData', 'variationsData'];
-                    hiddenFields.forEach(fieldId => {
-                        const field = this.getElement(fieldId);
-                        if (field) {
-                            formData.append(fieldId, field.value || '');
-                        }
-                    });
-
-                    // Selected items
-                    const hiddenInputs = document.querySelectorAll('#productForm input[type="hidden"][name$="[]"], #productForm input[type="hidden"][name="productCategory"]');
+                    const hiddenInputs = form.querySelectorAll('input[type="hidden"][name$="[]"], input[type="hidden"][name="productCategory"]');
+                    console.log('🔍 Found hidden inputs:', hiddenInputs.length);
+                    
                     hiddenInputs.forEach(input => {
                         if (input.name && input.value) {
                             formData.append(input.name, input.value);
+                            console.log(`✅ Added ${input.name}:`, input.value);
                         }
                     });
-
+                    
+                    console.log('📋 Final FormData check:');
+                    let totalEntries = 0;
+                    let hasImageFile = false;
+                    
+                    for (let [key, value] of formData.entries()) {
+                        totalEntries++;
+                        if (key === 'productImage') {
+                            hasImageFile = true;
+                            console.log(`  ${key}: [File] ${value.name} (${value.size} bytes, ${value.type})`);
+                        } else {
+                            console.log(`  ${key}: ${value}`);
+                        }
+                    }
+                    
+                    console.log(`📊 FormData summary: ${totalEntries} entries, hasImage: ${hasImageFile}`);
+                    
+                    if (!hasImageFile && !this.state.isEditMode) {
+                        throw new Error('Resim dosyası FormData\'ya eklenemedi!');
+                    }
+                    
+                    console.log('📡 Sending request to:', form.action);
+                    
                     const response = await fetch(form.action, {
                         method: 'POST',
                         body: formData,
@@ -1170,38 +1239,47 @@
                             'X-Requested-With': 'XMLHttpRequest'
                         }
                     });
-
+                    
+                    console.log('📡 Response received:', {
+                        status: response.status,
+                        statusText: response.statusText,
+                        ok: response.ok
+                    });
+                    
+                    console.log('📄 Response headers:');
+                    for (let [key, value] of response.headers.entries()) {
+                        console.log(`  ${key}: ${value}`);
+                    }
+                    
                     if (response.ok) {
                         const contentType = response.headers.get('content-type');
-
+                        
                         if (contentType && contentType.includes('application/json')) {
                             const result = await response.json();
-
+                            console.log('📄 JSON Response:', result);
+                            
                             if (result.success) {
-                                this.uiService.showSuccess('Ürün başarıyla kaydedildi!');
-                                if (result.redirectUrl) {
-                                    window.location.href = result.redirectUrl;
-                                }
+                                this.uiService.showSuccess(result.message);
+                                setTimeout(() => window.location.reload(), 1500);
                             } else {
                                 throw new Error(result.message || 'Ürün kaydedilemedi.');
                             }
                         } else {
                             this.uiService.showSuccess('Ürün başarıyla kaydedildi!');
-                            window.location.reload();
+                            setTimeout(() => window.location.reload(), 1500);
                         }
                     } else {
                         const errorText = await response.text();
-                        console.error('Server Error Response:', errorText);
+                        console.error('❌ Server Error Response:', errorText.substring(0, 1000));
                         throw new Error(`Server error: ${response.status}`);
                     }
-
+                    
                 } catch (error) {
-                    console.error('Submit failed:', error);
+                    console.error('❌ Submit failed:', error);
                     throw error;
                 }
             }
-
-            // Form Management Methods
+            
             clearForm() {
                 try {
                     this.formService.clearForm();
