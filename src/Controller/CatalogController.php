@@ -308,7 +308,6 @@ class CatalogController extends AbstractController
             if (!$product->hasChildren()) {
                 return [];
             }
-
             $variants = [];
             $productVariants = $product->getChildren([Product::OBJECT_TYPE_VARIANT]);
 
@@ -324,10 +323,19 @@ class CatalogController extends AbstractController
                     'name' => $colorObject->getColor()
                 ] : null;
 
+                $eansObjects = $variant->getEans() ?? [];
+                $eans = [];
+                if (!is_array($eansObjects)) {
+                    foreach ($eansObjects as $eanObject) {
+                        if ($eanObject->getKey()) {
+                            $eans[] = $eanObject->getKey();
+                        }
+                    }
+                }
                 $variants[] = [
                     'id' => $variant->getId(),
                     'name' => $variant->getName(),
-                    'ean' => $variant->getEan(),
+                    'eans' => $eans ?? [],
                     'iwasku' => $variant->getIwasku(),
                     'productCode' => $variant->getProductCode(),
                     'variationSize' => $variant->getVariationSize(),
