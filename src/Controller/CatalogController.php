@@ -440,10 +440,9 @@ class CatalogController extends AbstractController
             'Toplam Varyant',
             'Oluşturma Tarihi',
             'Güncelleme Tarihi',
-            // Variant headers
             'Varyant ID',
             'Varyant Adı',
-            'EAN',
+            'EAN Kodları', 
             'IWASKU',
             'Varyant Kodu',
             'Beden',
@@ -455,10 +454,8 @@ class CatalogController extends AbstractController
 
         fputcsv($output, $headers, ';');
 
-        // Write data
         foreach ($products as $product) {
             if (empty($product['variants'])) {
-                // Product without variants
                 $row = [
                     $product['id'],
                     $product['name'],
@@ -467,15 +464,19 @@ class CatalogController extends AbstractController
                     $product['category'] ? $product['category']['displayName'] : '',
                     $product['description'],
                     0,
-                    $product['createdAt'],
-                    $product['modifiedAt'],
+                    $product['createdAt'] ?? '',
+                    $product['modifiedAt'] ?? '',
                     // Empty variant columns
                     '', '', '', '', '', '', '', '', '', ''
                 ];
                 fputcsv($output, $row, ';');
             } else {
-                // Product with variants
                 foreach ($product['variants'] as $index => $variant) {
+                    $eansString = '';
+                    if (isset($variant['eans']) && is_array($variant['eans']) && !empty($variant['eans'])) {
+                        $eansString = implode(', ', $variant['eans']);
+                    }
+
                     $row = [
                         $index === 0 ? $product['id'] : '', // Only show product info on first row
                         $index === 0 ? $product['name'] : '',
@@ -484,19 +485,19 @@ class CatalogController extends AbstractController
                         $index === 0 ? ($product['category'] ? $product['category']['displayName'] : '') : '',
                         $index === 0 ? $product['description'] : '',
                         $index === 0 ? $product['variantCount'] : '',
-                        $index === 0 ? $product['createdAt'] : '',
-                        $index === 0 ? $product['modifiedAt'] : '',
+                        $index === 0 ? ($product['createdAt'] ?? '') : '',
+                        $index === 0 ? ($product['modifiedAt'] ?? '') : '',
                         // Variant columns
                         $variant['id'],
                         $variant['name'],
-                        $variant['ean'] ?: '',
+                        $eansString, // Array'den string'e çevrilmiş EAN'lar
                         $variant['iwasku'] ?: '',
                         $variant['productCode'] ?: '',
                         $variant['variationSize'] ?: '',
                         $variant['color'] ? $variant['color']['name'] : '',
                         $variant['customField'] ?: '',
                         $variant['published'] ? 'Aktif' : 'Pasif',
-                        $variant['createdAt']
+                        $variant['createdAt'] ?? ''
                     ];
                     fputcsv($output, $row, ';');
                 }
