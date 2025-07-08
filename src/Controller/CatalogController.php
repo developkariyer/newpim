@@ -208,7 +208,7 @@ class CatalogController extends AbstractController
                     "productCode LIKE ?",
                     
                     // Variant IWASKU araması - parent ürünleri döndür
-                    "o_id IN (
+                    "oo_id IN (
                         SELECT DISTINCT oo_id 
                         FROM object_query_product 
                         WHERE iwasku LIKE ? 
