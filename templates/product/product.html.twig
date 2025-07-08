@@ -536,56 +536,10 @@
         'use strict';
 
         /**
-         * Product Form Manager - Ana uygulama sınıfı
+         * Ana Ürün Form Yöneticisi
          */
         class ProductFormManager {
             constructor() {
-                this.initializeConfig();
-                this.initializeState();
-                this.initializeServices();
-                this.bindEvents();
-                this.validateEnvironment();
-            }
-
-            /**
-             * Konfigürasyon ayarları
-             */
-            initializeConfig() {
-                this.config = {
-                    searchDelay: 300,
-                    minSearchLength: 2,
-                    endpoints: {
-                        productSearch: '/product/search-products',
-                        itemSearch: '/product/search',
-                        addColor: '/product/add-color'
-                    },
-                    icons: {
-                        colors: '🎨',
-                        brands: '🏷️',
-                        marketplaces: '🛒',
-                        categories: '📂'
-                    },
-                    typeLabels: {
-                        colors: 'renkler',
-                        brands: 'markalar', 
-                        marketplaces: 'pazaryerleri',
-                        categories: 'kategori'
-                    },
-                    inputNames: {
-                        colors: 'colors[]',
-                        brands: 'brands[]',
-                        marketplaces: 'marketplaces[]',
-                        categories: 'productCategory'
-                    },
-                    searchableTypes: ['colors'],
-                    selectableTypes: ['categories', 'brands', 'marketplaces']
-                };
-            }
-
-            /**
-             * Uygulama state'ini başlat
-             */
-            initializeState() {
                 this.state = {
                     selectedProduct: null,
                     isEditMode: false,
@@ -599,44 +553,71 @@
                     searchTimeout: null,
                     currentStep: 1
                 };
-            }
 
-            /**
-             * Servis sınıflarını başlat
-             */
-            initializeServices() {
+                this.config = {
+                    searchDelay: 300,
+                    minSearchLength: 2,
+                    endpoints: {
+                        productSearch: '/product/search-products',
+                        itemSearch: '/product/search',
+                        addColor: '/product/add-color',
+                        deleteVariant: '/product/delete-variant'
+                    },
+                    icons: {
+                        colors: '🎨',
+                        brands: '🏷️',
+                        marketplaces: '🛒',
+                        categories: '📂'
+                    },
+                    typeLabels: {
+                        colors: 'renkler',
+                        brands: 'markalar',
+                        marketplaces: 'pazaryerleri',
+                        categories: 'kategori'
+                    },
+                    inputNames: {
+                        colors: 'colors[]',
+                        brands: 'brands[]',
+                        marketplaces: 'marketplaces[]',
+                        categories: 'productCategory'
+                    }
+                };
+
                 this.searchService = new SearchService(this.config);
                 this.formService = new FormService(this.config, this.state);
                 this.tableService = new TableService();
                 this.variationService = new VariationService(this.state);
                 this.validationService = new ValidationService();
                 this.uiService = new UIService();
+
+                this.initialize();
             }
 
-            /**
-             * Event listener'ları bağla
-             */
-            bindEvents() {
+            initialize() {
                 try {
-                    this.bindProductSearchEvents();
-                    this.bindFormEvents();
-                    this.bindSelectionEvents();
-                    this.bindNavigationEvents();
-                    this.bindTableEvents();
+                    this.bindEvents();
+                    this.validateEnvironment();
+                    console.log('✅ ProductFormManager initialized successfully');
                 } catch (error) {
-                    console.error('Event binding failed:', error);
-                    this.uiService.showError('Uygulama başlatılırken bir hata oluştu.');
+                    console.error('❌ ProductFormManager initialization failed:', error);
+                    this.uiService.showError('Uygulama başlatılamadı. Lütfen sayfayı yenileyin.');
                 }
             }
 
-            /**
-             * Ürün arama event'leri
-             */
+            bindEvents() {
+                this.bindProductSearchEvents();
+                this.bindFormEvents();
+                this.bindSelectionEvents();
+                this.bindNavigationEvents();
+                this.bindTableEvents();
+                this.bindVariantEvents();
+            }
+
             bindProductSearchEvents() {
                 const searchInput = this.getElement('productSearchInput');
                 if (searchInput) {
                     searchInput.addEventListener('input', this.debounce(
-                        (e) => this.handleProductSearch(e.target.value), 
+                        (e) => this.handleProductSearch(e.target.value),
                         this.config.searchDelay
                     ));
                 }
@@ -647,50 +628,38 @@
                 }
             }
 
-            /**
-             * Form event'leri
-             */
             bindFormEvents() {
+                const form = this.getElement('productForm');
+                if (form) {
+                    form.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        this.handleFormSubmit();
+                    });
+                }
+
                 const imageInput = this.getElement('imageInput');
                 if (imageInput) {
                     imageInput.addEventListener('change', (e) => this.handleImageUpload(e));
                 }
+
                 const addColorBtn = this.getElement('addNewColorBtn');
                 if (addColorBtn) {
                     addColorBtn.addEventListener('click', () => this.handleAddNewColor());
                 }
-                const form = this.getElement('productForm');
-                if (form) {
-                    form.removeEventListener('submit', this.handleFormSubmit);
-                    form.addEventListener('submit', (e) => {
-                        console.log('🔥 Form submit event triggered');
-                        e.preventDefault();
-                        this.handleFormSubmit(e);
-                    });
-                    
-                    console.log('✅ Form submit listener bound successfully');
-                } else {
-                    console.error('❌ Form element not found');
-                }
             }
 
-            /**
-             * Seçim event'leri
-             */
             bindSelectionEvents() {
-                // Searchable types (AJAX arama)
-                this.config.searchableTypes.forEach(type => {
-                    const searchElement = this.getElement(`${type}Search`);
-                    if (searchElement) {
-                        searchElement.addEventListener('input', this.debounce(
-                            () => this.handleItemSearch(type), 
-                            this.config.searchDelay
-                        ));
-                    }
-                });
+                // Searchable items (colors)
+                const colorsSearch = this.getElement('colorsSearch');
+                if (colorsSearch) {
+                    colorsSearch.addEventListener('input', this.debounce(
+                        () => this.handleItemSearch('colors'),
+                        this.config.searchDelay
+                    ));
+                }
 
-                // Selectable types (Select dropdown)
-                this.config.selectableTypes.forEach(type => {
+                // Selectable items (categories, brands, marketplaces)
+                ['categories', 'brands', 'marketplaces'].forEach(type => {
                     const selectElement = this.getElement(`${type}Search`);
                     if (selectElement) {
                         selectElement.addEventListener('change', (e) => this.handleItemSelect(type, e));
@@ -698,38 +667,18 @@
                 });
             }
 
-            /**
-             * Navigasyon event'leri
-             */
             bindNavigationEvents() {
                 const goToVariationsBtn = this.getElement('goToVariationsBtn');
                 if (goToVariationsBtn) {
                     goToVariationsBtn.addEventListener('click', () => this.handleGoToVariations());
                 }
+
                 const backToStep1Btn = this.getElement('backToStep1Btn');
                 if (backToStep1Btn) {
                     backToStep1Btn.addEventListener('click', () => this.showStep(1));
                 }
-
-                const submitBtn = this.getElement('submitBtn');
-                if (submitBtn) {
-                    submitBtn.addEventListener('click', (e) => {
-                        console.log('🔥 Submit button clicked');
-                        e.preventDefault();
-                        this.handleFormSubmit(e);
-                    });
-                }
-
-                document.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('delete-variant-btn')) {
-                        this.handleDeleteVariant(e.target);
-                    }
-                });
             }
 
-            /**
-             * Tablo event'leri
-             */
             bindTableEvents() {
                 const tableButtons = [
                     { id: 'addSizeRowBtn', handler: () => this.tableService.addSizeRow() },
@@ -745,21 +694,17 @@
                     }
                 });
 
-                // Tablo satır silme
                 this.bindTableRowDeletion('sizeTable');
                 this.bindTableRowDeletion('customTable');
             }
 
-            /**
-             * Tablo satır silme event'i
-             */
             bindTableRowDeletion(tableId) {
                 const table = this.getElement(tableId);
                 if (table) {
                     const tbody = table.querySelector('tbody');
                     if (tbody) {
                         tbody.addEventListener('click', (e) => {
-                            if (e.target.classList.contains('remove-row-btn') && 
+                            if (e.target.classList.contains('remove-row-btn') &&
                                 !e.target.closest('tr').classList.contains('locked-row')) {
                                 e.target.closest('tr').remove();
                             }
@@ -768,9 +713,15 @@
                 }
             }
 
-            /**
-             * Ürün arama işlemi
-             */
+            bindVariantEvents() {
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('delete-variant-btn')) {
+                        this.handleDeleteVariant(e.target);
+                    }
+                });
+            }
+
+            // Product Search Methods
             async handleProductSearch(query) {
                 if (query.length < this.config.minSearchLength) {
                     this.uiService.hideElement('productSearchResults');
@@ -786,99 +737,6 @@
                 }
             }
 
-            async handleDeleteVariant(button) {
-                const color = button.dataset.color;
-                const size = button.dataset.size;
-                const custom = button.dataset.custom || null;
-                
-                const confirmMessage = `"${color} - ${size}${custom ? ' - ' + custom : ''}" varyantını silmek istediğinizden emin misiniz?\n\nBu işlem ürünü yayından kaldıracaktır (unpublish).`;
-                
-                if (!confirm(confirmMessage)) {
-                    return;
-                }
-
-                try {
-                    this.uiService.showLoading();
-                    
-                    const response = await fetch('/product/delete-variant', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify({
-                            productId: this.state.selectedProduct.id,
-                            variantData: {
-                                color: color,
-                                size: size,
-                                custom: custom
-                            }
-                        })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Variant silme başarısız');
-                    }
-
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        this.uiService.showSuccess(`Varyant silindi.`);
-                        this.removeVariantFromLocked(color, size, custom);
-                        this.variationService.generateMatrix();
-                    } else {
-                        throw new Error(result.message || 'Variant silme başarısız');
-                    }
-                    
-                } catch (error) {
-                    console.error('Delete variant failed:', error);
-                    this.uiService.showError(`Variant silinemedi: ${error.message}`);
-                } finally {
-                    this.uiService.hideLoading();
-                }
-            }
-
-            async refreshProductData() {
-                if (!this.state.selectedProduct) return;
-                
-                try {
-                    const response = await fetch(`/product/get-product-data/${this.state.selectedProduct.id}`);
-                    if (response.ok) {
-                        const updatedData = await response.json();
-                        this.state.selectedProduct.variants = updatedData.variants || [];
-                        this.variationService.updateLockedVariants(this.state.selectedProduct);
-                        console.log('✅ Product data refreshed:', this.state.selectedProduct);
-                    }
-                } catch (error) {
-                    console.error('Refresh product data failed:', error);
-                }
-            }
-
-            /**
-            * Silinen variant'ı locked listesinden çıkar
-            */
-            removeVariantFromLocked(color, size, custom) {
-                const normalizedCustom = (custom === undefined || custom === null || custom === '') ? null : custom;
-                this.state.lockedVariants = this.state.lockedVariants.filter(v => {
-                    const normalizedLockedCustom = (v.custom === undefined || v.custom === null) ? null : v.custom;
-                    const isMatch = (
-                        v.color === color &&
-                        v.size === size &&
-                        normalizedLockedCustom === normalizedCustom
-                    );
-                    console.log(`🗑️ Checking for removal:`, {
-                        variant: v,
-                        deleteTarget: { color, size, custom: normalizedCustom },
-                        isMatch: isMatch
-                    });
-                    return !isMatch; 
-                });
-                console.log('✅ Updated locked variants after deletion:', this.state.lockedVariants);
-            }
-
-            /**
-             * Ürün arama sonuçlarını göster
-             */
             displayProductSearchResults(items) {
                 const resultsDiv = this.getElement('productSearchResults');
                 if (!resultsDiv) return;
@@ -897,7 +755,6 @@
                     </div>
                 `).join('');
 
-                // Event delegation ile click event'i ekle
                 resultsDiv.addEventListener('click', (e) => {
                     const resultItem = e.target.closest('.search-result-item');
                     if (resultItem) {
@@ -912,36 +769,30 @@
                 this.uiService.showElement('productSearchResults');
             }
 
-            /**
-             * Düzenleme için ürün seç
-             */
             selectProductForEdit(product) {
                 try {
                     this.state.selectedProduct = product;
                     this.state.isEditMode = true;
-                    
+
                     this.uiService.hideElement('productSearchResults');
                     this.getElement('productSearchInput').value = '';
-                    
+
                     this.displaySelectedProduct(product);
                     this.formService.fillForm(product);
                     this.formService.setEditMode();
-                    
+
                     this.variationService.updateLockedVariants(product);
-                    
+
                     Object.keys(this.state.selectedItems).forEach(type => {
                         this.updateSelectedItems(type);
                     });
-                    
+
                 } catch (error) {
                     console.error('Product selection failed:', error);
                     this.uiService.showError('Ürün seçimi başarısız.');
                 }
             }
 
-            /**
-             * Seçilen ürünü göster
-             */
             displaySelectedProduct(product) {
                 const detailsElement = this.getElement('selectedProductDetails');
                 if (detailsElement) {
@@ -954,9 +805,7 @@
                 this.getElement('editingProductId').value = product.id;
             }
 
-            /**
-             * Item arama (AJAX)
-             */
+            // Item Selection Methods
             async handleItemSearch(type) {
                 const searchInput = this.getElement(`${type}Search`);
                 if (!searchInput) return;
@@ -975,9 +824,6 @@
                 }
             }
 
-            /**
-             * Item arama sonuçlarını göster
-             */
             displayItemSearchResults(type, items) {
                 const resultsDiv = this.getElement(`${type}Results`);
                 if (!resultsDiv) return;
@@ -995,7 +841,6 @@
                     </div>
                 `).join('');
 
-                // Event delegation
                 resultsDiv.addEventListener('click', (e) => {
                     const resultItem = e.target.closest('.item-result');
                     if (resultItem) {
@@ -1010,9 +855,6 @@
                 this.uiService.showElement(`${type}Results`);
             }
 
-            /**
-             * Item seçimi (Select)
-             */
             handleItemSelect(type, event) {
                 const selectedOption = event.target.options[event.target.selectedIndex];
                 if (selectedOption.value) {
@@ -1025,13 +867,10 @@
                 }
             }
 
-            /**
-             * Seçilen item'ı ekle
-             */
             addSelectedItem(type, item) {
                 try {
                     const singleSelectTypes = ['categories'];
-                    
+
                     if (singleSelectTypes.includes(type)) {
                         this.state.selectedItems[type] = [item];
                     } else {
@@ -1040,7 +879,7 @@
                         }
                         this.state.selectedItems[type].push(item);
                     }
-                    
+
                     this.updateSelectedItems(type);
                     this.clearSearchInput(type);
                 } catch (error) {
@@ -1048,13 +887,10 @@
                 }
             }
 
-            /**
-             * Seçilen item'ları güncelle
-             */
             updateSelectedItems(type) {
                 const selectedDiv = this.getElement(`${type}Selected`);
                 const hiddenDiv = this.getElement(`${type}Hidden`);
-                
+
                 if (!selectedDiv || !hiddenDiv) return;
 
                 if (this.state.selectedItems[type].length === 0) {
@@ -1064,80 +900,45 @@
                 }
 
                 selectedDiv.innerHTML = this.state.selectedItems[type].map(item => {
-                const isLocked = this.isItemLocked(type, item);
-                console.log(`🔍 Item lock check for ${type}:`, {
-                    item: item,
-                    isLocked: isLocked,
-                    lockedVariants: this.state.lockedVariants
-                });
-                const lockIcon = isLocked ? '🔒 ' : '';
-                const removeButton = isLocked ? 
-                    `<span style="margin-left: 0.5rem; color: #6c757d; cursor: not-allowed;" title="Bu ${this.config.typeLabels[type]} varyantlarda kullanıldığı için kaldırılamaz">🔒</span>` :
-                    `<span onclick="productFormManager.removeSelectedItem('${type}', ${item.id})" style="margin-left: 0.5rem; cursor: pointer; font-weight: bold;">×</span>`;
-                    
-                return `
-                    <span style="display: inline-block; background: ${isLocked ? '#6c757d' : '#007bff'}; color: white; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 12px; font-size: 0.875rem;">
-                        ${lockIcon}${this.config.icons[type] || '📋'} ${this.escapeHtml(item.name)}
-                        ${removeButton}
-                    </span>
-                `;
-            }).join('');
+                    const isLocked = this.isItemLocked(type, item);
+                    const lockIcon = isLocked ? '🔒 ' : '';
+                    const removeButton = isLocked ?
+                        `<span style="margin-left: 0.5rem; color: #6c757d; cursor: not-allowed;" title="Bu ${this.config.typeLabels[type]} varyantlarda kullanıldığı için kaldırılamaz">🔒</span>` :
+                        `<span onclick="productFormManager.removeSelectedItem('${type}', ${item.id})" style="margin-left: 0.5rem; cursor: pointer; font-weight: bold;">×</span>`;
 
-            hiddenDiv.innerHTML = this.state.selectedItems[type].map(item => 
-                `<input type="hidden" name="${this.config.inputNames[type] || type + '[]'}" value="${item.id}">`
-            ).join('');
+                    return `
+                        <span style="display: inline-block; background: ${isLocked ? '#6c757d' : '#007bff'}; color: white; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 12px; font-size: 0.875rem;">
+                            ${lockIcon}${this.config.icons[type] || '📋'} ${this.escapeHtml(item.name)}
+                            ${removeButton}
+                        </span>
+                    `;
+                }).join('');
+
+                hiddenDiv.innerHTML = this.state.selectedItems[type].map(item =>
+                    `<input type="hidden" name="${this.config.inputNames[type] || type + '[]'}" value="${item.id}">`
+                ).join('');
             }
 
-            /**
-             * Item'ın kilitli olup olmadığını kontrol et
-             */
             isItemLocked(type, item) {
                 if (type === 'colors' && this.state.lockedVariants.length > 0) {
-                    console.log(`🔍 DETAILED Color lock check for "${item.name}":`, {
-                        lockedVariants: this.state.lockedVariants,
-                        itemName: item.name,
-                        itemId: item.id,
-                        itemObject: item,
-                        checkingEach: this.state.lockedVariants.map(v => ({
-                            variantColor: v.color,
-                            itemName: item.name,
-                            exactMatch: v.color === item.name,
-                            typeOfVariantColor: typeof v.color,
-                            typeOfItemName: typeof item.name
-                        }))
-                    });
-                    
-                    const isLocked = this.state.lockedVariants.some(v => {
-                        const match = v.color === item.name;
-                        console.log(`🎯 Comparing: "${v.color}" === "${item.name}" = ${match}`);
-                        return match;
-                    });
-                    
-                    console.log(`🎨 Final result for "${item.name}": ${isLocked}`);
-                    return isLocked;
+                    return this.state.lockedVariants.some(v => v.color === item.name);
                 }
                 return false;
             }
 
-            /**
-             * Seçilen item'ı kaldır
-             */
             removeSelectedItem(type, itemId) {
                 const item = this.state.selectedItems[type].find(item => item.id == itemId);
                 if (!item) return;
-                
+
                 if (this.isItemLocked(type, item)) {
                     this.uiService.showError(`Bu ${this.config.typeLabels[type]} varyantlarda kullanıldığı için kaldırılamaz.`);
                     return;
                 }
-                
+
                 this.state.selectedItems[type] = this.state.selectedItems[type].filter(item => item.id != itemId);
                 this.updateSelectedItems(type);
             }
 
-            /**
-             * Arama input'unu temizle
-             */
             clearSearchInput(type) {
                 const searchInput = this.getElement(`${type}Search`);
                 if (searchInput) {
@@ -1146,34 +947,47 @@
                 this.uiService.hideElement(`${type}Results`);
             }
 
-            /**
-             * Resim yükleme
-             */
+            // Image Upload Methods
             handleImageUpload(event) {
                 const file = event.target.files[0];
                 if (!file) return;
 
                 if (!file.type.startsWith('image/')) {
                     this.uiService.showError('Lütfen geçerli bir resim dosyası seçin.');
+                    event.target.value = '';
+                    return;
+                }
+
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                if (file.size > maxSize) {
+                    this.uiService.showError('Resim dosyası çok büyük. Maksimum 5MB olmalıdır.');
+                    event.target.value = '';
                     return;
                 }
 
                 const reader = new FileReader();
+
                 reader.onload = (e) => {
-                    const preview = this.getElement('imagePreview');
-                    if (preview) {
-                        preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                    try {
+                        const preview = this.getElement('imagePreview');
+                        if (preview) {
+                            preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">`;
+                        }
+                    } catch (error) {
+                        console.error('Image preview failed:', error);
+                        this.uiService.showError('Resim önizleme başarısız.');
                     }
                 };
+
                 reader.onerror = () => {
                     this.uiService.showError('Resim yüklenirken bir hata oluştu.');
+                    event.target.value = '';
                 };
+
                 reader.readAsDataURL(file);
             }
 
-            /**
-             * Yeni renk ekleme
-             */
+            // Color Management Methods
             async handleAddNewColor() {
                 const colorInput = this.getElement('newColorInput');
                 if (!colorInput) return;
@@ -1195,9 +1009,7 @@
                 }
             }
 
-            /**
-             * Varyasyonlara git
-             */
+            // Navigation Methods
             handleGoToVariations() {
                 if (!this.validationService.validateStep1()) {
                     return;
@@ -1212,79 +1024,145 @@
                 }
             }
 
-            /**
-             * Form submit
-             */
-            handleFormSubmit(event) {
-                console.log('🔥 handleFormSubmit called');
-                
-                try {
-                    if (!this.validationService.validateStep1()) {
-                        console.log('❌ Validation failed');
-                        return;
+            showStep(stepNumber) {
+                this.state.currentStep = stepNumber;
+
+                for (let i = 1; i <= 2; i++) {
+                    const stepElement = this.getElement(`step${i}`);
+                    if (stepElement) {
+                        stepElement.style.display = i === stepNumber ? 'block' : 'none';
                     }
-                    
-                    console.log('✅ Validation passed, starting submit process');
-                    this.uiService.showLoading();
-                    this.variationService.collectVariationsData();
-                    
-                    this.submitFormWithFormData();
-                    
-                } catch (error) {
-                    console.error('Form submit failed:', error);
-                    this.uiService.hideLoading();
-                    this.uiService.showError('Form gönderilirken bir hata oluştu.');
                 }
             }
 
+            // Variant Management Methods
+            async handleDeleteVariant(button) {
+                const color = button.dataset.color;
+                const size = button.dataset.size;
+                const custom = button.dataset.custom || null;
+
+                const confirmMessage = `"${color} - ${size}${custom ? ' - ' + custom : ''}" varyantını silmek istediğinizden emin misiniz?\n\nBu işlem ürünü yayından kaldıracaktır (unpublish).`;
+
+                if (!confirm(confirmMessage)) {
+                    return;
+                }
+
+                try {
+                    this.uiService.showLoading();
+
+                    const response = await fetch(this.config.endpoints.deleteVariant, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            productId: this.state.selectedProduct.id,
+                            variantData: {
+                                color: color,
+                                size: size,
+                                custom: custom
+                            }
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Variant silme başarısız');
+                    }
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.uiService.showSuccess('Varyant silindi.');
+                        this.removeVariantFromLocked(color, size, custom);
+                        this.variationService.generateMatrix();
+                    } else {
+                        throw new Error(result.message || 'Variant silme başarısız');
+                    }
+
+                } catch (error) {
+                    console.error('Delete variant failed:', error);
+                    this.uiService.showError(`Variant silinemedi: ${error.message}`);
+                } finally {
+                    this.uiService.hideLoading();
+                }
+            }
+
+            removeVariantFromLocked(color, size, custom) {
+                const normalizedCustom = (custom === undefined || custom === null || custom === '') ? null : custom;
+
+                this.state.lockedVariants = this.state.lockedVariants.filter(v => {
+                    const normalizedLockedCustom = (v.custom === undefined || v.custom === null) ? null : v.custom;
+
+                    const isMatch = (
+                        v.color === color &&
+                        v.size === size &&
+                        normalizedLockedCustom === normalizedCustom
+                    );
+
+                    return !isMatch;
+                });
+            }
+
+            // Form Submission Methods
+            async handleFormSubmit() {
+                try {
+                    if (!this.validationService.validateStep1()) {
+                        return;
+                    }
+
+                    this.uiService.showLoading();
+                    this.variationService.collectVariationsData();
+
+                    await this.submitFormWithFormData();
+
+                } catch (error) {
+                    console.error('Form submit failed:', error);
+                    this.uiService.showError('Form gönderilirken bir hata oluştu.');
+                } finally {
+                    this.uiService.hideLoading();
+                }
+            }
 
             async submitFormWithFormData() {
                 try {
-                    console.log('🚀 Starting FormData submission');
-                    const form = document.getElementById('productForm');
+                    const form = this.getElement('productForm');
                     const formData = new FormData();
-                    const imageInput = document.getElementById('imageInput');
+
+                    // Image file
+                    const imageInput = this.getElement('imageInput');
                     if (imageInput && imageInput.files && imageInput.files.length > 0) {
                         formData.append('productImage', imageInput.files[0]);
-                        console.log('✅ Image file added to FormData:', {
-                            name: imageInput.files[0].name,
-                            size: imageInput.files[0].size,
-                            type: imageInput.files[0].type
-                        });
-                    } else {
-                        console.log('⚠️ No image file selected');
-                        if (!this.state.isEditMode) {
-                            throw new Error('Lütfen bir resim seçin.');
-                        }
+                    } else if (!this.state.isEditMode) {
+                        throw new Error('Lütfen bir resim seçin.');
                     }
+
+                    // Text fields
                     const textFields = ['productName', 'productIdentifier', 'productDescription'];
                     textFields.forEach(fieldId => {
-                        const field = document.getElementById(fieldId);
+                        const field = this.getElement(fieldId);
                         if (field) {
                             formData.append(fieldId, field.value || '');
-                            console.log(`✅ Added ${fieldId}:`, field.value || '(empty)');
                         }
                     });
+
+                    // Hidden fields
                     const hiddenFields = ['editingProductId', 'sizeTableData', 'customTableData', 'variationsData'];
                     hiddenFields.forEach(fieldId => {
-                        const field = document.getElementById(fieldId);
+                        const field = this.getElement(fieldId);
                         if (field) {
                             formData.append(fieldId, field.value || '');
-                            console.log(`✅ Added ${fieldId}:`, field.value || '(empty)');
                         }
                     });
+
+                    // Selected items
                     const hiddenInputs = document.querySelectorAll('#productForm input[type="hidden"][name$="[]"], #productForm input[type="hidden"][name="productCategory"]');
                     hiddenInputs.forEach(input => {
                         if (input.name && input.value) {
                             formData.append(input.name, input.value);
-                            console.log(`✅ Added ${input.name}:`, input.value);
                         }
                     });
-                    console.log('📝 Complete FormData:');
-                    for (let [key, value] of formData.entries()) {
-                        console.log(`  ${key}:`, typeof value === 'object' ? `[File: ${value.name}]` : value);
-                    }
-                    console.log('📡 Sending request to:', form.action);
+
                     const response = await fetch(form.action, {
                         method: 'POST',
                         body: formData,
@@ -1292,14 +1170,13 @@
                             'X-Requested-With': 'XMLHttpRequest'
                         }
                     });
-                    console.log('📡 Response received:', response.status, response.statusText);
+
                     if (response.ok) {
                         const contentType = response.headers.get('content-type');
-                        console.log('📄 Content-Type:', contentType);
+
                         if (contentType && contentType.includes('application/json')) {
                             const result = await response.json();
-                            console.log('📄 JSON Response:', result);
-                            
+
                             if (result.success) {
                                 this.uiService.showSuccess('Ürün başarıyla kaydedildi!');
                                 if (result.redirectUrl) {
@@ -1309,26 +1186,22 @@
                                 throw new Error(result.message || 'Ürün kaydedilemedi.');
                             }
                         } else {
-                            console.log('📄 HTML Response - probably redirected');
                             this.uiService.showSuccess('Ürün başarıyla kaydedildi!');
                             window.location.reload();
                         }
                     } else {
                         const errorText = await response.text();
-                        console.error('❌ Server Error Response:', errorText);
+                        console.error('Server Error Response:', errorText);
                         throw new Error(`Server error: ${response.status}`);
                     }
+
                 } catch (error) {
-                    console.error('❌ Submit failed:', error);
-                    this.uiService.showError(`Form gönderilirken hata: ${error.message}`);
-                } finally {
-                    this.uiService.hideLoading();
+                    console.error('Submit failed:', error);
+                    throw error;
                 }
             }
 
-            /**
-             * Formu temizle
-             */
+            // Form Management Methods
             clearForm() {
                 try {
                     this.formService.clearForm();
@@ -1339,23 +1212,7 @@
                 }
             }
 
-            /**
-             * Step göster
-             */
-            showStep(stepNumber) {
-                this.state.currentStep = stepNumber;
-                
-                for (let i = 1; i <= 2; i++) {
-                    const stepElement = this.getElement(`step${i}`);
-                    if (stepElement) {
-                        stepElement.style.display = i === stepNumber ? 'block' : 'none';
-                    }
-                }
-            }
-
-            /**
-             * Utility metodlar
-             */
+            // Utility Methods
             getElement(id) {
                 const element = document.getElementById(id);
                 if (!element) {
@@ -1378,22 +1235,16 @@
                 };
             }
 
-            /**
-             * Çevre doğrulaması
-             */
             validateEnvironment() {
-                const requiredElements = [
-                    'productForm', 'step1', 'step2'
-                ];
-
+                const requiredElements = ['productForm', 'step1', 'step2'];
                 const missingElements = requiredElements.filter(id => !document.getElementById(id));
-                
+
                 if (missingElements.length > 0) {
                     console.error('Missing required elements:', missingElements);
                     this.uiService.showError('Uygulama düzgün yüklenemedi. Sayfayı yenileyin.');
                     return false;
                 }
-                
+
                 return true;
             }
         }
@@ -1432,11 +1283,11 @@
 
                 if (!response.ok) throw new Error('Add color failed');
                 const data = await response.json();
-                
+
                 if (!data.success) {
                     throw new Error(data.message || 'Add color failed');
                 }
-                
+
                 return data;
             }
         }
@@ -1452,29 +1303,31 @@
 
             fillForm(product) {
                 try {
-                    this.state.lockedVariants = [];
-                    this.state.selectedItems = {
-                        colors: [],
-                        brands: [],
-                        marketplaces: [],
-                        categories: []
-                    };
-                    this.setFieldValue('productName', product.name);
-                    this.setFieldValue('productIdentifier', product.productIdentifier);
-                    this.setFieldValue('productDescription', product.description);
+                    this.resetState();
+                    this.setFieldValues(product);
                     this.setupSelectedItems(product);
-                    if (product.imagePath) {
-                        const preview = document.getElementById('imagePreview');
-                        if (preview) {
-                            preview.innerHTML = `<img src="${product.imagePath}" alt="Product Image">`;
-                        }
-                    }
+                    this.setProductImage(product);
                     this.fillTables(product);
-                    console.log('Form filled successfully for product:', product.id);
                 } catch (error) {
                     console.error('Fill form failed:', error);
                     throw error;
                 }
+            }
+
+            resetState() {
+                this.state.lockedVariants = [];
+                this.state.selectedItems = {
+                    colors: [],
+                    brands: [],
+                    marketplaces: [],
+                    categories: []
+                };
+            }
+
+            setFieldValues(product) {
+                this.setFieldValue('productName', product.name);
+                this.setFieldValue('productIdentifier', product.productIdentifier);
+                this.setFieldValue('productDescription', product.description);
             }
 
             setFieldValue(fieldId, value) {
@@ -1491,6 +1344,7 @@
                         name: product.categoryName
                     }];
                 }
+
                 ['brands', 'marketplaces', 'variantColors'].forEach(key => {
                     if (product[key] && Array.isArray(product[key])) {
                         const targetKey = key === 'variantColors' ? 'colors' : key;
@@ -1499,31 +1353,40 @@
                 });
             }
 
+            setProductImage(product) {
+                if (product.imagePath) {
+                    const preview = document.getElementById('imagePreview');
+                    if (preview) {
+                        preview.innerHTML = `<img src="${product.imagePath}" alt="Product Image" style="width: 100%; height: 100%; object-fit: cover;">`;
+                    }
+                }
+            }
+
             fillTables(product) {
                 if (product.sizeTable && Array.isArray(product.sizeTable)) {
-                    let processedUsedSizes = [];
-                    if (product.usedSizes && Array.isArray(product.usedSizes)) {
-                        processedUsedSizes = product.usedSizes;
-                    } else if (product.usedSizes && typeof product.usedSizes === 'object') {
-                        processedUsedSizes = Object.values(product.usedSizes);
-                    }
+                    const processedUsedSizes = this.processUsedItems(product.usedSizes);
                     window.productFormManager.tableService.populateSizeTable(
-                        product.sizeTable, 
+                        product.sizeTable,
                         processedUsedSizes
                     );
                 }
+
                 if (product.customTable && product.customTable.rows) {
-                    let processedUsedCustoms = [];
-                    if (product.usedCustoms && Array.isArray(product.usedCustoms)) {
-                        processedUsedCustoms = product.usedCustoms;
-                    } else if (product.usedCustoms && typeof product.usedCustoms === 'object') {
-                        processedUsedCustoms = Object.values(product.usedCustoms);
-                    }
+                    const processedUsedCustoms = this.processUsedItems(product.usedCustoms);
                     window.productFormManager.tableService.populateCustomTable(
-                        product.customTable, 
+                        product.customTable,
                         processedUsedCustoms
                     );
                 }
+            }
+
+            processUsedItems(usedItems) {
+                if (Array.isArray(usedItems)) {
+                    return usedItems;
+                } else if (typeof usedItems === 'object' && usedItems !== null) {
+                    return Object.values(usedItems);
+                }
+                return [];
             }
 
             setEditMode() {
@@ -1533,10 +1396,12 @@
                     identifierField.style.backgroundColor = '#e9ecef';
                     identifierField.style.cursor = 'not-allowed';
                 }
+
                 const imageInput = document.getElementById('imageInput');
                 if (imageInput) {
                     imageInput.removeAttribute('required');
                 }
+
                 const submitBtn = document.getElementById('submitBtn');
                 if (submitBtn) {
                     submitBtn.textContent = '💾 Ürünü Güncelle';
@@ -1544,36 +1409,28 @@
             }
 
             clearForm() {
+                this.resetState();
                 this.state.selectedProduct = null;
                 this.state.isEditMode = false;
-                this.state.lockedVariants = [];
-                this.state.selectedItems = {
-                    colors: [],
-                    brands: [],
-                    marketplaces: [],
-                    categories: []
-                };
+
                 const form = document.getElementById('productForm');
                 if (form) {
                     form.reset();
                 }
+
                 this.clearUIElements();
                 this.clearEditMode();
-                console.log('Form cleared successfully');
             }
 
             clearUIElements() {
-                const elementsToHide = [
-                    'selectedProductInfo',
-                    'sizeTablePreview',
-                    'customTablePreview'
-                ];
+                const elementsToHide = ['selectedProductInfo', 'sizeTablePreview', 'customTablePreview'];
                 elementsToHide.forEach(id => {
                     const element = document.getElementById(id);
                     if (element) {
                         element.style.display = 'none';
                     }
                 });
+
                 const hiddenInputs = ['editingProductId', 'sizeTableData', 'customTableData'];
                 hiddenInputs.forEach(id => {
                     const input = document.getElementById(id);
@@ -1581,10 +1438,12 @@
                         input.value = '';
                     }
                 });
+
                 const imagePreview = document.getElementById('imagePreview');
                 if (imagePreview) {
                     imagePreview.innerHTML = '📷';
                 }
+
                 const tableBodies = ['#sizeTable tbody', '#customTable tbody'];
                 tableBodies.forEach(selector => {
                     const tbody = document.querySelector(selector);
@@ -1601,10 +1460,12 @@
                     identifierField.style.backgroundColor = '';
                     identifierField.style.cursor = '';
                 }
+
                 const imageInput = document.getElementById('imageInput');
                 if (imageInput) {
                     imageInput.setAttribute('required', 'required');
                 }
+
                 const submitBtn = document.getElementById('submitBtn');
                 if (submitBtn) {
                     submitBtn.textContent = 'Kaydet';
@@ -1624,6 +1485,7 @@
                 if (isLocked) {
                     tr.classList.add('locked-row');
                 }
+
                 tr.innerHTML = `
                     <td data-label="Beden">
                         <input type="text" class="form-control" value="${values.beden || ''}" ${isLocked ? 'readonly' : ''} required>
@@ -1638,6 +1500,7 @@
                         </button>
                     </td>
                 `;
+
                 tbody.appendChild(tr);
             }
 
@@ -1649,7 +1512,9 @@
                 if (isLocked) {
                     tr.classList.add('locked-row');
                 }
+
                 const degerValue = typeof value === 'object' ? (value.deger || '') : value;
+
                 tr.innerHTML = `
                     <td data-label="Değer">
                         <input type="text" class="form-control" value="${degerValue}" ${isLocked ? 'readonly' : ''} required>
@@ -1661,6 +1526,7 @@
                         </button>
                     </td>
                 `;
+
                 tbody.appendChild(tr);
             }
 
@@ -1670,6 +1536,7 @@
                     window.productFormManager.uiService.showError('Lütfen tablodaki tüm alanları doldurun.');
                     return;
                 }
+
                 document.getElementById('sizeTableData').value = JSON.stringify(rows);
                 this.updateSizeTablePreview(rows);
                 this.closeModal('sizeTableModal');
@@ -1678,15 +1545,18 @@
             saveCustomTable() {
                 const titleInput = document.getElementById('customTableTitle');
                 const title = titleInput ? titleInput.value.trim() : '';
+
                 if (!title) {
                     window.productFormManager.uiService.showError('Lütfen Custom Tablo için bir başlık girin.');
                     return;
                 }
+
                 const rows = this.collectTableData('#customTable tbody tr', ['deger']);
                 if (!this.validateTableData(rows)) {
                     window.productFormManager.uiService.showError('Lütfen tablodaki tüm değer alanlarını doldurun.');
                     return;
                 }
+
                 const tableData = { title, rows };
                 document.getElementById('customTableData').value = JSON.stringify(tableData);
                 this.updateCustomTablePreview(tableData);
@@ -1745,27 +1615,23 @@
             }
 
             populateSizeTable(sizeTable, usedSizes = []) {
-                let normalizedUsedSizes = [];
-                if (Array.isArray(usedSizes)) {
-                    normalizedUsedSizes = usedSizes;
-                } else if (typeof usedSizes === 'object' && usedSizes !== null) {
-                    normalizedUsedSizes = Object.values(usedSizes);
-                }
                 const tbody = document.querySelector('#sizeTable tbody');
                 if (tbody) {
                     tbody.innerHTML = '';
                 }
+
                 sizeTable.forEach(row => {
                     const sizeValue = row.beden || '';
-                    const isLocked = normalizedUsedSizes.some(usedSize => {
+                    const isLocked = usedSizes.some(usedSize => {
                         if (typeof usedSize === 'string') {
-                            const extractedSize = usedSize.includes(' (En:') 
-                                ? usedSize.split(' (En:')[0]
-                                : usedSize.split(' (')[0];
+                            const extractedSize = usedSize.includes(' (En:') ?
+                                usedSize.split(' (En:')[0] :
+                                usedSize.split(' (')[0];
                             return extractedSize === sizeValue;
                         }
                         return usedSize === sizeValue;
                     });
+
                     this.addSizeRow(row, isLocked);
                 });
 
@@ -1778,18 +1644,20 @@
                 if (customTitleElement) {
                     customTitleElement.value = customTable.title || '';
                 }
-                const usedCustomsArray = Array.isArray(usedCustoms) ? usedCustoms : Object.values(usedCustoms || {});
+
                 const tbody = document.querySelector('#customTable tbody');
                 if (tbody) {
                     tbody.innerHTML = '';
                 }
+
                 if (customTable.rows && customTable.rows.length > 0) {
                     customTable.rows.forEach(row => {
                         const customValue = row.deger || '';
-                        const isLocked = usedCustomsArray.includes(customValue);
+                        const isLocked = usedCustoms.includes(customValue);
                         this.addCustomRow(row, isLocked);
                     });
                 }
+
                 document.getElementById('customTableData').value = JSON.stringify(customTable);
                 this.updateCustomTablePreview(customTable);
             }
@@ -1812,17 +1680,18 @@
             constructor(state) {
                 this.state = state;
             }
-            
+
             updateLockedVariants(product) {
                 if (!product || !product.variants || product.variants.length === 0) {
                     this.state.lockedVariants = [];
-                    console.log('❌ No variants to lock for existing product');
                     return;
                 }
+
                 this.state.lockedVariants = product.variants.map(v => {
                     let sizeValue = v.size || v.sizeName || v.beden || v.productVariantSize?.name || v.productVariantSize?.beden;
                     let colorValue = v.color || v.colorName || v.renk || v.productVariantColor?.name;
                     let customValue = v.custom || v.customName || v.customValue || v.productVariantCustom?.deger;
+
                     if (sizeValue && typeof sizeValue === 'string') {
                         if (sizeValue.includes(' (En:')) {
                             sizeValue = sizeValue.split(' (En:')[0];
@@ -1830,19 +1699,17 @@
                             sizeValue = sizeValue.split(' (')[0];
                         }
                     }
+
                     if (customValue === undefined || customValue === '' || customValue === 'undefined') {
                         customValue = null;
                     }
-                    const normalizedVariant = {
+
+                    return {
                         color: colorValue,
                         size: sizeValue,
                         custom: customValue
                     };
-                    console.log('🔒 Processing variant for locking:', v, '➡️ Normalized:', normalizedVariant);
-                    return normalizedVariant;
                 });
-
-                console.log('✅ Locked variants updated for existing product:', this.state.lockedVariants);
             }
 
             generateMatrix() {
@@ -1851,17 +1718,20 @@
                     const sizesData = this.getSizesData();
                     const sizes = sizesData.map(s => s.beden);
                     const customs = this.getCustomsData();
+
                     if (colors.length === 0 || sizes.length === 0) {
                         this.showMatrixError('Varyasyon matrisini oluşturmak için lütfen en az bir Renk ve bir Beden seçin.');
                         return;
                     }
+
                     const combos = this.generateCombinations(colors, sizes, customs);
                     const html = this.generateMatrixHTML(combos, sizesData, customs);
+
                     const container = document.getElementById('variationTableContainer');
                     if (container) {
                         container.innerHTML = html;
                     }
-                    console.log('Variation matrix generated successfully');
+
                 } catch (error) {
                     console.error('Generate matrix failed:', error);
                     this.showMatrixError('Varyasyon matrisi oluşturulurken bir hata oluştu.');
@@ -1907,18 +1777,22 @@
 
             generateMatrixHTML(combos, sizesData, customs) {
                 const hasCustomData = customs.length > 0;
+
                 let html = '<table class="table table-bordered"><thead><tr>';
                 html += '<th>Seç</th><th>Renk</th><th>Beden</th>';
                 if (hasCustomData) html += '<th>Custom</th>';
-                html += '<th>İşlem</th>'; 
+                html += '<th>İşlem</th>';
                 html += '</tr></thead><tbody>';
+
                 combos.forEach((combo, i) => {
                     const [color, size, custom] = combo;
                     const isLocked = this.isVariantLocked(color, size, custom);
                     const sizeLabel = this.formatSizeLabel(size, sizesData);
+
                     const rowClass = isLocked ? 'variant-locked' : '';
                     const lockIcon = isLocked ? '🔒 ' : '';
                     const checkboxAttributes = isLocked ? 'disabled checked' : '';
+
                     html += `<tr class="${rowClass}">
                         <td>
                             <input type="checkbox" class="variation-checkbox" data-index="${i}" ${checkboxAttributes}>
@@ -1926,10 +1800,11 @@
                         </td>
                         <td>${lockIcon}${color}</td>
                         <td>${lockIcon}${sizeLabel}</td>`;
-                    
+
                     if (hasCustomData) {
                         html += `<td>${lockIcon}${custom || ''}</td>`;
                     }
+
                     html += `<td>`;
                     if (isLocked) {
                         html += `<button type="button" class="btn btn-danger btn-sm delete-variant-btn" 
@@ -1940,9 +1815,7 @@
                     } else {
                         html += '<span class="text-muted">-</span>';
                     }
-                    html += `</td>`;
-                    
-                    html += '</tr>';
+                    html += `</td></tr>`;
                 });
 
                 html += '</tbody></table>';
@@ -1950,25 +1823,15 @@
             }
 
             isVariantLocked(color, size, custom) {
-                const isLocked = this.state.lockedVariants.some(v => {
+                return this.state.lockedVariants.some(v => {
                     const colorMatch = (v.color === color);
                     const sizeMatch = (v.size === size);
                     const normalizedLockedCustom = (v.custom === undefined || v.custom === null) ? null : v.custom;
                     const normalizedCheckingCustom = (custom === undefined || custom === null) ? null : custom;
                     const customMatch = (normalizedLockedCustom === normalizedCheckingCustom);
-                    console.log(`🔍 Checking variant lock:`, {
-                        checking: { color, size, custom: normalizedCheckingCustom },
-                        against: { color: v.color, size: v.size, custom: normalizedLockedCustom },
-                        matches: { colorMatch, sizeMatch, customMatch }
-                    });
-                    if (colorMatch && sizeMatch && customMatch) {
-                        console.log(`🔒 VARIANT LOCKED: ${color}-${size}-${normalizedCheckingCustom}`);
-                        return true;
-                    }
-                    return false;
-                });
 
-                return isLocked;
+                    return colorMatch && sizeMatch && customMatch;
+                });
             }
 
             formatSizeLabel(size, sizesData) {
@@ -1990,22 +1853,27 @@
                 const rows = [];
                 const customData = this.getCustomsData();
                 const hasCustomData = customData.length > 0;
+
                 document.querySelectorAll('#variationTableContainer tbody tr').forEach(tr => {
                     const checkbox = tr.querySelector('.variation-checkbox');
                     if (checkbox && checkbox.checked && !checkbox.disabled) {
                         const tds = tr.querySelectorAll('td');
                         const renk = tds[1].innerText.replace('🔒 ', '');
                         const beden = tds[2].innerText.replace('🔒 ', '').split(' (')[0];
+
                         const rowData = { renk, beden };
+
                         if (hasCustomData && tds.length > 3) {
                             const customValue = tds[3].innerText.replace('🔒 ', '').trim();
                             if (customValue && customValue !== '') {
                                 rowData.custom = customValue;
                             }
                         }
+
                         rows.push(rowData);
                     }
                 });
+
                 const variationsInput = document.getElementById('variationsData');
                 if (variationsInput) {
                     variationsInput.value = JSON.stringify(rows);
@@ -2020,8 +1888,11 @@
             validateStep1() {
                 const step1 = document.getElementById('step1');
                 if (!step1) return false;
-                const requiredInputs = step1.querySelectorAll('input[required], textarea[required], select[required]');
+
                 let isValid = true;
+
+                // Required fields validation
+                const requiredInputs = step1.querySelectorAll('input[required], textarea[required], select[required]');
                 requiredInputs.forEach(input => {
                     if (!input.value.trim()) {
                         input.classList.add('is-invalid');
@@ -2030,12 +1901,80 @@
                         input.classList.remove('is-invalid');
                     }
                 });
+
+                // Image validation
+                const imageInput = document.getElementById('imageInput');
+                const isEditMode = window.productFormManager && window.productFormManager.state.isEditMode;
+
+                if (imageInput && !isEditMode) {
+                    if (!imageInput.files || imageInput.files.length === 0) {
+                        this.showFieldError(imageInput, 'Lütfen bir resim seçin.');
+                        isValid = false;
+                    } else {
+                        const file = imageInput.files[0];
+                        if (!file.type.startsWith('image/')) {
+                            this.showFieldError(imageInput, 'Lütfen geçerli bir resim dosyası seçin.');
+                            isValid = false;
+                        } else if (file.size > 5 * 1024 * 1024) {
+                            this.showFieldError(imageInput, 'Resim dosyası çok büyük (max 5MB).');
+                            isValid = false;
+                        } else {
+                            this.clearFieldError(imageInput);
+                        }
+                    }
+                }
+
+                // Selected items validation
+                const selectedItems = window.productFormManager?.state?.selectedItems || {};
+
+                if (!selectedItems.colors || selectedItems.colors.length === 0) {
+                    this.showContainerError('colorsSelected', 'En az bir renk seçmelisiniz.');
+                    isValid = false;
+                } else {
+                    this.clearContainerError('colorsSelected');
+                }
+
+                const sizeTableData = document.getElementById('sizeTableData')?.value;
+                if (!sizeTableData || sizeTableData === '[]') {
+                    this.showContainerError('sizeTableBtn', 'Beden tablosu oluşturmalısınız.');
+                    isValid = false;
+                } else {
+                    this.clearContainerError('sizeTableBtn');
+                }
+
                 if (!isValid) {
                     if (window.productFormManager) {
                         window.productFormManager.uiService.showError('Lütfen tüm zorunlu alanları doldurun.');
                     }
                 }
+
                 return isValid;
+            }
+
+            showFieldError(field, message) {
+                field.classList.add('is-invalid');
+                field.title = message;
+            }
+
+            clearFieldError(field) {
+                field.classList.remove('is-invalid');
+                field.title = '';
+            }
+
+            showContainerError(containerId, message) {
+                const container = document.getElementById(containerId);
+                if (container) {
+                    container.style.borderColor = '#dc3545';
+                    container.title = message;
+                }
+            }
+
+            clearContainerError(containerId) {
+                const container = document.getElementById(containerId);
+                if (container) {
+                    container.style.borderColor = '#dee2e6';
+                    container.title = '';
+                }
             }
         }
 
@@ -2088,9 +2027,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             try {
                 window.productFormManager = new ProductFormManager();
-                console.log('Product Form Manager initialized successfully');
+                console.log('✅ Product Form Manager initialized successfully');
             } catch (error) {
-                console.error('Product Form Manager initialization failed:', error);
+                console.error('❌ Product Form Manager initialization failed:', error);
                 alert('Uygulama başlatılamadı. Lütfen sayfayı yenileyin.');
             }
         });
