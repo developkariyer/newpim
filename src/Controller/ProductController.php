@@ -261,15 +261,17 @@ class ProductController extends AbstractController
         $productDescription = $request->get('productDescription');
         
         $imageFile = $request->files->get('productImage');
+        error_log('Image file check: ' . ($imageFile ? 'EXISTS' : 'NOT EXISTS'));
+        
         if ($imageFile) {
-            error_log('Image file found: ' . $imageFile->getClientOriginalName());
-            error_log('Image file size: ' . $imageFile->getSize());
-            error_log('Image file type: ' . $imageFile->getMimeType());
-            error_log('Image file error: ' . $imageFile->getError());
-            error_log('Image file valid: ' . ($imageFile->isValid() ? 'YES' : 'NO'));
-        } else {
-            error_log('NO IMAGE FILE FOUND!');
-            error_log('Available files: ' . json_encode(array_keys($request->files->all())));
+            error_log('Image file details: ' . json_encode([
+                'name' => $imageFile->getClientOriginalName(),
+                'size' => $imageFile->getSize(),
+                'type' => $imageFile->getMimeType(),
+                'error' => $imageFile->getError(),
+                'valid' => $imageFile->isValid() ? 'YES' : 'NO',
+                'temp_path' => $imageFile->getPathname()
+            ]));
         }
 
         $categoryId = $request->get('productCategory');
@@ -317,7 +319,6 @@ class ProductController extends AbstractController
                 if ($imageFile && $imageFile->isValid()) {
                     error_log('Resim yükleniyor...');
                     $imageAsset = $this->uploadProductImage($imageFile, $productIdentifier ?: $productName);
-                    error_log('Resim yüklendi, asset ID: ' . ($imageAsset ? $imageAsset->getId() : 'NULL'));
                 } else {
                     error_log('Resim dosyası geçersiz veya yok');
                     if (!$isUpdate) {
@@ -714,60 +715,84 @@ class ProductController extends AbstractController
     private function uploadProductImage($imageFile, string $productKey): ?\Pimcore\Model\Asset\Image
     {
         try {
-            error_log('uploadProductImage başlıyor...');
+            error_log('=== IMAGE UPLOAD START ===');
+            error_log('Product key: ' . $productKey);
+            
+            if (!$imageFile || !$imageFile->isValid()) {
+                throw new \Exception('Invalid image file uploaded');
+            }
+            
             error_log('File info: ' . json_encode([
                 'name' => $imageFile->getClientOriginalName(),
                 'size' => $imageFile->getSize(),
                 'mime' => $imageFile->getMimeType(),
-                'temp_path' => $imageFile->getPathname()
+                'temp_path' => $imageFile->getPathname(),
+                'error' => $imageFile->getError()
             ]));
+
             $assetFolder = \Pimcore\Model\Asset::getByPath('/products');
             if (!$assetFolder) {
-                error_log('Products klasörü yok, oluşturuluyor...');
+                error_log('Creating products folder...');
+                $rootFolder = \Pimcore\Model\Asset::getByPath('/');
+                if (!$rootFolder) {
+                    throw new \Exception('Root asset folder not found');
+                }
+                
                 $assetFolder = new \Pimcore\Model\Asset\Folder();
                 $assetFolder->setFilename('products');
-                $assetFolder->setParent(\Pimcore\Model\Asset::getByPath('/'));
+                $assetFolder->setParent($rootFolder);
                 $assetFolder->save();
-                error_log('Products klasörü oluşturuldu: ' . $assetFolder->getFullPath());
-            } else {
-                error_log('Products klasörü mevcut: ' . $assetFolder->getFullPath());
+                error_log('Products folder created: ' . $assetFolder->getFullPath());
             }
+
             $originalName = $imageFile->getClientOriginalName();
-            $extension = pathinfo($originalName, PATHINFO_EXTENSION) ?: 'jpg';
-            $filename = $this->generateSafeFilename($productKey) . '_' . time() . '.' . $extension;
-            error_log('Generated filename: ' . $filename);
-            $existingAsset = \Pimcore\Model\Asset::getByPath('/products/' . $filename);
-            if ($existingAsset) {
-                $filename = $this->generateSafeFilename($productKey) . '_' . time() . '_' . rand(1000, 9999) . '.' . $extension;
-                error_log('Filename updated to avoid conflict: ' . $filename);
+            $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+            
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (!in_array($extension, $allowedExtensions)) {
+                $extension = 'jpg'; 
             }
-            $imageAsset = new \Pimcore\Model\Asset\Image();
-            $imageAsset->setFilename($filename);
-            $imageAsset->setParent($assetFolder);
+            
+            $safeProductKey = preg_replace('/[^a-zA-Z0-9\-_]/', '_', $productKey);
+            $filename = $safeProductKey . '_' . time() . '_' . uniqid() . '.' . $extension;
+            
+            error_log('Generated filename: ' . $filename);
             $tempPath = $imageFile->getPathname();
             if (!file_exists($tempPath)) {
                 throw new \Exception('Temporary file not found: ' . $tempPath);
             }
+
             $fileContent = file_get_contents($tempPath);
             if ($fileContent === false) {
                 throw new \Exception('Cannot read file content from: ' . $tempPath);
             }
+
             if (strlen($fileContent) === 0) {
                 throw new \Exception('File content is empty');
             }
+
             error_log('File content size: ' . strlen($fileContent) . ' bytes');
+            $imageAsset = new \Pimcore\Model\Asset\Image();
+            $imageAsset->setFilename($filename);
+            $imageAsset->setParent($assetFolder);
             $imageAsset->setData($fileContent);
+            $imageAsset->setMimeType($imageFile->getMimeType());
             $imageAsset->save();
-            error_log('Image asset oluşturuldu: ' . json_encode([
+
+            error_log('Image asset created successfully: ' . json_encode([
                 'ID' => $imageAsset->getId(),
                 'Path' => $imageAsset->getFullPath(),
-                'Size' => $imageAsset->getFileSize()
+                'Size' => $imageAsset->getFileSize(),
+                'MimeType' => $imageAsset->getMimeType()
             ]));
+
             return $imageAsset;
+
         } catch (\Exception $e) {
-            error_log('Image upload HATA: ' . $e->getMessage());
+            error_log('IMAGE UPLOAD ERROR: ' . $e->getMessage());
             error_log('Stack trace: ' . $e->getTraceAsString());
-            throw new \Exception('Resim yüklenirken hata oluştu: ' . $e->getMessage());
+            
+            return null;
         }
     }
 
