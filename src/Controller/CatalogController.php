@@ -196,10 +196,9 @@ class CatalogController extends AbstractController
             }
 
             if (!empty($searchQuery) && strlen($searchQuery) >= self::SEARCH_MIN_LENGTH) {
-                $searchCondition = "(name LIKE ? OR productIdentifier LIKE ? OR description LIKE ? OR iwasku LIKE ?)";
+                $searchCondition = "(name LIKE ? OR productIdentifier LIKE ? OR description LIKE ?)";
                 $conditions[] = $searchCondition;
                 $searchParam = "%" . $searchQuery . "%";
-                $params[] = $searchParam;
                 $params[] = $searchParam;
                 $params[] = $searchParam;
                 $params[] = $searchParam;

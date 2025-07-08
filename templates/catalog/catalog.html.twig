@@ -383,97 +383,252 @@
 
         /* Variants Section */
         .variants-section {
-            background: var(--light-bg);
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             border-top: 1px solid var(--border-color);
-            padding: 1.5rem;
+            padding: 2rem;
             display: none;
+            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
         }
 
         .product-row.expanded .variants-section {
             display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .variants-title {
             font-weight: 700;
             color: var(--text-primary);
-            margin: 0 0 1rem 0;
+            margin: 0 0 1.5rem 0;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .variants-title::before {
+            content: "🧩";
+            font-size: 1.5rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
         }
 
         .variants-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.25rem;
         }
 
         @media (max-width: 768px) {
             .variants-grid {
                 grid-template-columns: 1fr;
+                gap: 1rem;
             }
         }
 
         .variant-card {
             background: white;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 1rem;
-            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .variant-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .variant-card:hover {
-            border-color: var(--primary-color);
-            box-shadow: var(--shadow-md);
+            transform: translateY(-4px);
+            border-color: rgba(102, 126, 234, 0.2);
+            box-shadow: 
+                0 8px 25px rgba(0, 0, 0, 0.1),
+                0 4px 10px rgba(102, 126, 234, 0.1);
+        }
+
+        .variant-card:hover::before {
+            opacity: 1;
         }
 
         .variant-header {
             display: flex;
             justify-content: space-between;
-            align-items: start;
-            margin-bottom: 0.75rem;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            gap: 1rem;
         }
 
         .variant-name {
             font-weight: 600;
             color: var(--text-primary);
-            font-size: 0.875rem;
+            font-size: 0.95rem;
             line-height: 1.4;
+            flex: 1;
         }
 
         .variant-status {
-            background: var(--success-color);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
-            padding: 0.125rem 0.5rem;
-            border-radius: 0.75rem;
-            font-size: 0.625rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.7rem;
             font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+            white-space: nowrap;
         }
 
         .variant-details {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 0.5rem;
-            font-size: 0.75rem;
+            gap: 1rem;
+            font-size: 0.8rem;
         }
 
         .variant-detail {
             display: flex;
             flex-direction: column;
+            gap: 0.25rem;
+            padding: 0.75rem;
+            background: rgba(248, 250, 252, 0.8);
+            border-radius: var(--radius-md);
+            border-left: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .variant-detail:nth-child(odd) {
+            border-left-color: #667eea;
+        }
+
+        .variant-detail:nth-child(even) {
+            border-left-color: #764ba2;
+        }
+
+        .variant-detail:hover {
+            background: rgba(102, 126, 234, 0.05);
+            transform: translateX(2px);
         }
 
         .variant-label {
             color: var(--text-secondary);
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.025em;
+            letter-spacing: 0.5px;
+            font-size: 0.7rem;
         }
 
         .variant-value {
             color: var(--text-primary);
             font-weight: 500;
             word-break: break-all;
+            font-size: 0.85rem;
+        }
+
+        /* EAN Badges - Enhanced */
+        .variant-eans {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .ean-badge {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
+            color: var(--primary-color);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            transition: all 0.2s ease;
+            font-family: 'Monaco', 'Consolas', monospace;
+        }
+
+        .ean-badge:hover {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%);
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+        }
+
+        /* EAN detail full width styling */
+        .variant-detail.ean-detail {
+            grid-column: 1 / -1;
+            border-left-color: #f59e0b;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(245, 158, 11, 0.02) 100%);
+        }
+
+        /* Size and Color special styling */
+        .variant-detail.size-detail {
+            border-left-color: #8b5cf6;
+        }
+
+        .variant-detail.color-detail {
+            border-left-color: #ef4444;
+        }
+
+        .variant-detail.iwasku-detail {
+            border-left-color: #06b6d4;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .variants-section {
+                padding: 1.5rem;
+            }
+            
+            .variant-details {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+            
+            .variant-card {
+                padding: 1.25rem;
+            }
+            
+            .variants-title {
+                font-size: 1rem;
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .variant-card {
+                background: #1e293b;
+                color: #e2e8f0;
+            }
+            
+            .variant-detail {
+                background: rgba(30, 41, 59, 0.5);
+            }
+            
+            .variant-name {
+                color: #e2e8f0;
+            }
+            
+            .variant-value {
+                color: #cbd5e1;
+            }
         }
 
         /* Loading States */
@@ -1119,44 +1274,55 @@
 
             createVariantsSection(variants) {
                 if (!variants || variants.length === 0) return '';
-
                 const variantCards = variants.map(variant => `
                     <div class="variant-card">
                         <div class="variant-header">
                             <div class="variant-name">${this.escapeHtml(variant.name || 'Varyant')}</div>
-                            <span class="variant-status">Aktif</span>
+                            <span class="variant-status">✨ Aktif</span>
                         </div>
                         <div class="variant-details">
                             ${variant.eans && variant.eans.length > 0 ? `
-                                <div class="variant-detail" style="grid-column: 1 / -1;">
-                                    <span class="variant-label">EAN Kodları</span>
+                                <div class="variant-detail ean-detail">
+                                    <span class="variant-label">📊 EAN Kodları</span>
                                     <div class="variant-eans">
                                         ${variant.eans.map(ean => `<span class="ean-badge">${this.escapeHtml(ean)}</span>`).join('')}
                                     </div>
                                 </div>
                             ` : ''}
                             ${variant.iwasku ? `
-                                <div class="variant-detail">
-                                    <span class="variant-label">IWASKU</span>
+                                <div class="variant-detail iwasku-detail">
+                                    <span class="variant-label">🏷️ IWASKU</span>
                                     <span class="variant-value">${this.escapeHtml(variant.iwasku)}</span>
                                 </div>
                             ` : ''}
-                            ${variant.variationSize ? `
+                            ${variant.productCode ? `
                                 <div class="variant-detail">
-                                    <span class="variant-label">Beden</span>
+                                    <span class="variant-label">🔢 Kod</span>
+                                    <span class="variant-value">${this.escapeHtml(variant.productCode)}</span>
+                                </div>
+                            ` : ''}
+                            ${variant.variationSize ? `
+                                <div class="variant-detail size-detail">
+                                    <span class="variant-label">📏 Beden</span>
                                     <span class="variant-value">${this.escapeHtml(variant.variationSize)}</span>
                                 </div>
                             ` : ''}
                             ${variant.color?.name ? `
-                                <div class="variant-detail">
-                                    <span class="variant-label">Renk</span>
+                                <div class="variant-detail color-detail">
+                                    <span class="variant-label">🎨 Renk</span>
                                     <span class="variant-value">${this.escapeHtml(variant.color.name)}</span>
                                 </div>
                             ` : ''}
                             ${variant.customField ? `
                                 <div class="variant-detail">
-                                    <span class="variant-label">Custom</span>
+                                    <span class="variant-label">⚙️ Özel Alan</span>
                                     <span class="variant-value">${this.escapeHtml(variant.customField)}</span>
+                                </div>
+                            ` : ''}
+                            ${variant.createdAt ? `
+                                <div class="variant-detail">
+                                    <span class="variant-label">📅 Oluşturma</span>
+                                    <span class="variant-value">${this.escapeHtml(variant.createdAt)}</span>
                                 </div>
                             ` : ''}
                         </div>
@@ -1166,8 +1332,8 @@
                 return `
                     <div class="variants-section">
                         <h4 class="variants-title">
-                            🧩 Ürün Varyantları
-                            <span style="font-weight: 400; color: var(--text-secondary);">(${variants.length} adet)</span>
+                            Ürün Varyantları
+                            <span style="font-weight: 400; color: var(--text-secondary); font-size: 0.9rem;">(${variants.length} adet)</span>
                         </h4>
                         <div class="variants-grid">
                             ${variantCards}
