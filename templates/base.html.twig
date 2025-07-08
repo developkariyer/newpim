@@ -15,44 +15,10 @@
             --accent-color: #3b82f6;
             --light-color: #f5f7fa;
             --dark-color: #1e293b;
-            
-            /* Light theme variables */
-            --bg-primary: #f5f8fa;
-            --bg-secondary: #ffffff;
-            --bg-tertiary: #f8fafc;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --text-muted: #94a3b8;
-            --border-color: #e2e8f0;
-            --shadow: rgba(0, 0, 0, 0.1);
-            --card-bg: #ffffff;
-            --input-bg: #ffffff;
-            --radius-sm: 4px;
-            --radius-md: 8px;
-            --radius-lg: 12px;
-        }
-
-        /* Dark theme variables */
-        [data-theme="dark"] {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-tertiary: #334155;
-            --text-primary: #f1f5f9;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
-            --shadow: rgba(0, 0, 0, 0.3);
-            --card-bg: #1e293b;
-            --input-bg: #334155;
-        }
-
-        * {
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
 
         body {
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
+            background-color: #f5f8fa;
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             min-height: 100vh;
             display: flex;
@@ -62,7 +28,7 @@
         /* Header & Navigation */
         .navbar {
             background: linear-gradient(to right, var(--primary-color), var(--secondary-color)) !important;
-            box-shadow: 0 2px 10px var(--shadow);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             padding: 0.7rem 1rem;
         }
 
@@ -88,52 +54,18 @@
         .dropdown-menu {
             border: none;
             border-radius: 8px;
-            box-shadow: 0 10px 15px var(--shadow);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
         }
 
         .dropdown-item {
             padding: 0.6rem 1.2rem;
             transition: all 0.2s;
-            color: var(--text-primary);
         }
 
         .dropdown-item:hover {
             background-color: rgba(59, 130, 246, 0.1);
             color: var(--primary-color);
-        }
-
-        /* Dark Mode Toggle */
-        .theme-toggle {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 25px;
-            padding: 0.4rem 0.8rem;
-            color: white;
-            font-size: 0.875rem;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .theme-toggle:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.3);
-            color: white;
-            text-decoration: none;
-        }
-
-        .theme-toggle i {
-            font-size: 0.875rem;
-            transition: transform 0.3s ease;
-        }
-
-        .theme-toggle:hover i {
-            transform: rotate(180deg);
         }
 
         /* Main Content */
@@ -151,20 +83,14 @@
         .card {
             border: none;
             border-radius: 10px;
-            box-shadow: 0 5px 15px var(--shadow);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
             transition: transform 0.3s, box-shadow 0.3s;
             overflow: hidden;
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
         }
 
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px var(--shadow);
-        }
-
-        .card-body {
-            color: var(--text-primary);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
 
         /* Buttons */
@@ -185,123 +111,43 @@
             transform: translateY(-2px);
         }
 
-        .btn-secondary {
-            background-color: var(--bg-tertiary);
-            border-color: var(--border-color);
-            color: var(--text-primary);
-        }
-
-        .btn-secondary:hover {
-            background-color: var(--border-color);
-            border-color: var(--text-secondary);
-            color: var(--text-primary);
-        }
-
-        /* Forms */
-        .form-control, .form-select {
-            background-color: var(--input-bg);
-            border-color: var(--border-color);
-            color: var(--text-primary);
-        }
-
-        .form-control:focus, .form-select:focus {
-            background-color: var(--input-bg);
-            border-color: var(--primary-color);
-            color: var(--text-primary);
-            box-shadow: 0 0 0 0.2rem rgba(68, 129, 235, 0.25);
-        }
-
-        .form-label {
-            color: var(--text-primary);
-            font-weight: 500;
-        }
-
         /* Alerts */
         .alert {
             border: none;
             border-radius: 10px;
-            box-shadow: 0 3px 10px var(--shadow);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
         }
 
         /* Footer */
         footer {
-            background-color: var(--card-bg);
-            border-top: 1px solid var(--border-color);
+            background-color: white;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
             padding: 1.5rem 0;
             margin-top: auto;
-            color: var(--text-secondary);
         }
 
         /* User Info */
         .user-info {
             padding: 1rem;
             border-radius: 10px;
-            background-color: var(--card-bg);
-            box-shadow: 0 3px 10px var(--shadow);
+            background-color: white;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
             margin-bottom: 1.5rem;
-            border: 1px solid var(--border-color);
         }
 
-        /* Select2 Dark Mode */
+        /* Select2 Customization */
         .select2-container--default .select2-selection--single {
             border-radius: 6px;
             height: 38px;
-            border-color: var(--border-color);
-            background-color: var(--input-bg);
+            border-color: #dee2e6;
         }
 
         .select2-container--default .select2-selection--single .select2-selection__rendered {
             line-height: 36px;
-            color: var(--text-primary);
         }
 
         .select2-container--default .select2-selection--single .select2-selection__arrow {
             height: 36px;
-        }
-
-        .select2-dropdown {
-            background-color: var(--card-bg);
-            border-color: var(--border-color);
-        }
-
-        .select2-results__option {
-            color: var(--text-primary);
-        }
-
-        .select2-results__option--highlighted {
-            background-color: var(--primary-color);
-        }
-
-        /* Table Dark Mode */
-        .table {
-            color: var(--text-primary);
-        }
-
-        .table th {
-            border-color: var(--border-color);
-            color: var(--text-primary);
-        }
-
-        .table td {
-            border-color: var(--border-color);
-        }
-
-        .table-striped > tbody > tr:nth-of-type(odd) > td {
-            background-color: var(--bg-tertiary);
-        }
-
-        /* Text Colors */
-        .text-muted {
-            color: var(--text-muted) !important;
-        }
-
-        .text-secondary {
-            color: var(--text-secondary) !important;
-        }
-
-        /* Smooth theme transition */
-        .theme-transition * {
-            transition: all 0.3s ease !important;
         }
     </style>
     {% block stylesheets %}{% endblock %}
@@ -334,30 +180,25 @@
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item"  href="{{ path('product') }}"><i class="fa-brands fa-product-hunt me-2"></i>Ürün Ekle</a></li>
                             <li><hr class="dropdown-divider"></li>
+                            {# <li><a class="dropdown-item" href="{{ path('sticker_main_page') }}"><i class="fas fa-tags me-2"></i>Etiket</a></li>
+                            <li><hr class="dropdown-divider"></li> #}
+                            {# <li><a class="dropdown-item" href="{{ path('product_dimensions_main_page') }}"><i class="fas fa-box me-2"></i>Ürün Boyutları</a></li> #}
                         </ul>
                     </li>
                     {% block navbaritems %}
                     {% endblock %}
                 </ul>
 
-                <div class="d-flex align-items-center gap-3">
-                    <!-- Dark Mode Toggle -->
-                    <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
-                        <i class="fas fa-moon" id="themeIcon"></i>
-                        <span id="themeText">Dark</span>
-                    </button>
-
-                    {% if app.user %}
-                        <div class="d-flex align-items-center">
-                            <span class="text-white me-3">
-                                <i class="fas fa-user-circle me-1"></i> {{ app.user.getUserIdentifier() | default('Kullanıcı') }}
-                            </span>
-                            <a href="{{ path('app_frontend_logout') }}" class="btn btn-sm btn-light">
-                                <i class="fas fa-sign-out-alt me-1"></i> Çıkış
-                            </a>
-                        </div>
-                    {% endif %}
-                </div>
+                {% if app.user %}
+                    <div class="d-flex align-items-center">
+                        <span class="text-white me-3">
+                            <i class="fas fa-user-circle me-1"></i> {{ app.user.getUserIdentifier() | default('Kullanıcı') }}
+                        </span>
+                        <a href="{{ path('app_frontend_logout') }}" class="btn btn-sm btn-light">
+                            <i class="fas fa-sign-out-alt me-1"></i> Çıkış
+                        </a>
+                    </div>
+                {% endif %}
 
                 {% block header %}
                 {% endblock %}
@@ -366,54 +207,61 @@
     </nav>
 </header>
 
-<!-- Aynı main content... -->
+<main>
+    <div class="container">
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ type }} alert-dismissible fade show mb-4" role="alert">
+                    <div class="d-flex align-items-center">
+                        {% if type == 'success' %}
+                            <i class="fas fa-check-circle me-2"></i>
+                        {% elseif type == 'danger' or type == 'error' %}
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                        {% elseif type == 'warning' %}
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                        {% else %}
+                            <i class="fas fa-info-circle me-2"></i>
+                        {% endif %}
+                        {{ message }}
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        {% block content %}
+            {% if not app.user %}
+                <div class="user-info d-flex justify-content-between align-items-center p-4">
+                    <div>
+                        <h4 class="mb-2">Hoş Geldiniz</h4>
+                        <p class="mb-0 text-muted">Lütfen sisteme giriş yapın.</p>
+                    </div>
+                    <a href="{{ path('app_frontend_login') }}" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt me-2"></i> Giriş Yap
+                    </a>
+                </div>
+            {% endif %}
+            <!-- Content will be injected here -->
+        {% endblock %}
+    </div>
+</main>
+
+<footer class="bg-white text-center">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="text-muted">
+                <small>&copy; {{ "now"|date("Y") }} IWAPIM - Tüm hakları saklıdır</small>
+            </div>
+            <div>
+                {% block footer %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</footer>
 
 <script>
-    // Dark Mode Toggle System
-    function initializeTheme() {
-        // Check for saved theme or default to light
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = savedTheme === 'auto' ? (prefersDark ? 'dark' : 'light') : savedTheme;
-        
-        setTheme(theme);
-    }
-
-    function setTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
-        updateThemeButton(theme);
-        
-        // Add transition class temporarily
-        document.body.classList.add('theme-transition');
-        setTimeout(() => {
-            document.body.classList.remove('theme-transition');
-        }, 300);
-    }
-
-    function updateThemeButton(theme) {
-        const icon = document.getElementById('themeIcon');
-        const text = document.getElementById('themeText');
-        
-        if (theme === 'dark') {
-            icon.className = 'fas fa-sun';
-            text.textContent = 'Light';
-        } else {
-            icon.className = 'fas fa-moon';
-            text.textContent = 'Dark';
-        }
-    }
-
-    function toggleTheme() {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        setTheme(newTheme);
-    }
-
-    // Initialize theme on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        initializeTheme();
-        
+    $(document).ready(function() {
         // Initialize Select2 Elements
         $('.select2').select2();
 
@@ -421,13 +269,6 @@
         setTimeout(function() {
             $('.alert').alert('close');
         }, 5000);
-        
-        // Listen for system theme changes
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
-            if (localStorage.getItem('theme') === 'auto') {
-                setTheme(e.matches ? 'dark' : 'light');
-            }
-        });
     });
 </script>
 {% block body_scripts %}{% endblock %}
