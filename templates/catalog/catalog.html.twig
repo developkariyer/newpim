@@ -385,7 +385,7 @@
         .variants-section {
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             border-top: 1px solid var(--border-color);
-            padding: 2rem;
+            padding: 1.5rem;
             display: none;
             border-radius: 0 0 var(--radius-lg) var(--radius-lg);
         }
@@ -409,206 +409,207 @@
         .variants-title {
             font-weight: 700;
             color: var(--text-primary);
-            margin: 0 0 1.5rem 0;
+            margin: 0 0 1rem 0;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            font-size: 1.1rem;
+            gap: 0.5rem;
+            font-size: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--border-color);
         }
 
         .variants-title::before {
             content: "🧩";
-            font-size: 1.5rem;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+            font-size: 1.2rem;
         }
 
-        .variants-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.25rem;
+        /* Variants as Table/List Format */
+        .variants-table {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
         }
 
-        @media (max-width: 768px) {
-            .variants-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-        }
-
-        .variant-card {
+        .variant-row {
             background: white;
-            border: 2px solid transparent;
-            border-radius: var(--radius-lg);
-            padding: 1.5rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            transition: all 0.2s ease;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 1rem;
+            align-items: center;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
-        .variant-card::before {
+        .variant-row::before {
             content: '';
             position: absolute;
-            top: 0;
             left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             opacity: 0;
             transition: opacity 0.3s ease;
         }
 
-        .variant-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(102, 126, 234, 0.2);
-            box-shadow: 
-                0 8px 25px rgba(0, 0, 0, 0.1),
-                0 4px 10px rgba(102, 126, 234, 0.1);
+        .variant-row:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: rgba(102, 126, 234, 0.3);
         }
 
-        .variant-card:hover::before {
+        .variant-row:hover::before {
             opacity: 1;
         }
 
-        .variant-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
+        /* Variant Status Badge */
+        .variant-status {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+        }
+
+        /* Variant Info - Main Content */
+        .variant-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
+            font-size: 0.85rem;
+        }
+
+        .variant-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.125rem;
+        }
+
+        .variant-field-label {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .variant-field-value {
+            color: var(--text-primary);
+            font-weight: 500;
+            word-break: break-word;
+            line-height: 1.3;
+        }
+
+        /* EAN Codes - Inline Display */
+        .variant-eans-inline {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .ean-badge-inline {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
+            color: var(--primary-color);
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.75rem;
+            font-size: 0.65rem;
+            font-weight: 600;
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            font-family: 'Monaco', 'Consolas', monospace;
+            transition: all 0.2s ease;
+        }
+
+        .ean-badge-inline:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Variant Actions */
+        .variant-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            align-items: flex-end;
         }
 
         .variant-name {
             font-weight: 600;
             color: var(--text-primary);
-            font-size: 0.95rem;
-            line-height: 1.4;
-            flex: 1;
+            font-size: 0.9rem;
+            text-align: right;
+            line-height: 1.3;
         }
 
-        .variant-status {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 1rem;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
-            white-space: nowrap;
-        }
-
-        .variant-details {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            font-size: 0.8rem;
-        }
-
-        .variant-detail {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-            padding: 0.75rem;
-            background: rgba(248, 250, 252, 0.8);
-            border-radius: var(--radius-md);
-            border-left: 3px solid transparent;
-            transition: all 0.2s ease;
-        }
-
-        .variant-detail:nth-child(odd) {
-            border-left-color: #667eea;
-        }
-
-        .variant-detail:nth-child(even) {
-            border-left-color: #764ba2;
-        }
-
-        .variant-detail:hover {
-            background: rgba(102, 126, 234, 0.05);
-            transform: translateX(2px);
-        }
-
-        .variant-label {
+        .variant-date {
             color: var(--text-secondary);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
             font-size: 0.7rem;
+            text-align: right;
         }
 
-        .variant-value {
-            color: var(--text-primary);
-            font-weight: 500;
-            word-break: break-all;
-            font-size: 0.85rem;
-        }
-
-        /* EAN Badges - Enhanced */
-        .variant-eans {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-        }
-
-        .ean-badge {
-            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
-            color: var(--primary-color);
-            padding: 0.25rem 0.75rem;
-            border-radius: 1rem;
-            font-size: 0.7rem;
-            font-weight: 600;
-            border: 1px solid rgba(37, 99, 235, 0.2);
-            transition: all 0.2s ease;
-            font-family: 'Monaco', 'Consolas', monospace;
-        }
-
-        .ean-badge:hover {
-            background: linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%);
-            transform: scale(1.05);
-            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
-        }
-
-        /* EAN detail full width styling */
-        .variant-detail.ean-detail {
-            grid-column: 1 / -1;
-            border-left-color: #f59e0b;
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(245, 158, 11, 0.02) 100%);
-        }
-
-        /* Size and Color special styling */
-        .variant-detail.size-detail {
-            border-left-color: #8b5cf6;
-        }
-
-        .variant-detail.color-detail {
-            border-left-color: #ef4444;
-        }
-
-        .variant-detail.iwasku-detail {
-            border-left-color: #06b6d4;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 640px) {
+        /* Mobile Responsive - Stack Vertically */
+        @media (max-width: 768px) {
             .variants-section {
-                padding: 1.5rem;
+                padding: 1rem;
             }
             
-            .variant-details {
+            .variant-row {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+                text-align: left;
+            }
+            
+            .variant-info {
                 grid-template-columns: 1fr;
                 gap: 0.75rem;
             }
             
-            .variant-card {
-                padding: 1.25rem;
+            .variant-actions {
+                align-items: flex-start;
             }
             
-            .variants-title {
-                font-size: 1rem;
+            .variant-name,
+            .variant-date {
+                text-align: left;
             }
+            
+            .variant-status {
+                align-self: flex-start;
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        /* Special Field Styling */
+        .variant-field.iwasku .variant-field-label {
+            color: #06b6d4;
+        }
+
+        .variant-field.size .variant-field-label {
+            color: #8b5cf6;
+        }
+
+        .variant-field.color .variant-field-label {
+            color: #ef4444;
+        }
+
+        .variant-field.code .variant-field-label {
+            color: #f59e0b;
+        }
+
+        .variant-field.eans .variant-field-label {
+            color: #10b981;
         }
 
         /* Loading States */
@@ -1254,69 +1255,90 @@
 
             createVariantsSection(variants) {
                 if (!variants || variants.length === 0) return '';
-                const variantCards = variants.map(variant => `
-                    <div class="variant-card">
-                        <div class="variant-header">
-                            <div class="variant-name">${this.escapeHtml(variant.name || 'Varyant')}</div>
+
+                const variantRows = variants.map(variant => {
+                    const fields = [];
+                    
+                    if (variant.iwasku) {
+                        fields.push(`
+                            <div class="variant-field iwasku">
+                                <span class="variant-field-label">🏷️ IWASKU</span>
+                                <span class="variant-field-value">${this.escapeHtml(variant.iwasku)}</span>
+                            </div>
+                        `);
+                    }
+                    
+                    if (variant.productCode) {
+                        fields.push(`
+                            <div class="variant-field code">
+                                <span class="variant-field-label">🔢 Kod</span>
+                                <span class="variant-field-value">${this.escapeHtml(variant.productCode)}</span>
+                            </div>
+                        `);
+                    }
+                    
+                    if (variant.variationSize) {
+                        fields.push(`
+                            <div class="variant-field size">
+                                <span class="variant-field-label">📏 Beden</span>
+                                <span class="variant-field-value">${this.escapeHtml(variant.variationSize)}</span>
+                            </div>
+                        `);
+                    }
+                    
+                    if (variant.color?.name) {
+                        fields.push(`
+                            <div class="variant-field color">
+                                <span class="variant-field-label">🎨 Renk</span>
+                                <span class="variant-field-value">${this.escapeHtml(variant.color.name)}</span>
+                            </div>
+                        `);
+                    }
+                    
+                    if (variant.eans && variant.eans.length > 0) {
+                        fields.push(`
+                            <div class="variant-field eans">
+                                <span class="variant-field-label">📊 EAN Kodları</span>
+                                <div class="variant-eans-inline">
+                                    ${variant.eans.map(ean => `<span class="ean-badge-inline">${this.escapeHtml(ean)}</span>`).join('')}
+                                </div>
+                            </div>
+                        `);
+                    }
+                    
+                    if (variant.customField) {
+                        fields.push(`
+                            <div class="variant-field">
+                                <span class="variant-field-label">⚙️ Özel Alan</span>
+                                <span class="variant-field-value">${this.escapeHtml(variant.customField)}</span>
+                            </div>
+                        `);
+                    }
+
+                    return `
+                        <div class="variant-row">
                             <span class="variant-status">✨ Aktif</span>
+                            
+                            <div class="variant-info">
+                                ${fields.join('')}
+                            </div>
+                            
+                            <div class="variant-actions">
+                                <div class="variant-name">${this.escapeHtml(variant.name || 'Varyant')}</div>
+                                ${variant.createdAt ? `<div class="variant-date">📅 ${this.escapeHtml(variant.createdAt)}</div>` : ''}
+                            </div>
                         </div>
-                        <div class="variant-details">
-                            ${variant.eans && variant.eans.length > 0 ? `
-                                <div class="variant-detail ean-detail">
-                                    <span class="variant-label">📊 EAN Kodları</span>
-                                    <div class="variant-eans">
-                                        ${variant.eans.map(ean => `<span class="ean-badge">${this.escapeHtml(ean)}</span>`).join('')}
-                                    </div>
-                                </div>
-                            ` : ''}
-                            ${variant.iwasku ? `
-                                <div class="variant-detail iwasku-detail">
-                                    <span class="variant-label">🏷️ IWASKU</span>
-                                    <span class="variant-value">${this.escapeHtml(variant.iwasku)}</span>
-                                </div>
-                            ` : ''}
-                            ${variant.productCode ? `
-                                <div class="variant-detail">
-                                    <span class="variant-label">🔢 Kod</span>
-                                    <span class="variant-value">${this.escapeHtml(variant.productCode)}</span>
-                                </div>
-                            ` : ''}
-                            ${variant.variationSize ? `
-                                <div class="variant-detail size-detail">
-                                    <span class="variant-label">📏 Beden</span>
-                                    <span class="variant-value">${this.escapeHtml(variant.variationSize)}</span>
-                                </div>
-                            ` : ''}
-                            ${variant.color?.name ? `
-                                <div class="variant-detail color-detail">
-                                    <span class="variant-label">🎨 Renk</span>
-                                    <span class="variant-value">${this.escapeHtml(variant.color.name)}</span>
-                                </div>
-                            ` : ''}
-                            ${variant.customField ? `
-                                <div class="variant-detail">
-                                    <span class="variant-label">⚙️ Özel Alan</span>
-                                    <span class="variant-value">${this.escapeHtml(variant.customField)}</span>
-                                </div>
-                            ` : ''}
-                            ${variant.createdAt ? `
-                                <div class="variant-detail">
-                                    <span class="variant-label">📅 Oluşturma</span>
-                                    <span class="variant-value">${this.escapeHtml(variant.createdAt)}</span>
-                                </div>
-                            ` : ''}
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
 
                 return `
                     <div class="variants-section">
                         <h4 class="variants-title">
                             Ürün Varyantları
-                            <span style="font-weight: 400; color: var(--text-secondary); font-size: 0.9rem;">(${variants.length} adet)</span>
+                            <span style="font-weight: 400; color: var(--text-secondary); font-size: 0.85rem;">(${variants.length} adet)</span>
                         </h4>
-                        <div class="variants-grid">
-                            ${variantCards}
+                        <div class="variants-table">
+                            ${variantRows}
                         </div>
                     </div>
                 `;
