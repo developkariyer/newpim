@@ -185,7 +185,7 @@ class CatalogController extends AbstractController
             $listing = new ProductListing();
             
             // Base condition - only main products (not variants)
-            $conditions = ["published = 1", "type IS NULL OR type != 'variant'"];
+            $conditions = ["published = 1", "type IS NULL OR"];
             $params = [];
 
             // Category filter
