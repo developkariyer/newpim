@@ -1256,6 +1256,25 @@
             createVariantsSection(variants) {
                 if (!variants || variants.length === 0) return '';
 
+                const sortedVariants = [...variants].sort((a, b) => {
+                    const sizeA = a.variationSize || '';
+                    const sizeB = b.variationSize || '';
+                    
+                    // Beden sıralaması
+                    const sizeOrder = {
+                        'XS': 1, 'S': 2, 'M': 3, 'L': 4, 'XL': 5, 'XXL': 6
+                    };
+                    
+                    const orderA = sizeOrder[sizeA.toUpperCase()] || 999;
+                    const orderB = sizeOrder[sizeB.toUpperCase()] || 999;
+                    
+                    if (orderA === 999 && orderB === 999) {
+                        return sizeA.localeCompare(sizeB, 'tr');
+                    }
+                    
+                    return orderA - orderB;
+                });
+
                 const variantRows = variants.map(variant => {
                     const fields = [];
                     
