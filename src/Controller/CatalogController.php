@@ -279,7 +279,6 @@ class CatalogController extends AbstractController
                 'variants' => $variants,
                 'variantCount' => count($variants),
                 'hasVariants' => !empty($variants),
-                'createdAt' => $product->getCreationDate() ? $product->getCreationDate()->format('d.m.Y H:i') : null,
                 'modifiedAt' => $product->getModificationDate() ? $product->getModificationDate()->format('d.m.Y H:i') : null
             ];
 
