@@ -184,11 +184,9 @@ class CatalogController extends AbstractController
         try {
             $listing = new ProductListing();
             
-            // Base condition - only main products (not variants)
-            $conditions = ["published = 1"];
+            $conditions = ["published = 1", "type IS NULL OR type != 'variant'"];
             $params = [];
 
-            // Category filter
             if (!empty($categoryFilter)) {
                 $category = $this->getCategoryByKey($categoryFilter);
                 if ($category) {
@@ -197,7 +195,6 @@ class CatalogController extends AbstractController
                 }
             }
 
-            // Search filter
             if (!empty($searchQuery) && strlen($searchQuery) >= self::SEARCH_MIN_LENGTH) {
                 $searchCondition = "(name LIKE ? OR productIdentifier LIKE ? OR description LIKE ? OR iwasku LIKE ?)";
                 $conditions[] = $searchCondition;
@@ -208,41 +205,22 @@ class CatalogController extends AbstractController
                 $params[] = $searchParam;
             }
 
-            // Set conditions
             $listing->setCondition(implode(" AND ", $conditions), $params);
             
-            // Set pagination
             $listing->setLimit($limit);
             $listing->setOffset($offset);
             
-            // Set ordering
             $listing->setOrderKey('creationDate');
             $listing->setOrder('DESC');
 
-            $allProducts = $listing->load();
-            $productGroups = [];
-            foreach ($allProducts as $product) {
-                if ($product->getType() === 'variant') {
-                    $parentId = $product->getO_parentId();
-                    if ($parentId) {
-                        $parent = Product::getById($parentId);
-                        if ($parent && $parent->getPublished()) {
-                            $productGroups[$parentId] = $parent;
-                        }
-                    }
-                } else {
-                    $productGroups[$product->getId()] = $product;
-                }
-            }
+            $products = $listing->load();
+            $total = $listing->getTotalCount();
 
-            $uniqueProducts = array_values($productGroups);
-          
-            $total = count($uniqueProducts);
-            $paginatedProducts = array_slice($uniqueProducts, $offset, $limit);
             $formattedProducts = [];
-            foreach ($paginatedProducts as $product) {
+            foreach ($products as $product) {
                 $formattedProducts[] = $this->formatProductForCatalog($product);
             }
+
             return [
                 'products' => $formattedProducts,
                 'total' => $total,
