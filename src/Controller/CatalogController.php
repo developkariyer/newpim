@@ -185,7 +185,7 @@ class CatalogController extends AbstractController
             $listing = new ProductListing();
             
             // Base condition - only main products (not variants)
-            $conditions = ["published = 1"];
+            $conditions = ["published = 1", "type IS NULL OR type != 'variant'"];
             $params = [];
 
             // Category filter
@@ -198,14 +198,34 @@ class CatalogController extends AbstractController
             }
 
             if (!empty($searchQuery) && strlen($searchQuery) >= self::SEARCH_MIN_LENGTH) {
-                $searchCondition = "(name LIKE ? OR productIdentifier LIKE ? OR description LIKE ? OR productCode LIKE ? OR iwasku LIKE ?)";
-                $conditions[] = $searchCondition;
                 $searchParam = "%" . $searchQuery . "%";
+                
+                $searchConditions = [
+                    // Ana ürün alanları
+                    "name LIKE ?",
+                    "productIdentifier LIKE ?", 
+                    "description LIKE ?",
+                    "productCode LIKE ?",
+                    
+                    // Variant IWASKU araması - parent ürünleri döndür
+                    "o_id IN (
+                        SELECT DISTINCT oo_id 
+                        FROM object_query_Product 
+                        WHERE iwasku LIKE ? 
+                        AND published = 1 
+                        AND type = 'variant'
+                    )"
+                ];
+                
+                $searchCondition = "(" . implode(" OR ", $searchConditions) . ")";
+                $conditions[] = $searchCondition;
+                
+                // Parametreler
                 $params[] = $searchParam; // name
                 $params[] = $searchParam; // productIdentifier
                 $params[] = $searchParam; // description
                 $params[] = $searchParam; // productCode
-                $params[] = $searchParam; // iwasku
+                $params[] = $searchParam; // iwasku (variant'da)
             }
 
             // Set conditions
