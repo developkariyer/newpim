@@ -205,6 +205,7 @@ class CatalogController extends AbstractController
                 $params[] = $searchParam;
                 $params[] = $searchParam;
                 $params[] = $searchParam;
+                $params[] = $searchParam;
             }
 
             // Set conditions
