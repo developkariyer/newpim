@@ -342,14 +342,8 @@ class CatalogController extends AbstractController
                     'color' => $colorInfo,
                     'customField' => $variant->getCustomField(),
                     'published' => $variant->getPublished(),
-                    'createdAt' => $variant->getCreationDate() ? $variant->getCreationDate()->format('d.m.Y H:i') : null
                 ];
             }
-
-            // Sort variants by creation date (newest first)
-            usort($variants, function($a, $b) {
-                return strtotime($b['createdAt'] ?? '0') - strtotime($a['createdAt'] ?? '0');
-            });
 
             return $variants;
 
