@@ -716,82 +716,59 @@ class ProductController extends AbstractController
     {
         try {
             error_log('=== IMAGE UPLOAD START ===');
-            error_log('Product key: ' . $productKey);
             
-            if (!$imageFile || !$imageFile->isValid()) {
-                throw new \Exception('Invalid image file uploaded');
+            if (!$imageFile instanceof \Symfony\Component\HttpFoundation\File\UploadedFile || !$imageFile->isValid()) {
+                $errorMessage = $imageFile ? $imageFile->getErrorMessage() : 'No file uploaded.';
+                throw new \Exception('Invalid image file uploaded: ' . $errorMessage);
             }
             
-            error_log('File info: ' . json_encode([
-                'name' => $imageFile->getClientOriginalName(),
-                'size' => $imageFile->getSize(),
-                'mime' => $imageFile->getMimeType(),
-                'temp_path' => $imageFile->getPathname(),
-                'error' => $imageFile->getError()
-            ]));
+            error_log('File is valid. Original name: ' . $imageFile->getClientOriginalName());
 
+            $projectDir = $this->getParameter('kernel.project_dir');
+            $tempUploadDir = $projectDir . '/var/uploads';
+            if (!is_dir($tempUploadDir)) {
+                mkdir($tempUploadDir, 0777, true);
+            }
+
+            $originalName = $imageFile->getClientOriginalName();
+            $safeFilename = $this->generateSafeFilename(pathinfo($originalName, PATHINFO_FILENAME));
+            $extension = $imageFile->guessExtension() ?: 'jpg';
+            $newFilename = $safeFilename . '-' . uniqid() . '.' . $extension;
+            $movedFile = $imageFile->move($tempUploadDir, $newFilename);
+            $movedFilePath = $movedFile->getRealPath();
+            error_log('File moved to temporary location: ' . $movedFilePath);
+
+            if (!file_exists($movedFilePath) || !is_readable($movedFilePath)) {
+                throw new \Exception('Moved file is not readable at: ' . $movedFilePath);
+            }
             $assetFolder = \Pimcore\Model\Asset::getByPath('/products');
             if (!$assetFolder) {
                 error_log('Creating products folder...');
                 $rootFolder = \Pimcore\Model\Asset::getByPath('/');
-                if (!$rootFolder) {
-                    throw new \Exception('Root asset folder not found');
-                }
+                if (!$rootFolder) throw new \Exception('Root asset folder not found');
                 
                 $assetFolder = new \Pimcore\Model\Asset\Folder();
                 $assetFolder->setFilename('products');
                 $assetFolder->setParent($rootFolder);
                 $assetFolder->save();
-                error_log('Products folder created: ' . $assetFolder->getFullPath());
             }
 
-            $originalName = $imageFile->getClientOriginalName();
-            $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-            
-            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-            if (!in_array($extension, $allowedExtensions)) {
-                $extension = 'jpg'; 
-            }
-            
-            $safeProductKey = preg_replace('/[^a-zA-Z0-9\-_]/', '_', $productKey);
-            $filename = $safeProductKey . '_' . time() . '_' . uniqid() . '.' . $extension;
-            
-            error_log('Generated filename: ' . $filename);
-            $tempPath = $imageFile->getPathname();
-            if (!file_exists($tempPath)) {
-                throw new \Exception('Temporary file not found: ' . $tempPath);
-            }
-
-            $fileContent = file_get_contents($tempPath);
-            if ($fileContent === false) {
-                throw new \Exception('Cannot read file content from: ' . $tempPath);
-            }
-
-            if (strlen($fileContent) === 0) {
-                throw new \Exception('File content is empty');
-            }
-
-            error_log('File content size: ' . strlen($fileContent) . ' bytes');
             $imageAsset = new \Pimcore\Model\Asset\Image();
-            $imageAsset->setFilename($filename);
+            $assetFilename = $this->generateSafeFilename($productKey) . '_' . time() . '.' . $extension;
+            $imageAsset->setFilename($assetFilename);
             $imageAsset->setParent($assetFolder);
-            $imageAsset->setData($fileContent);
-            $imageAsset->setMimeType($imageFile->getMimeType());
+            $imageAsset->setData(file_get_contents($movedFilePath));
             $imageAsset->save();
+            unlink($movedFilePath);
+            error_log('Temporary file deleted: ' . $movedFilePath);
 
-            error_log('Image asset created successfully: ' . json_encode([
-                'ID' => $imageAsset->getId(),
-                'Path' => $imageAsset->getFullPath(),
-                'Size' => $imageAsset->getFileSize(),
-                'MimeType' => $imageAsset->getMimeType()
-            ]));
+            error_log('Image asset created successfully: ID ' . $imageAsset->getId());
 
             return $imageAsset;
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             error_log('IMAGE UPLOAD ERROR: ' . $e->getMessage());
             error_log('Stack trace: ' . $e->getTraceAsString());
-            
             return null;
         }
     }
