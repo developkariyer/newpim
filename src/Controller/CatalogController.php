@@ -214,6 +214,8 @@ class CatalogController extends AbstractController
                                 AND e.GTIN LIKE ?)";
                 $params[] = "%" . $eanFilter . "%";
             }
+            $finalCondition = implode(" AND ", $conditions);
+            error_log("Final SQL Condition: " . $finalCondition);
 
             $listing->setCondition(implode(" AND ", $conditions), $params);
             $listing->setLimit($limit);
