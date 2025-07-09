@@ -47,9 +47,9 @@ class ProductDimensionsController extends FrontendController
             try {
                 $categoryId = $this->findCategoryIdByName($category);
                 if ($categoryId) {
-                    $conditions .= " AND productCategory = " . $categoryId;
+                    $conditions .= " AND productCategory__id = " . $categoryId;
                 } else {
-                    $conditions .= " AND productCategory = -1";
+                    $conditions .= " AND productCategory__id = -1";
                 }
             } catch (\Exception $e) {
                 error_log('Category search error: ' . $e->getMessage());
