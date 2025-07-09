@@ -1223,6 +1223,41 @@
                         }
                     });
                 }
+
+                // NEW: Advanced search events
+                if (this.elements.advancedToggle) {
+                    this.elements.advancedToggle.addEventListener('click', () => {
+                        this.toggleAdvancedPanel();
+                    });
+                }
+
+                if (this.elements.asinFilter) {
+                    this.elements.asinFilter.addEventListener('input', (e) => {
+                        this.state.currentAsin = e.target.value.trim();
+                        this.debounceSearch();
+                    });
+                }
+
+                if (this.elements.brandFilter) {
+                    this.elements.brandFilter.addEventListener('input', (e) => {
+                        this.state.currentBrand = e.target.value.trim();
+                        this.debounceSearch();
+                    });
+                }
+
+                if (this.elements.eanFilter) {
+                    this.elements.eanFilter.addEventListener('input', (e) => {
+                        this.state.currentEan = e.target.value.trim();
+                        this.debounceSearch();
+                    });
+                }
+
+                if (this.elements.clearAdvanced) {
+                    this.elements.clearAdvanced.addEventListener('click', () => {
+                        this.clearAdvancedFilters();
+                    });
+                }
+
             }
 
             debounceSearch(query) {
