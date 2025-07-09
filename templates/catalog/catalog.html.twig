@@ -200,6 +200,37 @@
             font-size: 1.1rem;
         }
 
+        .advanced-panel {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid var(--border-color);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .advanced-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+
+        @media (max-width: 768px) {
+            .advanced-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         /* Product Grid */
         .products-container {
             background: white;
@@ -942,6 +973,12 @@
                     </select>
                 </div>
 
+                <div class="form-group">
+                    <button type="button" id="advancedToggle" class="btn btn-outline">
+                        ⚙️ Gelişmiş
+                    </button>
+                </div>
+
                 <!-- Clear Filters -->
                 <div class="form-group">
                     <button type="button" id="clearFilters" class="btn btn-outline">
@@ -954,6 +991,30 @@
                     <a href="#" id="exportExcel" class="btn btn-success">
                         📊 Excel İndir
                     </a>
+                </div>
+            </div>
+            <div id="advancedPanel" class="advanced-panel" style="display: none;">
+                <div class="advanced-row">
+                    <div class="form-group">
+                        <label for="asinFilter" class="form-label">🏷️ ASIN/FNSKU</label>
+                        <input type="text" id="asinFilter" class="form-control" placeholder="ASIN veya FNSKU...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="brandFilter" class="form-label">🏢 Marka</label>
+                        <input type="text" id="brandFilter" class="form-control" placeholder="Marka adı...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="eanFilter" class="form-label">📊 EAN</label>
+                        <input type="text" id="eanFilter" class="form-control" placeholder="EAN kodu...">
+                    </div>
+
+                    <div class="form-group">
+                        <button type="button" id="clearAdvanced" class="btn btn-outline">
+                            🧹 Gelişmiş Temizle
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
