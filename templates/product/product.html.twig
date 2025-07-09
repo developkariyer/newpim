@@ -528,6 +528,11 @@
         </div>
         <!-- Custom Table Model End -->
     </div>
+    {% if selectedProduct %}
+        <script type="application/json" id="selectedProductData">
+            {{ selectedProduct|json_encode|raw }}
+        </script>
+    {% endif %}
 {% endblock %}
 
 {% block body_scripts %}
@@ -591,6 +596,7 @@
                 this.uiService = new UIService();
 
                 this.initialize();
+                this.checkForEditProduct();
             }
 
             initialize() {
@@ -985,6 +991,21 @@
                 };
 
                 reader.readAsDataURL(file);
+            }
+
+            checkForEditProduct() {
+                try {
+                    const selectedProductData = document.getElementById('selectedProductData');
+                    if (selectedProductData) {
+                        const productData = JSON.parse(selectedProductData.textContent);
+                        if (productData && productData.id) {
+                            console.log('🎯 Auto-loading product for edit:', productData.id);
+                            this.selectProductForEdit(productData);
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ Check edit product failed:', error);
+                }
             }
 
             // Color Management Methods

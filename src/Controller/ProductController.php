@@ -49,11 +49,23 @@ class ProductController extends AbstractController
     public function index(): Response
     {
         try {
+            $editProductId = $request->query->get('edit');
+            $selectedProductData = null;
+            if ($editProductId) {
+                $selectedProduct = Product::getById((int)$editProductId);
+                if ($selectedProduct) {
+                    $selectedProductData = $this->buildProductData($selectedProduct);
+                    error_log('Loading product for edit: ' . $selectedProduct->getId());
+                } else {
+                    $this->addFlash('warning', 'Düzenlenecek ürün bulunamadı.');
+                }
+            }
             return $this->render('product/product.html.twig', [
                 'categories' => $this->getGenericListing(self::TYPE_MAPPING['categories'], "published = 1", fn($category) => $category->getCategory()),
                 'colors' => $this->getGenericListing(self::TYPE_MAPPING['colors']),
                 'brands' => $this->getGenericListing(self::TYPE_MAPPING['brands']),
-                'marketplaces' => $this->getGenericListing(self::TYPE_MAPPING['marketplaces'])
+                'marketplaces' => $this->getGenericListing(self::TYPE_MAPPING['marketplaces']),
+                'selectedProduct' => $selectedProductData
             ]);
         } catch (\Exception $e) {
             $this->addFlash('danger', 'Sayfa yüklenirken bir hata oluştu: ' . $e->getMessage());
@@ -161,6 +173,31 @@ class ProductController extends AbstractController
         } catch (\Exception $e) {
             error_log('Delete variant error: ' . $e->getMessage());
             return new JsonResponse(['success' => false, 'message' => 'Varyant silinirken hata oluştu']);
+        }
+    }
+
+    #[Route('', name: 'product')]
+    public function index(Request $request): Response
+    {
+        try {
+            $editProductId = $request->query->get('edit');
+            $selectedProduct = null;
+            if ($editProductId) {
+                $selectedProduct = Product::getById((int)$editProductId);
+                if (!$selectedProduct) {
+                    $this->addFlash('warning', 'Düzenlenecek ürün bulunamadı.');
+                }
+            }
+            return $this->render('product/product.html.twig', [
+                'categories' => $this->getGenericListing(self::TYPE_MAPPING['categories'], "published = 1", fn($category) => $category->getCategory()),
+                'colors' => $this->getGenericListing(self::TYPE_MAPPING['colors']),
+                'brands' => $this->getGenericListing(self::TYPE_MAPPING['brands']),
+                'marketplaces' => $this->getGenericListing(self::TYPE_MAPPING['marketplaces']),
+                'selectedProduct' => $selectedProduct
+            ]);
+        } catch (\Exception $e) {
+            $this->addFlash('danger', 'Sayfa yüklenirken bir hata oluştu: ' . $e->getMessage());
+            return $this->redirectToRoute('product', [], Response::HTTP_SEE_OTHER);
         }
     }
 

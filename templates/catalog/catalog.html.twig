@@ -581,6 +581,8 @@
             box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
             min-width: 100px;
             justify-content: center;
+            z-index: 10;
+            pointer-events: all;
         }
 
         .edit-btn:hover {
@@ -1147,22 +1149,24 @@
                 // Product row clicks - UPDATED
                 if (this.elements.productsGrid) {
                     this.elements.productsGrid.addEventListener('click', (e) => {
-                        // Edit button click
                         if (e.target.closest('.edit-btn')) {
-                            e.stopPropagation(); // Prevent row expansion
+                            e.stopPropagation(); 
+                            e.preventDefault();
                             const editBtn = e.target.closest('.edit-btn');
                             const productId = editBtn.dataset.productId;
                             this.editProduct(productId);
-                            return;
+                            return false; 
                         }
-                        
-                        // Row expansion (if not clicking edit button or variants section)
                         const productRow = e.target.closest('.product-row');
-                        if (productRow && !e.target.closest('.variants-section') && !e.target.closest('.edit-btn')) {
+                        if (productRow && 
+                            !e.target.closest('.variants-section') && 
+                            !e.target.closest('.edit-btn') &&
+                            !e.target.closest('.product-actions')) {
                             this.toggleProductExpansion(productRow);
                         }
                     });
                 }
+            }
 
             }
 
@@ -1330,14 +1334,12 @@
                         
                         <div class="product-meta">
                             <div class="product-actions">
-                                <button class="edit-btn" data-product-id="${product.id}" title="Ürünü Düzenle">
+                                <button class="edit-btn" data-product-id="${product.id}" data-action="edit" title="Ürünü Düzenle">
                                     <i class="fas fa-edit"></i>
                                     <span>Düzenle</span>
                                 </button>
-                            </div>
-                            <div class="product-stats">
                                 ${variantBadge}
-                                ${hasVariants ? '<span class="expand-icon">▼</span>' : ''}
+                                ${hasVariants ? '<span class="expand-icon" data-action="expand">▼</span>' : ''}
                             </div>
                         </div>
                     </div>
@@ -1690,6 +1692,21 @@
                     clearTimeout(timeout);
                     timeout = setTimeout(later, wait);
                 };
+            }
+        }
+
+        // Edit Product Method
+        editProduct(productId) {
+            try {
+                console.log(`🎯 Edit button clicked for product: ${productId}`);
+                this.showLoading();
+                const editUrl = `/product?edit=${productId}`;
+                window.location.href = editUrl;
+                console.log(`✅ Redirecting to edit product: ${productId}`);
+            } catch (error) {
+                console.error('❌ Edit product failed:', error);
+                this.hideLoading();
+                this.showError('Ürün düzenleme sayfasına yönlendirilemedi.');
             }
         }
 
