@@ -33,11 +33,17 @@ class CatalogController extends AbstractController
             $categories = $this->getAvailableCategories();
             $categoryFilter = $request->query->get('category');
             $searchQuery = $request->query->get('search', '');
+            $asinFilter = trim($request->query->get('asin', ''));
+            $brandFilter = trim($request->query->get('brand', ''));
+            $eanFilter = trim($request->query->get('ean', ''));
             $initialProducts = $this->getProducts(
                 limit: self::DEFAULT_LIMIT,
                 offset: 0,
                 categoryFilter: $categoryFilter,
-                searchQuery: $searchQuery
+                searchQuery: $searchQuery,
+                asinFilter: $asinFilter,
+                brandFilter: $brandFilter,
+                eanFilter: $eanFilter
             );
             return $this->render('catalog/catalog.html.twig', [
                 'categories' => $categories,
@@ -46,6 +52,9 @@ class CatalogController extends AbstractController
                 'hasMore' => $initialProducts['hasMore'],
                 'currentCategory' => $categoryFilter,
                 'currentSearch' => $searchQuery,
+                'currentAsin' => $asinFilter,
+                'currentBrand' => $brandFilter,
+                'currentEan' => $eanFilter,
                 'limit' => self::DEFAULT_LIMIT
             ]);
         } catch (\Exception $e) {
@@ -146,7 +155,10 @@ class CatalogController extends AbstractController
         try {
             $categoryFilter = $request->query->get('category');
             $searchQuery = trim($request->query->get('search', ''));
-            $result = $this->getProducts(limit: self::EXPORT_MAX_PRODUCTS, offset: 0, categoryFilter: $categoryFilter, searchQuery: $searchQuery);
+            $asinFilter = trim($request->query->get('asin', ''));
+            $brandFilter = trim($request->query->get('brand', ''));
+            $eanFilter = trim($request->query->get('ean', ''));
+            $result = $this->getProducts(limit: self::EXPORT_MAX_PRODUCTS, offset: 0, categoryFilter: $categoryFilter, searchQuery: $searchQuery,asinFilter: $asinFilter, brandFilter: $brandFilter, eanFilter: $eanFilter);
             $products = $result['products'];
             $response = new StreamedResponse();
             $response->setCallback(function() use ($products, $categoryFilter, $searchQuery) {
