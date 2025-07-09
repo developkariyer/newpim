@@ -20,6 +20,7 @@ class CatalogController extends AbstractController
     private const DEFAULT_LIMIT = 20;
     private const MAX_LIMIT = 100;
     private const SEARCH_MIN_LENGTH = 2;
+    private const EXPORT_MAX_PRODUCTS = 50000;
     
     // ===========================================
     // MAIN ROUTES
@@ -29,19 +30,15 @@ class CatalogController extends AbstractController
     public function index(Request $request): Response
     {
         try {
-            // Get initial data for page load
             $categories = $this->getAvailableCategories();
             $categoryFilter = $request->query->get('category');
             $searchQuery = $request->query->get('search', '');
-            
-            // Get initial products (first page)
             $initialProducts = $this->getProducts(
                 limit: self::DEFAULT_LIMIT,
                 offset: 0,
                 categoryFilter: $categoryFilter,
                 searchQuery: $searchQuery
             );
-
             return $this->render('catalog/catalog.html.twig', [
                 'categories' => $categories,
                 'initialProducts' => $initialProducts['products'],
@@ -51,11 +48,9 @@ class CatalogController extends AbstractController
                 'currentSearch' => $searchQuery,
                 'limit' => self::DEFAULT_LIMIT
             ]);
-
         } catch (\Exception $e) {
             error_log('Catalog page error: ' . $e->getMessage());
             $this->addFlash('danger', 'Katalog yüklenirken bir hata oluştu.');
-            
             return $this->render('catalog/catalog.html.twig', [
                 'categories' => [],
                 'initialProducts' => [],
@@ -76,9 +71,7 @@ class CatalogController extends AbstractController
             $offset = max((int)$request->query->get('offset', 0), 0);
             $categoryFilter = $request->query->get('category');
             $searchQuery = trim($request->query->get('search', ''));
-
             $result = $this->getProducts($limit, $offset, $categoryFilter, $searchQuery);
-
             return new JsonResponse([
                 'success' => true,
                 'products' => $result['products'],
@@ -87,10 +80,8 @@ class CatalogController extends AbstractController
                 'offset' => $offset,
                 'limit' => $limit
             ]);
-
         } catch (\Exception $e) {
             error_log('Products API error: ' . $e->getMessage());
-            
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Ürünler yüklenirken hata oluştu.',
@@ -108,7 +99,6 @@ class CatalogController extends AbstractController
             $searchQuery = trim($request->query->get('q', ''));
             $categoryFilter = $request->query->get('category');
             $limit = min((int)$request->query->get('limit', self::DEFAULT_LIMIT), self::MAX_LIMIT);
-
             if (strlen($searchQuery) < self::SEARCH_MIN_LENGTH) {
                 return new JsonResponse([
                     'success' => true,
@@ -118,9 +108,7 @@ class CatalogController extends AbstractController
                     'message' => 'En az ' . self::SEARCH_MIN_LENGTH . ' karakter girin.'
                 ]);
             }
-
             $result = $this->getProducts($limit, 0, $categoryFilter, $searchQuery);
-
             return new JsonResponse([
                 'success' => true,
                 'products' => $result['products'],
@@ -128,10 +116,8 @@ class CatalogController extends AbstractController
                 'hasMore' => $result['hasMore'],
                 'query' => $searchQuery
             ]);
-
         } catch (\Exception $e) {
             error_log('Search API error: ' . $e->getMessage());
-            
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Arama sırasında hata oluştu.',
@@ -148,29 +134,20 @@ class CatalogController extends AbstractController
         try {
             $categoryFilter = $request->query->get('category');
             $searchQuery = trim($request->query->get('search', ''));
-            
-            // Get all products for export (no limit)
-            $result = $this->getProducts(limit: 10000, offset: 0, categoryFilter: $categoryFilter, searchQuery: $searchQuery);
+            $result = $this->getProducts(limit: self::EXPORT_MAX_PRODUCTS, offset: 0, categoryFilter: $categoryFilter, searchQuery: $searchQuery);
             $products = $result['products'];
-
             $response = new StreamedResponse();
-            
             $response->setCallback(function() use ($products, $categoryFilter, $searchQuery) {
                 $this->generateExcelOutput($products, $categoryFilter, $searchQuery);
             });
-
             $filename = $this->generateExcelFilename($categoryFilter, $searchQuery);
-            
             $response->headers->set('Content-Type', 'application/vnd.ms-excel; charset=utf-8');
             $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
             $response->headers->set('Cache-Control', 'max-age=0');
-
             return $response;
-
         } catch (\Exception $e) {
             error_log('Excel export error: ' . $e->getMessage());
             $this->addFlash('danger', 'Excel dosyası oluşturulurken hata oluştu.');
-            
             return $this->redirectToRoute('catalog');
         }
     }
@@ -183,10 +160,8 @@ class CatalogController extends AbstractController
     {
         try {
             $listing = new ProductListing();
-            
             $conditions = ["published = 1", "type IS NULL OR type != 'variant'"];
             $params = [];
-
             if (!empty($categoryFilter)) {
                 $category = $this->getCategoryByKey($categoryFilter);
                 if ($category) {
@@ -194,7 +169,6 @@ class CatalogController extends AbstractController
                     $params[] = $category->getId();
                 }
             }
-
             if (!empty($searchQuery) && strlen($searchQuery) >= self::SEARCH_MIN_LENGTH) {
                 $searchCondition = "(name LIKE ? OR productIdentifier LIKE ? OR description LIKE ?)";
                 $conditions[] = $searchCondition;
@@ -203,23 +177,17 @@ class CatalogController extends AbstractController
                 $params[] = $searchParam;
                 $params[] = $searchParam;
             }
-
             $listing->setCondition(implode(" AND ", $conditions), $params);
-            
             $listing->setLimit($limit);
             $listing->setOffset($offset);
-            
             $listing->setOrderKey('creationDate');
             $listing->setOrder('DESC');
-
             $products = $listing->load();
             $total = $listing->getTotalCount();
-
             $formattedProducts = [];
             foreach ($products as $product) {
                 $formattedProducts[] = $this->formatProductForCatalog($product);
             }
-
             return [
                 'products' => $formattedProducts,
                 'total' => $total,
@@ -227,10 +195,8 @@ class CatalogController extends AbstractController
                 'currentOffset' => $offset,
                 'currentLimit' => $limit
             ];
-
         } catch (\Exception $e) {
             error_log('Get products error: ' . $e->getMessage());
-            
             return [
                 'products' => [],
                 'total' => 0,
@@ -244,21 +210,15 @@ class CatalogController extends AbstractController
     private function formatProductForCatalog(Product $product): array
     {
         try {
-            // Get variants
             $variants = $this->getProductVariants($product);
-            
-            // Get category info
             $category = $product->getProductCategory();
             $categoryInfo = $category ? [
                 'id' => $category->getId(),
                 'name' => $category->getKey(),
                 'displayName' => $category->getCategory() ?: $category->getKey()
             ] : null;
-
-            // Get main product image
             $image = $product->getImage();
             $imagePath = $image ? $image->getFullPath() : null;
-
             return [
                 'id' => $product->getId(),
                 'name' => $product->getName(),
@@ -272,10 +232,8 @@ class CatalogController extends AbstractController
                 'variantCount' => count($variants),
                 'hasVariants' => !empty($variants),
             ];
-
         } catch (\Exception $e) {
             error_log('Format product error: ' . $e->getMessage());
-            
             return [
                 'id' => $product->getId(),
                 'name' => $product->getName() ?: 'Unknown Product',
@@ -302,11 +260,8 @@ class CatalogController extends AbstractController
             }
             $variants = [];
             $productVariants = $product->getChildren([Product::OBJECT_TYPE_VARIANT]);
-
             foreach ($productVariants as $variant) {
-                if (!$variant->getPublished()) {
-                    continue; // Skip unpublished variants
-                }
+                
 
                 // Get color info
                 $colorObject = $variant->getVariationColor();
@@ -353,10 +308,8 @@ class CatalogController extends AbstractController
             $listing->setOrderKey('key');
             $listing->setOrder('ASC');
             $listing->load();
-
             $categories = [];
             foreach ($listing as $category) {
-                // Only include leaf categories (categories without children that can have products)
                 if (!$category->hasChildren()) {
                     $categories[] = [
                         'id' => $category->getId(),
@@ -366,14 +319,10 @@ class CatalogController extends AbstractController
                     ];
                 }
             }
-
-            // Sort by product count (categories with more products first)
             usort($categories, function($a, $b) {
                 return $b['productCount'] - $a['productCount'];
             });
-
             return $categories;
-
         } catch (\Exception $e) {
             error_log('Get available categories error: ' . $e->getMessage());
             return [];
