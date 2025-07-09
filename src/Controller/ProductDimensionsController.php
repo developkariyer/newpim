@@ -62,7 +62,7 @@ class ProductDimensionsController extends FrontendController
         $count = $listingObject->count();
         $productData = [];
         foreach ($products as $product) {
-            if ($product->getType() === 'variant' || !$product instanceof Product) {
+            if ($product->getType() !== 'variant' || !$product instanceof Product) {
                 continue;
             }
             $productData[] = [
