@@ -189,6 +189,8 @@ class CatalogController extends AbstractController
             $listing = new ProductListing();
             $conditions = ["published = 1", "type IS NULL OR type != 'variant'"];
             $params = [];
+            $parentIdsFromAdvancedFilters = [];
+            $hasAdvancedFilter = false;
             if (!empty($categoryFilter)) {
                 $category = $this->getCategoryByKey($categoryFilter);
                 if ($category) {
@@ -204,41 +206,46 @@ class CatalogController extends AbstractController
                 $params[] = $searchParam;
                 $params[] = $searchParam;
             }
+
             if (!empty($asinFilter)) {
-                error_log("Adding ASIN filter: $asinFilter");
-                $asins = $this->getAsinsByValue($asinFilter);
-                if (!empty($asins)) {
-                    $asinIds = array_map(function($asin) { return $asin->getId(); }, $asins);
-                    $conditions[] = "asin IN (" . implode(',', array_fill(0, count($asinIds), '?')) . ")";
-                    $params = array_merge($params, $asinIds);
-                } else {
-                    $conditions[] = "oo_id = -1"; 
-                }
+                $hasAdvancedFilter = true;
+                $asinParentIds = $this->getParentProductIdsByVariantAsin($asinFilter);
+                error_log("ASIN '$asinFilter' için bulunan parent ID'ler: " . json_encode($asinParentIds));
+                $parentIdsFromAdvancedFilters[] = $asinParentIds;
             }
 
             if (!empty($brandFilter)) {
-                error_log("Adding Brand filter: $brandFilter");
-                $brands = $this->getBrandsByValue($brandFilter);
-                if (!empty($brands)) {
-                    $brandIds = array_map(function($brand) { return $brand->getId(); }, $brands);
-                    $conditions[] = "brandItems IN (" . implode(',', array_fill(0, count($brandIds), '?')) . ")";
-                    $params = array_merge($params, $brandIds);
-                } else {
-                    $conditions[] = "oo_id = -1";
-                }
+                $hasAdvancedFilter = true;
+                $brandParentIds = $this->getParentProductIdsByVariantBrand($brandFilter);
+                error_log("Brand '$brandFilter' için bulunan parent ID'ler: " . json_encode($brandParentIds));
+                $parentIdsFromAdvancedFilters[] = $brandParentIds;
             }
 
             if (!empty($eanFilter)) {
-                error_log("Adding EAN filter: $eanFilter");
-                $eans = $this->getEansByValue($eanFilter);
-                if (!empty($eans)) {
-                    $eanIds = array_map(function($ean) { return $ean->getId(); }, $eans);
-                    $conditions[] = "eans IN (" . implode(',', array_fill(0, count($eanIds), '?')) . ")";
-                    $params = array_merge($params, $eanIds);
+                $hasAdvancedFilter = true;
+                $eanParentIds = $this->getParentProductIdsByVariantEan($eanFilter);
+                error_log("EAN '$eanFilter' için bulunan parent ID'ler: " . json_encode($eanParentIds));
+                $parentIdsFromAdvancedFilters[] = $eanParentIds;
+            }
+
+            if ($hasAdvancedFilter) {
+                if (count($parentIdsFromAdvancedFilters) === 1) {
+                    $finalParentIds = $parentIdsFromAdvancedFilters[0];
                 } else {
+                    $finalParentIds = array_intersect(...$parentIdsFromAdvancedFilters);
+                }
+                
+                error_log("Final parent ID'ler: " . json_encode($finalParentIds));
+                
+                if (empty($finalParentIds)) {
                     $conditions[] = "oo_id = -1";
+                } else {
+                    $placeholders = implode(',', array_fill(0, count($finalParentIds), '?'));
+                    $conditions[] = "oo_id IN ($placeholders)";
+                    $params = array_merge($params, array_values($finalParentIds));
                 }
             }
+
             $finalCondition = implode(" AND ", $conditions);
             error_log("Final SQL Condition: " . $finalCondition);
 
@@ -404,41 +411,107 @@ class CatalogController extends AbstractController
         }
     }
 
-    private function getAsinsByValue(string $asinValue): array
+    private function getParentProductIdsByVariantAsin(string $asinValue): array
     {
         try {
-            $listing = new AsinListing();
-            $listing->setCondition("(asin LIKE ? OR fnskus LIKE ?)", ["%" . $asinValue . "%", "%" . $asinValue . "%"]);
-            $listing->setLimit(1);
-            return $listing->current();
+            $variantListing = new ProductListing();
+            $variantListing->setCondition("type = 'variant' AND published = 1");
+            $variants = $variantListing->getObjects();
+            $parentIds = [];
+            foreach ($variants as $variant) {
+                $asinObjects = $variant->getAsin();
+                if ($asinObjects) {
+                    if (is_array($asinObjects)) {
+                        foreach ($asinObjects as $asinObj) {
+                            if ($asinObj->getAsin() && stripos($asinObj->getAsin(), $asinValue) !== false) {
+                                $parentIds[] = $variant->getParentId();
+                                break;
+                            }
+                            if ($asinObj->getFnskus() && stripos($asinObj->getFnskus(), $asinValue) !== false) {
+                                $parentIds[] = $variant->getParentId();
+                                break;
+                            }
+                        }
+                    } else {
+                        if ($asinObjects->getAsin() && stripos($asinObjects->getAsin(), $asinValue) !== false) {
+                            $parentIds[] = $variant->getParentId();
+                        }
+                        if ($asinObjects->getFnskus() && stripos($asinObjects->getFnskus(), $asinValue) !== false) {
+                            $parentIds[] = $variant->getParentId();
+                        }
+                    }
+                }
+            }
+            
+            return array_unique(array_filter($parentIds));
         } catch (\Exception $e) {
-            error_log('Get asins by value error: ' . $e->getMessage());
+            error_log('Get parent product IDs by variant ASIN error: ' . $e->getMessage());
             return [];
         }
     }
 
-    private function getBrandsByValue(string $brandValue): array
+    /**
+     * Brand değeri bulunan varyantların ana ürün ID'lerini getirir
+     */
+    private function getParentProductIdsByVariantBrand(string $brandValue): array
     {
         try {
-            $listing = new BrandListing();
-            $listing->setCondition("key LIKE ?", ["%" . $brandValue . "%"]);
-            $listing->setLimit(1);
-            return $listing->current();
+            $variantListing = new ProductListing();
+            $variantListing->setCondition("type = 'variant' AND published = 1");
+            $variants = $variantListing->getObjects();
+            
+            $parentIds = [];
+            foreach ($variants as $variant) {
+                $brandObjects = $variant->getBrandItems();
+                if ($brandObjects) {
+                    if (is_array($brandObjects)) {
+                        foreach ($brandObjects as $brandObj) {
+                            if ($brandObj->getKey() && stripos($brandObj->getKey(), $brandValue) !== false) {
+                                $parentIds[] = $variant->getParentId();
+                                break;
+                            }
+                        }
+                    } else {
+                        if ($brandObjects->getKey() && stripos($brandObjects->getKey(), $brandValue) !== false) {
+                            $parentIds[] = $variant->getParentId();
+                        }
+                    }
+                }
+            }
+            
+            return array_unique(array_filter($parentIds));
         } catch (\Exception $e) {
-            error_log('Get brands by value error: ' . $e->getMessage());
+            error_log('Get parent product IDs by variant Brand error: ' . $e->getMessage());
             return [];
         }
     }
 
-    private function getEansByValue(string $eanValue): array
+    /**
+     * EAN değeri bulunan varyantların ana ürün ID'lerini getirir
+     */
+    private function getParentProductIdsByVariantEan(string $eanValue): array
     {
         try {
-            $listing = new EanListing();
-            $listing->setCondition("GTIN LIKE ?", ["%" . $eanValue . "%"]);
-            $listing->setLimit(1);
-            return $listing->current();
+            $variantListing = new ProductListing();
+            $variantListing->setCondition("type = 'variant' AND published = 1");
+            $variants = $variantListing->getObjects();
+            
+            $parentIds = [];
+            foreach ($variants as $variant) {
+                $eanObjects = $variant->getEans();
+                if ($eanObjects && is_array($eanObjects)) {
+                    foreach ($eanObjects as $eanObj) {
+                        if ($eanObj->getGTIN() && stripos($eanObj->getGTIN(), $eanValue) !== false) {
+                            $parentIds[] = $variant->getParentId();
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            return array_unique(array_filter($parentIds));
         } catch (\Exception $e) {
-            error_log('Get eans by value error: ' . $e->getMessage());
+            error_log('Get parent product IDs by variant EAN error: ' . $e->getMessage());
             return [];
         }
     }
