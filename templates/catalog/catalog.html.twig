@@ -1397,15 +1397,6 @@
                         `);
                     }
                     
-                    if (variant.productCode) {
-                        fields.push(`
-                            <div class="variant-field code">
-                                <span class="variant-field-label">🔢 Kod</span>
-                                <span class="variant-field-value">${this.escapeHtml(variant.productCode)}</span>
-                            </div>
-                        `);
-                    }
-                    
                     if (variant.variationSize) {
                         fields.push(`
                             <div class="variant-field size">
