@@ -201,29 +201,24 @@ class CatalogController extends AbstractController
                 $params[] = $searchParam;
                 $params[] = $searchParam;
             }
+            
             if (!empty($asinFilter)) {
-                $conditions[] = "EXISTS (SELECT 1 FROM object_relations_" . Product::classId() . " r 
-                                JOIN object_store_" . \Pimcore\Model\DataObject\Asin::classId() . " a ON r.dest_id = a.oo_id 
-                                WHERE r.src_id = objects.oo_id AND r.fieldname = 'asin' 
-                                AND (a.asin LIKE ? OR a.fnskus LIKE ?))";
+                error_log("Adding ASIN filter: $asinFilter");
+                $conditions[] = "(asin LIKE ? OR fnskus LIKE ?)";
                 $asinParam = "%" . $asinFilter . "%";
                 $params[] = $asinParam;
                 $params[] = $asinParam;
             }
 
             if (!empty($brandFilter)) {
-                $conditions[] = "EXISTS (SELECT 1 FROM object_relations_" . Product::classId() . " r 
-                                JOIN object_store_" . \Pimcore\Model\DataObject\Brand::classId() . " b ON r.dest_id = b.oo_id 
-                                WHERE r.src_id = objects.oo_id AND r.fieldname = 'brandItems' 
-                                AND b.key LIKE ?)";
+                error_log("Adding Brand filter: $brandFilter");
+                $conditions[] = "brand LIKE ?";
                 $params[] = "%" . $brandFilter . "%";
             }
 
             if (!empty($eanFilter)) {
-                $conditions[] = "EXISTS (SELECT 1 FROM object_relations_" . Product::classId() . " r 
-                                JOIN object_store_" . \Pimcore\Model\DataObject\Ean::classId() . " e ON r.dest_id = e.oo_id 
-                                WHERE r.src_id = objects.oo_id AND r.fieldname = 'eans' 
-                                AND e.GTIN LIKE ?)";
+                error_log("Adding EAN filter: $eanFilter");
+                $conditions[] = "ean LIKE ?";
                 $params[] = "%" . $eanFilter . "%";
             }
             $finalCondition = implode(" AND ", $conditions);
