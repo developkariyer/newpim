@@ -1311,6 +1311,27 @@
                 }
             }
 
+            toggleAdvancedPanel() {
+                this.state.isAdvancedOpen = !this.state.isAdvancedOpen;
+                if (this.state.isAdvancedOpen) {
+                    this.elements.advancedPanel.style.display = 'block';
+                    this.elements.advancedToggle.textContent = '⚙️ Gizle';
+                } else {
+                    this.elements.advancedPanel.style.display = 'none';
+                    this.elements.advancedToggle.textContent = '⚙️ Gelişmiş';
+                }
+            }
+
+            clearAdvancedFilters() {
+                this.state.currentAsin = '';
+                this.state.currentBrand = '';
+                this.state.currentEan = '';
+                if (this.elements.asinFilter) this.elements.asinFilter.value = '';
+                if (this.elements.brandFilter) this.elements.brandFilter.value = '';
+                if (this.elements.eanFilter) this.elements.eanFilter.value = '';
+                
+                this.resetAndReload();
+            }
 
             async loadProducts(isReset = false) {
                 if (this.state.isLoading && !isReset) return;
