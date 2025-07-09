@@ -44,7 +44,16 @@ class ProductDimensionsController extends FrontendController
             $conditions .= " AND iwasku LIKE '%" . $iwasku . "%'";
         }
         if ($category) {
-            $conditions .= " AND productCategory = '" . $category . "'";
+            try {
+                $categoryId = $this->findCategoryIdByName($category);
+                if ($categoryId) {
+                    $conditions .= " AND productCategory = " . $categoryId;
+                } else {
+                    $conditions .= " AND productCategory = -1";
+                }
+            } catch (\Exception $e) {
+                error_log('Category search error: ' . $e->getMessage());
+            }
         }
         $packageStatus = $request->query->get('packageStatus');
         if ($packageStatus === 'with-dimensions') {
@@ -176,4 +185,19 @@ class ProductDimensionsController extends FrontendController
         ]);
     }
 
+    private function findCategoryIdByName(string $categoryName): ?int
+    {
+        try {
+            $categoryListing = new Category\Listing();
+            $categoryListing->setCondition(
+                "published = 1 AND (category = '" . $categoryName . "' OR category LIKE '%/" . $categoryName . "')"
+            );
+            $categoryListing->setLimit(1);
+            $categoryObjects = $categoryListing->load();
+            return !empty($categoryObjects) ? $categoryObjects[0]->getId() : null;
+        } catch (\Exception $e) {
+            error_log('Find category ID error: ' . $e->getMessage());
+            return null;
+        }
+    }
 }
