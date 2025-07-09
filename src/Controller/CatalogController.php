@@ -261,15 +261,14 @@ class CatalogController extends AbstractController
             $variants = [];
             $productVariants = $product->getChildren([Product::OBJECT_TYPE_VARIANT]);
             foreach ($productVariants as $variant) {
-                
-
-                // Get color info
+                if (!$variant->getPublished()) {
+                    continue; 
+                }
                 $colorObject = $variant->getVariationColor();
                 $colorInfo = $colorObject ? [
                     'id' => $colorObject->getId(),
                     'name' => $colorObject->getColor()
                 ] : null;
-
                 $eansObjects = $variant->getEans() ?? [];
                 $eans = [];
                 if (is_array($eansObjects)) {
@@ -291,9 +290,7 @@ class CatalogController extends AbstractController
                     'published' => $variant->getPublished(),
                 ];
             }
-
             return $variants;
-
         } catch (\Exception $e) {
             error_log('Get product variants error: ' . $e->getMessage());
             return [];
@@ -335,9 +332,7 @@ class CatalogController extends AbstractController
             $listing = new CategoryListing();
             $listing->setCondition("published = 1 AND `key` = ?", [$categoryKey]);
             $listing->setLimit(1);
-            
             return $listing->current();
-
         } catch (\Exception $e) {
             error_log('Get category by key error: ' . $e->getMessage());
             return null;
@@ -349,9 +344,7 @@ class CatalogController extends AbstractController
         try {
             $listing = new ProductListing();
             $listing->setCondition("published = 1 AND productCategory__id = ? AND (type IS NULL OR type != 'variant')", [$categoryId]);
-            
             return $listing->getTotalCount();
-
         } catch (\Exception $e) {
             error_log('Get category product count error: ' . $e->getMessage());
             return 0;
@@ -364,13 +357,8 @@ class CatalogController extends AbstractController
 
     private function generateExcelOutput(array $products, ?string $categoryFilter, string $searchQuery): void
     {
-        // Set UTF-8 BOM for proper Turkish character support
         echo "\xEF\xBB\xBF";
-        
-        // Open output stream
         $output = fopen('php://output', 'w');
-
-        // Write headers
         $headers = [
             'Ürün ID',
             'Ürün Adı',
@@ -392,9 +380,7 @@ class CatalogController extends AbstractController
             'Varyant Durumu',
             'Varyant Oluşturma'
         ];
-
         fputcsv($output, $headers, ';');
-
         foreach ($products as $product) {
             if (empty($product['variants'])) {
                 $row = [
@@ -407,7 +393,6 @@ class CatalogController extends AbstractController
                     0,
                     $product['createdAt'] ?? '',
                     $product['modifiedAt'] ?? '',
-                    // Empty variant columns
                     '', '', '', '', '', '', '', '', '', ''
                 ];
                 fputcsv($output, $row, ';');
@@ -417,9 +402,8 @@ class CatalogController extends AbstractController
                     if (isset($variant['eans']) && is_array($variant['eans']) && !empty($variant['eans'])) {
                         $eansString = implode(', ', $variant['eans']);
                     }
-
                     $row = [
-                        $index === 0 ? $product['id'] : '', // Only show product info on first row
+                        $index === 0 ? $product['id'] : '', 
                         $index === 0 ? $product['name'] : '',
                         $index === 0 ? $product['productIdentifier'] : '',
                         $index === 0 ? $product['productCode'] : '',
@@ -428,10 +412,9 @@ class CatalogController extends AbstractController
                         $index === 0 ? $product['variantCount'] : '',
                         $index === 0 ? ($product['createdAt'] ?? '') : '',
                         $index === 0 ? ($product['modifiedAt'] ?? '') : '',
-                        // Variant columns
                         $variant['id'],
                         $variant['name'],
-                        $eansString, // Array'den string'e çevrilmiş EAN'lar
+                        $eansString,
                         $variant['iwasku'] ?: '',
                         $variant['productCode'] ?: '',
                         $variant['variationSize'] ?: '',
@@ -444,7 +427,6 @@ class CatalogController extends AbstractController
                 }
             }
         }
-
         fclose($output);
     }
 
@@ -452,37 +434,25 @@ class CatalogController extends AbstractController
     {
         $timestamp = date('Y-m-d_H-i-s');
         $filename = 'urun_katalogu_' . $timestamp;
-
         if (!empty($categoryFilter)) {
             $filename .= '_kategori_' . $this->sanitizeFilename($categoryFilter);
         }
-
         if (!empty($searchQuery)) {
             $filename .= '_arama_' . $this->sanitizeFilename($searchQuery);
         }
-
         return $filename . '.csv';
     }
 
     private function sanitizeFilename(string $input): string
     {
-        // Convert Turkish characters
         $input = str_replace(
             ['ı', 'ğ', 'ü', 'ş', 'ö', 'ç', 'İ', 'Ğ', 'Ü', 'Ş', 'Ö', 'Ç'],
             ['i', 'g', 'u', 's', 'o', 'c', 'I', 'G', 'U', 'S', 'O', 'C'],
             $input
         );
-        
-        // Remove special characters and spaces
         $input = preg_replace('/[^a-zA-Z0-9_-]/', '_', $input);
-        
-        // Remove multiple underscores
         $input = preg_replace('/_+/', '_', $input);
-        
-        // Trim underscores
         $input = trim($input, '_');
-        
-        // Limit length
         return substr($input, 0, 50);
     }
 
@@ -494,7 +464,6 @@ class CatalogController extends AbstractController
     {
         $limit = min(max((int)$request->query->get('limit', self::DEFAULT_LIMIT), 1), self::MAX_LIMIT);
         $offset = max((int)$request->query->get('offset', 0), 0);
-        
         return ['limit' => $limit, 'offset' => $offset];
     }
 

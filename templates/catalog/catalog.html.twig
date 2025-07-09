@@ -2,11 +2,7 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    <style>
-        /* ===========================================
-           MODERN CATALOG SYSTEM STYLES
-           ========================================== */
-        
+    <style>        
         :root {
             --primary-color: #2563eb;
             --primary-hover: #1d4ed8;
@@ -946,11 +942,6 @@
     {{ parent() }}
     <script>
         'use strict';
-
-        /**
-         * Modern Catalog System
-         * Professional, responsive, and performant product catalog
-         */
         class CatalogSystem {
             constructor() {
                 this.config = this.loadConfig();
@@ -965,15 +956,12 @@
                     expandedProducts: new Set(),
                     debounceTimer: null
                 };
-
                 this.elements = this.initializeElements();
                 this.bindEvents();
                 this.renderInitialProducts();
                 this.updateUI();
-
                 console.log('✅ Catalog System initialized successfully');
             }
-
             loadConfig() {
                 try {
                     const configElement = document.getElementById('catalogData');
