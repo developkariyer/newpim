@@ -1729,15 +1729,21 @@
 
             updateURL() {
                 const params = new URLSearchParams();
-                
                 if (this.state.currentSearch) {
                     params.append('search', this.state.currentSearch);
                 }
-                
                 if (this.state.currentCategory) {
                     params.append('category', this.state.currentCategory);
                 }
-
+                if (this.state.currentAsin) {
+                    params.append('asin', this.state.currentAsin);
+                }
+                if (this.state.currentBrand) {
+                    params.append('brand', this.state.currentBrand);
+                }
+                if (this.state.currentEan) {
+                    params.append('ean', this.state.currentEan);
+                }
                 const newURL = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
                 window.history.replaceState({}, '', newURL);
             }
