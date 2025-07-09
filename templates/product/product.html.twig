@@ -596,8 +596,6 @@
                 this.uiService = new UIService();
 
                 this.initialize();
-                this.initializeComponents();
-                this.bindEvents();
                 this.checkForEditProduct();
             }
 
@@ -794,10 +792,24 @@
                     Object.keys(this.state.selectedItems).forEach(type => {
                         this.updateSelectedItems(type);
                     });
+                    this.cleanEditUrl();
 
                 } catch (error) {
                     console.error('Product selection failed:', error);
                     this.uiService.showError('Ürün seçimi başarısız.');
+                }
+            }
+
+            cleanEditUrl() {
+                try {
+                    const url = new URL(window.location);
+                    if (url.searchParams.has('edit')) {
+                        url.searchParams.delete('edit');
+                        window.history.replaceState({}, '', url);
+                        console.log('🧹 Edit parameter cleaned from URL');
+                    }
+                } catch (error) {
+                    console.error('❌ URL clean failed:', error);
                 }
             }
 
@@ -1002,11 +1014,60 @@
                         const productData = JSON.parse(selectedProductData.textContent);
                         if (productData && productData.id) {
                             console.log('🎯 Auto-loading product for edit:', productData.id);
-                            this.selectProductForEdit(productData);
+                            this.simulateProductSearch(productData);
+                            return;
                         }
+                    }
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const editId = urlParams.get('edit');
+                    if (editId) {
+                        console.log('🎯 Loading product via search for edit:', editId);
+                        this.performProductSearchById(editId);
                     }
                 } catch (error) {
                     console.error('❌ Check edit product failed:', error);
+                    this.uiService.showNotification('Ürün yükleme hatası: ' + error.message, 'error');
+                }
+            }
+
+            simulateProductSearch(productData) {
+                try {
+                    console.log('🔍 Simulating search for product:', productData.name);
+                    const searchInput = this.getElement('productSearchInput');
+                    if (searchInput) {
+                        searchInput.value = productData.name;
+                    }
+                    const searchResults = [productData]; 
+                    this.displayProductSearchResults(searchResults);
+                    setTimeout(() => {
+                        this.selectProductForEdit(productData);
+                    }, 2000);
+                } catch (error) {
+                    console.error('❌ Simulate search failed:', error);
+                    throw error;
+                }
+            }
+
+            async performProductSearchById(productId) {
+                try {
+                    this.uiService.showLoading();
+                    const response = await fetch(`/product/search-products?q=${productId}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    const data = await response.json();
+                    if (data.items && data.items.length > 0) {
+                        const productData = data.items[0];
+                        console.log('✅ Product loaded via search:', productData);
+                        this.simulateProductSearch(productData);
+                    } else {
+                        throw new Error('Ürün bulunamadı');
+                    }
+                } catch (error) {
+                    console.error('❌ Search by ID failed:', error);
+                    this.uiService.showNotification('Ürün yüklenemedi: ' + error.message, 'error');
+                } finally {
+                    this.uiService.hideLoading();
                 }
             }
 
