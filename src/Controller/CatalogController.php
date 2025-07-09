@@ -12,6 +12,9 @@ use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\Category;
 use Pimcore\Model\DataObject\Product\Listing as ProductListing;
 use Pimcore\Model\DataObject\Category\Listing as CategoryListing;
+use Pimcore\Model\DataObject\Brand\Listing as BrandListing;
+use Pimcore\Model\DataObject\Asin\Listing as AsinListing;
+use Pimcore\Model\DataObject\Ean\Listing as EanListing;
 
 #[Route('/catalog')]
 class CatalogController extends AbstractController
@@ -203,17 +206,38 @@ class CatalogController extends AbstractController
             }
             if (!empty($asinFilter)) {
                 error_log("Adding ASIN filter: $asinFilter");
-                $listing->addConditionParam("asin__asin LIKE ? OR asin__fnskus LIKE ?", ["%" . $asinFilter . "%", "%" . $asinFilter . "%"]);
+                $asins = $this->getAsinsByValue($asinFilter);
+                if (!empty($asins)) {
+                    $asinIds = array_map(function($asin) { return $asin->getId(); }, $asins);
+                    $conditions[] = "asin__id IN (" . implode(',', array_fill(0, count($asinIds), '?')) . ")";
+                    $params = array_merge($params, $asinIds);
+                } else {
+                    $conditions[] = "oo_id = -1"; // Hiç sonuç döndürme
+                }
             }
-            
+
             if (!empty($brandFilter)) {
                 error_log("Adding Brand filter: $brandFilter");
-                $listing->addConditionParam("brandItems__key LIKE ?", ["%" . $brandFilter . "%"]);
+                $brands = $this->getBrandsByValue($brandFilter);
+                if (!empty($brands)) {
+                    $brandIds = array_map(function($brand) { return $brand->getId(); }, $brands);
+                    $conditions[] = "brandItems__id IN (" . implode(',', array_fill(0, count($brandIds), '?')) . ")";
+                    $params = array_merge($params, $brandIds);
+                } else {
+                    $conditions[] = "oo_id = -1";
+                }
             }
-            
+
             if (!empty($eanFilter)) {
                 error_log("Adding EAN filter: $eanFilter");
-                $listing->addConditionParam("eans__GTIN LIKE ?", ["%" . $eanFilter . "%"]);
+                $eans = $this->getEansByValue($eanFilter);
+                if (!empty($eans)) {
+                    $eanIds = array_map(function($ean) { return $ean->getId(); }, $eans);
+                    $conditions[] = "eans__id IN (" . implode(',', array_fill(0, count($eanIds), '?')) . ")";
+                    $params = array_merge($params, $eanIds);
+                } else {
+                    $conditions[] = "oo_id = -1";
+                }
             }
             $finalCondition = implode(" AND ", $conditions);
             error_log("Final SQL Condition: " . $finalCondition);
@@ -377,6 +401,42 @@ class CatalogController extends AbstractController
         } catch (\Exception $e) {
             error_log('Get category by key error: ' . $e->getMessage());
             return null;
+        }
+    }
+
+    private function getAsinsByValue(string $asinValue): array
+    {
+        try {
+            $listing = new AsinListing();
+            $listing->setCondition("(asin LIKE ? OR fnskus LIKE ?)", ["%" . $asinValue . "%", "%" . $asinValue . "%"]);
+            return $listing->getObjects();
+        } catch (\Exception $e) {
+            error_log('Get asins by value error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    private function getBrandsByValue(string $brandValue): array
+    {
+        try {
+            $listing = new BrandListing();
+            $listing->setCondition("key LIKE ?", ["%" . $brandValue . "%"]);
+            return $listing->getObjects();
+        } catch (\Exception $e) {
+            error_log('Get brands by value error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    private function getEansByValue(string $eanValue): array
+    {
+        try {
+            $listing = new EanListing();
+            $listing->setCondition("GTIN LIKE ?", ["%" . $eanValue . "%"]);
+            return $listing->getObjects();
+        } catch (\Exception $e) {
+            error_log('Get eans by value error: ' . $e->getMessage());
+            return [];
         }
     }
 
