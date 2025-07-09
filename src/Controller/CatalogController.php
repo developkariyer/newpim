@@ -190,20 +190,31 @@ class CatalogController extends AbstractController
                 $params[] = $searchParam;
             }
             if (!empty($asinFilter)) {
-                $conditions[] = "asin__asin LIKE ? OR asin__fnskus LIKE ?";
+                $conditions[] = "EXISTS (SELECT 1 FROM object_relations_" . Product::classId() . " r 
+                                JOIN object_store_" . \Pimcore\Model\DataObject\Asin::classId() . " a ON r.dest_id = a.oo_id 
+                                WHERE r.src_id = objects.oo_id AND r.fieldname = 'asin' 
+                                AND (a.asin LIKE ? OR a.fnskus LIKE ?))";
                 $asinParam = "%" . $asinFilter . "%";
                 $params[] = $asinParam;
                 $params[] = $asinParam;
             }
+
             if (!empty($brandFilter)) {
-                $conditions[] = "brandItems__key LIKE ?";
+                $conditions[] = "EXISTS (SELECT 1 FROM object_relations_" . Product::classId() . " r 
+                                JOIN object_store_" . \Pimcore\Model\DataObject\Brand::classId() . " b ON r.dest_id = b.oo_id 
+                                WHERE r.src_id = objects.oo_id AND r.fieldname = 'brandItems' 
+                                AND b.key LIKE ?)";
                 $params[] = "%" . $brandFilter . "%";
             }
 
             if (!empty($eanFilter)) {
-                $conditions[] = "eans__GTIN LIKE ?";
+                $conditions[] = "EXISTS (SELECT 1 FROM object_relations_" . Product::classId() . " r 
+                                JOIN object_store_" . \Pimcore\Model\DataObject\Ean::classId() . " e ON r.dest_id = e.oo_id 
+                                WHERE r.src_id = objects.oo_id AND r.fieldname = 'eans' 
+                                AND e.GTIN LIKE ?)";
                 $params[] = "%" . $eanFilter . "%";
             }
+
             $listing->setCondition(implode(" AND ", $conditions), $params);
             $listing->setLimit($limit);
             $listing->setOffset($offset);
