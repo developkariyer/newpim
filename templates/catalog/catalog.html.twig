@@ -555,6 +555,84 @@
             text-align: right;
         }
 
+        /* Product Actions */
+        .product-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            align-items: flex-end;
+        }
+
+        .edit-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+            min-width: 100px;
+            justify-content: center;
+        }
+
+        .edit-btn:hover {
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .edit-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+        }
+
+        .edit-btn i {
+            font-size: 0.875rem;
+        }
+
+        .edit-btn span {
+            font-size: 0.75rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .product-content {
+                grid-template-columns: 60px 1fr;
+                gap: 0.75rem;
+                padding: 1rem;
+            }
+            
+            .product-actions {
+                grid-column: 1 / -1;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 0.75rem;
+            }
+            
+            .edit-btn {
+                min-width: 80px;
+                padding: 0.4rem 0.8rem;
+                font-size: 0.75rem;
+            }
+            
+            .edit-btn span {
+                display: none;
+            }
+            
+            .edit-btn i {
+                font-size: 1rem;
+            }
+        }
+
         /* Mobile Responsive - Stack Vertically */
         @media (max-width: 768px) {
             .variants-section {
@@ -1065,6 +1143,27 @@
                         this.loadMoreProducts();
                     }
                 }, 200));
+
+                // Product row clicks - UPDATED
+                if (this.elements.productsGrid) {
+                    this.elements.productsGrid.addEventListener('click', (e) => {
+                        // Edit button click
+                        if (e.target.closest('.edit-btn')) {
+                            e.stopPropagation(); // Prevent row expansion
+                            const editBtn = e.target.closest('.edit-btn');
+                            const productId = editBtn.dataset.productId;
+                            this.editProduct(productId);
+                            return;
+                        }
+                        
+                        // Row expansion (if not clicking edit button or variants section)
+                        const productRow = e.target.closest('.product-row');
+                        if (productRow && !e.target.closest('.variants-section') && !e.target.closest('.edit-btn')) {
+                            this.toggleProductExpansion(productRow);
+                        }
+                    });
+                }
+
             }
 
             debounceSearch(query) {
@@ -1230,8 +1329,14 @@
                         </div>
                         
                         <div class="product-meta">
-                            ${variantBadge}
-                            ${hasVariants ? '<span class="expand-icon">▼</span>' : ''}
+                            <div class="product-actions">
+                                <button class="edit-btn" data-product-id="${product.id}" title="Ürünü Düzenle">
+                                    <i class="fas fa-edit"></i>
+                                    <span>Düzenle</span>
+                                </button>
+                                ${variantBadge}
+                                ${hasVariants ? '<span class="expand-icon">▼</span>' : ''}
+                            </div>
                         </div>
                     </div>
                     
