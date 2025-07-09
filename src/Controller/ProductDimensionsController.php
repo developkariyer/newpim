@@ -16,6 +16,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 use Pimcore\Controller\FrontendController;
 use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\Data\Link;
+use Pimcore\Model\DataObject\Category;
 use Pimcore\Model\Asset;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\ExpressionLanguage\Expression;
@@ -65,13 +66,21 @@ class ProductDimensionsController extends FrontendController
             if ($product->getType() !== 'variant' || !$product instanceof Product) {
                 continue;
             }
+            $catagoryData = $product->getProductCategory();
+            if (!$catagoryData || !$catagoryData instanceof Category) {
+                continue;
+            }
+            $categoryPath = $catagoryData->getCategory();
+            $categoryName = !empty($categoryPath) ? basename($categoryPath) : '';
+
+
             $productData[] = [
                 'id' => $product->getId(),
                 'name' => $product->getName(),
                 'iwasku' => $product->getIwasku(),
                 'variationSize' => $product->getVariationSize(),
                 'variationColor' => $product->getVariationColor(),
-                'wsCategory' => $product->getProductCategory()->getCategory(),
+                'wsCategory' => $categoryName,
                 'weight' => $product->getPackageWeight(),
                 'width' => $product->getPackageDimension1(),
                 'length' => $product->getPackageDimension2(),
@@ -81,12 +90,25 @@ class ProductDimensionsController extends FrontendController
         }
         $categories = [];
         try {
-            $sql = "SELECT DISTINCT(category) FROM object_query_category WHERE category IS NOT NULL AND category != '' ORDER BY category ASC";
-            $result = Utility::fetchFromSql($sql);
-            foreach ($result as $category) {
-                $categories[] = $category['category'];
+            $categoryListing = new Category\Listing();
+            $categoryListing->setCondition("published = 1 AND category IS NOT NULL AND category != ''");
+            $categoryListing->setOrderKey("category");
+            $categoryListing->setOrder("ASC");
+            $categoryObjects = $categoryListing->load();
+            $categoryNames = [];
+            foreach ($categoryObjects as $categoryObject) {
+                if ($categoryObject instanceof Category && $categoryObject->getCategory()) {
+                    $categoryName = basename($categoryObject->getCategory());
+                    if (!empty($categoryName)) {
+                        $categoryNames[$categoryName] = true; 
+                    }
+                }
             }
+            $categories = array_keys($categoryNames);
+            sort($categories);
+            
         } catch (\Exception $e) {
+            error_log('Category listing error: ' . $e->getMessage());
             $categories = [];
         }
         return $this->render('productDimensions/productDimensions.html.twig', [
