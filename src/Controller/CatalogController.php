@@ -201,25 +201,19 @@ class CatalogController extends AbstractController
                 $params[] = $searchParam;
                 $params[] = $searchParam;
             }
-            
             if (!empty($asinFilter)) {
                 error_log("Adding ASIN filter: $asinFilter");
-                $conditions[] = "(asin LIKE ? OR fnskus LIKE ?)";
-                $asinParam = "%" . $asinFilter . "%";
-                $params[] = $asinParam;
-                $params[] = $asinParam;
+                $listing->addConditionParam("asin__asin LIKE ? OR asin__fnskus LIKE ?", ["%" . $asinFilter . "%", "%" . $asinFilter . "%"]);
             }
-
+            
             if (!empty($brandFilter)) {
                 error_log("Adding Brand filter: $brandFilter");
-                $conditions[] = "brand LIKE ?";
-                $params[] = "%" . $brandFilter . "%";
+                $listing->addConditionParam("brandItems__key LIKE ?", ["%" . $brandFilter . "%"]);
             }
-
+            
             if (!empty($eanFilter)) {
                 error_log("Adding EAN filter: $eanFilter");
-                $conditions[] = "ean LIKE ?";
-                $params[] = "%" . $eanFilter . "%";
+                $listing->addConditionParam("eans__GTIN LIKE ?", ["%" . $eanFilter . "%"]);
             }
             $finalCondition = implode(" AND ", $conditions);
             error_log("Final SQL Condition: " . $finalCondition);
