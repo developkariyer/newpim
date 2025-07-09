@@ -1090,6 +1090,10 @@
                     isLoading: false,
                     currentSearch: this.config.currentSearch,
                     currentCategory: this.config.currentCategory,
+                    currentAsin: '',
+                    currentBrand: '',
+                    currentEan: '',
+                    isAdvancedOpen: false,
                     expandedProducts: new Set(),
                     debounceTimer: null
                 };
@@ -1130,7 +1134,13 @@
                     emptyState: document.getElementById('emptyState'),
                     totalCount: document.getElementById('totalCount'),
                     filterInfo: document.getElementById('filterInfo'),
-                    loadingOverlay: document.getElementById('loadingOverlay')
+                    loadingOverlay: document.getElementById('loadingOverlay'),
+                    advancedToggle: document.getElementById('advancedToggle'),
+                    advancedPanel: document.getElementById('advancedPanel'),
+                    asinFilter: document.getElementById('asinFilter'),
+                    brandFilter: document.getElementById('brandFilter'),
+                    eanFilter: document.getElementById('eanFilter'),
+                    clearAdvanced: document.getElementById('clearAdvanced'),
                 };
             }
 
@@ -1354,6 +1364,18 @@
 
                     if (this.state.currentCategory) {
                         params.append('category', this.state.currentCategory);
+                    }
+
+                    if (this.state.currentAsin) {
+                        params.append('asin', this.state.currentAsin);
+                    }
+
+                    if (this.state.currentBrand) {
+                        params.append('brand', this.state.currentBrand);
+                    }
+
+                    if (this.state.currentEan) {
+                        params.append('ean', this.state.currentEan);
                     }
 
                     const response = await fetch(`${this.config.apiEndpoints.products}?${params}`);
@@ -1601,11 +1623,10 @@
                 if (this.elements.categoryFilter) {
                     this.elements.categoryFilter.selectedIndex = 0;
                 }
-
                 this.state.currentSearch = '';
                 this.state.currentCategory = '';
-                
                 this.resetAndReload();
+                this.clearAdvancedFilters();
             }
 
             async exportToExcel() {

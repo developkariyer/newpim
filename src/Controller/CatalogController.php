@@ -71,7 +71,19 @@ class CatalogController extends AbstractController
             $offset = max((int)$request->query->get('offset', 0), 0);
             $categoryFilter = $request->query->get('category');
             $searchQuery = trim($request->query->get('search', ''));
-            $result = $this->getProducts($limit, $offset, $categoryFilter, $searchQuery);
+            $asinFilter = trim($request->query->get('asin', ''));
+            $brandFilter = trim($request->query->get('brand', ''));
+            $eanFilter = trim($request->query->get('ean', ''));
+            
+            $result = $this->getProducts(
+                $limit, 
+                $offset, 
+                $categoryFilter, 
+                $searchQuery,
+                $asinFilter,
+                $brandFilter,
+                $eanFilter
+            );
             return new JsonResponse([
                 'success' => true,
                 'products' => $result['products'],
@@ -176,6 +188,21 @@ class CatalogController extends AbstractController
                 $params[] = $searchParam;
                 $params[] = $searchParam;
                 $params[] = $searchParam;
+            }
+            if (!empty($asinFilter)) {
+                $conditions[] = "asin__asin LIKE ? OR asin__fnskus LIKE ?";
+                $asinParam = "%" . $asinFilter . "%";
+                $params[] = $asinParam;
+                $params[] = $asinParam;
+            }
+            if (!empty($brandFilter)) {
+                $conditions[] = "brandItems__key LIKE ?";
+                $params[] = "%" . $brandFilter . "%";
+            }
+
+            if (!empty($eanFilter)) {
+                $conditions[] = "eans__GTIN LIKE ?";
+                $params[] = "%" . $eanFilter . "%";
             }
             $listing->setCondition(implode(" AND ", $conditions), $params);
             $listing->setLimit($limit);
