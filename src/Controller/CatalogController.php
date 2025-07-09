@@ -180,7 +180,7 @@ class CatalogController extends AbstractController
     // DATA RETRIEVAL METHODS
     // ===========================================
 
-    private function getProducts(int $limit, int $offset, ?string $categoryFilter = null, string $searchQuery = ''): array
+    private function getProducts(int $limit, int $offset, ?string $categoryFilter = null, string $searchQuery = '',?string $asinFilter = null, ?string $brandFilter = null, ?string $eanFilter = null   ): array
     {
         try {
             $listing = new ProductListing();
