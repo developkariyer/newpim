@@ -1203,6 +1203,22 @@
                 }
             }
 
+            // Edit Product Method
+            editProduct(productId) {
+                try {
+                    console.log(`🎯 Edit button clicked for product: ${productId}`);
+                    this.showLoading();
+                    const editUrl = `/product?edit=${productId}`;
+                    window.location.href = editUrl;
+                    console.log(`✅ Redirecting to edit product: ${productId}`);
+                } catch (error) {
+                    console.error('❌ Edit product failed:', error);
+                    this.hideLoading();
+                    this.showError('Ürün düzenleme sayfasına yönlendirilemedi.');
+                }
+            }
+
+
             async loadProducts(isReset = false) {
                 if (this.state.isLoading && !isReset) return;
 
@@ -1689,21 +1705,6 @@
                     clearTimeout(timeout);
                     timeout = setTimeout(later, wait);
                 };
-            }
-        }
-
-        // Edit Product Method
-        editProduct(productId) {
-            try {
-                console.log(`🎯 Edit button clicked for product: ${productId}`);
-                this.showLoading();
-                const editUrl = `/product?edit=${productId}`;
-                window.location.href = editUrl;
-                console.log(`✅ Redirecting to edit product: ${productId}`);
-            } catch (error) {
-                console.error('❌ Edit product failed:', error);
-                this.hideLoading();
-                this.showError('Ürün düzenleme sayfasına yönlendirilemedi.');
             }
         }
 
