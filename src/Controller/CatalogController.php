@@ -409,7 +409,8 @@ class CatalogController extends AbstractController
         try {
             $listing = new AsinListing();
             $listing->setCondition("(asin LIKE ? OR fnskus LIKE ?)", ["%" . $asinValue . "%", "%" . $asinValue . "%"]);
-            return $listing->getObjects();
+            $listing->setLimit(1);
+            return $listing->current();
         } catch (\Exception $e) {
             error_log('Get asins by value error: ' . $e->getMessage());
             return [];
@@ -421,7 +422,8 @@ class CatalogController extends AbstractController
         try {
             $listing = new BrandListing();
             $listing->setCondition("key LIKE ?", ["%" . $brandValue . "%"]);
-            return $listing->getObjects();
+            $listing->setLimit(1);
+            return $listing->current();
         } catch (\Exception $e) {
             error_log('Get brands by value error: ' . $e->getMessage());
             return [];
@@ -433,7 +435,8 @@ class CatalogController extends AbstractController
         try {
             $listing = new EanListing();
             $listing->setCondition("GTIN LIKE ?", ["%" . $eanValue . "%"]);
-            return $listing->getObjects();
+            $listing->setLimit(1);
+            return $listing->current();
         } catch (\Exception $e) {
             error_log('Get eans by value error: ' . $e->getMessage());
             return [];
