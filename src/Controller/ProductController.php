@@ -72,7 +72,7 @@ class ProductController extends AbstractController
         } catch (\Exception $e) {
             error_log('Product page error: ' . $e->getMessage());
             $this->addFlash('danger', 'Sayfa yüklenirken bir hata oluştu: ' . $e->getMessage());
-            return $this->redirectToRoute('product', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('product'); // $request kaldırıldı
         }
     }
 
