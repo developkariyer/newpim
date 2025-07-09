@@ -81,14 +81,19 @@ class ProductDimensionsController extends FrontendController
             }
             $categoryPath = $catagoryData->getCategory();
             $categoryName = !empty($categoryPath) ? basename($categoryPath) : '';
-
+            $colorData = $product->getVariationColor();
+            $colorName = '';
+            if ($colorData && method_exists($colorData, 'getColor')) {
+                $colorPath = $colorData->getColor();
+                $colorName = !empty($colorPath) ? basename($colorPath) : '';
+            }
 
             $productData[] = [
                 'id' => $product->getId(),
                 'name' => $product->getName(),
                 'iwasku' => $product->getIwasku(),
                 'variationSize' => $product->getVariationSize(),
-                'variationColor' => $product->getVariationColor(),
+                'variationColor' => $colorName,
                 'wsCategory' => $categoryName,
                 'weight' => $product->getPackageWeight(),
                 'width' => $product->getPackageDimension1(),
