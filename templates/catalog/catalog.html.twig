@@ -1270,16 +1270,20 @@
 
             }
 
-            debounceSearch(query) {
+            debounceSearch(query = null) {
                 clearTimeout(this.state.debounceTimer);
                 this.state.debounceTimer = setTimeout(() => {
-                    this.performSearch(query);
+                    if (query !== null) {
+                        this.performSearch(query);
+                    } else {
+                        this.resetAndReload();
+                    }
                 }, 300);
             }
 
-            async performSearch(query) {
+            async performSearch(query = '') {
                 try {
-                    this.state.currentSearch = query.trim();
+                    this.state.currentSearch = (query || '').toString().trim();
                     this.resetAndReload();
                 } catch (error) {
                     console.error('Search failed:', error);
@@ -1632,29 +1636,34 @@
             async exportToExcel() {
                 try {
                     this.showLoading();
-
                     const params = new URLSearchParams();
-                    
                     if (this.state.currentSearch) {
                         params.append('search', this.state.currentSearch);
                     }
-                    
                     if (this.state.currentCategory) {
                         params.append('category', this.state.currentCategory);
+                    }
+                    if (this.state.currentAsin) {
+                        params.append('asin', this.state.currentAsin);
+                    }
+
+                    if (this.state.currentBrand) {
+                        params.append('brand', this.state.currentBrand);
+                    }
+
+                    if (this.state.currentEan) {
+                        params.append('ean', this.state.currentEan);
                     }
 
                     const url = `${this.config.apiEndpoints.export}?${params}`;
                     
-                    // Create invisible download link
                     const link = document.createElement('a');
                     link.href = url;
                     link.download = '';
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
-
                     this.showSuccess('Excel dosyası indiriliyor...');
-
                 } catch (error) {
                     console.error('Excel export failed:', error);
                     this.showError('Excel dosyası oluşturulamadı.');
@@ -1691,18 +1700,26 @@
 
             updateFilterInfo() {
                 if (!this.elements.filterInfo) return;
-
                 const filters = [];
-                
                 if (this.state.currentSearch) {
                     filters.push(`arama: "${this.state.currentSearch}"`);
                 }
-                
                 if (this.state.currentCategory) {
                     const categoryOption = this.elements.categoryFilter?.querySelector(`option[value="${this.state.currentCategory}"]`);
                     if (categoryOption) {
                         filters.push(`kategori: "${categoryOption.textContent.split(' (')[0]}"`);
                     }
+                }
+                if (this.state.currentAsin) {
+                    filters.push(`ASIN: "${this.state.currentAsin}"`);
+                }
+
+                if (this.state.currentBrand) {
+                    filters.push(`marka: "${this.state.currentBrand}"`);
+                }
+
+                if (this.state.currentEan) {
+                    filters.push(`EAN: "${this.state.currentEan}"`);
                 }
 
                 this.elements.filterInfo.textContent = filters.length > 0 
