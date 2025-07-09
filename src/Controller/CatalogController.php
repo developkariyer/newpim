@@ -209,10 +209,10 @@ class CatalogController extends AbstractController
                 $asins = $this->getAsinsByValue($asinFilter);
                 if (!empty($asins)) {
                     $asinIds = array_map(function($asin) { return $asin->getId(); }, $asins);
-                    $conditions[] = "asin__id IN (" . implode(',', array_fill(0, count($asinIds), '?')) . ")";
+                    $conditions[] = "asin IN (" . implode(',', array_fill(0, count($asinIds), '?')) . ")";
                     $params = array_merge($params, $asinIds);
                 } else {
-                    $conditions[] = "oo_id = -1"; // Hiç sonuç döndürme
+                    $conditions[] = "oo_id = -1"; 
                 }
             }
 
@@ -221,7 +221,7 @@ class CatalogController extends AbstractController
                 $brands = $this->getBrandsByValue($brandFilter);
                 if (!empty($brands)) {
                     $brandIds = array_map(function($brand) { return $brand->getId(); }, $brands);
-                    $conditions[] = "brandItems__id IN (" . implode(',', array_fill(0, count($brandIds), '?')) . ")";
+                    $conditions[] = "brandItems IN (" . implode(',', array_fill(0, count($brandIds), '?')) . ")";
                     $params = array_merge($params, $brandIds);
                 } else {
                     $conditions[] = "oo_id = -1";
@@ -233,7 +233,7 @@ class CatalogController extends AbstractController
                 $eans = $this->getEansByValue($eanFilter);
                 if (!empty($eans)) {
                     $eanIds = array_map(function($ean) { return $ean->getId(); }, $eans);
-                    $conditions[] = "eans__id IN (" . implode(',', array_fill(0, count($eanIds), '?')) . ")";
+                    $conditions[] = "eans IN (" . implode(',', array_fill(0, count($eanIds), '?')) . ")";
                     $params = array_merge($params, $eanIds);
                 } else {
                     $conditions[] = "oo_id = -1";
