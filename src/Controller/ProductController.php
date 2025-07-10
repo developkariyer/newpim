@@ -24,7 +24,7 @@ use App\Service\FileSecurityService;
 use App\Service\AssetManagementService;
 use App\Service\DataProcessingService;
 use App\Service\CodeGenerationService;
-
+use App\Service\VariantService;
 
 #[Route('/product')]
 class ProductController extends AbstractController
@@ -34,6 +34,8 @@ class ProductController extends AbstractController
     private FileSecurityService $fileService;
     private AssetManagementService $assetService;
     private DataProcessingService $dataProcessor;
+    private CodeGenerationService $codeGenerator;
+    private VariantService $variantService;
 
     public function __construct(
         CsrfTokenManagerInterface $csrfTokenManager,
@@ -41,7 +43,8 @@ class ProductController extends AbstractController
         FileSecurityService $fileService,
         AssetManagementService $assetService,
         DataProcessingService $dataProcessor,
-        CodeGenerationService $codeGenerator
+        CodeGenerationService $codeGenerator,
+        VariantService $variantService
     ) {
         $this->csrfTokenManager = $csrfTokenManager;
         $this->securityService = $securityService;
@@ -49,6 +52,7 @@ class ProductController extends AbstractController
         $this->assetService = $assetService;
         $this->dataProcessor = $dataProcessor;
         $this->codeGenerator = $codeGenerator;
+        $this->variantService = $variantService;
     }
 
     // Constants for configuration
@@ -154,7 +158,7 @@ class ProductController extends AbstractController
             $product->save();
             error_log('Product saved successfully: ' . $product->getId());
             if (!empty($requestData['variations'])) {
-                $this->createProductVariants($product, $requestData['variations']);
+                $this->variantService->createProductVariants($product, $requestData['variations']);
             }
             return $this->createSuccessResponse($request, $requestData['isUpdate'], $product);
         } catch (\Throwable $e) {
@@ -212,7 +216,7 @@ class ProductController extends AbstractController
             if ($this->colorExists($colorName)) {
                 return new JsonResponse(['success' => false, 'message' => 'Bu renk zaten mevcut.']);
             }
-            $color = $this->createColor($colorName);
+            $color = $this->variantService->createColor($colorName);
             return new JsonResponse(['success' => true, 'id' => $color->getId()]);
         } catch (\Exception $e) {
             error_log('Add color error: ' . $e->getMessage());
@@ -225,7 +229,7 @@ class ProductController extends AbstractController
     {
         try {
             $data = json_decode($request->getContent(), true);
-            $variant = $this->findVariantByData($data['productId'], $data['variantData']);
+            $variant = $this->variantService->findVariantByData($data['productId'], $data['variantData']);
             if (!$variant) {
                 return new JsonResponse(['success' => false, 'message' => 'Varyant bulunamadı']);
             }
@@ -370,102 +374,6 @@ class ProductController extends AbstractController
         return $folder;
     }
 
-    // ===========================================
-    // VARIANT MANAGEMENT
-    // ===========================================
-
-    private function createProductVariants(Product $parentProduct, array $variations): void
-    {
-        foreach ($variations as $variantData) {
-            $this->createSingleVariant($parentProduct, $variantData);
-        }
-    }
-
-    private function createSingleVariant(Product $parentProduct, array $variantData): void
-    {
-        if (isset($variantData['color']) && !isset($variantData['renk'])) {
-            $variantData['renk'] = $variantData['color'];
-        }
-        if (isset($variantData['size']) && !isset($variantData['beden'])) {
-            $variantData['beden'] = $variantData['size'];
-        }
-        $existingVariant = $this->findVariantByData($parentProduct->getId(), $variantData);
-        error_log('Checking for existing variant with data: ' . json_encode($variantData));
-        if ($existingVariant) {
-            error_log('Existing variant found: ' . $existingVariant->getId());
-            if (!$existingVariant->getPublished()) {
-                $existingVariant->setPublished(true);
-                $existingVariant->save();
-                error_log('Variant republished: ' . $existingVariant->getId());
-            } else {
-                error_log('Variant already exists and published: ' . $existingVariant->getId());
-            }
-            return;
-        }
-        error_log('No existing variant found, creating new one.');
-        $variant = new Product();
-        $variant->setParent($parentProduct);
-        $variant->setType(Product::OBJECT_TYPE_VARIANT);
-        $variantKey = $this->codeGenerator->generateVariantKey($variantData);
-        $fullKey = $parentProduct->getProductIdentifier() . '-' . $parentProduct->getName() . '-' . $variantKey;
-        $variant->setKey($fullKey);
-        $variant->setName($fullKey);
-        $this->setVariantProperties($variant, $variantData);
-        $this->codeGenerator->generateVariantCodes($variant, $parentProduct->getProductIdentifier());
-        $variant->setPublished(true);
-        $variant->save();
-        error_log('Variant created: ' . $variant->getId());
-    }
-
-    private function setVariantProperties(Product $variant, array $variantData): void
-    {
-        if (!empty($variantData['renk'])) {
-            $color = $this->findColorByName($variantData['renk']);
-            if ($color) {
-                $variant->setVariationColor($color);
-            }
-        }
-        if (!empty($variantData['beden'])) {
-            $variant->setVariationSize($variantData['beden']);
-        }
-        if (!empty($variantData['custom'])) {
-            $variant->setCustomField($variantData['custom']);
-        }
-    }
-
-    private function findVariantByData(int $productId, array $variantData): ?Product
-    {
-        $product = Product::getById($productId);
-        if (!$product) {
-            error_log("findVariantByData: Product not found for ID $productId");
-            return null;
-        }
-        $variants = $product->getChildren([Product::OBJECT_TYPE_VARIANT], true);
-        error_log("findVariantByData: Checking " . count($variants) . " variants for product $productId");
-        foreach ($variants as $variant) {
-            if ($this->variantMatches($variant, $variantData)) {
-                error_log("findVariantByData: MATCHED variant ID " . $variant->getId());
-                return $variant;
-            }
-            error_log("findVariantByData: NOT MATCHED variant ID " . $variant->getId());
-        }
-        return null;
-    }
-
-    private function variantMatches(Product $variant, array $variantData): bool
-    {
-        $variantColor = $variant->getVariationColor() ? $variant->getVariationColor()->getColor() : null;
-        $variantSize = $variant->getVariationSize() ?: null;
-        $variantCustom = $variant->getCustomField() ?: null;
-        
-        $dataColor = $variantData['renk'] ?? $variantData['color'] ?? null;
-        $dataSize = $variantData['beden'] ?? $variantData['size'] ?? null;
-        $dataCustom = $variantData['custom'] ?? null;
-        
-        return $variantColor === $dataColor &&
-            $variantSize === $dataSize &&
-            $variantCustom === $dataCustom;
-    }
 
     // ===========================================
     // VALIDATION HELPERS
@@ -564,36 +472,6 @@ class ProductController extends AbstractController
         }
         
         return $results;
-    }
-
-    // ===========================================
-    // COLOR MANAGEMENT
-    // ===========================================
-
-    private function colorExists(string $colorName): bool
-    {
-        $listing = new ColorListing();
-        $listing->setCondition('color = ?', [$colorName]);
-        return $listing->count() > 0;
-    }
-
-    private function createColor(string $colorName): Color
-    {
-        $color = new Color();
-        $color->setKey($colorName);
-        $color->setParentId(self::COLORS_FOLDER_ID);
-        $color->setColor($colorName);
-        $color->setPublished(true);
-        $color->save();
-        return $color;
-    }
-
-    private function findColorByName(string $colorName): ?Color
-    {
-        $listing = new ColorListing();
-        $listing->setCondition('color = ?', [$colorName]);
-        $listing->setLimit(1);
-        return $listing->current();
     }
 
     // ===========================================
