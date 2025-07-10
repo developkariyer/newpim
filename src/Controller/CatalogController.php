@@ -245,10 +245,6 @@ class CatalogController extends AbstractController
                     $params = array_merge($params, array_values($finalParentIds));
                 }
             }
-
-            $finalCondition = implode(" AND ", $conditions);
-            error_log("Final SQL Condition: " . $finalCondition);
-
             $listing->setCondition(implode(" AND ", $conditions), $params);
             $listing->setLimit($limit);
             $listing->setOffset($offset);
