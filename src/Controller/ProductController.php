@@ -382,13 +382,17 @@ class ProductController extends AbstractController
     {
         $product = Product::getById($productId);
         if (!$product) {
+            error_log("findVariantByData: Product not found for ID $productId");
             return null;
         }
         $variants = $product->getChildren([Product::OBJECT_TYPE_VARIANT]);
+        error_log("findVariantByData: Checking " . count($variants) . " variants for product $productId");
         foreach ($variants as $variant) {
             if ($this->variantMatches($variant, $variantData)) {
+                error_log("findVariantByData: MATCHED variant ID " . $variant->getId());
                 return $variant;
             }
+            error_log("findVariantByData: NOT MATCHED variant ID " . $variant->getId());
         }
         return null;
     }
@@ -398,9 +402,25 @@ class ProductController extends AbstractController
         $variantColor = $variant->getVariationColor() ? $variant->getVariationColor()->getColor() : null;
         $variantSize = $variant->getVariationSize() ?: null;
         $variantCustom = $variant->getCustomField() ?: null;
-        return $variantColor === ($variantData['color'] ?? null) &&
-               $variantSize === ($variantData['size'] ?? null) &&
-               $variantCustom === ($variantData['custom'] ?? null);
+
+        $dataColor = $variantData['color'] ?? null;
+        $dataSize = $variantData['size'] ?? null;
+        $dataCustom = $variantData['custom'] ?? null;
+
+        $result = $variantColor === $dataColor && $variantSize === $dataSize && $variantCustom === $dataCustom;
+
+        error_log("variantMatches: "
+            . "VariantID=" . $variant->getId()
+            . " | VariantColor=" . var_export($variantColor, true)
+            . " | DataColor=" . var_export($dataColor, true)
+            . " | VariantSize=" . var_export($variantSize, true)
+            . " | DataSize=" . var_export($dataSize, true)
+            . " | VariantCustom=" . var_export($variantCustom, true)
+            . " | DataCustom=" . var_export($dataCustom, true)
+            . " | MATCH=" . ($result ? 'YES' : 'NO')
+        );
+
+        return $result;
     }
 
     // ===========================================
