@@ -560,12 +560,18 @@ class ProductController extends AbstractController
     private function generateVariantCodes(Product $variant, string $parentIdentifier): void
     {
         if ($variant->getType() === Product::OBJECT_TYPE_VARIANT) {
-            $cleanIdentifier = str_replace(['-', ' '], '', $parentIdentifier);
+            $cleanIdentifier = $this->removeTRChars($parentIdentifier);
+            $cleanIdentifier = str_replace(['-', ' '], '', $cleanIdentifier);
             $iwasku = str_pad($cleanIdentifier, 7, '0', STR_PAD_RIGHT);
             $productCode = $this->generateUniqueCode(self::UNIQUE_CODE_LENGTH);
             $variant->setProductCode($productCode);
             $variant->setIwasku($iwasku . $productCode);
         }
+    }
+
+    public function removeTRChars($str): string
+    {
+        return str_ireplace(['ı', 'İ', 'ğ', 'Ğ', 'ü', 'Ü', 'ş', 'Ş', 'ö', 'Ö', 'ç', 'Ç'], ['i', 'I', 'g', 'G', 'u', 'U', 's', 'S', 'o', 'O', 'c', 'C'], $str);    
     }
 
     private function generateUniqueCode(int $length = 5): string
