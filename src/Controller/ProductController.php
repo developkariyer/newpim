@@ -7,6 +7,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\Security\Csrf\CsrfToken;
 use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\Brand;
 use Pimcore\Model\DataObject\Category;
@@ -18,9 +20,16 @@ use Pimcore\Model\DataObject\Brand\Listing as BrandListing;
 use Pimcore\Model\DataObject\Marketplace\Listing as MarketplaceListing;
 use Pimcore\Model\DataObject\Product\Listing as ProductListing;
 
+
 #[Route('/product')]
 class ProductController extends AbstractController
 {
+    private CsrfTokenManagerInterface $csrfTokenManager;
+    public function __construct(CsrfTokenManagerInterface $csrfTokenManager)
+    {
+        $this->csrfTokenManager = $csrfTokenManager;
+    }
+
     private const PRODUCTS_MAIN_FOLDER_ID = 1246;
     private const COLORS_FOLDER_ID = 1247;
     private const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
