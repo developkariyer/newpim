@@ -475,7 +475,7 @@ class ProductController extends AbstractController
                 return null;
             }
             $assetFolder = $this->getOrCreateAssetFolder();
-            $filename = $this->generateImageFilename($imageFile, $productKey);
+            $filename = $this->fileService->generateImageFilename($imageFile, $productKey);
             $fileContent = $this->fileService->readImageFileContent($imageFile);
             if (!$fileContent) {
                 return null;
@@ -539,13 +539,6 @@ class ProductController extends AbstractController
         }
 
         return $assetFolder;
-    }
-
-    private function generateImageFilename($imageFile, string $productKey): string
-    {
-        $extension = strtolower(pathinfo($imageFile->getClientOriginalName(), PATHINFO_EXTENSION)) ?: 'jpg';
-        $safeFilename = $this->generateSafeFilename($productKey);
-        return $safeFilename . '_' . time() . '_' . uniqid() . '.' . $extension;
     }
 
     // ===========================================
