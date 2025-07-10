@@ -14,7 +14,7 @@ class DataProcessingService
         private LoggerInterface $logger
     ) {}
 
-    private function buildProductData(Product $product): array
+    public function buildProductData(Product $product): array
     {
         $variants = $this->getProductVariants($product);
         $variantAnalysis = $this->analyzeVariants($variants);
