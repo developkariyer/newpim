@@ -5,11 +5,7 @@
 {% endblock %}
 {% block content %}
     <div class="container mt-5">
-        {% if app.user %}
-            Hoş geldin, {{ app.user.username }}
-        {% else %}
-            Hoş geldin, Ziyaretçi
-        {% endif %}
+        <h2>Hoş geldin, {{ user.username|default('Ziyaretçi') }}!</h2>
         <p>Platforma giriş yaptınız. Ürün kataloğunu inceleyebilirsiniz.</p>
     </div>
 {% endblock %}
