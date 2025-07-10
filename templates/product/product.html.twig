@@ -1986,6 +1986,10 @@
 
             isVariantLocked(color, size, custom) {
                 return this.state.lockedVariants.some(v => {
+                    if (v.published === false) {
+                        return false;
+                    }
+                    
                     const colorMatch = (v.color === color);
                     const sizeMatch = (v.size === size);
                     const normalizedLockedCustom = (v.custom === undefined || v.custom === null) ? null : v.custom;
