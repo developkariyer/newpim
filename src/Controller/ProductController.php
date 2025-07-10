@@ -476,7 +476,7 @@ class ProductController extends AbstractController
             }
             $assetFolder = $this->getOrCreateAssetFolder();
             $filename = $this->generateImageFilename($imageFile, $productKey);
-            $fileContent = $this->readImageFileContent($imageFile);
+            $fileContent = $this->fileService->readImageFileContent($imageFile);
             if (!$fileContent) {
                 return null;
             }
