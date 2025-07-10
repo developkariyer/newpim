@@ -5,7 +5,7 @@
 {% endblock %}
 {% block content %}
     <div class="container mt-5">
-        <h2>Hoş geldin, {{ user.username|default('Ziyaretçi') }}!</h2>
+        <h2>Hoş geldin, {{ user|default('Ziyaretçi') }}!</h2>
         <p>Platforma giriş yaptınız. Ürün kataloğunu inceleyebilirsiniz.</p>
     </div>
 {% endblock %}
