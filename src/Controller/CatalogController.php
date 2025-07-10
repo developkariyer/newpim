@@ -343,9 +343,6 @@ class CatalogController extends AbstractController
             $variants = [];
             $productVariants = $product->getChildren([Product::OBJECT_TYPE_VARIANT], true);
             foreach ($productVariants as $variant) {
-                if (!$variant->getPublished()) {
-                    continue; 
-                }
                 $colorObject = $variant->getVariationColor();
                 $colorInfo = $colorObject ? [
                     'id' => $colorObject->getId(),
