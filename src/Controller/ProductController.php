@@ -19,15 +19,17 @@ use Pimcore\Model\DataObject\Color\Listing as ColorListing;
 use Pimcore\Model\DataObject\Brand\Listing as BrandListing;
 use Pimcore\Model\DataObject\Marketplace\Listing as MarketplaceListing;
 use Pimcore\Model\DataObject\Product\Listing as ProductListing;
+use App\Service\SecurityValidationService;
 
 
 #[Route('/product')]
 class ProductController extends AbstractController
 {
     private CsrfTokenManagerInterface $csrfTokenManager;
-    public function __construct(CsrfTokenManagerInterface $csrfTokenManager)
-    {
+    private SecurityValidationService $securityService;
+    public function __construct(CsrfTokenManagerInterface $csrfTokenManager, SecurityValidationService $securityService) {
         $this->csrfTokenManager = $csrfTokenManager;
+        $this->securityService = $securityService;
     }
 
     // Constants for configuration
@@ -114,7 +116,7 @@ class ProductController extends AbstractController
     #[Route('/create', name: 'product_create', methods: ['POST'])]
     public function create(Request $request): Response
     {
-        if (!$this->validateCsrfToken($request)) {
+        if (!$this->securityService->validateCsrfToken($request)) {
             return $this->handleSecurityError('CSRF token geçersiz', $request);
         }
         $this->logRequest($request);
@@ -294,7 +296,6 @@ class ProductController extends AbstractController
         return true;
     }
 
-    
     // ===========================================
     // INPUT SANITIZATION METHODS
     // ===========================================
@@ -312,10 +313,6 @@ class ProductController extends AbstractController
         $this->addFlash('danger', 'Güvenlik hatası oluştu. Lütfen tekrar deneyin.');
         return $this->redirectToRoute('product');
     }
-
-
-
-
 
     // ===========================================
     // PRODUCT CREATION HELPERS
