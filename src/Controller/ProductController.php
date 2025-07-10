@@ -21,6 +21,8 @@ use Pimcore\Model\DataObject\Marketplace\Listing as MarketplaceListing;
 use Pimcore\Model\DataObject\Product\Listing as ProductListing;
 use App\Service\SecurityValidationService;
 use App\Service\FileSecurityService;
+use App\Service\AssetManagementService;
+
 
 
 #[Route('/product')]
@@ -28,14 +30,19 @@ class ProductController extends AbstractController
 {
     private CsrfTokenManagerInterface $csrfTokenManager;
     private SecurityValidationService $securityService;
+    private FileSecurityService $fileService;
+    private AssetManagementService $assetService;
+
     public function __construct(
         CsrfTokenManagerInterface $csrfTokenManager,
         SecurityValidationService $securityService,
-        FileSecurityService $fileService
+        FileSecurityService $fileService,
+        AssetManagementService $assetService
     ) {
         $this->csrfTokenManager = $csrfTokenManager;
         $this->securityService = $securityService;
         $this->fileService = $fileService;
+        $this->assetService = $assetService;
     }
 
     // Constants for configuration
@@ -470,75 +477,7 @@ class ProductController extends AbstractController
 
     private function uploadProductImage($imageFile, string $productKey): ?\Pimcore\Model\Asset\Image
     {
-        try {
-            if (!$this->fileService->validateImageFile($imageFile)) {
-                return null;
-            }
-            $assetFolder = $this->getOrCreateAssetFolder();
-            $filename = $this->fileService->generateImageFilename($imageFile, $productKey);
-            $fileContent = $this->fileService->readImageFileContent($imageFile);
-            if (!$fileContent) {
-                return null;
-            }
-            $imageAsset = new \Pimcore\Model\Asset\Image();
-            $imageAsset->setFilename($filename);
-            $imageAsset->setParent($assetFolder);
-            $imageAsset->setMimeType($imageFile->getMimeType());
-            $imageAsset->setData($fileContent);
-            $imageAsset->save();
-            error_log('Image uploaded successfully: ' . $imageAsset->getId());
-            return $imageAsset;
-
-        } catch (\Exception $e) {
-            error_log('Image upload error: ' . $e->getMessage());
-            return null;
-        }
-    }
-
-    private function validateImageFile($imageFile): bool
-    {
-        if (!$imageFile || !$imageFile->isValid()) {
-            error_log('Invalid image file');
-            return false;
-        }
-
-        if ($imageFile->getSize() > self::MAX_IMAGE_SIZE) {
-            error_log('Image file too large: ' . $imageFile->getSize());
-            return false;
-        }
-
-        if (!in_array($imageFile->getMimeType(), self::ALLOWED_IMAGE_TYPES)) {
-            error_log('Invalid image type: ' . $imageFile->getMimeType());
-            return false;
-        }
-
-        if (!$this->validateImageExtension($imageFile)) {
-            return false;
-        }
-        if (!$this->validateImageMagicNumbers($imageFile)) {
-            return false;
-        }
-        if (!$this->validateImageFilename($imageFile)) {
-            return false;
-        }
-        if (!$this->scanImageContent($imageFile)) {
-            return false;
-        }
-        error_log('Security: Image file passed all validation checks');
-        return true;
-    }
-
-    private function getOrCreateAssetFolder(): \Pimcore\Model\Asset\Folder
-    {
-        $assetFolder = \Pimcore\Model\Asset::getByPath('/products');
-        if (!$assetFolder) {
-            $assetFolder = new \Pimcore\Model\Asset\Folder();
-            $assetFolder->setFilename('products');
-            $assetFolder->setParent(\Pimcore\Model\Asset::getByPath('/'));
-            $assetFolder->save();
-        }
-
-        return $assetFolder;
+        return $this->assetService->uploadProductImage($imageFile, $productKey);
     }
 
     // ===========================================
