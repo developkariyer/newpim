@@ -282,7 +282,12 @@ class CatalogController extends AbstractController
     private function formatProductForCatalog(Product $product): array
     {
         try {
-            $variants = $this->getProductVariants($product);
+            $customFieldTable = $product->getCustomFieldTable();
+            $customTableTitle = null;
+            if ($customFieldTable && is_array($customFieldTable->getData()) && !empty($customFieldTable->getData())) {
+                $customTableTitle = reset($customFieldTable->getData());
+            }
+            $variants = $this->getProductVariants($product, $customTableTitle);
             $category = $product->getProductCategory();
             $categoryInfo = $category ? [
                 'id' => $category->getId(),
@@ -324,7 +329,7 @@ class CatalogController extends AbstractController
         }
     }
 
-    private function getProductVariants(Product $product): array
+    private function getProductVariants(Product $product, $customTableTitle): array
     {
         try {
             if (!$product->hasChildren()) {
@@ -358,6 +363,7 @@ class CatalogController extends AbstractController
                     'productCode' => $variant->getProductCode(),
                     'variationSize' => $variant->getVariationSize(),
                     'color' => $colorInfo,
+                    'customFieldTitle' => $customTableTitle,
                     'customField' => $variant->getCustomField(),
                     'published' => $variant->getPublished(),
                 ];
