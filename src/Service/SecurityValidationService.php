@@ -27,7 +27,7 @@ class SecurityValidationService
     {
         $token = $request->request->get('_token') ?? $request->headers->get('X-CSRF-TOKEN');
         if (!$token) {
-            $this->logger->warning(' [" . __METHOD__ . "] Security: CSRF token missing', [
+            $this->logger->warning(" [" . __METHOD__ . "] Security: CSRF token missing", [
                 'ip' => $request->getClientIp(),
                 'user_agent' => $request->headers->get('User-Agent')
             ]);
