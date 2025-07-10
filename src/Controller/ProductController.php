@@ -30,6 +30,7 @@ class ProductController extends AbstractController
         $this->csrfTokenManager = $csrfTokenManager;
     }
 
+    // Constants for configuration
     private const PRODUCTS_MAIN_FOLDER_ID = 1246;
     private const COLORS_FOLDER_ID = 1247;
     private const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -65,6 +66,14 @@ class ProductController extends AbstractController
         'brand' => Brand::class,
         'marketplace' => Marketplace::class,
         'category' => Category::class
+    ];
+    private const CSRF_TOKEN_ID = 'product_form';
+    private const MAX_REQUEST_SIZE = 50 * 1024 * 1024;
+    private const ALLOWED_ORIGINS = []; 
+    private const XSS_DANGEROUS_TAGS = [
+        '<script', '</script>', '<iframe', '</iframe>', '<object', '</object>',
+        '<embed', '</embed>', '<form', '</form>', 'javascript:', 'vbscript:',
+        'onload=', 'onerror=', 'onclick=', 'onmouseover=', 'onfocus='
     ];
 
     // ===========================================
@@ -105,6 +114,9 @@ class ProductController extends AbstractController
     #[Route('/create', name: 'product_create', methods: ['POST'])]
     public function create(Request $request): Response
     {
+        if (!$this->validateCsrfToken($request)) {
+            return $this->handleSecurityError('CSRF token geçersiz', $request);
+        }
         $this->logRequest($request);
         try {
             $requestData = $this->parseRequestData($request);
@@ -204,6 +216,40 @@ class ProductController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => 'Varyant silinirken hata oluştu']);
         }
     }
+
+    // ===========================================
+    // SECURITY VALIDATION METHODS
+    // ===========================================
+
+    private function validateCsrfToken(Request $request): bool
+    {
+        $token = $request->request->get('_token') ?? $request->headers->get('X-CSRF-TOKEN');
+        if (!$token) {
+            error_log('Security: CSRF token missing');
+            return false;
+        }
+        $csrfToken = new CsrfToken(self::CSRF_TOKEN_ID, $token);
+        $isValid = $this->csrfTokenManager->isTokenValid($csrfToken);
+        if (!$isValid) {
+            error_log('Security: CSRF token validation failed');
+        }
+        return $isValid;
+    }
+
+    private function handleSecurityError(string $message, Request $request): Response
+    {
+        error_log('Security Error: ' . $message . ' - IP: ' . $request->getClientIp());
+        if ($request->isXmlHttpRequest()) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Güvenlik hatası oluştu'
+            ], 403);
+        }
+        
+        $this->addFlash('danger', 'Güvenlik hatası oluştu. Lütfen tekrar deneyin.');
+        return $this->redirectToRoute('product');
+    }
+
 
     // ===========================================
     // PRODUCT CREATION HELPERS
