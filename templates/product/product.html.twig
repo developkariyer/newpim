@@ -2018,11 +2018,6 @@
                 const rows = [];
                 const customData = this.getCustomsData();
                 const hasCustomData = customData.length > 0;
-                const existingVariantCombos = new Set(); 
-                this.state.lockedVariants.forEach(v => {
-                    const comboKey = `${v.color}|${v.size}|${v.custom || ''}`;
-                    existingVariantCombos.add(comboKey);
-                });
                 document.querySelectorAll('#variationTableContainer tbody tr').forEach(tr => {
                     const checkbox = tr.querySelector('.variation-checkbox');
                     if (checkbox && checkbox.checked && !checkbox.disabled) {
@@ -2030,21 +2025,18 @@
                         const renk = tds[1].innerText.replace('🔒 ', '');
                         const beden = tds[2].innerText.replace('🔒 ', '').split(' (')[0];
                         let custom = '';
+                        
                         if (hasCustomData && tds.length > 3) {
                             custom = tds[3].innerText.replace('🔒 ', '').trim();
                         }
-                        const comboKey = `${renk}|${beden}|${custom}`;
-                        if (!existingVariantCombos.has(comboKey)) {
-                            const rowData = { renk, beden };
-                            if (custom && custom !== '') {
-                                rowData.custom = custom;
-                            }
-                            rows.push(rowData);
-                            existingVariantCombos.add(comboKey);
+                        const rowData = { renk, beden };
+                        if (custom && custom !== '') {
+                            rowData.custom = custom;
                         }
+                        
+                        rows.push(rowData);
                     }
                 });
-
                 const variationsInput = document.getElementById('variationsData');
                 if (variationsInput) {
                     variationsInput.value = JSON.stringify(rows);
