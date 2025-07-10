@@ -324,12 +324,6 @@ class ProductController extends AbstractController
 
     private function createSingleVariant(Product $parentProduct, array $variantData): void
     {
-        if (isset($variantData['color']) && !isset($variantData['renk'])) {
-            $variantData['renk'] = $variantData['color'];
-        }
-        if (isset($variantData['size']) && !isset($variantData['beden'])) {
-            $variantData['beden'] = $variantData['size'];
-        }
         $existingVariant = $this->findVariantByData($parentProduct->getId(), $variantData);
         error_log('Checking for existing variant with data: ' . json_encode($variantData));
         if ($existingVariant) {
