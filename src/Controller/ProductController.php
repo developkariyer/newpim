@@ -23,7 +23,7 @@ use App\Service\SecurityValidationService;
 use App\Service\FileSecurityService;
 use App\Service\AssetManagementService;
 use App\Service\DataProcessingService;
-
+use App\Service\CodeGenerationService;
 
 
 #[Route('/product')]
@@ -40,13 +40,15 @@ class ProductController extends AbstractController
         SecurityValidationService $securityService,
         FileSecurityService $fileService,
         AssetManagementService $assetService,
-        DataProcessingService $dataProcessor
+        DataProcessingService $dataProcessor,
+        CodeGenerationService $codeGenerator
     ) {
         $this->csrfTokenManager = $csrfTokenManager;
         $this->securityService = $securityService;
         $this->fileService = $fileService;
         $this->assetService = $assetService;
         $this->dataProcessor = $dataProcessor;
+        $this->codeGenerator = $codeGenerator;
     }
 
     // Constants for configuration
@@ -334,7 +336,7 @@ class ProductController extends AbstractController
             }
         }
         if (!$data['isUpdate']) {
-            $this->generateProductCode($product);
+            $this->codeGenerator->generateProductCode($product);
         }
     }
 
@@ -404,25 +406,15 @@ class ProductController extends AbstractController
         $variant = new Product();
         $variant->setParent($parentProduct);
         $variant->setType(Product::OBJECT_TYPE_VARIANT);
-        $variantKey = $this->generateVariantKey($variantData);
+        $variantKey = $this->codeGenerator->generateVariantKey($variantData);
         $fullKey = $parentProduct->getProductIdentifier() . '-' . $parentProduct->getName() . '-' . $variantKey;
         $variant->setKey($fullKey);
         $variant->setName($fullKey);
         $this->setVariantProperties($variant, $variantData);
-        $this->generateVariantCodes($variant, $parentProduct->getProductIdentifier());
+        $this->codeGenerator->generateVariantCodes($variant, $parentProduct->getProductIdentifier());
         $variant->setPublished(true);
         $variant->save();
         error_log('Variant created: ' . $variant->getId());
-    }
-
-    private function generateVariantKey(array $variantData): string
-    {
-        $parts = array_filter([
-            $variantData['renk'] ?? '',
-            $variantData['beden'] ?? '',
-            $variantData['custom'] ?? ''
-        ]);
-        return implode('-', $parts) ?: 'variant';
     }
 
     private function setVariantProperties(Product $variant, array $variantData): void
@@ -473,61 +465,6 @@ class ProductController extends AbstractController
         return $variantColor === $dataColor &&
             $variantSize === $dataSize &&
             $variantCustom === $dataCustom;
-    }
-
-    // ===========================================
-    // CODE GENERATION
-    // ===========================================
-
-    private function generateProductCode(Product $product): void
-    {
-        $productCode = $this->generateUniqueCode(self::UNIQUE_CODE_LENGTH);
-        $product->setProductCode($productCode);
-    }
-
-    private function generateVariantCodes(Product $variant, string $parentIdentifier): void
-    {
-        if ($variant->getType() === Product::OBJECT_TYPE_VARIANT) {
-            $cleanIdentifier = $this->dataProcessor->removeTRChars($parentIdentifier);
-            $cleanIdentifier = str_replace(['-', ' '], '', $cleanIdentifier);
-            $iwasku = str_pad($cleanIdentifier, 7, '0', STR_PAD_RIGHT);
-            $productCode = $this->generateUniqueCode(self::UNIQUE_CODE_LENGTH);
-            $variant->setProductCode($productCode);
-            $variant->setIwasku($iwasku . $productCode);
-        }
-    }
-
-    private function generateUniqueCode(int $length = 5): string
-    {
-        $maxAttempts = 1000;
-        $attempts = 0;
-        while ($attempts < $maxAttempts) {
-            $candidateCode = $this->generateRandomString($length);
-            if (!$this->codeExists($candidateCode)) {
-                return $candidateCode;
-            }
-            $attempts++;
-        }
-        throw new \Exception('Unable to generate unique code after ' . $maxAttempts . ' attempts');
-    }
-
-    private function generateRandomString(int $length = 5): string
-    {
-        $characters = 'ABCDEFGHJKMNPQRSTVWXYZ1234567890';
-        $result = '';
-        for ($i = 0; $i < $length; $i++) {
-            $result .= $characters[mt_rand(0, strlen($characters) - 1)];
-        }
-        return $result;
-    }
-
-    private function codeExists(string $code): bool
-    {
-        $listing = new ProductListing();
-        $listing->setCondition('productCode = ?', [$code]);
-        $listing->setUnpublished(true);
-        $listing->setLimit(1);
-        return $listing->count() > 0;
     }
 
     // ===========================================
