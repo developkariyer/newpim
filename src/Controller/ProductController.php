@@ -402,25 +402,9 @@ class ProductController extends AbstractController
         $variantColor = $variant->getVariationColor() ? $variant->getVariationColor()->getColor() : null;
         $variantSize = $variant->getVariationSize() ?: null;
         $variantCustom = $variant->getCustomField() ?: null;
-
-        $dataColor = $variantData['color'] ?? null;
-        $dataSize = $variantData['size'] ?? null;
-        $dataCustom = $variantData['custom'] ?? null;
-
-        $result = $variantColor === $dataColor && $variantSize === $dataSize && $variantCustom === $dataCustom;
-
-        error_log("variantMatches: "
-            . "VariantID=" . $variant->getId()
-            . " | VariantColor=" . var_export($variantColor, true)
-            . " | DataColor=" . var_export($dataColor, true)
-            . " | VariantSize=" . var_export($variantSize, true)
-            . " | DataSize=" . var_export($dataSize, true)
-            . " | VariantCustom=" . var_export($variantCustom, true)
-            . " | DataCustom=" . var_export($dataCustom, true)
-            . " | MATCH=" . ($result ? 'YES' : 'NO')
-        );
-
-        return $result;
+        return $variantColor === ($variantData['color'] ?? null) &&
+               $variantSize === ($variantData['size'] ?? null) &&
+               $variantCustom === ($variantData['custom'] ?? null);
     }
 
     // ===========================================
@@ -855,9 +839,6 @@ class ProductController extends AbstractController
 
     private function getProductVariants(Product $product): array
     {
-        if (!$product->hasChildren()) {
-            return [];
-        }
         $variants = [];
         $productVariants = $product->getChildren([Product::OBJECT_TYPE_VARIANT]);
         foreach ($productVariants as $variant) {
