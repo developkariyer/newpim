@@ -408,8 +408,8 @@ class ProductController extends AbstractController
         $variantColor = $variant->getVariationColor() ? $variant->getVariationColor()->getColor() : null;
         $variantSize = $variant->getVariationSize() ?: null;
         $variantCustom = $variant->getCustomField() ?: null;
-        return $variantColor === ($variantData['renk'] ?? null) &&
-               $variantSize === ($variantData['beden'] ?? null) &&
+        return $variantColor === ($variantData['color'] ?? null) &&
+               $variantSize === ($variantData['size'] ?? null) &&
                $variantCustom === ($variantData['custom'] ?? null);
     }
 
