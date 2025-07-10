@@ -35,6 +35,12 @@ class SecurityValidationService
         }
         $csrfToken = new CsrfToken(self::CSRF_TOKEN_ID, $token);
         $isValid = $this->csrfTokenManager->isTokenValid($csrfToken);
+        $this->logger->info('Security: CSRF token validation', [
+            'ip' => $request->getClientIp(),
+            'token_received' => substr($token, 0, 8) . '...',
+            'user_agent' => $request->headers->get('User-Agent'),
+            'is_valid' => $isValid
+        ]);
         if (!$isValid) {
             $this->logger->warning('Security: CSRF token validation failed', [
                 'ip' => $request->getClientIp(),
