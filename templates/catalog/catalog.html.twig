@@ -1533,8 +1533,15 @@
 
             createVariantsSection(variants) {
                 if (!variants || variants.length === 0) return '';
-
-                const sortedVariants = [...variants].sort((a, b) => {
+                const uniqueVariants = [];
+                const seenVariantIds = new Set();
+                variants.forEach(variant => {
+                    if (!seenVariantIds.has(variant.id)) {
+                        uniqueVariants.push(variant);
+                        seenVariantIds.add(variant.id);
+                    }
+                });
+                const sortedVariants = [...uniqueVariants].sort((a, b) => {
                     const sizeA = a.variationSize || '';
                     const sizeB = b.variationSize || '';
                     
