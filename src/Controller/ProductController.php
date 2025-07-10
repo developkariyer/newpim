@@ -391,7 +391,7 @@ class ProductController extends AbstractController
             error_log("findVariantByData: Product not found for ID $productId");
             return null;
         }
-        $variants = $product->getChildren([Product::OBJECT_TYPE_VARIANT]);
+        $variants = $product->getChildren([Product::OBJECT_TYPE_VARIANT], ['unpublished' => true]);
         error_log("findVariantByData: Checking " . count($variants) . " variants for product $productId");
         foreach ($variants as $variant) {
             if ($this->variantMatches($variant, $variantData)) {
@@ -851,7 +851,7 @@ class ProductController extends AbstractController
     private function getProductVariants(Product $product): array
     {
         $variants = [];
-        $productVariants = $product->getChildren([Product::OBJECT_TYPE_VARIANT]);
+        $productVariants = $product->getChildren([Product::OBJECT_TYPE_VARIANT], ['unpublished' => true]);
         foreach ($productVariants as $variant) {
             $variants[] = [
                 'id' => $variant->getId(),
