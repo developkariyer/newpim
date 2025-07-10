@@ -282,10 +282,19 @@ class CatalogController extends AbstractController
     private function formatProductForCatalog(Product $product): array
     {
         try {
-            $customFieldTable = $product->getCustomFieldTable();
-            $customTableTitle = null;
-            if ($customFieldTable && is_array($customFieldTable->getData()) && !empty($customFieldTable->getData())) {
-                $customTableTitle = reset($customFieldTable->getData());
+            $customTableData = $product->getCustomFieldTable();
+            if (!is_array($customTableData)) {
+                return [];
+            }
+            $customRows = [];
+            $customTableTitle = '';
+            foreach ($customTableData as $index => $row) {
+                $deger = $row['deger'] ?? $row['value'] ?? '';
+                if (!empty($deger) && $deger !== '[object Object]') {
+                    if ($index === 0) {
+                        $customTableTitle = $deger;
+                    } 
+                }
             }
             $variants = $this->getProductVariants($product, $customTableTitle);
             $category = $product->getProductCategory();
