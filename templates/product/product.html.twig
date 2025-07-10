@@ -278,22 +278,9 @@
             color: #856404;
         }
 
-        .variant-unpublished {
-            background-color: #f8d7da;
-            color: #721c24;
-            text-decoration: line-through;
-        }
-
-        .republish-variant-btn {
-            font-size: 0.75rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 3px;
-            transition: all 0.2s;
-        }
-
-        .republish-variant-btn:hover {
-            background-color: #28a745 !important;
-            transform: scale(1.05);
+        .variant-locked input[type="checkbox"] {
+            cursor: not-allowed;
+            pointer-events: none;
         }
     </style>
 {% endblock %}
@@ -736,8 +723,6 @@
                 document.addEventListener('click', (e) => {
                     if (e.target.classList.contains('delete-variant-btn')) {
                         this.handleDeleteVariant(e.target);
-                    } else if (e.target.classList.contains('republish-variant-btn')) {
-                        this.handleRepublishVariant(e.target);
                     }
                 });
             }
@@ -1182,47 +1167,6 @@
                 } catch (error) {
                     console.error('Delete variant failed:', error);
                     this.uiService.showError(`Variant silinemedi: ${error.message}`);
-                } finally {
-                    this.uiService.hideLoading();
-                }
-            }
-
-            async handleRepublishVariant(button) {
-                const color = button.dataset.color;
-                const size = button.dataset.size;
-                const custom = button.dataset.custom || null;
-                const confirmMessage = `"${color} - ${size}${custom ? ' - ' + custom : ''}" varyantını yeniden yayınlamak istediğinizden emin misiniz?`;
-                if (!confirm(confirmMessage)) {
-                    return;
-                }
-                try {
-                    this.uiService.showLoading();
-                    const currentVariations = JSON.parse(document.getElementById('variationsData').value || '[]');
-                    const variantExists = currentVariations.some(v => 
-                        v.renk === color && 
-                        v.beden === size && 
-                        (v.custom || null) === (custom || null)
-                    );
-                    
-                    if (!variantExists) {
-                        const newVariation = {
-                            renk: color,
-                            beden: size
-                        };
-                        
-                        if (custom) {
-                            newVariation.custom = custom;
-                        }
-                        
-                        currentVariations.push(newVariation);
-                        document.getElementById('variationsData').value = JSON.stringify(currentVariations);
-                    }
-                    
-                    await this.submitFormWithFormData();
-
-                } catch (error) {
-                    console.error('Republish variant failed:', error);
-                    this.uiService.showError(`Varyant yeniden yayınlanamadı: ${error.message}`);
                 } finally {
                     this.uiService.hideLoading();
                 }
@@ -1909,7 +1853,6 @@
                     let sizeValue = v.size || v.sizeName || v.beden || v.productVariantSize?.name || v.productVariantSize?.beden;
                     let colorValue = v.color || v.colorName || v.renk || v.productVariantColor?.name;
                     let customValue = v.custom || v.customName || v.customValue || v.productVariantCustom?.deger;
-                    let published = v.published !== undefined ? v.published : true; // Varsayılan olarak true
 
                     if (sizeValue && typeof sizeValue === 'string') {
                         if (sizeValue.includes(' (En:')) {
@@ -1926,9 +1869,7 @@
                     return {
                         color: colorValue,
                         size: sizeValue,
-                        custom: customValue,
-                        published: published,
-                        id: v.id
+                        custom: customValue
                     };
                 });
             }
@@ -1998,26 +1939,26 @@
 
             generateMatrixHTML(combos, sizesData, customs) {
                 const hasCustomData = customs.length > 0;
+
                 let html = '<table class="table table-bordered"><thead><tr>';
                 html += '<th>Seç</th><th>Renk</th><th>Beden</th>';
                 if (hasCustomData) html += '<th>Custom</th>';
                 html += '<th>İşlem</th>';
                 html += '</tr></thead><tbody>';
+
                 combos.forEach((combo, i) => {
                     const [color, size, custom] = combo;
-                    const lockedVariant = this.getLockedVariant(color, size, custom);
-                    const isLocked = !!lockedVariant;
-                    const isPublished = isLocked && (lockedVariant.published !== false);
+                    const isLocked = this.isVariantLocked(color, size, custom);
                     const sizeLabel = this.formatSizeLabel(size, sizesData);
 
-                    const rowClass = isLocked ? (isPublished ? 'variant-locked' : 'variant-locked variant-unpublished') : '';
-                    const lockIcon = isLocked ? (isPublished ? '🔒 ' : '🔓 ') : '';
+                    const rowClass = isLocked ? 'variant-locked' : '';
+                    const lockIcon = isLocked ? '🔒 ' : '';
                     const checkboxAttributes = isLocked ? 'disabled checked' : '';
 
                     html += `<tr class="${rowClass}">
                         <td>
                             <input type="checkbox" class="variation-checkbox" data-index="${i}" ${checkboxAttributes}>
-                            ${isLocked ? '<br><small>' + (isPublished ? 'Mevcut varyant' : 'Unpublished varyant') + '</small>' : ''}
+                            ${isLocked ? '<br><small>Mevcut varyant</small>' : ''}
                         </td>
                         <td>${lockIcon}${color}</td>
                         <td>${lockIcon}${sizeLabel}</td>`;
@@ -2028,19 +1969,11 @@
 
                     html += `<td>`;
                     if (isLocked) {
-                        if (isPublished) {
-                            html += `<button type="button" class="btn btn-danger btn-sm delete-variant-btn" 
-                                        data-color="${color}" data-size="${size}" data-custom="${custom || ''}"
-                                        title="Bu varyantı sil ve ürünü unpublish yap">
-                                        🗑️ Sil
-                                    </button>`;
-                        } else {
-                            html += `<button type="button" class="btn btn-success btn-sm republish-variant-btn" 
-                                        data-color="${color}" data-size="${size}" data-custom="${custom || ''}"
-                                        title="Bu unpublished varyantı tekrar yayınla">
-                                        ♻️ Yeniden Yayınla
-                                    </button>`;
-                        }
+                        html += `<button type="button" class="btn btn-danger btn-sm delete-variant-btn" 
+                                    data-color="${color}" data-size="${size}" data-custom="${custom || ''}"
+                                    title="Bu varyantı sil ve ürünü unpublish yap">
+                                    🗑️ Sil
+                                </button>`;
                     } else {
                         html += '<span class="text-muted">-</span>';
                     }
@@ -2107,18 +2040,6 @@
                 if (variationsInput) {
                     variationsInput.value = JSON.stringify(rows);
                 }
-            }
-
-            getLockedVariant(color, size, custom) {
-                return this.state.lockedVariants.find(v => {
-                    const colorMatch = (v.color === color);
-                    const sizeMatch = (v.size === size);
-                    const normalizedLockedCustom = (v.custom === undefined || v.custom === null) ? null : v.custom;
-                    const normalizedCheckingCustom = (custom === undefined || custom === null) ? null : custom;
-                    const customMatch = (normalizedLockedCustom === normalizedCheckingCustom);
-
-                    return colorMatch && sizeMatch && customMatch;
-                });
             }
         }
 
