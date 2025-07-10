@@ -622,16 +622,27 @@ class ProductController extends AbstractController
         if (empty($ids)) {
             return [];
         }
-        $objects = [];
-        foreach ($ids as $id) {
-            if (!empty($id)) {
-                $intId = (int)(is_array($id) ? $id[0] : $id);
-                $object = $this->getObjectById(self::CLASS_MAPPING[$type], $intId);       
-                if (!$object) {
-                    $errors[] = "{$displayName} ID {$intId} bulunamadı";
-                } else {
-                    $objects[] = $object;
-                }
+        $cleanIds = array_map('intval', array_filter($ids, 'is_numeric'));
+        if (empty($cleanIds)) {
+            return [];
+        }
+        $listingClass = self::TYPE_MAPPING[$type . 's'] ?? null;
+        if (!$listingClass || !class_exists($listingClass)) {
+            $errors[] = "{$displayName} için geçersiz tip: {$type}";
+            return [];
+        }
+        $listing = new $listingClass();
+        $listing->setCondition('oo_id IN (?)', [array_unique($cleanIds)]);
+        $listing->setUnpublished(true);
+        $objects = $listing->load();
+        if (count($objects) !== count(array_unique($cleanIds))) {
+            $foundIds = [];
+            foreach ($objects as $object) {
+                $foundIds[] = $object->getId();
+            }
+            $missingIds = array_diff(array_unique($cleanIds), $foundIds);
+            foreach ($missingIds as $missingId) {
+                $errors[] = "{$displayName} ID {$missingId} bulunamadı";
             }
         }
         return $objects;
