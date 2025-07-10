@@ -108,7 +108,7 @@ class ProductController extends AbstractController
             if ($editProductId) {
                 $selectedProduct = Product::getById((int)$editProductId);
                 if ($selectedProduct) {
-                    $selectedProductData = $this->buildProductData($selectedProduct);
+                    $selectedProductData = $this->dataProcessor->buildProductData($selectedProduct);
                     error_log('Loading product for edit: ' . $selectedProduct->getId());
                 } else {
                     $this->addFlash('warning', 'Düzenlenecek ürün bulunamadı.');
@@ -189,7 +189,7 @@ class ProductController extends AbstractController
             if (!$product) {
                 return new JsonResponse(['items' => []]);
             }
-            $productData = $this->buildProductData($product);
+            $productData = $this->dataProcessor->buildProductData($selectedProduct);
             return new JsonResponse(['items' => [$productData]]);
 
         } catch (\Exception $e) {
@@ -283,7 +283,7 @@ class ProductController extends AbstractController
     {
         $imageAsset = null;
         if ($data['imageFile'] && $data['imageFile']->isValid()) {
-            $imageAsset = $this->uploadProductImage($data['imageFile'], $data['productIdentifier'] ?: $data['productName']);
+            $imageAsset = $this->assetService->uploadProductImage($data['imageFile'], $data['productIdentifier'] ?: $data['productName']);
         }
         $parentFolder = $this->createProductFolderStructure($data['productIdentifier'], $data['categoryId']);
         $product = new Product();
@@ -305,7 +305,7 @@ class ProductController extends AbstractController
             throw new \Exception('Güncellenecek ürün bulunamadı.');
         }
         if ($data['imageFile'] && $data['imageFile']->isValid()) {
-            $imageAsset = $this->uploadProductImage($data['imageFile'], $product->getProductIdentifier());
+            $imageAsset = $this->assetService->uploadProductImage($data['imageFile'], $product->getProductIdentifier());
             if ($imageAsset) {
                 $product->setImage($imageAsset);
             }
@@ -473,24 +473,6 @@ class ProductController extends AbstractController
         return $variantColor === $dataColor &&
             $variantSize === $dataSize &&
             $variantCustom === $dataCustom;
-    }
-
-    // ===========================================
-    // IMAGE HANDLING
-    // ===========================================
-
-    private function uploadProductImage($imageFile, string $productKey): ?\Pimcore\Model\Asset\Image
-    {
-        return $this->assetService->uploadProductImage($imageFile, $productKey);
-    }
-
-    // ===========================================
-    // DATA PROCESSING
-    // ===========================================
-
-    private function buildProductData(Product $product): array
-    {
-        return $this->dataProcessor->buildProductData($product);
     }
 
     // ===========================================
