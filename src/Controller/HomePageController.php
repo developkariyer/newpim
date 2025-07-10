@@ -10,6 +10,9 @@ class HomePageController extends AbstractController
     #[Route('/', name: 'homepage')]
     public function homepage(): Response
     {
-        return $this->render('homepage/homepage.html.twig'); 
+        $user = $this->getUser();
+        return $this->render('homepage/homepage.html.twig', [
+            'user' => $user,
+        ]);
     }
 }
