@@ -560,7 +560,8 @@ class ProductController extends AbstractController
     private function generateVariantCodes(Product $variant, string $parentIdentifier): void
     {
         if ($variant->getType() === Product::OBJECT_TYPE_VARIANT) {
-            $iwasku = str_pad(str_replace('-', '', $parentIdentifier), 7, '0', STR_PAD_RIGHT);
+            $cleanIdentifier = str_replace(['-', ' '], '', $parentIdentifier);
+            $iwasku = str_pad($cleanIdentifier, 7, '0', STR_PAD_RIGHT);
             $productCode = $this->generateUniqueCode(self::UNIQUE_CODE_LENGTH);
             $variant->setProductCode($productCode);
             $variant->setIwasku($iwasku . $productCode);
