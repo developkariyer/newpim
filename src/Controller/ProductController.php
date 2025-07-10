@@ -22,6 +22,7 @@ use Pimcore\Model\DataObject\Product\Listing as ProductListing;
 use App\Service\SecurityValidationService;
 use App\Service\FileSecurityService;
 use App\Service\AssetManagementService;
+use App\Service\DataProcessingService;
 
 
 
@@ -32,17 +33,20 @@ class ProductController extends AbstractController
     private SecurityValidationService $securityService;
     private FileSecurityService $fileService;
     private AssetManagementService $assetService;
+    private DataProcessingService $dataProcessor;
 
     public function __construct(
         CsrfTokenManagerInterface $csrfTokenManager,
         SecurityValidationService $securityService,
         FileSecurityService $fileService,
-        AssetManagementService $assetService
+        AssetManagementService $assetService,
+        DataProcessingService $dataProcessor
     ) {
         $this->csrfTokenManager = $csrfTokenManager;
         $this->securityService = $securityService;
         $this->fileService = $fileService;
         $this->assetService = $assetService;
+        $this->dataProcessor = $dataProcessor;
     }
 
     // Constants for configuration
@@ -324,7 +328,7 @@ class ProductController extends AbstractController
             }
         }
         if ($data['customTableData']) {
-            $customTable = $this->processCustomTableData($data['customTableData']);
+            $customTable = $this->dataProcessor->processCustomTableData($data['customTableData']);
             if ($customTable) {
                 $product->setCustomFieldTable($customTable);
             }
@@ -484,57 +488,9 @@ class ProductController extends AbstractController
     // DATA PROCESSING
     // ===========================================
 
-    private function processCustomTableData(string $customTableData): ?array
-    {
-        $decoded = json_decode($customTableData, true);
-        
-        if (!is_array($decoded) || !isset($decoded['rows']) || !is_array($decoded['rows'])) {
-            return null;
-        }
-
-        $customFieldTable = [];
-        $title = trim($decoded['title'] ?? '');
-        
-        if ($title !== '') {
-            $customFieldTable[] = ['deger' => $title];
-        }
-
-        foreach ($decoded['rows'] as $row) {
-            if (isset($row['deger']) && !empty($row['deger'])) {
-                $customFieldTable[] = ['deger' => $row['deger']];
-            }
-        }
-
-        return empty($customFieldTable) ? null : $customFieldTable;
-    }
-
     private function buildProductData(Product $product): array
     {
-        $variants = $this->getProductVariants($product);
-        $variantAnalysis = $this->analyzeVariants($variants);
-        return [
-            'id' => $product->getId(),
-            'name' => $product->getName(),
-            'productIdentifier' => $product->getProductIdentifier(),
-            'description' => $product->getDescription(),
-            'categoryId' => $product->getProductCategory()?->getId(),
-            'categoryName' => $product->getProductCategory()?->getKey(),
-            'brands' => $this->formatObjectCollection($product->getBrandItems(), Brand::class),
-            'marketplaces' => $this->formatObjectCollection($product->getMarketplaces(), Marketplace::class),
-            'imagePath' => $product->getImage()?->getFullPath(),
-            'hasVariants' => !empty($variants),
-            'variants' => $variants,
-            'variantColors' => array_values(array_unique($variantAnalysis['colors'], SORT_REGULAR)),
-            'sizeTable' => $this->formatSizeTable($product, $variantAnalysis['usedSizes']),
-            'customTable' => $this->formatCustomTable($product, $variantAnalysis['usedCustoms']),
-            'usedSizes' => array_unique($variantAnalysis['usedSizes']),
-            'usedCustoms' => array_values(array_unique($variantAnalysis['usedCustoms'])),
-            'usedColorIds' => array_unique($variantAnalysis['usedColorIds']),
-            'canEditSizeTable' => true,
-            'canEditColors' => true,
-            'canEditCustomTable' => true,
-            'canCreateVariants' => true
-        ];
+        return $this->dataProcessor->buildProductData($product);
     }
 
     // ===========================================
@@ -550,18 +506,13 @@ class ProductController extends AbstractController
     private function generateVariantCodes(Product $variant, string $parentIdentifier): void
     {
         if ($variant->getType() === Product::OBJECT_TYPE_VARIANT) {
-            $cleanIdentifier = $this->removeTRChars($parentIdentifier);
+            $cleanIdentifier = $this->dataProcessor->removeTRChars($parentIdentifier);
             $cleanIdentifier = str_replace(['-', ' '], '', $cleanIdentifier);
             $iwasku = str_pad($cleanIdentifier, 7, '0', STR_PAD_RIGHT);
             $productCode = $this->generateUniqueCode(self::UNIQUE_CODE_LENGTH);
             $variant->setProductCode($productCode);
             $variant->setIwasku($iwasku . $productCode);
         }
-    }
-
-    public function removeTRChars($str): string
-    {
-        return str_ireplace(['ı', 'İ', 'ğ', 'Ğ', 'ü', 'Ü', 'ş', 'Ş', 'ö', 'Ö', 'ç', 'Ç'], ['i', 'I', 'g', 'G', 'u', 'U', 's', 'S', 'o', 'O', 'c', 'C'], $str);    
     }
 
     private function generateUniqueCode(int $length = 5): string
@@ -805,123 +756,4 @@ class ProductController extends AbstractController
         return $filename ?: 'product';
     }
 
-    // ===========================================
-    // FORMATTING HELPERS
-    // ===========================================
-
-    private function getProductVariants(Product $product): array
-    {
-        $variants = [];
-        $productVariants = $product->getChildren([Product::OBJECT_TYPE_VARIANT], true);
-        foreach ($productVariants as $variant) {
-            $variants[] = [
-                'id' => $variant->getId(),
-                'name' => $variant->getName(),
-                'color' => $variant->getVariationColor()?->getColor(),
-                'colorId' => $variant->getVariationColor()?->getId(),
-                'size' => $variant->getVariationSize(),
-                'custom' => $variant->getCustomField(),
-                'published' => $variant->getPublished(), 
-                'iwasku' => $variant->getIwasku(), 
-                'productCode' => $variant->getProductCode()
-            ];
-        }
-        return $variants;
-    }
-
-    private function analyzeVariants(array $variants): array
-    {
-        $colors = [];
-        $usedSizes = [];
-        $usedCustoms = [];
-        $usedColorIds = [];
-        foreach ($variants as $variant) {
-            $isPublished = $variant['published'] ?? true;
-            if ($variant['colorId']) {
-                $usedColorIds[] = $variant['colorId'];
-                $colors[] = [
-                    'id' => $variant['colorId'],
-                    'name' => $variant['color'],
-                    'published' => $isPublished  
-                ];
-            }
-            if ($variant['size']) {
-                $usedSizes[] = $variant['size'];
-            }
-            if ($variant['custom']) {
-                $usedCustoms[] = $variant['custom'];
-            }
-        }
-        return [
-            'colors' => $colors,
-            'usedSizes' => $usedSizes,
-            'usedCustoms' => $usedCustoms,
-            'usedColorIds' => $usedColorIds
-        ];
-    }
-
-    private function formatObjectCollection($items, string $expectedClass): array
-    {
-        if (!$items) {
-            return [];
-        }
-        $result = [];
-        $itemsArray = is_array($items) ? $items : [$items];
-        foreach ($itemsArray as $item) {
-            if ($item instanceof $expectedClass) {
-                $result[] = [
-                    'id' => $item->getId(),
-                    'name' => $item->getKey()
-                ];
-            }
-        }
-        return $result;
-    }
-
-    private function formatSizeTable(Product $product, array $usedSizes): array
-    {
-        $sizeTableData = $product->getVariationSizeTable();
-        if (!is_array($sizeTableData)) {
-            return [];
-        }
-        $sizeTable = [];
-        foreach ($sizeTableData as $row) {
-            $beden = $row['beden'] ?? $row['label'] ?? '';
-            $sizeTable[] = [
-                'beden' => $beden,
-                'en' => $row['en'] ?? $row['width'] ?? '',
-                'boy' => $row['boy'] ?? $row['length'] ?? '',
-                'yukseklik' => $row['yukseklik'] ?? $row['height'] ?? '',
-                'locked' => in_array($beden, $usedSizes)
-            ];
-        }
-        return $sizeTable;
-    }
-
-    private function formatCustomTable(Product $product, array $usedCustoms): array
-    {
-        $customTableData = $product->getCustomFieldTable();
-        if (!is_array($customTableData)) {
-            return [];
-        }
-        $customRows = [];
-        $customTitle = '';
-        foreach ($customTableData as $index => $row) {
-            $deger = $row['deger'] ?? $row['value'] ?? '';
-            if (!empty($deger) && $deger !== '[object Object]') {
-                if ($index === 0) {
-                    $customTitle = $deger;
-                } else {
-                    $customRows[] = [
-                        'deger' => $deger,
-                        'locked' => in_array($deger, $usedCustoms)
-                    ];
-                }
-            }
-        }
-        return [
-            'title' => $customTitle,
-            'rows' => $customRows
-        ];
-    }
 }
