@@ -507,6 +507,34 @@
             box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
         }
 
+        .variant-status-active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+        }
+
+        .variant-status-inactive {
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            color: white;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+        }
+
+        .variant-row-inactive {
+            opacity: 0.7;
+            background-color: rgba(239, 68, 68, 0.05);
+            border-left: 3px solid #ef4444;
+        }
+
+        .variant-row-inactive:hover {
+            border-left: 3px solid #b91c1c;
+            opacity: 0.9;
+        }
+
+        .variant-row-inactive::before {
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            opacity: 0;
+        }
+
         /* Variant Info - Main Content */
         .variant-info {
             display: grid;
@@ -1574,10 +1602,13 @@
                             </div>
                         `);
                     }
+                    const isPublished = variant.published !== false; 
+                    const statusClass = isPublished ? 'variant-status-active' : 'variant-status-inactive';
+                    const statusText = isPublished ? '✨ Aktif' : '❌ Pasif';
 
                     return `
-                        <div class="variant-row">
-                            <span class="variant-status">✨ Aktif</span>
+                        <div class="variant-row ${isPublished ? '' : 'variant-row-inactive'}">
+                            <span class="variant-status ${statusClass}">${statusText}</span>
                             
                             <div class="variant-info">
                                 ${fields.join('')}
