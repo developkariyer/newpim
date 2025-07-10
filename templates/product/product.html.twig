@@ -1947,24 +1947,17 @@
 
                 combos.forEach((combo, i) => {
                     const [color, size, custom] = combo;
-                    
-                    const existingVariant = this.state.lockedVariants.find(v => 
-                        v.color === color && v.size === size && 
-                        ((v.custom || null) === (custom || null))
-                    );
-
-                    const isLocked = !!existingVariant;
-                    const isPublished = isLocked && existingVariant.published !== false;
+                    const isLocked = this.isVariantLocked(color, size, custom);
                     const sizeLabel = this.formatSizeLabel(size, sizesData);
-                    const rowClass = isLocked ? (isPublished ? 'variant-locked' : 'variant-unpublished') : '';
-                    const lockIcon = isPublished ? '🔒 ' : (isLocked ? '🔓 ' : '');
-                    const checkboxAttributes = isPublished ? 'disabled checked' : (isLocked ? 'checked' : '');
-                    const statusText = isPublished ? 'Mevcut varyant' : (isLocked ? 'Yayında değil (Kaydedince yayınlanacak)' : '');
+
+                    const rowClass = isLocked ? 'variant-locked' : '';
+                    const lockIcon = isLocked ? '🔒 ' : '';
+                    const checkboxAttributes = isLocked ? 'disabled checked' : '';
 
                     html += `<tr class="${rowClass}">
                         <td>
                             <input type="checkbox" class="variation-checkbox" data-index="${i}" ${checkboxAttributes}>
-                            ${isLocked ? `<br><small>${statusText}</small>` : ''}
+                            ${isLocked ? '<br><small>Mevcut varyant</small>' : ''}
                         </td>
                         <td>${lockIcon}${color}</td>
                         <td>${lockIcon}${sizeLabel}</td>`;
@@ -1974,7 +1967,7 @@
                     }
 
                     html += `<td>`;
-                    if (isPublished) { // Sadece yayınlanmış olanların silme butonu olsun
+                    if (isLocked) {
                         html += `<button type="button" class="btn btn-danger btn-sm delete-variant-btn" 
                                     data-color="${color}" data-size="${size}" data-custom="${custom || ''}"
                                     title="Bu varyantı sil ve ürünü unpublish yap">
@@ -1992,10 +1985,6 @@
 
             isVariantLocked(color, size, custom) {
                 return this.state.lockedVariants.some(v => {
-                    if (v.published === false) {
-                        return false;
-                    }
-                    
                     const colorMatch = (v.color === color);
                     const sizeMatch = (v.size === size);
                     const normalizedLockedCustom = (v.custom === undefined || v.custom === null) ? null : v.custom;
