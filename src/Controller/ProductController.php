@@ -324,6 +324,12 @@ class ProductController extends AbstractController
 
     private function createSingleVariant(Product $parentProduct, array $variantData): void
     {
+        if (isset($variantData['color']) && !isset($variantData['renk'])) {
+            $variantData['renk'] = $variantData['color'];
+        }
+        if (isset($variantData['size']) && !isset($variantData['beden'])) {
+            $variantData['beden'] = $variantData['size'];
+        }
         $existingVariant = $this->findVariantByData($parentProduct->getId(), $variantData);
         error_log('Checking for existing variant with data: ' . json_encode($variantData));
         if ($existingVariant) {
@@ -402,9 +408,14 @@ class ProductController extends AbstractController
         $variantColor = $variant->getVariationColor() ? $variant->getVariationColor()->getColor() : null;
         $variantSize = $variant->getVariationSize() ?: null;
         $variantCustom = $variant->getCustomField() ?: null;
-        return $variantColor === ($variantData['color'] ?? null) &&
-               $variantSize === ($variantData['size'] ?? null) &&
-               $variantCustom === ($variantData['custom'] ?? null);
+        
+        $dataColor = $variantData['renk'] ?? $variantData['color'] ?? null;
+        $dataSize = $variantData['beden'] ?? $variantData['size'] ?? null;
+        $dataCustom = $variantData['custom'] ?? null;
+        
+        return $variantColor === $dataColor &&
+            $variantSize === $dataSize &&
+            $variantCustom === $dataCustom;
     }
 
     // ===========================================
