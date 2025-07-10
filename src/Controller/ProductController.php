@@ -86,7 +86,6 @@ class ProductController extends AbstractController
         try {
             $editProductId = $request->query->get('edit');
             $selectedProductData = null;
-            
             if ($editProductId) {
                 $selectedProduct = Product::getById((int)$editProductId);
                 if ($selectedProduct) {
@@ -96,18 +95,19 @@ class ProductController extends AbstractController
                     $this->addFlash('warning', 'Düzenlenecek ürün bulunamadı.');
                 }
             }
-            
+            $csrfToken = $this->csrfTokenManager->getToken(self::CSRF_TOKEN_ID)->getValue();
             return $this->render('product/product.html.twig', [
                 'categories' => $this->getGenericListing(self::TYPE_MAPPING['categories'], "published = 1", fn($category) => $category->getCategory()),
                 'colors' => $this->getGenericListing(self::TYPE_MAPPING['colors']),
                 'brands' => $this->getGenericListing(self::TYPE_MAPPING['brands']),
                 'marketplaces' => $this->getGenericListing(self::TYPE_MAPPING['marketplaces']),
-                'selectedProduct' => $selectedProductData
+                'selectedProduct' => $selectedProductData,
+                'csrf_token' => $csrfToken
             ]);
         } catch (\Exception $e) {
             error_log('Product page error: ' . $e->getMessage());
             $this->addFlash('danger', 'Sayfa yüklenirken bir hata oluştu: ' . $e->getMessage());
-            return $this->redirectToRoute('product'); // $request kaldırıldı
+            return $this->redirectToRoute('product');
         }
     }
 
