@@ -324,10 +324,16 @@ class ProductController extends AbstractController
 
     private function createSingleVariant(Product $parentProduct, array $variantData): void
     {
+        if (isset($variantData['color']) && !isset($variantData['renk'])) {
+            $variantData['renk'] = $variantData['color'];
+        }
+        if (isset($variantData['size']) && !isset($variantData['beden'])) {
+            $variantData['beden'] = $variantData['size'];
+        }
         $existingVariant = $this->findVariantByData($parentProduct->getId(), $variantData);
-        error_log('Checking for existing variant...');
+        error_log('Checking for existing variant with data: ' . json_encode($variantData));
         if ($existingVariant) {
-            error_log('Existing variant found: ' . $existingVariant->getId()); // <-- Buraya ekle
+            error_log('Existing variant found: ' . $existingVariant->getId());
             if (!$existingVariant->getPublished()) {
                 $existingVariant->setPublished(true);
                 $existingVariant->save();
@@ -402,8 +408,8 @@ class ProductController extends AbstractController
         $variantColor = $variant->getVariationColor() ? $variant->getVariationColor()->getColor() : null;
         $variantSize = $variant->getVariationSize() ?: null;
         $variantCustom = $variant->getCustomField() ?: null;
-        return $variantColor === ($variantData['color'] ?? null) &&
-               $variantSize === ($variantData['size'] ?? null) &&
+        return $variantColor === ($variantData['renk'] ?? null) &&
+               $variantSize === ($variantData['beden'] ?? null) &&
                $variantCustom === ($variantData['custom'] ?? null);
     }
 
@@ -849,6 +855,9 @@ class ProductController extends AbstractController
                 'colorId' => $variant->getVariationColor()?->getId(),
                 'size' => $variant->getVariationSize(),
                 'custom' => $variant->getCustomField(),
+                'published' => $variant->getPublished(), 
+                'iwasku' => $variant->getIwasku(), 
+                'productCode' => $variant->getProductCode()
             ];
         }
         return $variants;
@@ -861,11 +870,13 @@ class ProductController extends AbstractController
         $usedCustoms = [];
         $usedColorIds = [];
         foreach ($variants as $variant) {
+            $isPublished = $variant['published'] ?? true;
             if ($variant['colorId']) {
                 $usedColorIds[] = $variant['colorId'];
                 $colors[] = [
                     'id' => $variant['colorId'],
-                    'name' => $variant['color']
+                    'name' => $variant['color'],
+                    'published' => $isPublished  
                 ];
             }
             if ($variant['size']) {
