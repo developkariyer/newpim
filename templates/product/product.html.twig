@@ -1848,15 +1848,11 @@
                     this.state.lockedVariants = [];
                     return;
                 }
-
-                const uniqueVariants = new Map();
-                
-                product.variants.forEach(v => {
+                this.state.lockedVariants = product.variants.map(v => {
                     let sizeValue = v.size || v.sizeName || v.beden || v.productVariantSize?.name || v.productVariantSize?.beden;
                     let colorValue = v.color || v.colorName || v.renk || v.productVariantColor?.name;
                     let customValue = v.custom || v.customName || v.customValue || v.productVariantCustom?.deger;
                     let published = typeof v.published !== 'undefined' ? v.published : true;
-                    
                     if (sizeValue && typeof sizeValue === 'string') {
                         if (sizeValue.includes(' (En:')) {
                             sizeValue = sizeValue.split(' (En:')[0];
@@ -1864,25 +1860,19 @@
                             sizeValue = sizeValue.split(' (')[0];
                         }
                     }
-                    
                     if (customValue === undefined || customValue === '' || customValue === 'undefined') {
                         customValue = null;
                     }
-
-                    const uniqueKey = `${colorValue}-${sizeValue}-${customValue || 'null'}`;
-                    
-                    if (!uniqueVariants.has(uniqueKey) || uniqueVariants.get(uniqueKey).published === false) {
-                        uniqueVariants.set(uniqueKey, {
-                            color: colorValue,
-                            size: sizeValue,
-                            custom: customValue,
-                            published: published,
-                            id: v.id
-                        });
-                    }
+                    return {
+                        color: colorValue,
+                        size: sizeValue,
+                        custom: customValue,
+                        published: published, 
+                        id: v.id
+                    };
                 });
-                this.state.lockedVariants = Array.from(uniqueVariants.values());
-                console.log('Locked variants updated (deduplicated):', this.state.lockedVariants);
+                
+                console.log('Locked variants updated:', this.state.lockedVariants);
             }
 
             generateMatrix() {
@@ -1898,6 +1888,7 @@
                     }
 
                     const combos = this.generateCombinations(colors, sizes, customs);
+                    const uniqueCombos = this.filterUniqueCombinations(combos);
                     const html = this.generateMatrixHTML(combos, sizesData, customs);
 
                     const container = document.getElementById('variationTableContainer');
@@ -1909,6 +1900,24 @@
                     console.error('Generate matrix failed:', error);
                     this.showMatrixError('Varyasyon matrisi oluşturulurken bir hata oluştu.');
                 }
+            }
+
+            filterUniqueCombinations(combos) {
+                const seen = new Set();
+                const uniqueCombos = [];
+
+                combos.forEach(combo => {
+                    const [color, size, custom] = combo;
+                    const normalizedCustom = (custom === undefined || custom === null || custom === '') ? null : custom;
+                    const key = `${color}-${size}-${normalizedCustom || 'null'}`;
+                    
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        uniqueCombos.push([color, size, normalizedCustom]);
+                    }
+                });
+
+                return uniqueCombos;
             }
 
             getSizesData() {
