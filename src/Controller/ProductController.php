@@ -20,6 +20,7 @@ use Pimcore\Model\DataObject\Brand\Listing as BrandListing;
 use Pimcore\Model\DataObject\Marketplace\Listing as MarketplaceListing;
 use Pimcore\Model\DataObject\Product\Listing as ProductListing;
 use App\Service\SecurityValidationService;
+use App\Service\FileSecurityService;
 
 
 #[Route('/product')]
@@ -27,9 +28,14 @@ class ProductController extends AbstractController
 {
     private CsrfTokenManagerInterface $csrfTokenManager;
     private SecurityValidationService $securityService;
-    public function __construct(CsrfTokenManagerInterface $csrfTokenManager, SecurityValidationService $securityService) {
+    public function __construct(
+        CsrfTokenManagerInterface $csrfTokenManager,
+        SecurityValidationService $securityService,
+        FileSecurityService $fileService
+    ) {
         $this->csrfTokenManager = $csrfTokenManager;
         $this->securityService = $securityService;
+        $this->fileService = $fileService;
     }
 
     // Constants for configuration
@@ -465,31 +471,21 @@ class ProductController extends AbstractController
     private function uploadProductImage($imageFile, string $productKey): ?\Pimcore\Model\Asset\Image
     {
         try {
-            // Validate image file
-            if (!$this->validateImageFile($imageFile)) {
+            if (!$this->fileService->validateImageFile($imageFile)) {
                 return null;
             }
-
-            // Get or create asset folder
             $assetFolder = $this->getOrCreateAssetFolder();
-            
-            // Generate filename
             $filename = $this->generateImageFilename($imageFile, $productKey);
-            
-            // Read file content
             $fileContent = $this->readImageFileContent($imageFile);
             if (!$fileContent) {
                 return null;
             }
-
-            // Create asset
             $imageAsset = new \Pimcore\Model\Asset\Image();
             $imageAsset->setFilename($filename);
             $imageAsset->setParent($assetFolder);
             $imageAsset->setMimeType($imageFile->getMimeType());
             $imageAsset->setData($fileContent);
             $imageAsset->save();
-
             error_log('Image uploaded successfully: ' . $imageAsset->getId());
             return $imageAsset;
 
@@ -530,139 +526,6 @@ class ProductController extends AbstractController
         }
         error_log('Security: Image file passed all validation checks');
         return true;
-    }
-
-    private function validateImageExtension($imageFile): bool
-    {
-        $originalName = $imageFile->getClientOriginalName();
-        if (empty($originalName)) {
-            error_log('Security: Missing original filename');
-            return false;
-        }
-        $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-        if (empty($extension)) {
-            error_log('Security: No file extension found');
-            return false;
-        }
-        if (!in_array($extension, self::ALLOWED_IMAGE_EXTENSIONS)) {
-            error_log('Security: Extension not in whitelist: ' . $extension);
-            return false;
-        }
-        $filename = pathinfo($originalName, PATHINFO_FILENAME);
-        $suspiciousExtensions = ['php', 'phtml', 'php3', 'php4', 'php5', 'pht', 'phar', 'jsp', 'asp', 'aspx', 'js', 'html', 'htm'];
-        foreach ($suspiciousExtensions as $suspExt) {
-            if (stripos($filename, '.' . $suspExt) !== false) {
-                error_log('Security: Suspicious double extension detected: ' . $originalName);
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private function validateImageMagicNumbers($imageFile): bool
-    {
-        $filePath = $imageFile->getPathname();
-        if (!file_exists($filePath) || !is_readable($filePath)) {
-            error_log('Security: Cannot read file for magic number check: ' . $filePath);
-            return false;
-        }
-        $handle = fopen($filePath, 'rb');
-        if (!$handle) {
-            error_log('Security: Cannot open file for reading: ' . $filePath);
-            return false;
-        }
-        $header = fread($handle, 20);
-        fclose($handle);
-        if ($header === false || strlen($header) < 4) {
-            error_log('Security: Cannot read file header or file too small');
-            return false;
-        }
-        $extension = strtolower(pathinfo($imageFile->getClientOriginalName(), PATHINFO_EXTENSION));
-        if (!isset(self::IMAGE_MAGIC_NUMBERS[$extension])) {
-            error_log('Security: No magic numbers defined for extension: ' . $extension);
-            return false;
-        }
-        $validMagicNumbers = self::IMAGE_MAGIC_NUMBERS[$extension];
-        $isValid = false;
-        foreach ($validMagicNumbers as $magicNumber) {
-            if (substr($header, 0, strlen($magicNumber)) === $magicNumber) {
-                $isValid = true;
-                break;
-            }
-        }
-        if (!$isValid) {
-            error_log('Security: Magic number mismatch for ' . $extension . ' file');
-            return false;
-        }
-        if ($extension === 'webp') {
-            if (substr($header, 8, 4) !== 'WEBP') {
-                error_log('Security: Invalid WebP format signature');
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private function validateImageFilename($imageFile): bool
-    {
-        $originalName = $imageFile->getClientOriginalName();
-        if (strlen($originalName) > self::MAX_FILENAME_LENGTH) {
-            error_log('Security: Filename too long: ' . strlen($originalName) . ' characters');
-            return false;
-        }
-        $dangerousChars = ['..', '/', '\\', '<', '>', ':', '"', '|', '?', '*', "\0"];
-        foreach ($dangerousChars as $char) {
-            if (strpos($originalName, $char) !== false) {
-                error_log('Security: Dangerous character in filename: ' . $char);
-                return false;
-            }
-        }
-        if (strpos($originalName, "\0") !== false) {
-            error_log('Security: Null byte in filename detected');
-            return false;
-        }
-        if (preg_match('/[\x00-\x1F\x7F-\x9F]/', $originalName)) {
-            error_log('Security: Control characters in filename');
-            return false;
-        }
-        return true;
-    }
-
-    private function scanImageContent($imageFile): bool
-    {
-        $filePath = $imageFile->getPathname();
-        $content = file_get_contents($filePath, false, null, 0, 8192);
-        if ($content === false) {
-            error_log('Security: Cannot read file content for scanning');
-            return false;
-        }
-        foreach (self::SUSPICIOUS_PATTERNS as $pattern) {
-            if (preg_match($pattern, $content)) {
-                error_log('Security: Suspicious content pattern detected: ' . $pattern);
-                return false;
-            }
-        }
-        if (stripos($content, '<?') !== false || stripos($content, '<%') !== false) {
-            error_log('Security: Embedded script tags detected');
-            return false;
-        }
-
-        return true;
-    }
-
-    private function readImageFileContent($imageFile): ?string
-    {
-        $tempPath = $imageFile->getPathname();
-        if (!file_exists($tempPath) || !is_readable($tempPath)) {
-            error_log('Image file not readable: ' . $tempPath);
-            return null;
-        }
-        $content = file_get_contents($tempPath);
-        if ($content === false || strlen($content) === 0) {
-            error_log('Cannot read image content');
-            return null;
-        }
-        return $content;
     }
 
     private function getOrCreateAssetFolder(): \Pimcore\Model\Asset\Folder
