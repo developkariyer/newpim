@@ -1848,11 +1848,15 @@
                     this.state.lockedVariants = [];
                     return;
                 }
-                this.state.lockedVariants = product.variants.map(v => {
+
+                const uniqueVariants = new Map();
+                
+                product.variants.forEach(v => {
                     let sizeValue = v.size || v.sizeName || v.beden || v.productVariantSize?.name || v.productVariantSize?.beden;
                     let colorValue = v.color || v.colorName || v.renk || v.productVariantColor?.name;
                     let customValue = v.custom || v.customName || v.customValue || v.productVariantCustom?.deger;
                     let published = typeof v.published !== 'undefined' ? v.published : true;
+                    
                     if (sizeValue && typeof sizeValue === 'string') {
                         if (sizeValue.includes(' (En:')) {
                             sizeValue = sizeValue.split(' (En:')[0];
@@ -1860,19 +1864,25 @@
                             sizeValue = sizeValue.split(' (')[0];
                         }
                     }
+                    
                     if (customValue === undefined || customValue === '' || customValue === 'undefined') {
                         customValue = null;
                     }
-                    return {
-                        color: colorValue,
-                        size: sizeValue,
-                        custom: customValue,
-                        published: published, 
-                        id: v.id
-                    };
+
+                    const uniqueKey = `${colorValue}-${sizeValue}-${customValue || 'null'}`;
+                    
+                    if (!uniqueVariants.has(uniqueKey) || uniqueVariants.get(uniqueKey).published === false) {
+                        uniqueVariants.set(uniqueKey, {
+                            color: colorValue,
+                            size: sizeValue,
+                            custom: customValue,
+                            published: published,
+                            id: v.id
+                        });
+                    }
                 });
-                
-                console.log('Locked variants updated:', this.state.lockedVariants);
+                this.state.lockedVariants = Array.from(uniqueVariants.values());
+                console.log('Locked variants updated (deduplicated):', this.state.lockedVariants);
             }
 
             generateMatrix() {
