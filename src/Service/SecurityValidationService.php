@@ -27,7 +27,7 @@ class SecurityValidationService
     {
         $token = $request->request->get('_token') ?? $request->headers->get('X-CSRF-TOKEN');
         if (!$token) {
-            $this->logger->warning(" [" . __METHOD__ . "] Security: CSRF token missing", [
+            $this->logger->warning('Security: CSRF token missing', [
                 'ip' => $request->getClientIp(),
                 'user_agent' => $request->headers->get('User-Agent')
             ]);
@@ -35,14 +35,8 @@ class SecurityValidationService
         }
         $csrfToken = new CsrfToken(self::CSRF_TOKEN_ID, $token);
         $isValid = $this->csrfTokenManager->isTokenValid($csrfToken);
-        $this->logger->info(' [" . __METHOD__ . "] Security: CSRF token validation', [
-            'ip' => $request->getClientIp(),
-            'token_received' => substr($token, 0, 8) . '...',
-            'user_agent' => $request->headers->get('User-Agent'),
-            'is_valid' => $isValid
-        ]);
         if (!$isValid) {
-            $this->logger->warning(' [" . __METHOD__ . "] Security: CSRF token validation failed', [
+            $this->logger->warning('Security: CSRF token validation failed', [
                 'ip' => $request->getClientIp(),
                 'token_received' => substr($token, 0, 8) . '...',
                 'user_agent' => $request->headers->get('User-Agent')
@@ -55,7 +49,7 @@ class SecurityValidationService
     {
         $token = $request->headers->get('X-CSRF-TOKEN') ?? $request->request->get('_token');
         if (!$token) {
-            $this->logger->warning('[" . __METHOD__ . "] Security: AJAX CSRF token missing', [
+            $this->logger->warning('Security: AJAX CSRF token missing', [
                 'ip' => $request->getClientIp(),
                 'route' => $request->get('_route')
             ]);
@@ -64,7 +58,7 @@ class SecurityValidationService
         $csrfToken = new CsrfToken(self::CSRF_TOKEN_ID, $token);
         $isValid = $this->csrfTokenManager->isTokenValid($csrfToken);
         if (!$isValid) {
-            $this->logger->warning(' [" . __METHOD__ . "] Security: AJAX CSRF token validation failed', [
+            $this->logger->warning('Security: AJAX CSRF token validation failed', [
                 'ip' => $request->getClientIp(),
                 'route' => $request->get('_route')
             ]);
@@ -76,7 +70,7 @@ class SecurityValidationService
     {
         $contentLength = $request->headers->get('Content-Length');
         if ($contentLength && $contentLength > self::MAX_REQUEST_SIZE) {
-            $this->logger->warning(' [" . __METHOD__ . "] Security: Request too large', [
+            $this->logger->warning('Security: Request too large', [
                 'content_length' => $contentLength,
                 'max_allowed' => self::MAX_REQUEST_SIZE,
                 'ip' => $request->getClientIp()
@@ -99,7 +93,7 @@ class SecurityValidationService
                 }
             }
             if (!$isValidContentType) {
-                $this->logger->warning(' [" . __METHOD__ . "] Security: Invalid Content-Type', [
+                $this->logger->warning('Security: Invalid Content-Type', [
                     'content_type' => $contentType,
                     'ip' => $request->getClientIp()
                 ]);
@@ -110,7 +104,7 @@ class SecurityValidationService
             $origin = $request->headers->get('Origin');
             
             if ($origin && !in_array($origin, self::ALLOWED_ORIGINS)) {
-                $this->logger->warning(' [" . __METHOD__ . "] Security: Invalid Origin', [
+                $this->logger->warning('Security: Invalid Origin', [
                     'origin' => $origin,
                     'allowed_origins' => self::ALLOWED_ORIGINS,
                     'ip' => $request->getClientIp()
@@ -120,7 +114,7 @@ class SecurityValidationService
         }
         $userAgent = $request->headers->get('User-Agent');
         if (empty($userAgent) || strlen($userAgent) < 10) {
-            $this->logger->warning(' [" . __METHOD__ . "] Security: Suspicious User-Agent', [
+            $this->logger->warning('Security: Suspicious User-Agent', [
                 'user_agent' => $userAgent,
                 'ip' => $request->getClientIp()
             ]);
