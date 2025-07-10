@@ -324,6 +324,17 @@ class ProductController extends AbstractController
 
     private function createSingleVariant(Product $parentProduct, array $variantData): void
     {
+        $existingVariant = $this->findVariantByData($parentProduct->getId(), $variantData);
+        if ($existingVariant) {
+            if (!$existingVariant->getPublished()) {
+                $existingVariant->setPublished(true);
+                $existingVariant->save();
+                error_log('Variant republished: ' . $existingVariant->getId());
+            } else {
+                error_log('Variant already exists and published: ' . $existingVariant->getId());
+            }
+            return;
+        }
         $variant = new Product();
         $variant->setParent($parentProduct);
         $variant->setType(Product::OBJECT_TYPE_VARIANT);
