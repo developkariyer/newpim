@@ -26,6 +26,7 @@ use App\Service\DataProcessingService;
 use App\Service\CodeGenerationService;
 use App\Service\VariantService;
 use App\Service\SearchService;
+use App\Service\ProductService;
 
 
 #[Route('/product')]
@@ -39,6 +40,8 @@ class ProductController extends AbstractController
     private CodeGenerationService $codeGenerator;
     private VariantService $variantService;
     private SearchService $searchService;
+    private ProductService $productService;
+    
 
     public function __construct(
         CsrfTokenManagerInterface $csrfTokenManager,
@@ -48,7 +51,8 @@ class ProductController extends AbstractController
         DataProcessingService $dataProcessor,
         CodeGenerationService $codeGenerator,
         VariantService $variantService,
-        SearchService $searchService
+        SearchService $searchService,
+        ProductService $productService
     ) {
         $this->csrfTokenManager = $csrfTokenManager;
         $this->securityService = $securityService;
@@ -58,6 +62,7 @@ class ProductController extends AbstractController
         $this->codeGenerator = $codeGenerator;
         $this->variantService = $variantService;
         $this->searchService = $searchService;
+        $this->productService = $productService;
     }
 
     // Constants for configuration
@@ -148,27 +153,20 @@ class ProductController extends AbstractController
             return $this->handleSecurityError('CSRF token geçersiz', $request);
         }
         $this->logRequest($request);
-        try {
-            $requestData = $this->parseRequestData($request);
-            $validationResult = $this->validateProductData($requestData);
-            if (!$validationResult['isValid']) {
-                return $this->handleValidationErrors($validationResult['errors'], $request);
+        $requestData = $this->parseRequestData($request);
+        $result = $this->productService->processProduct($requestData);
+        if (!$result['success']) {
+            if (isset($result['errors'])) {
+                return $this->handleValidationErrors($result['errors'], $request);
+            } else {
+                return $this->handleProductCreationError(
+                    $result['exception'] ?? new \Exception($result['message'] ?? 'Bilinmeyen hata'), 
+                    $request, 
+                    $requestData['isUpdate'] ?? false
+                );
             }
-            $product = $requestData['isUpdate'] 
-                ? $this->updateExistingProduct($requestData)
-                : $this->createNewProduct($requestData);
-
-            $this->setProductData($product, $requestData, $validationResult['objects']);
-            $product->setPublished(true);
-            $product->save();
-            error_log('Product saved successfully: ' . $product->getId());
-            if (!empty($requestData['variations'])) {
-                $this->variantService->createProductVariants($product, $requestData['variations']);
-            }
-            return $this->createSuccessResponse($request, $requestData['isUpdate'], $product);
-        } catch (\Throwable $e) {
-            return $this->handleProductCreationError($e, $request, $requestData['isUpdate'] ?? false);
         }
+        return $this->createSuccessResponse($request, $requestData['isUpdate'], $result['product']);
     }
 
     #[Route('/search/{type}', name: 'product_search', methods: ['GET'])]
@@ -271,114 +269,6 @@ class ProductController extends AbstractController
             'variations' => $variations ? json_decode($variations, true) : null
         ];
     }
-
-    private function validateProductData(array $data): array
-    {
-        $errors = [];
-        $objects = [];
-        $objects['category'] = $this->validateSingleObject('category', $data['categoryId'], $errors, 'Kategori');
-        $objects['brands'] = $this->validateMultipleObjects('brand', $data['brandIds'], $errors, 'Marka');
-        $objects['marketplaces'] = $this->validateMultipleObjects('marketplace', $data['marketplaceIds'], $errors, 'Pazaryeri');
-        $objects['colors'] = $this->validateMultipleObjects('color', $data['colorIds'], $errors, 'Renk');
-        if (!$data['isUpdate'] && (!$data['imageFile'] || !$data['imageFile']->isValid())) {
-            $errors[] = 'Geçerli bir resim dosyası gerekli.';
-        }
-        return [
-            'isValid' => empty($errors),
-            'errors' => $errors,
-            'objects' => $objects
-        ];
-    }
-
-    private function createNewProduct(array $data): Product
-    {
-        $imageAsset = null;
-        if ($data['imageFile'] && $data['imageFile']->isValid()) {
-            $imageAsset = $this->assetService->uploadProductImage($data['imageFile'], $data['productIdentifier'] ?: $data['productName']);
-        }
-        $parentFolder = $this->createProductFolderStructure($data['productIdentifier'], $data['categoryId']);
-        $product = new Product();
-        $product->setParent($parentFolder);
-        $product->setKey($data['productIdentifier'] . ' ' . $data['productName']);
-        $product->setProductIdentifier($data['productIdentifier']);
-        
-        if ($imageAsset) {
-            $product->setImage($imageAsset);
-        }
-        error_log('Creating new product in folder: ' . $parentFolder->getFullPath());
-        return $product;
-    }
-
-    private function updateExistingProduct(array $data): Product
-    {
-        $product = Product::getById($data['editingProductId']);
-        if (!$product) {
-            throw new \Exception('Güncellenecek ürün bulunamadı.');
-        }
-        if ($data['imageFile'] && $data['imageFile']->isValid()) {
-            $imageAsset = $this->assetService->uploadProductImage($data['imageFile'], $product->getProductIdentifier());
-            if ($imageAsset) {
-                $product->setImage($imageAsset);
-            }
-        }
-        error_log('Updating existing product: ' . $product->getId());
-        return $product;
-    }
-
-    private function setProductData(Product $product, array $data, array $objects): void
-    {
-        $product->setName($data['productName']);
-        $product->setDescription($data['productDescription']);
-        $product->setProductCategory($objects['category']);
-        $product->setBrandItems($objects['brands']);
-        $product->setMarketplaces($objects['marketplaces']);
-        if ($data['sizeTableData']) {
-            $sizeTable = json_decode($data['sizeTableData'], true);
-            if (is_array($sizeTable)) {
-                $product->setVariationSizeTable($sizeTable);
-            }
-        }
-        if ($data['customTableData']) {
-            $customTable = $this->dataProcessor->processCustomTableData($data['customTableData']);
-            if ($customTable) {
-                $product->setCustomFieldTable($customTable);
-            }
-        }
-        if (!$data['isUpdate']) {
-            $this->codeGenerator->generateProductCode($product);
-        }
-    }
-
-    private function createProductFolderStructure(string $productIdentifier, int $categoryId): \Pimcore\Model\DataObject\Folder
-    {
-        $productsFolder = \Pimcore\Model\DataObject\Folder::getById(self::PRODUCTS_MAIN_FOLDER_ID);
-        if (!$productsFolder) {
-            throw new \Exception('Products main folder not found');
-        }
-        $category = Category::getById($categoryId);
-        if (!$category) {
-            throw new \Exception('Category not found');
-        }
-        $categoryFolder = $this->getOrCreateFolder($productsFolder, $category->getKey());
-        $identifierPrefix = strtoupper(explode('-', $productIdentifier)[0]);
-        $identifierFolder = $this->getOrCreateFolder($categoryFolder, $identifierPrefix);
-        return $identifierFolder;
-    }
-
-    private function getOrCreateFolder(\Pimcore\Model\DataObject\Folder $parent, string $folderName): \Pimcore\Model\DataObject\Folder
-    {
-        $folderPath = $parent->getFullPath() . '/' . $folderName;
-        $folder = \Pimcore\Model\DataObject\Folder::getByPath($folderPath);
-        if (!$folder) {
-            $folder = new \Pimcore\Model\DataObject\Folder();
-            $folder->setKey($folderName);
-            $folder->setParent($parent);
-            $folder->save();
-            error_log('Created folder: ' . $folder->getFullPath());
-        }
-        return $folder;
-    }
-
 
     // ===========================================
     // VALIDATION HELPERS
