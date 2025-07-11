@@ -15,6 +15,7 @@ use Pimcore\Model\DataObject\Category\Listing as CategoryListing;
 use Pimcore\Model\DataObject\Brand\Listing as BrandListing;
 use Pimcore\Model\DataObject\Asin\Listing as AsinListing;
 use Pimcore\Model\DataObject\Ean\Listing as EanListing;
+use App\Service\SearchService;
 
 #[Route('/catalog')]
 class CatalogController extends AbstractController
@@ -22,8 +23,9 @@ class CatalogController extends AbstractController
     // Constants
     private const DEFAULT_LIMIT = 20;
     private const MAX_LIMIT = 100;
-    private const SEARCH_MIN_LENGTH = 2;
     private const EXPORT_MAX_PRODUCTS = 50000;
+
+    private SearchService $searchService;
     
     // ===========================================
     // MAIN ROUTES
@@ -39,7 +41,7 @@ class CatalogController extends AbstractController
             $asinFilter = trim($request->query->get('asin', ''));
             $brandFilter = trim($request->query->get('brand', ''));
             $eanFilter = trim($request->query->get('ean', ''));
-            $initialProducts = $this->getProducts(
+            $initialProducts = $this->searchService->getFilteredProducts(
                 limit: self::DEFAULT_LIMIT,
                 offset: 0,
                 categoryFilter: $categoryFilter,
@@ -87,7 +89,7 @@ class CatalogController extends AbstractController
             $brandFilter = trim($request->query->get('brand', ''));
             $eanFilter = trim($request->query->get('ean', ''));
             
-            $result = $this->getProducts(
+            $result = $this->searchService->getFilteredProducts(
                 $limit, 
                 $offset, 
                 $categoryFilter, 
@@ -132,7 +134,7 @@ class CatalogController extends AbstractController
                     'message' => 'En az ' . self::SEARCH_MIN_LENGTH . ' karakter girin.'
                 ]);
             }
-            $result = $this->getProducts($limit, 0, $categoryFilter, $searchQuery);
+            $result = $this->searchService->getFilteredProducts($limit, 0, $categoryFilter, $searchQuery);
             return new JsonResponse([
                 'success' => true,
                 'products' => $result['products'],
@@ -178,103 +180,7 @@ class CatalogController extends AbstractController
             return $this->redirectToRoute('catalog');
         }
     }
-
-    // ===========================================
-    // DATA RETRIEVAL METHODS
-    // ===========================================
-
-    private function getProducts(int $limit, int $offset, ?string $categoryFilter = null, string $searchQuery = '',?string $asinFilter = null, ?string $brandFilter = null, ?string $eanFilter = null   ): array
-    {
-        try {
-            $listing = new ProductListing();
-            $conditions = ["published = 1", "type IS NULL OR type != 'variant'"];
-            $params = [];
-            $parentIdsFromAdvancedFilters = [];
-            $hasAdvancedFilter = false;
-            if (!empty($categoryFilter)) {
-                $category = $this->getCategoryByKey($categoryFilter);
-                if ($category) {
-                    $conditions[] = "productCategory__id = ?";
-                    $params[] = $category->getId();
-                }
-            }
-            if (!empty($searchQuery) && strlen($searchQuery) >= self::SEARCH_MIN_LENGTH) {
-                $searchCondition = "(name LIKE ? OR productIdentifier LIKE ? OR description LIKE ?)";
-                $conditions[] = $searchCondition;
-                $searchParam = "%" . $searchQuery . "%";
-                $params[] = $searchParam;
-                $params[] = $searchParam;
-                $params[] = $searchParam;
-            }
-
-            if (!empty($asinFilter)) {
-                $hasAdvancedFilter = true;
-                $asinParentIds = $this->getParentProductIdsByVariantAsin($asinFilter);
-                error_log("ASIN '$asinFilter' için bulunan parent ID'ler: " . json_encode($asinParentIds));
-                $parentIdsFromAdvancedFilters[] = $asinParentIds;
-            }
-
-            if (!empty($brandFilter)) {
-                $hasAdvancedFilter = true;
-                $brandParentIds = $this->getParentProductIdsByVariantBrand($brandFilter);
-                error_log("Brand '$brandFilter' için bulunan parent ID'ler: " . json_encode($brandParentIds));
-                $parentIdsFromAdvancedFilters[] = $brandParentIds;
-            }
-
-            if (!empty($eanFilter)) {
-                $hasAdvancedFilter = true;
-                $eanParentIds = $this->getParentProductIdsByVariantEan($eanFilter);
-                error_log("EAN '$eanFilter' için bulunan parent ID'ler: " . json_encode($eanParentIds));
-                $parentIdsFromAdvancedFilters[] = $eanParentIds;
-            }
-
-            if ($hasAdvancedFilter) {
-                if (count($parentIdsFromAdvancedFilters) === 1) {
-                    $finalParentIds = $parentIdsFromAdvancedFilters[0];
-                } else {
-                    $finalParentIds = array_intersect(...$parentIdsFromAdvancedFilters);
-                }
-                
-                error_log("Final parent ID'ler: " . json_encode($finalParentIds));
-                
-                if (empty($finalParentIds)) {
-                    $conditions[] = "oo_id = -1";
-                } else {
-                    $placeholders = implode(',', array_fill(0, count($finalParentIds), '?'));
-                    $conditions[] = "oo_id IN ($placeholders)";
-                    $params = array_merge($params, array_values($finalParentIds));
-                }
-            }
-            $listing->setCondition(implode(" AND ", $conditions), $params);
-            $listing->setLimit($limit);
-            $listing->setOffset($offset);
-            $listing->setOrderKey('creationDate');
-            $listing->setOrder('DESC');
-            $products = $listing->load();
-            $total = $listing->getTotalCount();
-            $formattedProducts = [];
-            foreach ($products as $product) {
-                $formattedProducts[] = $this->formatProductForCatalog($product);
-            }
-            return [
-                'products' => $formattedProducts,
-                'total' => $total,
-                'hasMore' => ($offset + $limit) < $total,
-                'currentOffset' => $offset,
-                'currentLimit' => $limit
-            ];
-        } catch (\Exception $e) {
-            error_log('Get products error: ' . $e->getMessage());
-            return [
-                'products' => [],
-                'total' => 0,
-                'hasMore' => false,
-                'currentOffset' => 0,
-                'currentLimit' => $limit
-            ];
-        }
-    }
-
+   
     private function formatProductForCatalog(Product $product): array
     {
         try {
@@ -292,7 +198,7 @@ class CatalogController extends AbstractController
                     } 
                 }
             }
-            $variants = $this->getProductVariants($product, $customTableTitle);
+            $variants = $this->searchService->getProductVariants($product, $customTableTitle);
             $category = $product->getProductCategory();
             $categoryInfo = $category ? [
                 'id' => $category->getId(),
@@ -331,208 +237,6 @@ class CatalogController extends AbstractController
                 'createdAt' => null,
                 'modifiedAt' => null
             ];
-        }
-    }
-
-    private function getProductVariants(Product $product, $customTableTitle): array
-    {
-        try {
-            if (!$product->hasChildren()) {
-                return [];
-            }
-            $variants = [];
-            $productVariants = $product->getChildren([Product::OBJECT_TYPE_VARIANT], true);
-            foreach ($productVariants as $variant) {
-                $colorObject = $variant->getVariationColor();
-                $colorInfo = $colorObject ? [
-                    'id' => $colorObject->getId(),
-                    'name' => $colorObject->getColor()
-                ] : null;
-                $eansObjects = $variant->getEans() ?? [];
-                $eans = [];
-                if (is_array($eansObjects)) {
-                    foreach ($eansObjects as $eanObject) {
-                        if ($eanObject->getGTIN()) {
-                            $eans[] = $eanObject->getGTIN();
-                        }
-                    }
-                }
-                $variants[] = [
-                    'id' => $variant->getId(),
-                    'name' => $variant->getName(),
-                    'eans' => $eans ?? [],
-                    'iwasku' => $variant->getIwasku(),
-                    'productCode' => $variant->getProductCode(),
-                    'variationSize' => $variant->getVariationSize(),
-                    'color' => $colorInfo,
-                    'customFieldTitle' => $customTableTitle,
-                    'customField' => $variant->getCustomField(),
-                    'published' => $variant->getPublished(),
-                ];
-            }
-            return $variants;
-        } catch (\Exception $e) {
-            error_log('Get product variants error: ' . $e->getMessage());
-            return [];
-        }
-    }
-
-    private function getAvailableCategories(): array
-    {
-        try {
-            $listing = new CategoryListing();
-            $listing->setCondition("published = 1");
-            $listing->setOrderKey('key');
-            $listing->setOrder('ASC');
-            $listing->load();
-            $categories = [];
-            foreach ($listing as $category) {
-                if (!$category->hasChildren()) {
-                    $categories[] = [
-                        'id' => $category->getId(),
-                        'key' => $category->getKey(),
-                        'name' => $category->getCategory() ?: $category->getKey(),
-                        'productCount' => $this->getCategoryProductCount($category->getId())
-                    ];
-                }
-            }
-            usort($categories, function($a, $b) {
-                return $b['productCount'] - $a['productCount'];
-            });
-            return $categories;
-        } catch (\Exception $e) {
-            error_log('Get available categories error: ' . $e->getMessage());
-            return [];
-        }
-    }
-
-    private function getCategoryByKey(string $categoryKey): ?Category
-    {
-        try {
-            $listing = new CategoryListing();
-            $listing->setCondition("published = 1 AND `key` = ?", [$categoryKey]);
-            $listing->setLimit(1);
-            return $listing->current();
-        } catch (\Exception $e) {
-            error_log('Get category by key error: ' . $e->getMessage());
-            return null;
-        }
-    }
-
-    private function getParentProductIdsByVariantAsin(string $asinValue): array
-    {
-        try {
-            $variantListing = new ProductListing();
-            $variantListing->setCondition("type = 'variant' AND published = 1");
-            $variants = $variantListing->getObjects();
-            $parentIds = [];
-            foreach ($variants as $variant) {
-                $asinObjects = $variant->getAsin();
-                if ($asinObjects) {
-                    if (is_array($asinObjects)) {
-                        foreach ($asinObjects as $asinObj) {
-                            if ($asinObj->getAsin() && stripos($asinObj->getAsin(), $asinValue) !== false) {
-                                $parentIds[] = $variant->getParentId();
-                                break;
-                            }
-                            if ($asinObj->getFnskus() && stripos($asinObj->getFnskus(), $asinValue) !== false) {
-                                $parentIds[] = $variant->getParentId();
-                                break;
-                            }
-                        }
-                    } else {
-                        if ($asinObjects->getAsin() && stripos($asinObjects->getAsin(), $asinValue) !== false) {
-                            $parentIds[] = $variant->getParentId();
-                        }
-                        if ($asinObjects->getFnskus() && stripos($asinObjects->getFnskus(), $asinValue) !== false) {
-                            $parentIds[] = $variant->getParentId();
-                        }
-                    }
-                }
-            }
-            
-            return array_unique(array_filter($parentIds));
-        } catch (\Exception $e) {
-            error_log('Get parent product IDs by variant ASIN error: ' . $e->getMessage());
-            return [];
-        }
-    }
-
-    /**
-     * Brand değeri bulunan varyantların ana ürün ID'lerini getirir
-     */
-    private function getParentProductIdsByVariantBrand(string $brandValue): array
-    {
-        try {
-            $variantListing = new ProductListing();
-            $variantListing->setCondition("type = 'variant' AND published = 1");
-            $variants = $variantListing->getObjects();
-            
-            $parentIds = [];
-            foreach ($variants as $variant) {
-                $brandObjects = $variant->getBrandItems();
-                if ($brandObjects) {
-                    if (is_array($brandObjects)) {
-                        foreach ($brandObjects as $brandObj) {
-                            if ($brandObj->getKey() && stripos($brandObj->getKey(), $brandValue) !== false) {
-                                $parentIds[] = $variant->getParentId();
-                                break;
-                            }
-                        }
-                    } else {
-                        if ($brandObjects->getKey() && stripos($brandObjects->getKey(), $brandValue) !== false) {
-                            $parentIds[] = $variant->getParentId();
-                        }
-                    }
-                }
-            }
-            
-            return array_unique(array_filter($parentIds));
-        } catch (\Exception $e) {
-            error_log('Get parent product IDs by variant Brand error: ' . $e->getMessage());
-            return [];
-        }
-    }
-
-    /**
-     * EAN değeri bulunan varyantların ana ürün ID'lerini getirir
-     */
-    private function getParentProductIdsByVariantEan(string $eanValue): array
-    {
-        try {
-            $variantListing = new ProductListing();
-            $variantListing->setCondition("type = 'variant' AND published = 1");
-            $variants = $variantListing->getObjects();
-            
-            $parentIds = [];
-            foreach ($variants as $variant) {
-                $eanObjects = $variant->getEans();
-                if ($eanObjects && is_array($eanObjects)) {
-                    foreach ($eanObjects as $eanObj) {
-                        if ($eanObj->getGTIN() && stripos($eanObj->getGTIN(), $eanValue) !== false) {
-                            $parentIds[] = $variant->getParentId();
-                            break;
-                        }
-                    }
-                }
-            }
-            
-            return array_unique(array_filter($parentIds));
-        } catch (\Exception $e) {
-            error_log('Get parent product IDs by variant EAN error: ' . $e->getMessage());
-            return [];
-        }
-    }
-
-    private function getCategoryProductCount(int $categoryId): int
-    {
-        try {
-            $listing = new ProductListing();
-            $listing->setCondition("published = 1 AND productCategory__id = ? AND (type IS NULL OR type != 'variant')", [$categoryId]);
-            return $listing->getTotalCount();
-        } catch (\Exception $e) {
-            error_log('Get category product count error: ' . $e->getMessage());
-            return 0;
         }
     }
 
