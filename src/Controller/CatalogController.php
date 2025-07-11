@@ -16,6 +16,7 @@ use Pimcore\Model\DataObject\Brand\Listing as BrandListing;
 use Pimcore\Model\DataObject\Asin\Listing as AsinListing;
 use Pimcore\Model\DataObject\Ean\Listing as EanListing;
 use App\Service\SearchService;
+use App\Service\ExportService;
 
 #[Route('/catalog')]
 class CatalogController extends AbstractController
@@ -27,9 +28,11 @@ class CatalogController extends AbstractController
     private const EXPORT_MAX_PRODUCTS = 50000;
 
     private SearchService $searchService;
+    private ExportService $exportService;
 
-    public function __construct(SearchService $searchService)
+    public function __construct(SearchService $searchService, ExportService $exportService)
     {
+        $this->exportService = $exportService;
         $this->searchService = $searchService;
     }
     
@@ -160,7 +163,7 @@ class CatalogController extends AbstractController
         }
     }
 
-    #[Route('/export/excel', name: 'catalog_export_excel', methods: ['GET'])]
+     #[Route('/export/excel', name: 'catalog_export_excel', methods: ['GET'])]
     public function exportToExcel(Request $request): StreamedResponse
     {
         try {
@@ -169,146 +172,24 @@ class CatalogController extends AbstractController
             $asinFilter = trim($request->query->get('asin', ''));
             $brandFilter = trim($request->query->get('brand', ''));
             $eanFilter = trim($request->query->get('ean', ''));
-            $result = $this->searchService->getFilteredProducts(limit: self::EXPORT_MAX_PRODUCTS, offset: 0, categoryFilter: $categoryFilter, searchQuery: $searchQuery,asinFilter: $asinFilter, brandFilter: $brandFilter, eanFilter: $eanFilter);
-            $products = $result['products'];
-            $response = new StreamedResponse();
-            $response->setCallback(function() use ($products, $categoryFilter, $searchQuery) {
-                $this->generateExcelOutput($products, $categoryFilter, $searchQuery);
-            });
-            $filename = $this->generateExcelFilename($categoryFilter, $searchQuery);
-            $response->headers->set('Content-Type', 'application/vnd.ms-excel; charset=utf-8');
-            $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
-            $response->headers->set('Cache-Control', 'max-age=0');
-            return $response;
+            
+            return $this->exportService->exportFilteredProductsToCsv(
+                self::EXPORT_MAX_PRODUCTS,
+                0,
+                $categoryFilter,
+                $searchQuery,
+                $asinFilter,
+                $brandFilter,
+                $eanFilter
+            );
         } catch (\Exception $e) {
-            error_log('Excel export error: ' . $e->getMessage());
+            $this->logger->error('Excel export error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             $this->addFlash('danger', 'Excel dosyası oluşturulurken hata oluştu.');
             return $this->redirectToRoute('catalog');
         }
     }
 
-    // ===========================================
-    // EXCEL EXPORT METHODS
-    // ===========================================
-
-    private function generateExcelOutput(array $products, ?string $categoryFilter, string $searchQuery): void
-    {
-        echo "\xEF\xBB\xBF";
-        $output = fopen('php://output', 'w');
-        $headers = [
-            'Ürün ID',
-            'Ürün Adı',
-            'Ürün Tanıtıcı',
-            'Ürün Kodu',
-            'Kategori',
-            'Açıklama',
-            'Toplam Varyant',
-            'Oluşturma Tarihi',
-            'Güncelleme Tarihi',
-            'Varyant ID',
-            'Varyant Adı',
-            'EAN Kodları', 
-            'IWASKU',
-            'Varyant Kodu',
-            'Beden',
-            'Renk',
-            'Custom Alan',
-            'Varyant Durumu',
-            'Varyant Oluşturma'
-        ];
-        fputcsv($output, $headers, ';');
-        foreach ($products as $product) {
-            if (empty($product['variants'])) {
-                $row = [
-                    $product['id'],
-                    $product['name'],
-                    $product['productIdentifier'],
-                    $product['productCode'],
-                    $product['category'] ? $product['category']['displayName'] : '',
-                    $product['description'],
-                    0,
-                    $product['createdAt'] ?? '',
-                    $product['modifiedAt'] ?? '',
-                    '', '', '', '', '', '', '', '', '', ''
-                ];
-                fputcsv($output, $row, ';');
-            } else {
-                foreach ($product['variants'] as $index => $variant) {
-                    $eansString = '';
-                    if (isset($variant['eans']) && is_array($variant['eans']) && !empty($variant['eans'])) {
-                        $eansString = implode(', ', $variant['eans']);
-                    }
-                    $row = [
-                        $index === 0 ? $product['id'] : '', 
-                        $index === 0 ? $product['name'] : '',
-                        $index === 0 ? $product['productIdentifier'] : '',
-                        $index === 0 ? $product['productCode'] : '',
-                        $index === 0 ? ($product['category'] ? $product['category']['displayName'] : '') : '',
-                        $index === 0 ? $product['description'] : '',
-                        $index === 0 ? $product['variantCount'] : '',
-                        $index === 0 ? ($product['createdAt'] ?? '') : '',
-                        $index === 0 ? ($product['modifiedAt'] ?? '') : '',
-                        $variant['id'],
-                        $variant['name'],
-                        $eansString,
-                        $variant['iwasku'] ?: '',
-                        $variant['productCode'] ?: '',
-                        $variant['variationSize'] ?: '',
-                        $variant['color'] ? $variant['color']['name'] : '',
-                        $variant['customField'] ?: '',
-                        $variant['published'] ? 'Aktif' : 'Pasif',
-                        $variant['createdAt'] ?? ''
-                    ];
-                    fputcsv($output, $row, ';');
-                }
-            }
-        }
-        fclose($output);
-    }
-
-    private function generateExcelFilename(?string $categoryFilter, string $searchQuery): string
-    {
-        $timestamp = date('Y-m-d_H-i-s');
-        $filename = 'urun_katalogu_' . $timestamp;
-        if (!empty($categoryFilter)) {
-            $filename .= '_kategori_' . $this->sanitizeFilename($categoryFilter);
-        }
-        if (!empty($searchQuery)) {
-            $filename .= '_arama_' . $this->sanitizeFilename($searchQuery);
-        }
-        return $filename . '.csv';
-    }
-
-    private function sanitizeFilename(string $input): string
-    {
-        $input = str_replace(
-            ['ı', 'ğ', 'ü', 'ş', 'ö', 'ç', 'İ', 'Ğ', 'Ü', 'Ş', 'Ö', 'Ç'],
-            ['i', 'g', 'u', 's', 'o', 'c', 'I', 'G', 'U', 'S', 'O', 'C'],
-            $input
-        );
-        $input = preg_replace('/[^a-zA-Z0-9_-]/', '_', $input);
-        $input = preg_replace('/_+/', '_', $input);
-        $input = trim($input, '_');
-        return substr($input, 0, 50);
-    }
-
-    // ===========================================
-    // UTILITY METHODS
-    // ===========================================
-
-    private function validatePaginationParams(Request $request): array
-    {
-        $limit = min(max((int)$request->query->get('limit', self::DEFAULT_LIMIT), 1), self::MAX_LIMIT);
-        $offset = max((int)$request->query->get('offset', 0), 0);
-        return ['limit' => $limit, 'offset' => $offset];
-    }
-
-    private function logRequest(Request $request, string $action): void
-    {
-        error_log("=== CATALOG {$action} REQUEST ===");
-        error_log('Method: ' . $request->getMethod());
-        error_log('URI: ' . $request->getRequestUri());
-        error_log('Query params: ' . json_encode($request->query->all()));
-        error_log('User Agent: ' . $request->headers->get('User-Agent'));
-    }
 }
