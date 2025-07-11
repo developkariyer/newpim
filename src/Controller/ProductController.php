@@ -200,7 +200,7 @@ class ProductController extends AbstractController
             if (!$product) {
                 return new JsonResponse(['items' => []]);
             }
-            $productData = $this->dataProcessor->buildProductData($selectedProduct);
+            $productData = $this->dataProcessor->buildProductData($product);
             return new JsonResponse(['items' => [$productData]]);
 
         } catch (\Exception $e) {
