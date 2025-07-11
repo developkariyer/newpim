@@ -44,6 +44,8 @@ class ProductController extends AbstractController
     private VariantService $variantService;
     private SearchService $searchService;
     private ProductService $productService;
+    private LoggerInterface $logger;
+
 
     public function __construct(
         CsrfTokenManagerInterface $csrfTokenManager,
@@ -51,7 +53,8 @@ class ProductController extends AbstractController
         DataProcessingService $dataProcessor,
         VariantService $variantService,
         SearchService $searchService,
-        ProductService $productService
+        ProductService $productService,
+        LoggerInterface $logger
     ) {
         $this->csrfTokenManager = $csrfTokenManager;
         $this->securityService = $securityService;
@@ -59,6 +62,7 @@ class ProductController extends AbstractController
         $this->variantService = $variantService;
         $this->searchService = $searchService;
         $this->productService = $productService;
+        $this->logger = $logger;
     }
     
     // ===========================================
@@ -196,8 +200,17 @@ class ProductController extends AbstractController
     }
 
     // ===========================================
-    // PRODUCT CREATION HELPERS
+    // HELPERS
     // ===========================================
+
+    private function handleSecurityError(string $message, Request $request): Response
+    {
+        if ($request->isXmlHttpRequest()) {
+            return new JsonResponse(['success' => false, 'message' => $message], 403);
+        }
+        $this->addFlash('danger', $message);
+        return $this->redirectToRoute('product');
+    }
 
     private function parseRequestData(Request $request): array
     {

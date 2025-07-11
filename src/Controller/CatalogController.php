@@ -17,6 +17,7 @@ use Pimcore\Model\DataObject\Asin\Listing as AsinListing;
 use Pimcore\Model\DataObject\Ean\Listing as EanListing;
 use App\Service\SearchService;
 use App\Service\ExportService;
+use Psr\Log\LoggerInterface;
 
 #[Route('/catalog')]
 class CatalogController extends AbstractController
@@ -29,11 +30,13 @@ class CatalogController extends AbstractController
 
     private SearchService $searchService;
     private ExportService $exportService;
+    private LoggerInterface $logger;
 
-    public function __construct(SearchService $searchService, ExportService $exportService)
+    public function __construct(SearchService $searchService, ExportService $exportService, LoggerInterface $logger)
     {
         $this->exportService = $exportService;
         $this->searchService = $searchService;
+        $this->logger = $logger;
     }
     
     // ===========================================
