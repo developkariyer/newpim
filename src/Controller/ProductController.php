@@ -20,10 +20,7 @@ use Pimcore\Model\DataObject\Brand\Listing as BrandListing;
 use Pimcore\Model\DataObject\Marketplace\Listing as MarketplaceListing;
 use Pimcore\Model\DataObject\Product\Listing as ProductListing;
 use App\Service\SecurityValidationService;
-use App\Service\FileSecurityService;
-use App\Service\AssetManagementService;
 use App\Service\DataProcessingService;
-use App\Service\CodeGenerationService;
 use App\Service\VariantService;
 use App\Service\SearchService;
 use App\Service\ProductService;
@@ -32,63 +29,8 @@ use App\Service\ProductService;
 #[Route('/product')]
 class ProductController extends AbstractController
 {
-    private CsrfTokenManagerInterface $csrfTokenManager;
-    private SecurityValidationService $securityService;
-    private FileSecurityService $fileService;
-    private AssetManagementService $assetService;
-    private DataProcessingService $dataProcessor;
-    private CodeGenerationService $codeGenerator;
-    private VariantService $variantService;
-    private SearchService $searchService;
-    private ProductService $productService;
+    private const CSRF_TOKEN_ID = 'product_form';
     
-
-    public function __construct(
-        CsrfTokenManagerInterface $csrfTokenManager,
-        SecurityValidationService $securityService,
-        FileSecurityService $fileService,
-        AssetManagementService $assetService,
-        DataProcessingService $dataProcessor,
-        CodeGenerationService $codeGenerator,
-        VariantService $variantService,
-        SearchService $searchService,
-        ProductService $productService
-    ) {
-        $this->csrfTokenManager = $csrfTokenManager;
-        $this->securityService = $securityService;
-        $this->fileService = $fileService;
-        $this->assetService = $assetService;
-        $this->dataProcessor = $dataProcessor;
-        $this->codeGenerator = $codeGenerator;
-        $this->variantService = $variantService;
-        $this->searchService = $searchService;
-        $this->productService = $productService;
-    }
-
-    // Constants for configuration
-    private const PRODUCTS_MAIN_FOLDER_ID = 1246;
-    private const COLORS_FOLDER_ID = 1247;
-    private const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
-    private const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    private const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-    private const IMAGE_MAGIC_NUMBERS = [
-        'jpg' => ["\xFF\xD8\xFF"],
-        'jpeg' => ["\xFF\xD8\xFF"],
-        'png' => ["\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"],
-        'gif' => ["\x47\x49\x46\x38\x37\x61", "\x47\x49\x46\x38\x39\x61"],
-        'webp' => ["\x52\x49\x46\x46"]
-    ];
-    private const MAX_FILENAME_LENGTH = 255;
-    private const SUSPICIOUS_PATTERNS = [
-        '/<\?php/i',
-        '/<script/i',
-        '/javascript:/i',
-        '/vbscript:/i',
-        '/onload=/i',
-        '/onerror=/i'
-    ];
-    private const UNIQUE_CODE_LENGTH = 5;
-
     private const TYPE_MAPPING = [
         'colors' => ColorListing::class,
         'brands' => BrandListing::class,
@@ -96,21 +38,29 @@ class ProductController extends AbstractController
         'categories' => CategoryListing::class
     ];
 
-    private const CLASS_MAPPING = [
-        'color' => Color::class,
-        'brand' => Brand::class,
-        'marketplace' => Marketplace::class,
-        'category' => Category::class
-    ];
-    private const CSRF_TOKEN_ID = 'product_form';
-    private const MAX_REQUEST_SIZE = 50 * 1024 * 1024;
-    private const ALLOWED_ORIGINS = []; 
-    private const XSS_DANGEROUS_TAGS = [
-        '<script', '</script>', '<iframe', '</iframe>', '<object', '</object>',
-        '<embed', '</embed>', '<form', '</form>', 'javascript:', 'vbscript:',
-        'onload=', 'onerror=', 'onclick=', 'onmouseover=', 'onfocus='
-    ];
+    private CsrfTokenManagerInterface $csrfTokenManager;
+    private SecurityValidationService $securityService;
+    private DataProcessingService $dataProcessor;
+    private VariantService $variantService;
+    private SearchService $searchService;
+    private ProductService $productService;
 
+    public function __construct(
+        CsrfTokenManagerInterface $csrfTokenManager,
+        SecurityValidationService $securityService,
+        DataProcessingService $dataProcessor,
+        VariantService $variantService,
+        SearchService $searchService,
+        ProductService $productService
+    ) {
+        $this->csrfTokenManager = $csrfTokenManager;
+        $this->securityService = $securityService;
+        $this->dataProcessor = $dataProcessor;
+        $this->variantService = $variantService;
+        $this->searchService = $searchService;
+        $this->productService = $productService;
+    }
+    
     // ===========================================
     // MAIN ROUTES
     // ===========================================
@@ -216,7 +166,7 @@ class ProductController extends AbstractController
             if (!$colorName) {
                 return new JsonResponse(['success' => false, 'message' => 'Renk adı boş olamaz.']);
             }
-            if ($this->colorExists($colorName)) {
+            if ($this->variantService->colorExists($colorName)) {
                 return new JsonResponse(['success' => false, 'message' => 'Bu renk zaten mevcut.']);
             }
             $color = $this->variantService->createColor($colorName);
@@ -268,54 +218,6 @@ class ProductController extends AbstractController
             'customTableData' => $request->get('customTableData'),
             'variations' => $variations ? json_decode($variations, true) : null
         ];
-    }
-
-    // ===========================================
-    // VALIDATION HELPERS
-    // ===========================================
-
-    private function validateSingleObject(string $type, $id, array &$errors, string $displayName): ?object
-    {
-        if (empty($id)) {
-            return null;
-        }
-        $intId = (int)(is_array($id) ? $id[0] : $id);
-        $object = $this->searchService->getObjectById(self::CLASS_MAPPING[$type], $intId);
-        if (!$object) {
-            $errors[] = "{$displayName} ID {$intId} bulunamadı";
-        }
-        return $object;
-    }
-
-    private function validateMultipleObjects(string $type, array $ids, array &$errors, string $displayName): array
-    {
-        if (empty($ids)) {
-            return [];
-        }
-        $cleanIds = array_map('intval', array_filter($ids, 'is_numeric'));
-        if (empty($cleanIds)) {
-            return [];
-        }
-        $listingClass = self::TYPE_MAPPING[$type . 's'] ?? null;
-        if (!$listingClass || !class_exists($listingClass)) {
-            $errors[] = "{$displayName} için geçersiz tip: {$type}";
-            return [];
-        }
-        $listing = new $listingClass();
-        $listing->setCondition('oo_id IN (?)', [array_unique($cleanIds)]);
-        $listing->setUnpublished(true);
-        $objects = $listing->load();
-        if (count($objects) !== count(array_unique($cleanIds))) {
-            $foundIds = [];
-            foreach ($objects as $object) {
-                $foundIds[] = $object->getId();
-            }
-            $missingIds = array_diff(array_unique($cleanIds), $foundIds);
-            foreach ($missingIds as $missingId) {
-                $errors[] = "{$displayName} ID {$missingId} bulunamadı";
-            }
-        }
-        return $objects;
     }
 
     // ===========================================
@@ -386,15 +288,5 @@ class ProductController extends AbstractController
         error_log('Files: ' . json_encode(array_keys($request->files->all())));
     }
 
-    private function generateSafeFilename(string $input): string
-    {
-        $filename = mb_strtolower($input);
-        $filename = str_replace(['ı', 'ğ', 'ü', 'ş', 'ö', 'ç'], ['i', 'g', 'u', 's', 'o', 'c'], $filename);
-        $filename = preg_replace('/[^a-z0-9]/', '_', $filename);
-        $filename = preg_replace('/_+/', '_', $filename);
-        $filename = trim($filename, '_');
-        
-        return $filename ?: 'product';
-    }
 
 }
