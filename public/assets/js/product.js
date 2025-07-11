@@ -1,4 +1,5 @@
 
+window.csrfToken = '{{ csrf_token }}';
 'use strict';
 
 /**
@@ -782,8 +783,7 @@ class ProductFormManager {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': window.csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             });
             
