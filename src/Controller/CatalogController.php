@@ -26,6 +26,11 @@ class CatalogController extends AbstractController
     private const EXPORT_MAX_PRODUCTS = 50000;
 
     private SearchService $searchService;
+
+    public function __construct(SearchService $searchService)
+    {
+        $this->searchService = $searchService;
+    }
     
     // ===========================================
     // MAIN ROUTES
