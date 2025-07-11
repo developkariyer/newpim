@@ -25,6 +25,8 @@ use App\Service\AssetManagementService;
 use App\Service\DataProcessingService;
 use App\Service\CodeGenerationService;
 use App\Service\VariantService;
+use App\Service\SearchService;
+
 
 #[Route('/product')]
 class ProductController extends AbstractController
@@ -36,6 +38,7 @@ class ProductController extends AbstractController
     private DataProcessingService $dataProcessor;
     private CodeGenerationService $codeGenerator;
     private VariantService $variantService;
+    private SearchService $searchService;
 
     public function __construct(
         CsrfTokenManagerInterface $csrfTokenManager,
@@ -44,7 +47,8 @@ class ProductController extends AbstractController
         AssetManagementService $assetService,
         DataProcessingService $dataProcessor,
         CodeGenerationService $codeGenerator,
-        VariantService $variantService
+        VariantService $variantService,
+        SearchService $searchService
     ) {
         $this->csrfTokenManager = $csrfTokenManager;
         $this->securityService = $securityService;
@@ -53,6 +57,7 @@ class ProductController extends AbstractController
         $this->dataProcessor = $dataProcessor;
         $this->codeGenerator = $codeGenerator;
         $this->variantService = $variantService;
+        $this->searchService = $searchService;
     }
 
     // Constants for configuration
@@ -122,10 +127,10 @@ class ProductController extends AbstractController
             }
             $csrfToken = $this->csrfTokenManager->getToken(self::CSRF_TOKEN_ID)->getValue();
             return $this->render('product/product.html.twig', [
-                'categories' => $this->getGenericListing(self::TYPE_MAPPING['categories'], "published = 1", fn($category) => $category->getCategory()),
-                'colors' => $this->getGenericListing(self::TYPE_MAPPING['colors']),
-                'brands' => $this->getGenericListing(self::TYPE_MAPPING['brands']),
-                'marketplaces' => $this->getGenericListing(self::TYPE_MAPPING['marketplaces']),
+                'categories' => $this->searchService->getGenericListing(self::TYPE_MAPPING['categories'], "published = 1", fn($category) => $category->getCategory()),
+                'colors' => $this->searchService->getGenericListing(self::TYPE_MAPPING['colors']),
+                'brands' => $this->searchService->getGenericListing(self::TYPE_MAPPING['brands']),
+                'marketplaces' => $this->searchService->getGenericListing(self::TYPE_MAPPING['marketplaces']),
                 'selectedProduct' => $selectedProductData,
                 'csrf_token' => $csrfToken
             ]);
@@ -174,8 +179,8 @@ class ProductController extends AbstractController
             if (!isset(self::TYPE_MAPPING[$type])) {
                 return new JsonResponse(['error' => 'Invalid search type'], 400);
             }
-            $searchCondition = $this->buildSearchCondition($query);
-            $results = $this->getGenericListing(self::TYPE_MAPPING[$type], $searchCondition);
+            $searchCondition = $this->searchService->buildSearchCondition($query);
+            $results = $this->searchService->getGenericListing(self::TYPE_MAPPING[$type], $searchCondition);
             return new JsonResponse(['items' => $results]);
         } catch (\Exception $e) {
             error_log('Search error: ' . $e->getMessage());
@@ -191,7 +196,7 @@ class ProductController extends AbstractController
             if (strlen($query) < 2) {
                 return new JsonResponse(['items' => []]);
             }
-            $product = $this->findProductByQuery($query);
+            $product = $this->searchService->findProductByQuery($query);
             if (!$product) {
                 return new JsonResponse(['items' => []]);
             }
@@ -385,7 +390,7 @@ class ProductController extends AbstractController
             return null;
         }
         $intId = (int)(is_array($id) ? $id[0] : $id);
-        $object = $this->getObjectById(self::CLASS_MAPPING[$type], $intId);
+        $object = $this->searchService->getObjectById(self::CLASS_MAPPING[$type], $intId);
         if (!$object) {
             $errors[] = "{$displayName} ID {$intId} bulunamadı";
         }
@@ -421,57 +426,6 @@ class ProductController extends AbstractController
             }
         }
         return $objects;
-    }
-
-    private function getObjectById(string $className, int $id): ?object
-    {
-        if (!class_exists($className)) {
-            return null;
-        }
-        try {
-            return $className::getById($id);
-        } catch (\Exception $e) {
-            return null;
-        }
-    }
-
-    // ===========================================
-    // SEARCH AND LISTING
-    // ===========================================
-
-    private function buildSearchCondition(string $query): string
-    {
-        if (empty($query)) {
-            return "published = 1";
-        }
-        $escapedQuery = addslashes($query);
-        return "published = 1 AND LOWER(`key`) LIKE LOWER('%{$escapedQuery}%')";
-    }
-
-    private function findProductByQuery(string $query): ?Product
-    {
-        $listing = new ProductListing();
-        $listing->setCondition('productIdentifier LIKE ? OR name LIKE ?', ["%$query%", "%$query%"]);
-        $listing->setLimit(1);
-        $products = $listing->load();
-        return $products[0] ?? null;
-    }
-
-    private function getGenericListing(string $listingClass, string $condition = "published = 1", ?callable $nameGetter = null): array
-    {
-        $listing = new $listingClass();
-        $listing->setCondition($condition);
-        $listing->load();
-        
-        $results = [];
-        foreach ($listing as $item) {
-            $results[] = [
-                'id' => $item->getId(),
-                'name' => $nameGetter ? $nameGetter($item) : $item->getKey(),
-            ];
-        }
-        
-        return $results;
     }
 
     // ===========================================
