@@ -1,5 +1,4 @@
 
-window.csrfToken = '{{ csrf_token }}';
 'use strict';
 
 /**
