@@ -53,8 +53,7 @@ class ProductController extends AbstractController
         DataProcessingService $dataProcessor,
         VariantService $variantService,
         SearchService $searchService,
-        ProductService $productService,
-        LoggerInterface $logger
+        ProductService $productService
     ) {
         $this->csrfTokenManager = $csrfTokenManager;
         $this->securityService = $securityService;
@@ -62,7 +61,6 @@ class ProductController extends AbstractController
         $this->variantService = $variantService;
         $this->searchService = $searchService;
         $this->productService = $productService;
-        $this->logger = $logger;
     }
     
     // ===========================================
