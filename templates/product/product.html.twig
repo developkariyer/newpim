@@ -8,7 +8,7 @@
 {% block title %}Katalog Yeni Ürün Girişi{% endblock %}
 
 {% block content %}
-    <input type="hidden" name="_token" value="{{ csrf_token('product_form') }}">
+    <input type="hidden" name="_token" value={{ csrf_token('product_form') }}>
     <div class="product-form-container">
         {% if errors is defined and errors|length > 0 %}
             <div class="alert alert-danger" style="margin-bottom: 2rem; padding: 1rem; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; color: #721c24;">
