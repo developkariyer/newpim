@@ -79,7 +79,6 @@ class ProductController extends AbstractController
                 $selectedProduct = Product::getById((int)$editProductId);
                 if ($selectedProduct) {
                     $selectedProductData = $this->dataProcessor->buildProductData($selectedProduct);
-                    error_log('Loading product for edit: ' . $selectedProduct->getId());
                 } else {
                     $this->addFlash('warning', 'Düzenlenecek ürün bulunamadı.');
                 }
@@ -94,7 +93,6 @@ class ProductController extends AbstractController
                 'csrf_token' => $csrfToken
             ]);
         } catch (\Exception $e) {
-            error_log('Product page error: ' . $e->getMessage());
             $this->addFlash('danger', 'Sayfa yüklenirken bir hata oluştu: ' . $e->getMessage());
             return $this->redirectToRoute('product');
         }
@@ -106,7 +104,6 @@ class ProductController extends AbstractController
         if (!$this->securityService->validateCsrfToken($request)) {
             return $this->handleSecurityError('CSRF token geçersiz', $request);
         }
-        $this->logRequest($request);
         $requestData = $this->parseRequestData($request);
         $result = $this->productService->processProduct($requestData);
         if (!$result['success']) {
@@ -135,7 +132,6 @@ class ProductController extends AbstractController
             $results = $this->searchService->getGenericListing(self::TYPE_MAPPING[$type], $searchCondition);
             return new JsonResponse(['items' => $results]);
         } catch (\Exception $e) {
-            error_log('Search error: ' . $e->getMessage());
             return new JsonResponse(['error' => 'Search failed'], 500);
         }
     }
@@ -156,7 +152,6 @@ class ProductController extends AbstractController
             return new JsonResponse(['items' => [$productData]]);
 
         } catch (\Exception $e) {
-            error_log('Product search error: ' . $e->getMessage());
             return new JsonResponse(['error' => $e->getMessage()], 500);
         }
     }
@@ -176,7 +171,6 @@ class ProductController extends AbstractController
             $color = $this->variantService->createColor($colorName);
             return new JsonResponse(['success' => true, 'id' => $color->getId()]);
         } catch (\Exception $e) {
-            error_log('Add color error: ' . $e->getMessage());
             return new JsonResponse(['success' => false, 'message' => 'Renk eklenirken hata oluştu.']);
         }
     }
@@ -194,7 +188,6 @@ class ProductController extends AbstractController
             $variant->save();
             return new JsonResponse(['success' => true, 'message' => 'Varyant silindi']);
         } catch (\Exception $e) {
-            error_log('Delete variant error: ' . $e->getMessage());
             return new JsonResponse(['success' => false, 'message' => 'Varyant silinirken hata oluştu']);
         }
     }
@@ -239,8 +232,6 @@ class ProductController extends AbstractController
 
     private function handleValidationErrors(array $errors, Request $request): Response
     {
-        error_log('Validation errors: ' . json_encode($errors));
-        
         if ($request->isXmlHttpRequest()) {
             return new JsonResponse([
                 'success' => false,
@@ -273,33 +264,14 @@ class ProductController extends AbstractController
     private function handleProductCreationError(\Throwable $e, Request $request, bool $isUpdate): Response
     {
         $errorMessage = ($isUpdate ? 'Ürün güncellenirken' : 'Ürün oluşturulurken') . ' bir hata oluştu: ' . $e->getMessage();
-        
-        error_log('Product creation error: ' . $e->getMessage());
-        error_log('Stack trace: ' . $e->getTraceAsString());
-        
         if ($request->isXmlHttpRequest()) {
             return new JsonResponse([
                 'success' => false,
                 'message' => $errorMessage
             ], 500);
         }
-        
         $this->addFlash('danger', $errorMessage);
         return $this->redirectToRoute('product');
     }
-
-    // ===========================================
-    // UTILITIES
-    // ===========================================
-
-    private function logRequest(Request $request): void
-    {
-        error_log('=== PRODUCT CREATE REQUEST ===');
-        error_log('Method: ' . $request->getMethod());
-        error_log('Content-Type: ' . $request->headers->get('Content-Type'));
-        error_log('Request data: ' . json_encode($request->request->all()));
-        error_log('Files: ' . json_encode(array_keys($request->files->all())));
-    }
-
 
 }

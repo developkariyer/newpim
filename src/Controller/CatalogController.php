@@ -75,7 +75,6 @@ class CatalogController extends AbstractController
                 'limit' => self::DEFAULT_LIMIT
             ]);
         } catch (\Exception $e) {
-            error_log('Catalog page error: ' . $e->getMessage());
             $this->addFlash('danger', 'Katalog yüklenirken bir hata oluştu.');
             return $this->render('catalog/catalog.html.twig', [
                 'categories' => [],
@@ -119,7 +118,6 @@ class CatalogController extends AbstractController
                 'limit' => $limit
             ]);
         } catch (\Exception $e) {
-            error_log('Products API error: ' . $e->getMessage());
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Ürünler yüklenirken hata oluştu.',
@@ -155,7 +153,6 @@ class CatalogController extends AbstractController
                 'query' => $searchQuery
             ]);
         } catch (\Exception $e) {
-            error_log('Search API error: ' . $e->getMessage());
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Arama sırasında hata oluştu.',
