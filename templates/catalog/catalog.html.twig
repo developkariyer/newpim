@@ -1090,6 +1090,25 @@
         </div>
     </div>
 
+    <div class="modal fade" id="exportConfirmModal" tabindex="-1" aria-labelledby="exportConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportConfirmModalLabel">Excel İndirme Onayı</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bu filtreleme sonuçlarını Excel formatında indirmek istediğinize emin misiniz?</p>
+                <p id="exportProductCount" class="text-muted"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <a href="#" id="confirmExportBtn" class="btn btn-primary">İndir</a>
+            </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Hidden data for JavaScript -->
     <script type="application/json" id="catalogData">
         {
@@ -1110,6 +1129,9 @@
 
 {% block body_scripts %}
     {{ parent() }}
+    {% if not use_bootstrap_js is defined or use_bootstrap_js %}
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    {% endif %}
     <script>
         'use strict';
         class CatalogSystem {
@@ -1693,7 +1715,10 @@
 
             async exportToExcel() {
                 try {
-                    this.showLoading();
+                    const productCountElement = document.getElementById('exportProductCount');
+                    if (productCountElement) {
+                        productCountElement.textContent = `Toplam ${this.state.totalProducts} ürün indirilecek.`;
+                    }
                     const params = new URLSearchParams();
                     if (this.state.currentSearch) {
                         params.append('search', this.state.currentSearch);
@@ -1707,29 +1732,22 @@
                     if (this.state.currentAsin) {
                         params.append('asin', this.state.currentAsin);
                     }
-
                     if (this.state.currentBrand) {
                         params.append('brand', this.state.currentBrand);
                     }
-
                     if (this.state.currentEan) {
                         params.append('ean', this.state.currentEan);
                     }
-
                     const url = `${this.config.apiEndpoints.export}?${params}`;
-                    
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = '';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    this.showSuccess('Excel dosyası indiriliyor...');
+                    const confirmBtn = document.getElementById('confirmExportBtn');
+                    if (confirmBtn) {
+                        confirmBtn.href = url;
+                    }
+                    const modal = new bootstrap.Modal(document.getElementById('exportConfirmModal'));
+                    modal.show();
                 } catch (error) {
-                    console.error('Excel export failed:', error);
-                    this.showError('Excel dosyası oluşturulamadı.');
-                } finally {
-                    this.hideLoading();
+                    console.error('Excel export preparation failed:', error);
+                    this.showError('Excel dışa aktarım hazırlığı başarısız oldu.');
                 }
             }
 
