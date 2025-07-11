@@ -782,9 +782,7 @@ class ProductFormManager {
             const response = await fetch(form.action, {
                 method: 'POST',
                 body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+                credentials: 'same-origin'
             });
             
             console.log('📡 Response received:', {
