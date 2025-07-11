@@ -87,7 +87,9 @@ class ExportService
             'Güncelleme Tarihi',
             'Varyant ID',
             'Varyant Adı',
-            'EAN Kodları', 
+            'EAN Kodları',
+            'ASIN Kodları',
+            'FNSKU Kodları',
             'IWASKU',
             'Varyant Kodu',
             'Beden',
@@ -136,6 +138,25 @@ class ExportService
         if (isset($variant['eans']) && is_array($variant['eans']) && !empty($variant['eans'])) {
             $eansString = implode(', ', $variant['eans']);
         }
+        $asinsString = '';
+        if (isset($variant['asins']) && is_array($variant['asins']) && !empty($variant['asins'])) {
+            $asinCodes = array_map(function($asinObj) {
+                return $asinObj['asin'] ?? '';
+            }, $variant['asins']);
+            $asinCodes = array_filter($asinCodes);
+            $asinsString = implode(', ', $asinCodes);
+        }
+        $fnskusString = '';
+        if (isset($variant['asins']) && is_array($variant['asins']) && !empty($variant['asins'])) {
+            $allFnskus = [];
+            foreach ($variant['asins'] as $asinObj) {
+                if (isset($asinObj['fnskus']) && is_array($asinObj['fnskus']) && !empty($asinObj['fnskus'])) {
+                    $allFnskus = array_merge($allFnskus, $asinObj['fnskus']);
+                }
+            }
+            $allFnskus = array_filter($allFnskus);
+            $fnskusString = implode(', ', $allFnskus);
+        }
         return [
             $index === 0 ? $product['id'] : '',                      // Ürün ID (sadece ilk satırda)
             $index === 0 ? $product['name'] : '',                    // Ürün Adı (sadece ilk satırda)
@@ -149,6 +170,8 @@ class ExportService
             $variant['id'],                                          // Varyant ID
             $variant['name'],                                        // Varyant Adı
             $eansString,                                             // EAN Kodları
+            $asinsString,                                            // ASIN Kodları 
+            $fnskusString,                                           // FNSKU Kodları 
             $variant['iwasku'] ?? '',                                // IWASKU
             $variant['productCode'] ?? '',                           // Varyant Kodu
             $variant['variationSize'] ?? '',                         // Beden
