@@ -319,7 +319,7 @@ class SearchService
         }
     }
 
-    private function getProductVariants(Product $product, $customTableTitle): array
+    public function getProductVariants(Product $product, $customTableTitle): array
     {
         try {
             if (!$product->hasChildren()) {
