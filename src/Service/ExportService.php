@@ -38,6 +38,7 @@ class ExportService
         int $offset = 0, 
         ?string $categoryFilter = null, 
         string $searchQuery = '', 
+        ?string $iwaskuFilter = null,
         ?string $asinFilter = null, 
         ?string $brandFilter = null, 
         ?string $eanFilter = null
@@ -48,6 +49,7 @@ class ExportService
             'offset' => $offset,
             'category' => $categoryFilter,
             'search' => $searchQuery,
+            'iwasku' => $iwaskuFilter,
             'asin' => $asinFilter,
             'brand' => $brandFilter,
             'ean' => $eanFilter
@@ -57,6 +59,7 @@ class ExportService
             $offset, 
             $categoryFilter, 
             $searchQuery,
+            $iwaskuFilter,
             $asinFilter,
             $brandFilter,
             $eanFilter

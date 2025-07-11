@@ -79,7 +79,8 @@ class SearchService
         int $limit, 
         int $offset, 
         ?string $categoryFilter = null, 
-        string $searchQuery = '', 
+        string $searchQuery = '',
+        ?string $iwaskuFilter = null, 
         ?string $asinFilter = null, 
         ?string $brandFilter = null, 
         ?string $eanFilter = null
@@ -105,6 +106,12 @@ class SearchService
                 $params[] = $searchParam;
                 $params[] = $searchParam;
                 $params[] = $searchParam;
+            }
+
+            if (!empty($iwaskuFilter)) {
+                $hasAdvancedFilter = true;
+                $iwaskuParentIds = $this->getParentProductIdsByVariantIwasku($iwaskuFilter);
+                $parentIdsFromAdvancedFilters[] = $iwaskuParentIds;
             }
             
             if (!empty($asinFilter)) {
@@ -276,6 +283,25 @@ class SearchService
         $listing->setLimit(1);
         $categories = $listing->load();
         return $categories[0] ?? null;
+    }
+
+    private function getParentProductIdsByVariantIwasku(string $iwaskuValue): array
+    {
+        try {
+            $variantListing = new ProductListing();
+            $variantListing->setCondition("type = 'variant' AND published = 1");
+            $variants = $variantListing->getObjects();
+            $parentIds = [];
+            foreach ($variants as $variant) {
+                if ($variant->getIwasku() && stripos($variant->getIwasku(), $iwaskuValue) !== false) {
+                    $parentIds[] = $variant->getParentId();
+                }
+            }
+            return array_unique(array_filter($parentIds));
+        } catch (\Exception $e) {
+            error_log('Get parent product IDs by variant iwasku error: ' . $e->getMessage());
+            return [];
+        }
     }
 
     private function getParentProductIdsByVariantAsin(string $asinValue): array

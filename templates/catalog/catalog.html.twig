@@ -1024,6 +1024,11 @@
             <div id="advancedPanel" class="advanced-panel" style="display: none;">
                 <div class="advanced-row">
                     <div class="form-group">
+                        <label for="iwaskuFilter" class="form-label">🔖 IWASKU</label>
+                        <input type="text" id="iwasku-Filter" class="form-control" placeholder="IWASKU...">
+                    </div>
+
+                    <div class="form-group">
                         <label for="asinFilter" class="form-label">🏷️ ASIN/FNSKU</label>
                         <input type="text" id="asinFilter" class="form-control" placeholder="ASIN veya FNSKU...">
                     </div>
@@ -1165,6 +1170,7 @@
                     loadingOverlay: document.getElementById('loadingOverlay'),
                     advancedToggle: document.getElementById('advancedToggle'),
                     advancedPanel: document.getElementById('advancedPanel'),
+                    iwaskuFilter: document.getElementById('iwaskuFilter'),
                     asinFilter: document.getElementById('asinFilter'),
                     brandFilter: document.getElementById('brandFilter'),
                     eanFilter: document.getElementById('eanFilter'),
@@ -1269,6 +1275,13 @@
                     });
                 }
 
+                if (this.elements.iwaskuFilter) {
+                    this.elements.iwaskuFilter.addEventListener('input', (e) => {
+                        this.state.currentIwasku = e.target.value.trim();
+                        this.debounceSearch();
+                    });
+                }
+
                 if (this.elements.asinFilter) {
                     this.elements.asinFilter.addEventListener('input', (e) => {
                         this.state.currentAsin = e.target.value.trim();
@@ -1368,6 +1381,7 @@
                 this.state.currentAsin = '';
                 this.state.currentBrand = '';
                 this.state.currentEan = '';
+                if (this.elements.iwaskuFilter) this.elements.iwaskuFilter.value = '';
                 if (this.elements.asinFilter) this.elements.asinFilter.value = '';
                 if (this.elements.brandFilter) this.elements.brandFilter.value = '';
                 if (this.elements.eanFilter) this.elements.eanFilter.value = '';

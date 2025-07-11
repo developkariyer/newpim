@@ -50,6 +50,7 @@ class CatalogController extends AbstractController
             $categories = $this->searchService->getAvailableCategories();
             $categoryFilter = $request->query->get('category');
             $searchQuery = $request->query->get('search', '');
+            $iwaskuFilter = trim($request->query->get('iwasku', ''));
             $asinFilter = trim($request->query->get('asin', ''));
             $brandFilter = trim($request->query->get('brand', ''));
             $eanFilter = trim($request->query->get('ean', ''));
@@ -58,6 +59,7 @@ class CatalogController extends AbstractController
                 offset: 0,
                 categoryFilter: $categoryFilter,
                 searchQuery: $searchQuery,
+                iwaskuFilter: $iwaskuFilter,
                 asinFilter: $asinFilter,
                 brandFilter: $brandFilter,
                 eanFilter: $eanFilter
@@ -69,6 +71,7 @@ class CatalogController extends AbstractController
                 'hasMore' => $initialProducts['hasMore'],
                 'currentCategory' => $categoryFilter,
                 'currentSearch' => $searchQuery,
+                'currentIwasku' => $iwaskuFilter,
                 'currentAsin' => $asinFilter,
                 'currentBrand' => $brandFilter,
                 'currentEan' => $eanFilter,
@@ -96,6 +99,7 @@ class CatalogController extends AbstractController
             $offset = max((int)$request->query->get('offset', 0), 0);
             $categoryFilter = $request->query->get('category');
             $searchQuery = trim($request->query->get('search', ''));
+            $iwaskuFilter = trim($request->query->get('iwasku', ''));
             $asinFilter = trim($request->query->get('asin', ''));
             $brandFilter = trim($request->query->get('brand', ''));
             $eanFilter = trim($request->query->get('ean', ''));
@@ -105,6 +109,7 @@ class CatalogController extends AbstractController
                 $offset, 
                 $categoryFilter, 
                 $searchQuery,
+                $iwaskuFilter,
                 $asinFilter,
                 $brandFilter,
                 $eanFilter
@@ -169,6 +174,7 @@ class CatalogController extends AbstractController
         try {
             $categoryFilter = $request->query->get('category');
             $searchQuery = trim($request->query->get('search', ''));
+            $iwaskuFilter = trim($request->query->get('iwasku', ''));
             $asinFilter = trim($request->query->get('asin', ''));
             $brandFilter = trim($request->query->get('brand', ''));
             $eanFilter = trim($request->query->get('ean', ''));
@@ -178,6 +184,7 @@ class CatalogController extends AbstractController
                 0,
                 $categoryFilter,
                 $searchQuery,
+                $iwaskuFilter,
                 $asinFilter,
                 $brandFilter,
                 $eanFilter
