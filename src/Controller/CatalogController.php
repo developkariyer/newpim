@@ -24,6 +24,7 @@ class CatalogController extends AbstractController
     private const DEFAULT_LIMIT = 20;
     private const MAX_LIMIT = 100;
     private const EXPORT_MAX_PRODUCTS = 50000;
+    private const SEARCH_MIN_LENGTH = 2;
 
     private SearchService $searchService;
 

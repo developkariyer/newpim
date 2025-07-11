@@ -198,20 +198,43 @@ class SearchService
 
     public function getAvailableCategories(): array
     {
-        $listing = new CategoryListing();
-        $listing->setCondition("published = 1");
-        $listing->setOrderKey('category');
-        $listing->setOrder('ASC');
-        $categories = $listing->load();
-        $result = [];
-        foreach ($categories as $category) {
-            $result[] = [
-                'id' => $category->getId(),
-                'name' => $category->getCategory(),
-                'key' => $category->getKey()
-            ];
+        try {
+            $listing = new CategoryListing();
+            $listing->setCondition("published = 1");
+            $listing->setOrderKey('key');
+            $listing->setOrder('ASC');
+            $listing->load();
+            $categories = [];
+            foreach ($listing as $category) {
+                if (!$category->hasChildren()) {
+                    $categories[] = [
+                        'id' => $category->getId(),
+                        'key' => $category->getKey(),
+                        'name' => $category->getCategory() ?: $category->getKey(),
+                        'productCount' => $this->getCategoryProductCount($category->getId())
+                    ];
+                }
+            }
+            usort($categories, function($a, $b) {
+                return $b['productCount'] - $a['productCount'];
+            });
+            return $categories;
+        } catch (\Exception $e) {
+            error_log('Get available categories error: ' . $e->getMessage());
+            return [];
         }
-        return $result;
+    }
+
+    private function getCategoryProductCount(int $categoryId): int
+    {
+        try {
+            $listing = new ProductListing();
+            $listing->setCondition("published = 1 AND productCategory__id = ? AND (type IS NULL OR type != 'variant')", [$categoryId]);
+            return $listing->getTotalCount();
+        } catch (\Exception $e) {
+            error_log('Get category product count error: ' . $e->getMessage());
+            return 0;
+        }
     }
 
     public function getCategoryByKey(string $key): ?Category
