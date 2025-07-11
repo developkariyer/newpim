@@ -41,7 +41,7 @@ class CatalogController extends AbstractController
     public function index(Request $request): Response
     {
         try {
-            $categories = $this->getAvailableCategories();
+            $categories = $this->searchService->getAvailableCategories();
             $categoryFilter = $request->query->get('category');
             $searchQuery = $request->query->get('search', '');
             $asinFilter = trim($request->query->get('asin', ''));
