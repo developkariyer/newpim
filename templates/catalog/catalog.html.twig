@@ -1123,6 +1123,7 @@
                     isLoading: false,
                     currentSearch: this.config.currentSearch,
                     currentCategory: this.config.currentCategory,
+                    currentIwasku: '',
                     currentAsin: '',
                     currentBrand: '',
                     currentEan: '',
@@ -1381,6 +1382,7 @@
                 this.state.currentAsin = '';
                 this.state.currentBrand = '';
                 this.state.currentEan = '';
+                this.state.currentIwasku = '';
                 if (this.elements.iwaskuFilter) this.elements.iwaskuFilter.value = '';
                 if (this.elements.asinFilter) this.elements.asinFilter.value = '';
                 if (this.elements.brandFilter) this.elements.brandFilter.value = '';
@@ -1410,6 +1412,10 @@
 
                     if (this.state.currentCategory) {
                         params.append('category', this.state.currentCategory);
+                    }
+
+                    if (this.state.currentIwasku) {
+                        params.append('iwasku', this.state.currentIwasku);
                     }
 
                     if (this.state.currentAsin) {
@@ -1786,6 +1792,9 @@
                 }
                 if (this.state.currentCategory) {
                     params.append('category', this.state.currentCategory);
+                }
+                if (this.state.currentIwasku) {
+                    params.append('iwasku', this.state.currentIwasku);
                 }
                 if (this.state.currentAsin) {
                     params.append('asin', this.state.currentAsin);
