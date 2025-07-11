@@ -876,6 +876,91 @@
             color: #92400e;
         }
 
+        /* ASIN/FNSKU Styling */
+        .variant-asins-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .asin-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            background: rgba(59, 130, 246, 0.05);
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid rgba(59, 130, 246, 0.1);
+        }
+
+        .asin-code {
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .asin-badge {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%);
+            color: var(--primary-color);
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            font-family: 'Monaco', 'Consolas', monospace;
+        }
+
+        .fnsku-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            font-size: 0.75rem;
+        }
+
+        .fnsku-label {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.7rem;
+        }
+
+        .fnsku-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .fnsku-badge {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(234, 88, 12, 0.05) 100%);
+            color: #d97706; /* amber-600 */
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.75rem;
+            font-size: 0.65rem;
+            font-weight: 600;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            font-family: 'Monaco', 'Consolas', monospace;
+            transition: all 0.2s ease;
+        }
+
+        .fnsku-badge:hover {
+            background: #f59e0b;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .variant-field.asins .variant-field-label {
+            color: #3b82f6;
+        }
+
+        /* Responsive düzenlemeler */
+        @media (max-width: 768px) {
+            .asin-group {
+                padding: 0.375rem;
+            }
+            
+            .fnsku-badges {
+                margin-top: 0.25rem;
+            }
+        }
+
         /* Responsive Adjustments */
         @media (max-width: 640px) {
             .catalog-title {
@@ -1651,6 +1736,32 @@
                             </div>
                         `);
                     }
+
+                    if (variant.asins && variant.asins.length > 0) {
+                        fields.push(`
+                            <div class="variant-field asins">
+                                <span class="variant-field-label">🛒 ASIN/FNSKU</span>
+                                <div class="variant-asins-container">
+                                    ${variant.asins.map(asinObj => `
+                                        <div class="asin-group">
+                                            <div class="asin-code">ASIN: <span class="asin-badge">${this.escapeHtml(asinObj.asin || '-')}</span></div>
+                                            ${asinObj.fnskus && asinObj.fnskus.length > 0 ? `
+                                                <div class="fnsku-list">
+                                                    <span class="fnsku-label">FNSKU:</span>
+                                                    <div class="fnsku-badges">
+                                                        ${asinObj.fnskus.map(fnsku => `
+                                                            <span class="fnsku-badge">${this.escapeHtml(fnsku)}</span>
+                                                        `).join('')}
+                                                    </div>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `);
+                    }
+
                     const isPublished = variant.published !== false; 
                     const statusClass = isPublished ? 'variant-status-active' : 'variant-status-inactive';
                     const statusText = isPublished ? '✨ Aktif' : '❌ Pasif';

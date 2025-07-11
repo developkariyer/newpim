@@ -426,10 +426,34 @@ class SearchService
                         }
                     }
                 }
+                $asinObjects = $variant->getAsin() ?? [];
+                if (is_array($asinObjects)) {
+                    $formattedAsins = [];
+                    foreach ($asinObjects as $asinObject) {
+                        $asinData = [
+                            'asin' => $asinObject->getAsin() ?: null,
+                            'fnskus' => []
+                        ];
+                        $fnskusStr = $asinObject->getFnskus();
+                        if ($fnskusStr) {
+                            if (is_string($fnskusStr)) {
+                                $fnskuArray = array_filter(array_map('trim', explode(',', $fnskusStr)));
+                                $asinData['fnskus'] = $fnskuArray;
+                            }
+                            elseif (is_array($fnskusStr)) {
+                                $asinData['fnskus'] = array_filter($fnskusStr);
+                            }
+                        }
+                        if ($asinData['asin']) {
+                            $formattedAsins[] = $asinData;
+                        }
+                    }
+                }
                 $variants[] = [
                     'id' => $variant->getId(),
                     'name' => $variant->getName(),
                     'eans' => $eans ?? [],
+                    'asins' => $formattedAsins ?? [],
                     'iwasku' => $variant->getIwasku(),
                     'productCode' => $variant->getProductCode(),
                     'variationSize' => $variant->getVariationSize(),
