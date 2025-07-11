@@ -23,8 +23,8 @@ class CatalogController extends AbstractController
     // Constants
     private const DEFAULT_LIMIT = 20;
     private const MAX_LIMIT = 100;
-    private const EXPORT_MAX_PRODUCTS = 50000;
     private const SEARCH_MIN_LENGTH = 2;
+    private const EXPORT_MAX_PRODUCTS = 50000;
 
     private SearchService $searchService;
 
@@ -41,7 +41,7 @@ class CatalogController extends AbstractController
     public function index(Request $request): Response
     {
         try {
-            $categories = $this->searchService->getAvailableCategories();
+            $categories = $this->getAvailableCategories();
             $categoryFilter = $request->query->get('category');
             $searchQuery = $request->query->get('search', '');
             $asinFilter = trim($request->query->get('asin', ''));
@@ -169,7 +169,7 @@ class CatalogController extends AbstractController
             $asinFilter = trim($request->query->get('asin', ''));
             $brandFilter = trim($request->query->get('brand', ''));
             $eanFilter = trim($request->query->get('ean', ''));
-            $result = $this->getProducts(limit: self::EXPORT_MAX_PRODUCTS, offset: 0, categoryFilter: $categoryFilter, searchQuery: $searchQuery,asinFilter: $asinFilter, brandFilter: $brandFilter, eanFilter: $eanFilter);
+            $result = $this->searchService->getFilteredProducts(limit: self::EXPORT_MAX_PRODUCTS, offset: 0, categoryFilter: $categoryFilter, searchQuery: $searchQuery,asinFilter: $asinFilter, brandFilter: $brandFilter, eanFilter: $eanFilter);
             $products = $result['products'];
             $response = new StreamedResponse();
             $response->setCallback(function() use ($products, $categoryFilter, $searchQuery) {
@@ -184,65 +184,6 @@ class CatalogController extends AbstractController
             error_log('Excel export error: ' . $e->getMessage());
             $this->addFlash('danger', 'Excel dosyası oluşturulurken hata oluştu.');
             return $this->redirectToRoute('catalog');
-        }
-    }
-   
-    private function formatProductForCatalog(Product $product): array
-    {
-        try {
-            $customTableData = $product->getCustomFieldTable();
-            if (!is_array($customTableData)) {
-                return [];
-            }
-            $customRows = [];
-            $customTableTitle = '';
-            foreach ($customTableData as $index => $row) {
-                $deger = $row['deger'] ?? $row['value'] ?? '';
-                if (!empty($deger) && $deger !== '[object Object]') {
-                    if ($index === 0) {
-                        $customTableTitle = $deger;
-                    } 
-                }
-            }
-            $variants = $this->searchService->getProductVariants($product, $customTableTitle);
-            $category = $product->getProductCategory();
-            $categoryInfo = $category ? [
-                'id' => $category->getId(),
-                'name' => $category->getKey(),
-                'displayName' => $category->getCategory() ?: $category->getKey()
-            ] : null;
-            $image = $product->getImage();
-            $imagePath = $image ? $image->getFullPath() : null;
-            return [
-                'id' => $product->getId(),
-                'name' => $product->getName(),
-                'productIdentifier' => $product->getProductIdentifier(),
-                'description' => $product->getDescription(),
-                'productCode' => $product->getProductCode(),
-                'category' => $categoryInfo,
-                'imagePath' => $imagePath,
-                'imageUrl' => $imagePath ? '/var/assets' . $imagePath : null,
-                'variants' => $variants,
-                'variantCount' => count($variants),
-                'hasVariants' => !empty($variants),
-            ];
-        } catch (\Exception $e) {
-            error_log('Format product error: ' . $e->getMessage());
-            return [
-                'id' => $product->getId(),
-                'name' => $product->getName() ?: 'Unknown Product',
-                'productIdentifier' => $product->getProductIdentifier() ?: 'Unknown',
-                'description' => '',
-                'productCode' => '',
-                'category' => null,
-                'imagePath' => null,
-                'imageUrl' => null,
-                'variants' => [],
-                'variantCount' => 0,
-                'hasVariants' => false,
-                'createdAt' => null,
-                'modifiedAt' => null
-            ];
         }
     }
 
