@@ -10,6 +10,8 @@ use App\Service\CodeGenerationService;
 
 class VariantService
 {
+    private const COLOR_FOLDER_ID = 1247; // Default folder ID for colors
+
     public function __construct(
         private LoggerInterface $logger,
         private CodeGenerationService $codeGenerator
@@ -96,8 +98,11 @@ class VariantService
                $variantCustom === $dataCustom;
     }
 
-    public function createColor(string $colorName, int $colorsFolderId): Color
+    public function createColor(string $colorName, ?int $colorsFolderId = null): Color
     {
+        if ($colorsFolderId === null) {
+            $colorsFolderId = self::COLOR_FOLDER_ID; 
+        }
         $color = new Color();
         $color->setKey($colorName);
         $color->setParentId($colorsFolderId);
