@@ -47,6 +47,7 @@ class ProductService
             $this->setProductData($product, $requestData, $validationResult['objects']);
             $product->setPublished(true);
             $product->save();
+            $this->logger->info('Ürün kaydedildi', ['productId' => $product->getId()]);
             if (!empty($requestData['variations'])) {
                 $this->variantService->createProductVariants($product, $requestData['variations']);
             }
