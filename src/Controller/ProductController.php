@@ -81,14 +81,14 @@ class ProductController extends AbstractController
                     $this->addFlash('warning', 'Düzenlenecek ürün bulunamadı.');
                 }
             }
-            $csrfToken = $this->csrfTokenManager->getToken(self::CSRF_TOKEN_ID)->getValue();
+            //$csrfToken = $this->csrfTokenManager->getToken(self::CSRF_TOKEN_ID)->getValue();
             return $this->render('product/product.html.twig', [
                 'categories' => $this->searchService->getGenericListing(self::TYPE_MAPPING['categories'], "published = 1", fn($category) => $category->getCategory()),
                 'colors' => $this->searchService->getGenericListing(self::TYPE_MAPPING['colors']),
                 'brands' => $this->searchService->getGenericListing(self::TYPE_MAPPING['brands']),
                 'marketplaces' => $this->searchService->getGenericListing(self::TYPE_MAPPING['marketplaces']),
                 'selectedProduct' => $selectedProductData,
-                'csrf_token' => $csrfToken
+              //  'csrf_token' => $csrfToken
             ]);
         } catch (\Exception $e) {
             $this->addFlash('danger', 'Sayfa yüklenirken bir hata oluştu: ' . $e->getMessage());
