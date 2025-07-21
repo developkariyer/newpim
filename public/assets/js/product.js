@@ -1101,6 +1101,7 @@ class FormService {
  * Tablo Servisi
  */
 class TableService {
+    
     addSizeRow(values = {}, isLocked = false) {
         const tbody = document.querySelector('#sizeTable tbody');
         if (!tbody) return;
@@ -1301,6 +1302,7 @@ class TableService {
  * Varyasyon Servisi
  */
 class VariationService {
+
     constructor(state) {
         this.state = state;
     }
@@ -1533,6 +1535,7 @@ class VariationService {
  * Doğrulama Servisi
  */
 class ValidationService {
+
     validateStep1() {
         const step1 = document.getElementById('step1');
         if (!step1) return false;
@@ -1630,6 +1633,7 @@ class ValidationService {
  * UI Servisi
  */
 class UIService {
+    
     showElement(elementId) {
         const element = document.getElementById(elementId);
         if (element) {

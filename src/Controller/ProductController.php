@@ -99,9 +99,6 @@ class ProductController extends AbstractController
     #[Route('/create', name: 'product_create', methods: ['POST'])]
     public function create(Request $request): Response
     {
-        // if (!$this->securityService->validateCsrfToken($request)) {
-        //     return $this->handleSecurityError('CSRF token geçersiz', $request);
-        // }
         $requestData = $this->parseRequestData($request);
         $result = $this->productService->processProduct($requestData);
         if (!$result['success']) {

@@ -348,8 +348,7 @@ class SearchService
         try {
             $variantListing = new ProductListing();
             $variantListing->setCondition("type = 'variant' AND published = 1");
-            $variants = $variantListing->getObjects();
-            
+            $variants = $variantListing->getObjects();            
             $parentIds = [];
             foreach ($variants as $variant) {
                 $brandObjects = $variant->getBrandItems();
@@ -368,7 +367,6 @@ class SearchService
                     }
                 }
             }
-            
             return array_unique(array_filter($parentIds));
         } catch (\Exception $e) {
             error_log('Get parent product IDs by variant Brand error: ' . $e->getMessage());

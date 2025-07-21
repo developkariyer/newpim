@@ -135,9 +135,6 @@ class ProductService
         return $objects;
     }
 
-    /**
-     * Yeni ürün oluşturur
-     */
     private function createNewProduct(array $data): Product
     {
         $imageAsset = null;
@@ -174,7 +171,6 @@ class ProductService
                 $product->setImage($imageAsset);
             }
         }
-        
         return $product;
     }
 
@@ -228,7 +224,6 @@ class ProductService
             $folder->setParent($parent);
             $folder->save();
         }
-        
         return $folder;
     }
 
