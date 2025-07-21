@@ -91,7 +91,7 @@ class ProductController extends AbstractController
                 'csrf_token' => $csrfToken
             ]);
         } catch (\Exception $e) {
-            $this->addFlash('danger', 'Sayfa yüklenirken bir hata oluştu: ' . $e->getMessage());
+            $this->addFlash('danger', 'Sayfa Yüklenirken Bir Hata Oluştu: ' . $e->getMessage());
             return $this->redirectToRoute('product');
         }
     }
