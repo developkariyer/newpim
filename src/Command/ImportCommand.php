@@ -78,7 +78,7 @@ class ImportCommand extends AbstractCommand
 
     }
 
-    private function getProductCategory(string $categoryName): ?Category
+    private function getProductCategory(string $categoryName)
     {
         return Category::getByKey($categoryName);
         
