@@ -72,12 +72,18 @@ class ImportCommand extends AbstractCommand
             if (empty($colorName)) {
                 continue; 
             }
-            $existingColor = $this->findColorByName($colorName);
+            $cleanKey = strtolower(trim($colorName)); 
+            $cleanKey = str_replace(' ', '-', $cleanKey); 
+            $cleanKey = preg_replace('/[^a-z0-9\-_]/', '', $cleanKey);
+            if (empty($cleanKey)) {
+                continue; 
+            }
+            $existingColor = $this->findColorByName($cleanKey);
             if ($existingColor) {
                 continue;
             }
             $color = new Color();
-            $color->setKey($colorName);
+            $color->setKey($cleanKey);
             $color->setParentId(1247);
             $color->setColor($colorName);
             $color->setPublished(true);
