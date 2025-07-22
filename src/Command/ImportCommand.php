@@ -88,12 +88,34 @@ class ImportCommand extends AbstractCommand
         if ($imageAsset) {
             $product->setImage($imageAsset);
         }
+        $this->createVariant($product, $data['variants'] ?? []);
 
         $product->save();
 
-        // brands colors size tables variants 
+        // colors variants 
+
         
 
+    }
+
+    private function createVariant($parentProduct, $data)
+    {
+        if (!is_array($data) || empty($data)) {
+            return;
+        }
+        $variant = new Product();
+        $variant->setParent($parentProduct);
+        $variant->setType(Product::OBJECT_TYPE_VARIANT);
+        $variant->setProductCode($data['productCode']);
+        $variant->setIwasku($data['iwasku']);
+        $variant->setKey($data['key']);
+        $variant->setName($data['name']);
+        $variant->setVariationColor($data['variationSize']);
+        $variant->setVariationSize($data['variationColor']);
+        $variant->setPublished($data['published']);
+        $variant->setSticker4x6iwasku($data['sticker4x6iwasku'] ?? null);
+        $variant->setSticker4x6eu($data['sticker4x6eu'] ?? null);
+        $variant->save();
     }
 
     private function createSizeTable($sizeTable): array
