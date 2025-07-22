@@ -12,6 +12,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Pimcore\Model\DataObject\Product;
 use App\Service\AssetManagementService;
 use Pimcore\Model\DataObject\Folder;
+use Pimcore\Model\DataObject\Category;
 
 #[AsCommand(
     name: 'app:import',
@@ -69,12 +70,24 @@ class ImportCommand extends AbstractCommand
         $product->setProductIdentifier($data['identifier']);
         $product->setName($data['name']);
         $product->setDescription($data['description']);
-        $product->setProductCategory($data['category']);
+        $product->setProductCategory($this->getProductCategory($data['category']));
         $product->setProductCode($data['productCode']);
         // if ($imageAsset) {
         //     $product->setImage($imageAsset);
         // }
 
+    }
+
+    private function getProductCategory(string $categoryName): ?Folder
+    {
+        $category = Category::getByName($categoryName);
+        if (!$category) {
+            $category = new Category();
+            $category->setName($categoryName);
+            $category->save();
+        }
+        return $category;
+        
     }
 
     private function createProductFolderStructure(string $productIdentifier, string $category): Folder
