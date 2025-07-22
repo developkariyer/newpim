@@ -49,7 +49,7 @@ class ImportCommand extends AbstractCommand
             return Command::FAILURE;
         }
         $output->writeln('<info>Products:</info>');
-        $data->createUniqueColor($data);
+        $this->createUniqueColor($data);
         // foreach ($data as $index => $product) {
         //     $this->createProduct($product);
 
