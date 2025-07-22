@@ -13,6 +13,7 @@ use Pimcore\Model\DataObject\Product;
 use App\Service\AssetManagementService;
 use Pimcore\Model\DataObject\Folder;
 use Pimcore\Model\DataObject\Category;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 #[AsCommand(
     name: 'app:import',
@@ -58,8 +59,9 @@ class ImportCommand extends AbstractCommand
         $imageAsset = null;
         $data['image'] = 'https://iwa.web.tr/' . $data['image'];
         if ($data['image']) {
+            $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $data['identifier'] ?: $data['name']);
             $imageAsset = $this->assetService->uploadProductImage(
-                $data['image'], 
+                $uploadedFile,
                 $data['identifier'] ?: $data['name']
             );
         }
@@ -78,6 +80,21 @@ class ImportCommand extends AbstractCommand
             $product->setImage($imageAsset);
         }
 
+    }
+
+    private function createUploadedFileFromUrl(string $url, string $name = null): UploadedFile
+    {
+        $tmpFile = tempnam(sys_get_temp_dir(), 'upl_');
+        file_put_contents($tmpFile, file_get_contents($url));
+        $originalName = $name ?: basename(parse_url($url, PHP_URL_PATH));
+        $mimeType = mime_content_type($tmpFile);
+        return new UploadedFile(
+            $tmpFile,
+            $originalName,
+            $mimeType,
+            null,
+            true
+        );
     }
 
     private function getProductCategory(string $categoryName)
