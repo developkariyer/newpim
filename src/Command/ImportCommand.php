@@ -55,7 +55,7 @@ class ImportCommand extends AbstractCommand
     {
         $imageAsset = null;
         $data['image'] = 'https://iwa.web.tr/' . $data['image'];
-        if ($data['image'] && $data['image']->isValid()) {
+        if ($data['image']) {
             $imageAsset = $this->assetService->uploadProductImage(
                 $data['image'], 
                 $data['identifier'] ?: $data['name']
