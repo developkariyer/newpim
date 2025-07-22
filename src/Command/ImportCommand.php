@@ -49,12 +49,34 @@ class ImportCommand extends AbstractCommand
             return Command::FAILURE;
         }
         $output->writeln('<info>Products:</info>');
-        $this->createUniqueColor($data);
+        $this->createEan($data);
         // foreach ($data as $index => $product) {
         //     $this->createProduct($product);
 
         // }
         return Command::SUCCESS;
+    }
+
+    private function createEan($data)
+    {
+        $uniqueEans = [];
+        foreach ($data as $product) {
+            foreach ($product['variants'] as $variant) {
+                if (isset($variant['ean']) && !in_array($variant['ean'], $uniqueEans)) {
+                    $uniqueEans[] = $variant['ean'];
+                }
+            }
+        }
+        $uniqueEans = array_unique($uniqueEans);
+        foreach ($uniqueEans as $ean) {
+            $eanModel = new Ean();
+            $eanModel->setKey($ean);
+            $eanModel->setParentId(47);
+            $eanModel->setGTIN($ean);
+            $eanModel->setPublished(true);
+            $eanModel->save();
+        }
+
     }
 
     private function createUniqueColor($data)
@@ -76,7 +98,7 @@ class ImportCommand extends AbstractCommand
             if ($existingColor) {
                 continue;
             }
-           
+            
             $cleanKey = strtolower(trim($colorName));
             $cleanKey = str_replace(' ', '-', $cleanKey);
             $cleanKey = preg_replace('/[^a-z0-9\-_]/', '', $cleanKey);
@@ -150,7 +172,6 @@ class ImportCommand extends AbstractCommand
         }
        
     }
-
 
     private function createColor($variationColor)
     {
