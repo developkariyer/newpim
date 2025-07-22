@@ -16,6 +16,7 @@ use Pimcore\Model\DataObject\Category;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Pimcore\Model\DataObject\Color;
 use Pimcore\Model\DataObject\Ean;
+use Pimcore\Model\DataObject\Asin;
 use Pimcore\Model\DataObject\Color\Listing as ColorListing;
 
 #[AsCommand(
@@ -50,12 +51,36 @@ class ImportCommand extends AbstractCommand
             return Command::FAILURE;
         }
         $output->writeln('<info>Products:</info>');
-        $this->createEan($data);
+        $this->createAsinFnsku($data);
         // foreach ($data as $index => $product) {
         //     $this->createProduct($product);
 
         // }
         return Command::SUCCESS;
+    }
+    
+    private function createAsinFnsku($data)
+    {
+        $uniqueAsins = [];
+        foreach ($data as $product) {
+            foreach ($product['variants'] as $variant) {
+                if (isset($variant['asinMap']) && is_array($variant['asinMap'])) {
+                    foreach ($variant['asinMap'] as $asin => $fnskuList) {
+                        if (!in_array($asin, $uniqueAsins)) {
+                            $uniqueAsins[] = $asin;
+                            $fnskuString = is_array($fnskuList) ? implode("\n", $fnskuList) : (string)$fnskuList;
+                            $asinModel = new Asin();
+                            $asinModel->setKey($asin);
+                            $asinModel->setParentId(48); 
+                            $asinModel->setAsin($asin);
+                            $asinModel->setFnskus($fnskuString);
+                            $asinModel->setPublished(true);
+                            $asinModel->save();
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private function createEan($data)
