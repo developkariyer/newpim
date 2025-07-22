@@ -67,6 +67,10 @@ class ImportCommand extends AbstractCommand
         $product->setParent($parentFolder);
         $product->setKey($data['identifier'] . ' ' . $data['name']);
         $product->setProductIdentifier($data['identifier']);
+        $product->setName($data['name']);
+        $product->setDescription($data['description']);
+        $product->setProductCategory($objects['category']);
+        $product->setProductCode($data['productCode']);
         // if ($imageAsset) {
         //     $product->setImage($imageAsset);
         // }
