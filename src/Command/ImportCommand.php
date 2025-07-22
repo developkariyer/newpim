@@ -59,14 +59,10 @@ class ImportCommand extends AbstractCommand
         $imageAsset = null;
         $data['image'] = 'https://iwa.web.tr/' . $data['image'];
         if ($data['image']) {
-            $imageName = $data['identifier'] ?: $data['name'];
-            if (!str_ends_with($imageName, '.png')) {
-                $imageName .= '.png';
-            }
-            $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $imageName);
+            $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $data['identifier'] ?: $data['name']);
             $imageAsset = $this->assetService->uploadProductImage(
                 $uploadedFile,
-                $imageName
+                $data['identifier'] ?: $data['name']
             );
         }
         $parentFolder = $this->createProductFolderStructure($data['identifier'], $data['category']);
@@ -79,10 +75,11 @@ class ImportCommand extends AbstractCommand
         $product->setProductCategory($this->getProductCategory($data['category']));
         $product->setProductCode($data['productCode']);
         $product->setPublished($data['published'] ?? true);
-        $product->save();
         if ($imageAsset) {
             $product->setImage($imageAsset);
         }
+        $product->save();
+       
 
     }
 
