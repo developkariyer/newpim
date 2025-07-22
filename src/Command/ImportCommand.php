@@ -98,7 +98,6 @@ class ImportCommand extends AbstractCommand
 
     private function createSizeTable($sizeTable): array
     {
-        print_r($sizeTable);
         $result = [];
         foreach ($sizeTable as $row) {
             if (count($row) >= 3) {
@@ -106,11 +105,10 @@ class ImportCommand extends AbstractCommand
                     'label' => (string)$row[2],
                     'width'    => (string)$row[0],
                     'length'   => (string)$row[1],
-                    'height' => (string)$row[3] ?? 0,
+                    'height' => isset($row[3]) ? (string)$row[3] : '0',
                 ];
             }
         }
-        print_r($result);
         return $result;
     }
 
