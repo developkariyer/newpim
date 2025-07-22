@@ -100,23 +100,25 @@ class ImportCommand extends AbstractCommand
 
     private function createVariant($parentProduct, $data)
     {
-        print_r($data);
         if (!is_array($data) || empty($data)) {
             return;
         }
-        $variant = new Product();
-        $variant->setParent($parentProduct);
-        $variant->setType(Product::OBJECT_TYPE_VARIANT);
-        $variant->setProductCode($data['productCode']);
-        $variant->setIwasku($data['iwasku']);
-        $variant->setKey($data['key']);
-        $variant->setName($data['name']);
-        $variant->setVariationColor($data['variationSize']);
-        $variant->setVariationSize($data['variationColor']);
-        $variant->setPublished($data['published']);
-        $variant->setSticker4x6iwasku($data['sticker4x6iwasku'] ?? null);
-        $variant->setSticker4x6eu($data['sticker4x6eu'] ?? null);
-        $variant->save();
+        foreach ($data as $variantData) {
+            $variant = new Product();
+            $variant->setParent($parentProduct);
+            $variant->setType(Product::OBJECT_TYPE_VARIANT);
+            $variant->setProductCode($variantData['productCode']);
+            $variant->setIwasku($variantData['iwasku']);
+            $variant->setKey($variantData['key']);
+            $variant->setName($variantData['name']);
+            $variant->setVariationColor($variantData['variationSize']);
+            $variant->setVariationSize($variantData['variationColor']);
+            $variant->setPublished($variantData['published']);
+            $variant->setSticker4x6iwasku($variantData['sticker4x6iwasku'] ?? null);
+            $variant->setSticker4x6eu($variantData['sticker4x6eu'] ?? null);
+            $variant->save();
+        }
+       
     }
 
     private function createSizeTable($sizeTable): array
