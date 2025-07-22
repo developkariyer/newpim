@@ -69,7 +69,7 @@ class ImportCommand extends AbstractCommand
         $product->setProductIdentifier($data['identifier']);
         $product->setName($data['name']);
         $product->setDescription($data['description']);
-        $product->setProductCategory($objects['category']);
+        $product->setProductCategory($data['category']);
         $product->setProductCode($data['productCode']);
         // if ($imageAsset) {
         //     $product->setImage($imageAsset);
