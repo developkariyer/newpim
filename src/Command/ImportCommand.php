@@ -14,6 +14,8 @@ use App\Service\AssetManagementService;
 use Pimcore\Model\DataObject\Folder;
 use Pimcore\Model\DataObject\Category;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Pimcore\Model\DataObject\Color;
+use Pimcore\Model\DataObject\Color\Listing as ColorListing;
 
 #[AsCommand(
     name: 'app:import',
@@ -138,7 +140,7 @@ class ImportCommand extends AbstractCommand
 
     public function findColorByName(string $colorName)
     {
-        $listing = new \Pimcore\Model\DataObject\Color\Listing();
+        $listing = new ColorListing();
         $listing->setCondition('color = ?', [$colorName]);
         $listing->setLimit(1);
         return $listing->current();
