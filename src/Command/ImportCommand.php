@@ -57,7 +57,7 @@ class ImportCommand extends AbstractCommand
     private function createProduct(array $data)
     {
         $imageAsset = null;
-        $data['image'] = 'https://iwa.web.tr/' . $data['image'];
+        $data['image'] = 'https://iwa.web.tr' . $data['image'];
         echo $data['image'] . PHP_EOL;
         if ($data['image']) {
             $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $data['identifier'] ?: $data['name']);
