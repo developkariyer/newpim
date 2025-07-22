@@ -83,7 +83,7 @@ class ImportCommand extends AbstractCommand
         $product->setProductCode($data['productCode']);
 
         $product->setMarketplaces($this->getMarketplaceObjects($data['variants'] ?? []));
-
+        $product->setVariationSizeTable($this->createSizeTable($data['sizeTable'] ?? []));
         $product->setPublished($data['published'] ?? true);
         if ($imageAsset) {
             $product->setImage($imageAsset);
@@ -91,9 +91,24 @@ class ImportCommand extends AbstractCommand
 
         $product->save();
 
-        // brands marketplaces colors size tables variants 
+        // brands colors size tables variants 
         
 
+    }
+
+    private function createSizeTable($sizeTable): array
+    {
+        $result = [];
+        foreach ($sizeTable as $row) {
+            if (count($row) >= 3) {
+                $result[] = [
+                    'beden' => (string)$row[2],
+                    'en'    => (string)$row[0],
+                    'boy'   => (string)$row[1],
+                ];
+            }
+        }
+        return $result;
     }
 
     private function getMarketplaceObjects(array $variants): array
