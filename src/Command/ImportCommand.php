@@ -49,11 +49,33 @@ class ImportCommand extends AbstractCommand
             return Command::FAILURE;
         }
         $output->writeln('<info>Products:</info>');
-        foreach ($data as $index => $product) {
-            $this->createProduct($product);
+        $data->createUniqueColor($data);
+        // foreach ($data as $index => $product) {
+        //     $this->createProduct($product);
 
-        }
+        // }
         return Command::SUCCESS;
+    }
+
+    private function createUniqueColor($data)
+    {
+        $uniqueColors = [];
+        foreach ($data as $product) {
+            foreach ($product['variants'] as $variant) {
+                if (isset($variant['variationColor']) && !in_array($variant['variationColor'], $uniqueColors)) {
+                    $uniqueColors[] = $variant['variationColor'];
+                }
+            }
+        }    
+        $uniqueColors = array_unique($uniqueColors);
+        foreach ($uniqueColors as $colorName) {
+            $color = new Color();
+            $color->setKey($colorName);
+            $color->setParentId(1247);
+            $color->setColor($colorName);
+            $color->setPublished(true);
+            $color->save();
+        } 
     }
 
     private function createProduct(array $data)
@@ -91,14 +113,7 @@ class ImportCommand extends AbstractCommand
             $product->setImage($imageAsset);
         }
         $product->save();
-
         $this->createVariant($product, $data['variants'] ?? []);
-
-
-        // colors variants 
-
-        
-
     }
 
     private function createVariant($parentProduct, $data)
@@ -117,12 +132,11 @@ class ImportCommand extends AbstractCommand
             $variant->setVariationColor($this->createColor($variantData['variationColor']));
             $variant->setVariationSize($variantData['variationSize']);
             $variant->setPublished($variantData['published']);
-            //$variant->setSticker4x6iwasku($variantData['sticker4x6iwasku'] ?? null);
-            //$variant->setSticker4x6eu($variantData['sticker4x6eu'] ?? null);
             $variant->save();
         }
        
     }
+
 
     private function createColor($variationColor)
     {
