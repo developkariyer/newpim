@@ -81,13 +81,43 @@ class ImportCommand extends AbstractCommand
         $product->setDescription($data['description']);
         $product->setProductCategory($this->getProductCategory($data['category']));
         $product->setProductCode($data['productCode']);
+
+        $product->setMarketplaces($this->getMarketplaceObjects());
+
         $product->setPublished($data['published'] ?? true);
         if ($imageAsset) {
             $product->setImage($imageAsset);
         }
-        $product->save();
-       
 
+        $product->save();
+
+        // brands marketplaces colors size tables variants 
+        
+
+    }
+
+    private function getMarketplaceObjects(): array
+    {
+        $marketplaceNames = $this->getMarketplaces();
+        $marketplaces = [];
+        foreach ($marketplaceNames as $name) {
+            $marketplace = \Pimcore\Model\DataObject\Marketplace::getByName($name);
+            if ($marketplace) {
+                $marketplaces[] = $marketplace;
+            }
+        }
+        return $marketplaces;
+    }
+
+    private function getMarketplaces($variants)
+    {
+        $marketplaces = [];
+        foreach ($variants as $variant) {
+            if (isset($variant['marketplaceList'])) {
+                $marketplaces[] = $variant['marketplaceList'];
+            }
+        }
+        return array_unique($marketplaces);
     }
 
     private function createUploadedFileFromUrl(string $url, string $name = null): UploadedFile
