@@ -105,7 +105,7 @@ class ImportCommand extends AbstractCommand
                     'label' => (string)$row[2],
                     'width'    => (string)$row[0],
                     'length'   => (string)$row[1],
-                    'height' => (string)$row[3] ?? '',
+                    'height' => (string)$row[3] ?? 0,
                 ];
             }
         }
