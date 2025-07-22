@@ -116,8 +116,8 @@ class ImportCommand extends AbstractCommand
             $variant->setVariationColor($this->createColor($variantData['variationColor']));
             $variant->setVariationSize($variantData['variationSize']);
             $variant->setPublished($variantData['published']);
-            $variant->setSticker4x6iwasku($variantData['sticker4x6iwasku'] ?? null);
-            $variant->setSticker4x6eu($variantData['sticker4x6eu'] ?? null);
+            //$variant->setSticker4x6iwasku($variantData['sticker4x6iwasku'] ?? null);
+            //$variant->setSticker4x6eu($variantData['sticker4x6eu'] ?? null);
             $variant->save();
         }
        
