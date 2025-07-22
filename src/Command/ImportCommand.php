@@ -111,14 +111,37 @@ class ImportCommand extends AbstractCommand
             $variant->setIwasku($variantData['iwasku']);
             $variant->setKey($variantData['key']);
             $variant->setName($variantData['name']);
-            $variant->setVariationColor($variantData['variationSize']);
-            $variant->setVariationSize($variantData['variationColor']);
+            $variant->setVariationColor($this->createColor($variantData['variationColor']));
+            $variant->setVariationSize($variantData['variationSize']);
             $variant->setPublished($variantData['published']);
             $variant->setSticker4x6iwasku($variantData['sticker4x6iwasku'] ?? null);
             $variant->setSticker4x6eu($variantData['sticker4x6eu'] ?? null);
             $variant->save();
         }
        
+    }
+
+    private function createColor($variationColor)
+    {
+        $color = $this->findColorByName($variationColor);
+        if (!$color) {
+            $color = new Color();
+            $color->setKey($colorName);
+            $color->setParentId($colorsFolderId);
+            $color->setColor($colorName);
+            $color->setPublished(true);
+            $color->save();
+            return $color;
+        }
+        return $color;
+    }
+
+    public function findColorByName(string $colorName): ?Color
+    {
+        $listing = new ColorListing();
+        $listing->setCondition('color = ?', [$colorName]);
+        $listing->setLimit(1);
+        return $listing->current();
     }
 
     private function createSizeTable($sizeTable): array
