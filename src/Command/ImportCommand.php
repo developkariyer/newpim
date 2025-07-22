@@ -60,12 +60,18 @@ class ImportCommand extends AbstractCommand
         $data['image'] = 'https://iwa.web.tr' . $data['image'];
         echo $data['image'] . PHP_EOL;
         if ($data['image']) {
-            $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $data['identifier'] ?: $data['name']);
+            $imageName = $data['identifier'] ?: $data['name'];
+            if (!str_ends_with($imageName, '.png')) {
+                $imageName .= '.png';
+            }
+            echo $imageName . PHP_EOL;
+            $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $imageName);
             $imageAsset = $this->assetService->uploadProductImage(
                 $uploadedFile,
-                $data['identifier'] ?: $data['name']
+                $imageName
             );
         }
+
         $parentFolder = $this->createProductFolderStructure($data['identifier'], $data['category']);
         $product = new Product();
         $product->setParent($parentFolder);
