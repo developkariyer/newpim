@@ -15,6 +15,7 @@ use Pimcore\Model\DataObject\Folder;
 use Pimcore\Model\DataObject\Category;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Pimcore\Model\DataObject\Color;
+use Pimcore\Model\DataObject\Ean;
 use Pimcore\Model\DataObject\Color\Listing as ColorListing;
 
 #[AsCommand(
