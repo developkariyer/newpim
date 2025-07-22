@@ -22,7 +22,9 @@ class ImportCommand extends AbstractCommand
 
     public function __construct(
         private AssetManagementService $assetService
-    ) {}
+    ) {
+        parent::__construct();
+    }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
