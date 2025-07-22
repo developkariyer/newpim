@@ -69,6 +69,9 @@ class ImportCommand extends AbstractCommand
         }    
         $uniqueColors = array_unique($uniqueColors);
         foreach ($uniqueColors as $colorName) {
+            if (empty($colorName)) {
+                continue; 
+            }
             $existingColor = $this->findColorByName($colorName);
             if ($existingColor) {
                 continue;
