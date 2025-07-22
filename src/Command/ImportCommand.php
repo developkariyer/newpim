@@ -105,6 +105,7 @@ class ImportCommand extends AbstractCommand
                     'beden' => (string)$row[2],
                     'en'    => (string)$row[0],
                     'boy'   => (string)$row[1],
+                    'yukseklik' => (string)$row[3] ?? '',
                 ];
             }
         }
