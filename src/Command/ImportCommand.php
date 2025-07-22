@@ -121,7 +121,13 @@ class ImportCommand extends AbstractCommand
         $marketplaces = [];
         foreach ($variants as $variant) {
             if (isset($variant['marketplaceList'])) {
-                $marketplaces[] = $variant['marketplaceList'];
+                if (is_array($variant['marketplaceList'])) {
+                    foreach ($variant['marketplaceList'] as $mp) {
+                        $marketplaces[] = $mp;
+                    }
+                } else {
+                    $marketplaces[] = $variant['marketplaceList'];
+                }
             }
         }
         return array_unique($marketplaces);
