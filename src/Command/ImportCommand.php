@@ -63,13 +63,20 @@ class ImportCommand extends AbstractCommand
         $uniqueEans = [];
         foreach ($data as $product) {
             foreach ($product['variants'] as $variant) {
-                if (isset($variant['ean']) && !in_array($variant['ean'], $uniqueEans)) {
+                if (
+                    isset($variant['ean']) &&
+                    !empty($variant['ean']) && // BOŞLARI ATLAR
+                    !in_array($variant['ean'], $uniqueEans)
+                ) {
                     $uniqueEans[] = $variant['ean'];
                 }
             }
         }
         $uniqueEans = array_unique($uniqueEans);
         foreach ($uniqueEans as $ean) {
+            if (empty($ean)) {
+                continue;
+            }
             $eanModel = new Ean();
             $eanModel->setKey($ean);
             $eanModel->setParentId(47);
