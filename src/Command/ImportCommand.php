@@ -128,9 +128,9 @@ class ImportCommand extends AbstractCommand
         $color = $this->findColorByName($variationColor);
         if (!$color) {
             $color = new Color();
-            $color->setKey($colorName);
-            $color->setParentId($colorsFolderId);
-            $color->setColor($colorName);
+            $color->setKey($variationColor);
+            $color->setParentId(1247);
+            $color->setColor($variationColor);
             $color->setPublished(true);
             $color->save();
             return $color;
