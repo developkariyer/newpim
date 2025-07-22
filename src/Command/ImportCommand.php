@@ -71,7 +71,7 @@ class ImportCommand extends AbstractCommand
                             $fnskuString = is_array($fnskuList) ? implode("\n", $fnskuList) : (string)$fnskuList;
                             $asinModel = new Asin();
                             $asinModel->setKey($asin);
-                            $asinModel->setParentId(48); 
+                            $asinModel->setParentId(54); 
                             $asinModel->setAsin($asin);
                             $asinModel->setFnskus($fnskuString);
                             $asinModel->setPublished(true);
