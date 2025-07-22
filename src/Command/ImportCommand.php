@@ -100,6 +100,7 @@ class ImportCommand extends AbstractCommand
 
     private function createVariant($parentProduct, $data)
     {
+        print_r($data);
         if (!is_array($data) || empty($data)) {
             return;
         }
