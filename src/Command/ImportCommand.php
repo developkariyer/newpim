@@ -69,6 +69,10 @@ class ImportCommand extends AbstractCommand
         }    
         $uniqueColors = array_unique($uniqueColors);
         foreach ($uniqueColors as $colorName) {
+            $existingColor = $this->findColorByName($colorName);
+            if ($existingColor) {
+                continue;
+            }
             $color = new Color();
             $color->setKey($colorName);
             $color->setParentId(1247);
