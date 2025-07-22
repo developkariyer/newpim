@@ -109,6 +109,7 @@ class ImportCommand extends AbstractCommand
                 ];
             }
         }
+        print_r($result);
         return $result;
     }
 
