@@ -102,7 +102,7 @@ class ImportCommand extends AbstractCommand
         $marketplaces = [];
         foreach ($marketplaceNames as $name) {
             $marketplaceListing = new \Pimcore\Model\DataObject\Marketplace\Listing();
-            $marketplaceListing->setCondition("key = '$name'");
+            $marketplaceListing->setCondition("`key` = ?", [$name]);
             $marketplaceListing->setLimit(1);
             $marketplaceListing->load();
             if ($marketplaceListing->count() === 0) {
