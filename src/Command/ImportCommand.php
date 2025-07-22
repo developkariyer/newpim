@@ -136,7 +136,7 @@ class ImportCommand extends AbstractCommand
         return $color;
     }
 
-    public function findColorByName(string $colorName): ?Color
+    public function findColorByName(string $colorName)
     {
         $listing = new \Pimcore\Model\DataObject\Color\Listing();
         $listing->setCondition('color = ?', [$colorName]);
