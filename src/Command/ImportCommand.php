@@ -82,7 +82,7 @@ class ImportCommand extends AbstractCommand
         $product->setProductCategory($this->getProductCategory($data['category']));
         $product->setProductCode($data['productCode']);
 
-        $product->setMarketplaces($this->getMarketplaceObjects());
+        $product->setMarketplaces($this->getMarketplaceObjects($data['variants'] ?? []));
 
         $product->setPublished($data['published'] ?? true);
         if ($imageAsset) {
@@ -96,9 +96,9 @@ class ImportCommand extends AbstractCommand
 
     }
 
-    private function getMarketplaceObjects(): array
+    private function getMarketplaceObjects(array $variants): array
     {
-        $marketplaceNames = $this->getMarketplaces();
+        $marketplaceNames = $this->getMarketplaces($variants);
         $marketplaces = [];
         foreach ($marketplaceNames as $name) {
             $marketplaceListing = new \Pimcore\Model\DataObject\Marketplace\Listing();
