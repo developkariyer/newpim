@@ -52,7 +52,7 @@ class ImportCommand extends AbstractCommand
         return Command::SUCCESS;
     }
 
-    private function createProduct(array $data): Product
+    private function createProduct(array $data)
     {
         // $imageAsset = null;
         // $data['image'] = 'https://iwa.web.tr/' . $data['image'];
