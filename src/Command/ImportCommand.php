@@ -9,6 +9,8 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Pimcore\Model\DataObject\Product;
+use App\Service\AssetManagementService;
 
 #[AsCommand(
     name: 'app:import',
@@ -16,7 +18,12 @@ use Symfony\Component\Console\Input\InputOption;
 )]
 class ImportCommand extends AbstractCommand
 {
-    
+    private const PRODUCTS_MAIN_FOLDER_ID = 1246;
+
+    public function __construct(
+        private AssetManagementService $assetService
+    ) {}
+
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $filePath = PIMCORE_PROJECT_ROOT . '/tmp/exportProduct.json';
@@ -36,13 +43,56 @@ class ImportCommand extends AbstractCommand
         }
         $output->writeln('<info>Products:</info>');
         foreach ($data as $index => $product) {
-            $output->writeln("Product #$index");
-            $output->writeln("ID: " . ($product['id'] ?? 'N/A'));
-            $output->writeln("Name: " . ($product['name'] ?? 'N/A'));
-            $output->writeln("Price: " . ($product['price'] ?? 'N/A'));
-            $output->writeln('---------------------------');
+            $this->createProduct($product);
+
         }
         return Command::SUCCESS;
+    }
+
+    private function createProduct(array $data): Product
+    {
+        $imageAsset = null;
+        $data['image'] = 'https://iwa.web.tr/' . $data['image'];
+        if ($data['image'] && $data['image']->isValid()) {
+            $imageAsset = $this->assetService->uploadProductImage(
+                $data['image'], 
+                $data['identifier'] ?: $data['name']
+            );
+        }
+        $parentFolder = $this->createProductFolderStructure($data['identifier'], $data['category']);
+        $product = new Product();
+        $product->setParent($parentFolder);
+        $product->setKey($data['identifier'] . ' ' . $data['name']);
+        $product->setProductIdentifier($data['identifier']);
+        if ($imageAsset) {
+            $product->setImage($imageAsset);
+        }
+
+    }
+
+    private function createProductFolderStructure(string $productIdentifier, string $category): Folder
+    {
+        $productsFolder = Folder::getById(self::PRODUCTS_MAIN_FOLDER_ID);
+        if (!$productsFolder) {
+            throw new \Exception('Products main folder not found');
+        }
+        $categoryFolder = $this->getOrCreateFolder($productsFolder, $category);
+        $identifierPrefix = strtoupper(explode('-', $productIdentifier)[0]);
+        $identifierFolder = $this->getOrCreateFolder($categoryFolder, $identifierPrefix);
+        return $identifierFolder;
+    }
+
+    private function getOrCreateFolder(Folder $parent, string $folderName): Folder
+    {
+        $folderPath = $parent->getFullPath() . '/' . $folderName;
+        $folder = Folder::getByPath($folderPath);
+        if (!$folder) {
+            $folder = new Folder();
+            $folder->setKey($folderName);
+            $folder->setParent($parent);
+            $folder->save();
+        }
+        return $folder;
     }
 
 
