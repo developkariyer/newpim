@@ -11,6 +11,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Pimcore\Model\DataObject\Product;
 use App\Service\AssetManagementService;
+use Pimcore\Model\DataObject\Folder;
 
 #[AsCommand(
     name: 'app:import',
