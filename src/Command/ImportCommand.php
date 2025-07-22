@@ -80,7 +80,7 @@ class ImportCommand extends AbstractCommand
 
     private function getProductCategory(string $categoryName): ?Folder
     {
-        $category = Category::getByName($categoryName);
+        $category = Category::getByKey($categoryName);
         if (!$category) {
             $category = new Category();
             $category->setName($categoryName);
