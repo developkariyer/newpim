@@ -90,9 +90,10 @@ class ImportCommand extends AbstractCommand
         if ($imageAsset) {
             $product->setImage($imageAsset);
         }
+        $product->save();
+
         $this->createVariant($product, $data['variants'] ?? []);
 
-        $product->save();
 
         // colors variants 
 
