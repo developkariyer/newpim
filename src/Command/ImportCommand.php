@@ -72,6 +72,8 @@ class ImportCommand extends AbstractCommand
         $product->setDescription($data['description']);
         $product->setProductCategory($this->getProductCategory($data['category']));
         $product->setProductCode($data['productCode']);
+        $product->setPublished($data['published'] ?? true);
+        $product->save();
         // if ($imageAsset) {
         //     $product->setImage($imageAsset);
         // }
