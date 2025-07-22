@@ -53,22 +53,22 @@ class ImportCommand extends AbstractCommand
 
     private function createProduct(array $data): Product
     {
-        $imageAsset = null;
-        $data['image'] = 'https://iwa.web.tr/' . $data['image'];
-        if ($data['image']) {
-            $imageAsset = $this->assetService->uploadProductImage(
-                $data['image'], 
-                $data['identifier'] ?: $data['name']
-            );
-        }
+        // $imageAsset = null;
+        // $data['image'] = 'https://iwa.web.tr/' . $data['image'];
+        // if ($data['image']) {
+        //     $imageAsset = $this->assetService->uploadProductImage(
+        //         $data['image'], 
+        //         $data['identifier'] ?: $data['name']
+        //     );
+        // }
         $parentFolder = $this->createProductFolderStructure($data['identifier'], $data['category']);
         $product = new Product();
         $product->setParent($parentFolder);
         $product->setKey($data['identifier'] . ' ' . $data['name']);
         $product->setProductIdentifier($data['identifier']);
-        if ($imageAsset) {
-            $product->setImage($imageAsset);
-        }
+        // if ($imageAsset) {
+        //     $product->setImage($imageAsset);
+        // }
 
     }
 
