@@ -101,26 +101,18 @@ class ImportCommand extends AbstractCommand
             echo 'Processing product with ID: ' . $product['id'] . PHP_EOL;
             if (!empty($product['variationSizeList']) && is_string($product['variationSizeList'])) {
                 echo 'Processing variationSizeList: ' . $product['variationSizeList'] . PHP_EOL;
-                $sizeList = explode("\n", $product['variationSizeList']);
-                echo 'Split variationSizeList: ' . implode(', ', $sizeList) . PHP_EOL;
-                foreach ($sizeList as $size) {
-                    $sizeKey = trim($size);
-                    if (empty($sizeKey)) {
-                        echo 'Skipping empty size key.' . PHP_EOL;
-                        continue;
-                    }
-                    echo 'Processing size: ' . $sizeKey . PHP_EOL;
-                    if (!isset($sizeListCounts[$sizeKey])) {
-                        $sizeListCounts[$sizeKey] = 0;
-                    }
-                    $sizeListCounts[$sizeKey]++;
+                $sizeKey = trim($product['variationSizeList']);
+                echo 'Processing size group: ' . $sizeKey . PHP_EOL;
+                if (!isset($sizeListCounts[$sizeKey])) {
+                    $sizeListCounts[$sizeKey] = 0;
                 }
+                $sizeListCounts[$sizeKey]++;
             }
         }
         echo 'Size counts: ' . print_r($sizeListCounts, true) . PHP_EOL;
         echo 'Grouped sizes and counts: ' . PHP_EOL;
         foreach ($sizeListCounts as $sizeKey => $count) {
-            echo "Size List: [$sizeKey] | Product Count: $count" . PHP_EOL;
+            echo "Size Group: [$sizeKey] | Product Count: $count" . PHP_EOL;
         }
     }
     
