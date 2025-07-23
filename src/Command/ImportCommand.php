@@ -224,7 +224,14 @@ class ImportCommand extends AbstractCommand
             }
             $variant->setKey($variantData['key']);
             $variant->setName($variantData['name']);
-            $variant->setVariationColor($this->createColor($variantData['variationColor']));
+            $color = $this->createColor($variantData['variationColor']);
+            if ($color) {
+                $variant->setVariationColor($color);
+            } else {
+                echo 'Skipping variant due to empty color for product ' . $parentProduct->getProductIdentifier() . PHP_EOL;
+                continue;
+            }
+            $variant->setVariationColor();
             $variant->setVariationSize($variantData['variationSize']);
             $variant->setPublished($variantData['published']);
             $variant->save();
@@ -237,6 +244,10 @@ class ImportCommand extends AbstractCommand
         $color = $this->findColorByName($variationColor);
         if (!$color) {
             $color = new Color();
+            if (empty(trim($variationColor))) {
+                echo 'Color key is empty, skipping.' . PHP_EOL;
+                return null;
+            }
             $color->setKey($variationColor);
             $color->setParentId(1247);
             $color->setColor($variationColor);
