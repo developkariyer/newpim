@@ -95,21 +95,32 @@ class ImportCommand extends AbstractCommand
     private function groupDirtyVariationSizeList($data)
     {
         $dirtyProducts = $this->getDirtyProducts($data);
-        $sizeListCounts = [];
+        $sizeListAnalysis = [];
         echo 'Dirty products count: ' . count($dirtyProducts) . PHP_EOL;
         foreach ($dirtyProducts as $product) {
             if (!empty($product['variationSizeList']) && is_string($product['variationSizeList'])) {
-                $sizeKey = trim($product['variationSizeList']);
+                $sizeKey = trim(strtolower($product['variationSizeList'])); 
+                $originalSizeLabel = trim($product['variationSizeList']);
                 $productId = $product['id'];
-                if (!isset($sizeListCounts[$sizeKey])) {
-                    $sizeListCounts[$sizeKey] = [];
+                if (!isset($sizeListAnalysis[$sizeKey])) {
+                    $sizeListAnalysis[$sizeKey] = [
+                        'count' => 0,
+                        'product_ids' => [],
+                        'original_labels' => []
+                    ];
                 }
-                if (!in_array($productId, $sizeListCounts[$sizeKey])) {
-                    $sizeListCounts[$sizeKey][] = $productId;
+                $sizeListAnalysis[$sizeKey]['count']++;
+                $sizeListAnalysis[$sizeKey]['product_ids'][] = $productId;
+                if (!in_array($originalSizeLabel, $sizeListAnalysis[$sizeKey]['original_labels'])) {
+                    $sizeListAnalysis[$sizeKey]['original_labels'][] = $originalSizeLabel;
                 }
             }
         }
-        echo 'Size counts: ' . print_r($sizeListCounts, true) . PHP_EOL;
+        uasort($sizeListAnalysis, function ($a, $b) {
+            return $b['count'] <=> $a['count'];
+        });
+        echo 'Size Analysis: ' . print_r($sizeListAnalysis, true) . PHP_EOL;
+        return $sizeListAnalysis;
     }
     
     private function getDirtyProducts($data)
