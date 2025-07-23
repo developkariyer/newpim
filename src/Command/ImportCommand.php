@@ -88,6 +88,17 @@ class ImportCommand extends AbstractCommand
         }
     }
 
+    private function dirtyDataCount($data)
+    {
+        $dirtyCount = 0;
+        foreach ($data as $product) {
+            if (isset($product['isDirty']) && $product['isDirty']) {
+                $dirtyCount++;
+            }
+        }
+        return $dirtyCount;
+    }
+
     private function createEan($data)
     {
         $uniqueEans = [];
