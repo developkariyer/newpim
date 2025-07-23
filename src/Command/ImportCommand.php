@@ -224,7 +224,7 @@ class ImportCommand extends AbstractCommand
             $imageName
         );
         $listing = new Product\Listing();
-        $listing->setCondition('productIdentifier = ?', [$productIdentifier]);
+        $listing->setCondition('productIdentifier = ?', [$data['identifier']]);
         $listing->setLimit(1);
         $listing->load();
         $product = $listing->current();
