@@ -166,12 +166,13 @@ class ImportCommand extends AbstractCommand
     private function createProduct(array $data)
     {
         $isExist = $this->checkExistProduct($data['identifier']);
-        if ($isExist) {
-            echo 'Product with identifier ' . $data['identifier'] . ' already exists.' . PHP_EOL;
-            return;
-        }
         if ($data['isDirty']) {
             echo 'Product with identifier ' . $data['identifier'] . ' is dirty, skipping.' . PHP_EOL;
+            return;
+        }
+        if ($isExist) {
+            echo 'Product with identifier ' . $data['identifier'] . ' already exists.' . PHP_EOL;
+            $this->updateProduct($data);
             return;
         }
         $imageAsset = null;
@@ -207,6 +208,30 @@ class ImportCommand extends AbstractCommand
         }
         $product->save();
         $this->createVariant($product, $data['variants'] ?? []);
+    }
+
+    private function updateProduct(array $data)
+    {
+        $imageAsset = null;
+        if (!$data['image']) {
+            return;
+        }
+        $data['image'] = 'https://iwa.web.tr' . $data['image'];
+        $imageName = $data['identifier'] ?: $data['name'];
+        $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $imageName);
+        $imageAsset = $this->assetService->uploadProductImage(
+            $uploadedFile,
+            $imageName
+        );
+        $listing = new Product\Listing();
+        $listing->setCondition('productIdentifier = ?', [$productIdentifier]);
+        $listing->setLimit(1);
+        $listing->load();
+        $product = $listing->current();
+        if ($imageAsset) {
+            $product->setImage($imageAsset);
+        }
+        $product->save();
     }
 
     private function checkExistProduct($productIdentifier)
