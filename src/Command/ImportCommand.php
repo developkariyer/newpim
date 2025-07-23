@@ -231,7 +231,6 @@ class ImportCommand extends AbstractCommand
                 echo 'Skipping variant due to empty color for product ' . $parentProduct->getProductIdentifier() . PHP_EOL;
                 continue;
             }
-            $variant->setVariationColor();
             $variant->setVariationSize($variantData['variationSize']);
             $variant->setPublished($variantData['published']);
             $variant->save();
