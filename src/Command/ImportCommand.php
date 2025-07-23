@@ -217,10 +217,14 @@ class ImportCommand extends AbstractCommand
             $data['image'] = 'https://iwa.web.tr' . $data['image'];
             $imageName = $data['identifier'] ?: $data['name'];
             $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $imageName);
-            $imageAsset = $this->assetService->uploadProductImage(
-                $uploadedFile,
-                $imageName
-            );
+            if ($uploadedFile instanceof \Symfony\Component\HttpFoundation\File\UploadedFile) {
+                $imageAsset = $this->assetService->uploadProductImage(
+                    $uploadedFile,
+                    $imageName
+                );
+            } else {
+                echo "Image could not be downloaded or processed for product: " . $data['identifier'] . PHP_EOL;
+            }
         }
         $listing = new Product\Listing();
         $listing->setCondition('productIdentifier = ?', [$data['identifier']]);
