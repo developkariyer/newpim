@@ -51,11 +51,16 @@ class ImportCommand extends AbstractCommand
             return Command::FAILURE;
         }
         $output->writeln('<info>Products:</info>');
-        $this->createAsinFnsku($data);
-        // foreach ($data as $index => $product) {
-        //     $this->createProduct($product);
+        //$this->createAsinFnsku($data);
 
-        // }
+        $count = 0;
+        foreach ($data as $index => $product) {
+            if ($count >= 50) {
+                break;
+            }
+            $this->createProduct($product);
+            $count++;
+        }
         return Command::SUCCESS;
     }
     
