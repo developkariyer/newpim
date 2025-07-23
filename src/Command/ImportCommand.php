@@ -98,9 +98,7 @@ class ImportCommand extends AbstractCommand
         $sizeListCounts = [];
         echo 'Dirty products count: ' . count($dirtyProducts) . PHP_EOL;
         foreach ($dirtyProducts as $product) {
-            echo 'Processing product with ID: ' . $product['id'] . PHP_EOL;
             if (!empty($product['variationSizeList']) && is_string($product['variationSizeList'])) {
-                echo 'Processing variationSizeList: ' . $product['variationSizeList'] . PHP_EOL;
                 $sizeKey = trim($product['variationSizeList']);
                 $productId = $product['id'];
                 echo 'Processing size group: ' . $sizeKey . ' for Product ID: ' . $productId . PHP_EOL;
