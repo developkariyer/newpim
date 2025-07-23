@@ -163,9 +163,6 @@ class ImportCommand extends AbstractCommand
         if ($data['image']) {
             $data['image'] = 'https://iwa.web.tr' . $data['image'];
             $imageName = $data['identifier'] ?: $data['name'];
-            if (!str_ends_with($imageName, '.png')) {
-                $imageName .= '.png';
-            }
             $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $imageName);
             $imageAsset = $this->assetService->uploadProductImage(
                 $uploadedFile,
@@ -302,8 +299,17 @@ class ImportCommand extends AbstractCommand
     {
         $tmpFile = tempnam(sys_get_temp_dir(), 'upl_');
         file_put_contents($tmpFile, file_get_contents($url));
-        $originalName = $name ?: basename(parse_url($url, PHP_URL_PATH));
         $mimeType = mime_content_type($tmpFile);
+        $ext = match ($mimeType) {
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/gif' => 'gif',
+            default => pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION),
+        };
+        $originalName = $name ?: basename(parse_url($url, PHP_URL_PATH));
+        if (!str_ends_with($originalName, '.' . $ext)) {
+            $originalName .= '.' . $ext;
+        }
         return new UploadedFile(
             $tmpFile,
             $originalName,
