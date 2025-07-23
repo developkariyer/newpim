@@ -61,8 +61,26 @@ class ImportCommand extends AbstractCommand
         //     $this->createProduct($product);
         //     $count++;
         // }
-        echo $this->dirtyDataCount($data) . ' dirty products found.' . PHP_EOL;
+        echo $this->exportDirtyProducts($data) . ' dirty products found.' . PHP_EOL;
+
         return Command::SUCCESS;
+    }
+
+    private function exportDirtyProducts($data)
+    {
+        $dirtyProducts = [];
+        foreach ($data as $product) {
+            if (isset($product['isDirty']) && $product['isDirty']) {
+                $dirtyProducts[] = $product;
+            }
+        }
+        if (empty($dirtyProducts)) {
+            echo 'No dirty products found.' . PHP_EOL;
+            return;
+        }
+        $filePath = PIMCORE_PROJECT_ROOT . '/tmp/dirty_products.json';
+        file_put_contents($filePath, json_encode($dirtyProducts, JSON_PRETTY_PRINT));
+        echo 'Dirty products exported to: ' . $filePath . PHP_EOL;
     }
     
     private function createAsinFnsku($data)
