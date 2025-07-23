@@ -96,13 +96,22 @@ class ImportCommand extends AbstractCommand
     {
         $sizeListCounts = [];
         $dirtyProducts = $this->getDirtyProducts($data);
+        echo 'Dirty products count: ' . count($dirtyProducts) . PHP_EOL;
         foreach ($dirtyProducts as $product) {
+            echo 'Processing product with ID: ' . $product['id'] . PHP_EOL;
             if (isset($product['variants']) && is_array($product['variants'])) {
                 foreach ($product['variants'] as $variant) {
+                    echo 'Processing variant with variationSizeList: ' . $variant['variationSizeList'] . PHP_EOL;
                     if (!empty($variant['variationSizeList']) && is_string($variant['variationSizeList'])) {
-                        $sizeList = explode("\n", $variant['variationSizeList']); // Split the variationSizeList into an array
+                        $sizeList = explode("\n", $variant['variationSizeList']);
+                        echo 'Split variationSizeList: ' . implode(', ', $sizeList) . PHP_EOL;
                         foreach ($sizeList as $size) {
                             $sizeKey = trim($size);
+                            if (empty($sizeKey)) {
+                                echo 'Skipping empty size key.' . PHP_EOL;
+                                continue;
+                            }
+                            echo 'Processing size: ' . $sizeKey . PHP_EOL;
                             if (!isset($sizeListCounts[$sizeKey])) {
                                 $sizeListCounts[$sizeKey] = 0;
                             }
@@ -112,14 +121,10 @@ class ImportCommand extends AbstractCommand
                 }
             }
         }
-        $groupedSizes = [];
+        echo 'Size counts: ' . print_r($sizeListCounts, true) . PHP_EOL;
+        echo 'Grouped sizes and counts: ' . PHP_EOL;
         foreach ($sizeListCounts as $sizeKey => $count) {
-            $groupedSizes[] = [$sizeKey => $count];
-        }
-        foreach ($groupedSizes as $group) {
-            foreach ($group as $sizeKey => $count) {
-                echo "Size List: [$sizeKey] | Product Count: $count" . PHP_EOL;
-            }
+            echo "Size List: [$sizeKey] | Product Count: $count" . PHP_EOL;
         }
     }
     
