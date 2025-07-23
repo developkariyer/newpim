@@ -101,7 +101,6 @@ class ImportCommand extends AbstractCommand
             if (!empty($product['variationSizeList']) && is_string($product['variationSizeList'])) {
                 $sizeKey = trim($product['variationSizeList']);
                 $productId = $product['id'];
-                echo 'Processing size group: ' . $sizeKey . ' for Product ID: ' . $productId . PHP_EOL;
                 if (!isset($sizeListCounts[$sizeKey])) {
                     $sizeListCounts[$sizeKey] = [];
                 }
