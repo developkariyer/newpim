@@ -228,6 +228,10 @@ class ImportCommand extends AbstractCommand
         $listing->setLimit(1);
         $listing->load();
         $product = $listing->current();
+        if (!$product) {
+            echo 'Product not found for identifier ' . $data['identifier'] . ', skipping update.' . PHP_EOL;
+            return;
+        }
         if ($imageAsset) {
             $product->setImage($imageAsset);
         }
@@ -354,10 +358,20 @@ class ImportCommand extends AbstractCommand
         return array_unique($marketplaces);
     }
 
-    private function createUploadedFileFromUrl(string $url, string $name = null): UploadedFile
+    private function createUploadedFileFromUrl(string $url, string $name = null): ?UploadedFile
     {
+        $encodedUrl = preg_replace_callback(
+            '/[^\/]+/',
+            fn($m) => rawurlencode($m[0]),
+            $url
+        );
         $tmpFile = tempnam(sys_get_temp_dir(), 'upl_');
-        file_put_contents($tmpFile, file_get_contents($url));
+        $fileContent = @file_get_contents($encodedUrl);
+        if ($fileContent === false) {
+            echo "Image download failed: $encodedUrl" . PHP_EOL;
+            return null;
+        }
+        file_put_contents($tmpFile, $fileContent);
         $mimeType = mime_content_type($tmpFile);
         $ext = match ($mimeType) {
             'image/jpeg' => 'jpg',
