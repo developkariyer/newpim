@@ -53,14 +53,15 @@ class ImportCommand extends AbstractCommand
         $output->writeln('<info>Products:</info>');
         //$this->createAsinFnsku($data);
 
-        $count = 0;
-        foreach ($data as $index => $product) {
-            // if ($count >= 500) {
-            //     break;
-            // }
-            $this->createProduct($product);
-            $count++;
-        }
+        // $count = 0;
+        // foreach ($data as $index => $product) {
+        //     // if ($count >= 500) {
+        //     //     break;
+        //     // }
+        //     $this->createProduct($product);
+        //     $count++;
+        // }
+        echo $this->dirtyDataCount($data) . ' dirty products found.' . PHP_EOL;
         return Command::SUCCESS;
     }
     
@@ -212,33 +213,33 @@ class ImportCommand extends AbstractCommand
 
     private function updateProduct(array $data)
     {
-        $imageAsset = null;
-        if ($data['image']) {
-            $data['image'] = 'https://iwa.web.tr' . $data['image'];
-            $imageName = $data['identifier'] ?: $data['name'];
-            $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $imageName);
-            if ($uploadedFile instanceof \Symfony\Component\HttpFoundation\File\UploadedFile) {
-                $imageAsset = $this->assetService->uploadProductImage(
-                    $uploadedFile,
-                    $imageName
-                );
-            } else {
-                echo "Image could not be downloaded or processed for product: " . $data['identifier'] . PHP_EOL;
-            }
-        }
-        $listing = new Product\Listing();
-        $listing->setCondition('productIdentifier = ?', [$data['identifier']]);
-        $listing->setLimit(1);
-        $listing->load();
-        $product = $listing->current();
-        if (!$product) {
-            echo 'Product not found for identifier ' . $data['identifier'] . ', skipping update.' . PHP_EOL;
-            return;
-        }
-        if ($imageAsset) {
-            $product->setImage($imageAsset);
-        }
-        $product->save();
+        // $imageAsset = null;
+        // if ($data['image']) {
+        //     $data['image'] = 'https://iwa.web.tr' . $data['image'];
+        //     $imageName = $data['identifier'] ?: $data['name'];
+        //     $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $imageName);
+        //     if ($uploadedFile instanceof \Symfony\Component\HttpFoundation\File\UploadedFile) {
+        //         $imageAsset = $this->assetService->uploadProductImage(
+        //             $uploadedFile,
+        //             $imageName
+        //         );
+        //     } else {
+        //         echo "Image could not be downloaded or processed for product: " . $data['identifier'] . PHP_EOL;
+        //     }
+        // }
+        // $listing = new Product\Listing();
+        // $listing->setCondition('productIdentifier = ?', [$data['identifier']]);
+        // $listing->setLimit(1);
+        // $listing->load();
+        // $product = $listing->current();
+        // if (!$product) {
+        //     echo 'Product not found for identifier ' . $data['identifier'] . ', skipping update.' . PHP_EOL;
+        //     return;
+        // }
+        // if ($imageAsset) {
+        //     $product->setImage($imageAsset);
+        // }
+        // $product->save();
     }
 
     private function checkExistProduct($productIdentifier)
