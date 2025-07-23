@@ -363,12 +363,10 @@ class ImportCommand extends AbstractCommand
 
     private function createUploadedFileFromUrl(string $url, string $name = null): ?UploadedFile
     {
-        // URL encode
-        $encodedUrl = preg_replace_callback(
-            '/[^\/]+/',
-            fn($m) => rawurlencode($m[0]),
-            $url
-        );
+        $parsedUrl = parse_url($url);
+        $pathParts = explode('/', $parsedUrl['path']);
+        $encodedPath = implode('/', array_map('rawurlencode', $pathParts));
+        $encodedUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $encodedPath;
         $tmpFile = tempnam(sys_get_temp_dir(), 'upl_');
         $fileContent = @file_get_contents($encodedUrl);
         if ($fileContent === false) {
@@ -376,17 +374,26 @@ class ImportCommand extends AbstractCommand
             return null;
         }
         file_put_contents($tmpFile, $fileContent);
+
         $mimeType = mime_content_type($tmpFile);
+        if (!in_array($mimeType, ['image/jpeg', 'image/png', 'image/gif', 'image/webp'])) {
+            echo "Downloaded file is not a valid image: $encodedUrl" . PHP_EOL;
+            return null;
+        }
+
         $ext = match ($mimeType) {
             'image/jpeg' => 'jpg',
             'image/png' => 'png',
             'image/gif' => 'gif',
-            default => pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION),
+            'image/webp' => 'webp',
+            default => pathinfo($url, PATHINFO_EXTENSION),
         };
-        $originalName = $name ?: basename(parse_url($url, PHP_URL_PATH));
+
+        $originalName = $name ?: basename($parsedUrl['path']);
         if (!str_ends_with($originalName, '.' . $ext)) {
             $originalName .= '.' . $ext;
         }
+
         return new UploadedFile(
             $tmpFile,
             $originalName,
