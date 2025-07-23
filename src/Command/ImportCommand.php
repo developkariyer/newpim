@@ -102,17 +102,20 @@ class ImportCommand extends AbstractCommand
             if (!empty($product['variationSizeList']) && is_string($product['variationSizeList'])) {
                 echo 'Processing variationSizeList: ' . $product['variationSizeList'] . PHP_EOL;
                 $sizeKey = trim($product['variationSizeList']);
-                echo 'Processing size group: ' . $sizeKey . PHP_EOL;
+                $productId = $product['id'];
+                echo 'Processing size group: ' . $sizeKey . ' for Product ID: ' . $productId . PHP_EOL;
                 if (!isset($sizeListCounts[$sizeKey])) {
-                    $sizeListCounts[$sizeKey] = 0;
+                    $sizeListCounts[$sizeKey] = [];
                 }
-                $sizeListCounts[$sizeKey]++;
+                if (!in_array($productId, $sizeListCounts[$sizeKey])) {
+                    $sizeListCounts[$sizeKey][] = $productId;
+                }
             }
         }
         echo 'Size counts: ' . print_r($sizeListCounts, true) . PHP_EOL;
-        echo 'Grouped sizes and counts: ' . PHP_EOL;
-        foreach ($sizeListCounts as $sizeKey => $count) {
-            echo "Size Group: [$sizeKey] | Product Count: $count" . PHP_EOL;
+        echo 'Grouped sizes and product IDs: ' . PHP_EOL;
+        foreach ($sizeListCounts as $sizeKey => $productIds) {
+            echo "Size Group: [$sizeKey] | Product IDs: " . implode(', ', $productIds) . PHP_EOL;
         }
     }
     
