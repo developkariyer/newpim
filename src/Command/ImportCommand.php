@@ -93,14 +93,14 @@ class ImportCommand extends AbstractCommand
 
     }
 
-    private function processDirtyProducts()
+    private function processDirtyProducts($data)
     {
         $sizeMap = [
             'TekEbat' => 'Standart',
             'Tek Ebat' => 'Standart',
         ];
 
-        $dirtyProducts = $this->getDirtyProducts();
+        $dirtyProducts = $this->getDirtyProducts($data);
         if (empty($dirtyProducts)) {
             echo 'No dirty products found.' . PHP_EOL;
             return;
