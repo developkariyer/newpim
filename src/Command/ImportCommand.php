@@ -213,16 +213,15 @@ class ImportCommand extends AbstractCommand
     private function updateProduct(array $data)
     {
         $imageAsset = null;
-        if (!$data['image']) {
-            return;
+        if ($data['image']) {
+            $data['image'] = 'https://iwa.web.tr' . $data['image'];
+            $imageName = $data['identifier'] ?: $data['name'];
+            $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $imageName);
+            $imageAsset = $this->assetService->uploadProductImage(
+                $uploadedFile,
+                $imageName
+            );
         }
-        $data['image'] = 'https://iwa.web.tr' . $data['image'];
-        $imageName = $data['identifier'] ?: $data['name'];
-        $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $imageName);
-        $imageAsset = $this->assetService->uploadProductImage(
-            $uploadedFile,
-            $imageName
-        );
         $listing = new Product\Listing();
         $listing->setCondition('productIdentifier = ?', [$data['identifier']]);
         $listing->setLimit(1);
@@ -360,6 +359,7 @@ class ImportCommand extends AbstractCommand
 
     private function createUploadedFileFromUrl(string $url, string $name = null): ?UploadedFile
     {
+        // URL encode
         $encodedUrl = preg_replace_callback(
             '/[^\/]+/',
             fn($m) => rawurlencode($m[0]),
