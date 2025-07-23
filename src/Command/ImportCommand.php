@@ -96,10 +96,12 @@ class ImportCommand extends AbstractCommand
     {
         $sizeListCounts = [];
         $dirtyProducts = $this->getDirtyProducts($data);
+        echo 'Dirty products count: ' . count($dirtyProducts) . PHP_EOL;
         foreach ($dirtyProducts as $product) {
             if (isset($product['variants']) && is_array($product['variants'])) {
                 foreach ($product['variants'] as $variant) {
                     if (!empty($variant['variationSizeList']) && is_string($variant['variationSizeList'])) {
+                        echo 'Found variationSizeList: ' . $variant['variationSizeList'] . PHP_EOL;
                         $sizeKey = $variant['variationSizeList'];
                         if (!isset($sizeListCounts[$sizeKey])) {
                             $sizeListCounts[$sizeKey] = 0;
