@@ -61,10 +61,12 @@ class ImportCommand extends AbstractCommand
         //     $this->createProduct($product);
         //     $count++;
         // }
-        echo $this->exportDirtyProducts($data) . ' dirty products found.' . PHP_EOL;
-
+        // echo $this->exportDirtyProducts($data) . ' dirty products found.' . PHP_EOL;
+        $this->groupDirtyVariationSizeList($data);
         return Command::SUCCESS;
     }
+
+
 
     private function exportDirtyProducts($data)
     {
@@ -83,6 +85,58 @@ class ImportCommand extends AbstractCommand
         echo 'Dirty products exported to: ' . $filePath . PHP_EOL;
     }
     
+    private function groupDirtyProducts($data)
+    {
+        // TekEbat, 
+
+
+    }
+
+    private function groupDirtyVariationSizeList($data)
+    {
+        $sizeListCounts = [];
+        $dirtyProducts = $this->getDirtyProducts($data);
+        foreach ($dirtyProducts as $product) {
+            if (isset($product['variants']) && is_array($product['variants'])) {
+                foreach ($product['variants'] as $variant) {
+                    if (!empty($variant['variationSizeList']) && is_string($variant['variationSizeList'])) {
+                        $sizeKey = $variant['variationSizeList'];
+                        if (!isset($sizeListCounts[$sizeKey])) {
+                            $sizeListCounts[$sizeKey] = 0;
+                        }
+                        $sizeListCounts[$sizeKey]++;
+                    }
+                }
+            }
+        }
+        foreach ($sizeListCounts as $sizeKey => $count) {
+            $sizes = explode("\n", $sizeKey);
+            echo 'Size List: [' . implode(', ', $sizes) . '] | Product Count: ' . $count . PHP_EOL;
+        }
+    }
+    
+    private function getDirtyProducts($data)
+    {
+        $dirtyProducts = [];
+        foreach ($data as $product) {
+            if (isset($product['isDirty']) && $product['isDirty']) {
+                $dirtyProducts[] = $product;
+            }
+        }
+        return $dirtyProducts;
+    }
+
+    private function dirtyDataCount($data)
+    {
+        $dirtyCount = 0;
+        foreach ($data as $product) {
+            if (isset($product['isDirty']) && $product['isDirty']) {
+                $dirtyCount++;
+            }
+        }
+        return $dirtyCount;
+    }
+
     private function createAsinFnsku($data)
     {
         $uniqueAsins = [];
@@ -106,18 +160,7 @@ class ImportCommand extends AbstractCommand
             }
         }
     }
-
-    private function dirtyDataCount($data)
-    {
-        $dirtyCount = 0;
-        foreach ($data as $product) {
-            if (isset($product['isDirty']) && $product['isDirty']) {
-                $dirtyCount++;
-            }
-        }
-        return $dirtyCount;
-    }
-
+    
     private function createEan($data)
     {
         $uniqueEans = [];
@@ -253,6 +296,10 @@ class ImportCommand extends AbstractCommand
         // if (!$product) {
         //     echo 'Product not found for identifier ' . $data['identifier'] . ', skipping update.' . PHP_EOL;
         //     return;
+        // }
+        // $imageCheck  = $product->getImage();
+        // if ($imageCheck) {
+        //    return;
         // }
         // if ($imageAsset) {
         //     $product->setImage($imageAsset);
@@ -393,13 +440,11 @@ class ImportCommand extends AbstractCommand
             return null;
         }
         file_put_contents($tmpFile, $fileContent);
-
         $mimeType = mime_content_type($tmpFile);
         if (!in_array($mimeType, ['image/jpeg', 'image/png', 'image/gif', 'image/webp'])) {
             echo "Downloaded file is not a valid image: $encodedUrl" . PHP_EOL;
             return null;
         }
-
         $ext = match ($mimeType) {
             'image/jpeg' => 'jpg',
             'image/png' => 'png',
@@ -407,12 +452,10 @@ class ImportCommand extends AbstractCommand
             'image/webp' => 'webp',
             default => pathinfo($url, PATHINFO_EXTENSION),
         };
-
         $originalName = $name ?: basename($parsedUrl['path']);
         if (!str_ends_with($originalName, '.' . $ext)) {
             $originalName .= '.' . $ext;
         }
-
         return new UploadedFile(
             $tmpFile,
             $originalName,
@@ -460,6 +503,5 @@ class ImportCommand extends AbstractCommand
         }
         return $folder;
     }
-
 
 }
