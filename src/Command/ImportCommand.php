@@ -96,24 +96,30 @@ class ImportCommand extends AbstractCommand
     {
         $sizeListCounts = [];
         $dirtyProducts = $this->getDirtyProducts($data);
-        echo 'Dirty products count: ' . count($dirtyProducts) . PHP_EOL;
         foreach ($dirtyProducts as $product) {
             if (isset($product['variants']) && is_array($product['variants'])) {
                 foreach ($product['variants'] as $variant) {
                     if (!empty($variant['variationSizeList']) && is_string($variant['variationSizeList'])) {
-                        echo 'Found variationSizeList: ' . $variant['variationSizeList'] . PHP_EOL;
-                        $sizeKey = $variant['variationSizeList'];
-                        if (!isset($sizeListCounts[$sizeKey])) {
-                            $sizeListCounts[$sizeKey] = 0;
+                        $sizeList = explode("\n", $variant['variationSizeList']); // Split the variationSizeList into an array
+                        foreach ($sizeList as $size) {
+                            $sizeKey = trim($size);
+                            if (!isset($sizeListCounts[$sizeKey])) {
+                                $sizeListCounts[$sizeKey] = 0;
+                            }
+                            $sizeListCounts[$sizeKey]++;
                         }
-                        $sizeListCounts[$sizeKey]++;
                     }
                 }
             }
         }
+        $groupedSizes = [];
         foreach ($sizeListCounts as $sizeKey => $count) {
-            $sizes = explode("\n", $sizeKey);
-            echo 'Size List: [' . implode(', ', $sizes) . '] | Product Count: ' . $count . PHP_EOL;
+            $groupedSizes[] = [$sizeKey => $count];
+        }
+        foreach ($groupedSizes as $group) {
+            foreach ($group as $sizeKey => $count) {
+                echo "Size List: [$sizeKey] | Product Count: $count" . PHP_EOL;
+            }
         }
     }
     
