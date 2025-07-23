@@ -113,10 +113,6 @@ class ImportCommand extends AbstractCommand
             }
         }
         echo 'Size counts: ' . print_r($sizeListCounts, true) . PHP_EOL;
-        echo 'Grouped sizes and product IDs: ' . PHP_EOL;
-        foreach ($sizeListCounts as $sizeKey => $productIds) {
-            echo "Size Group: [$sizeKey] | Product IDs: " . implode(', ', $productIds) . PHP_EOL;
-        }
     }
     
     private function getDirtyProducts($data)
