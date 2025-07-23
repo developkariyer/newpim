@@ -176,7 +176,12 @@ class ImportCommand extends AbstractCommand
         $parentFolder = $this->createProductFolderStructure($data['identifier'], $data['category']);
         $product = new Product();
         $product->setParent($parentFolder);
-        $product->setKey($data['identifier'] . ' ' . $data['name']);
+        $key = $data['identifier'] . ' ' . $data['name'];
+        if (empty(trim($key))) {
+            echo 'Product key is empty for identifier ' . $data['identifier'] . ', skipping.' . PHP_EOL;
+            return;
+        }
+        $product->setKey($key);
         $product->setProductIdentifier($data['identifier']);
         $product->setName($data['name']);
         $product->setDescription($data['description']);
