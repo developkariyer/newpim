@@ -218,6 +218,10 @@ class ImportCommand extends AbstractCommand
             $variant->setType(Product::OBJECT_TYPE_VARIANT);
             $variant->setProductCode($variantData['productCode']);
             $variant->setIwasku($variantData['iwasku']);
+            if (empty(trim($variantData['key']))) {
+                echo 'Variant key is empty for product ' . $parentProduct->getProductIdentifier() . ', skipping.' . PHP_EOL;
+                continue;
+            }
             $variant->setKey($variantData['key']);
             $variant->setName($variantData['name']);
             $variant->setVariationColor($this->createColor($variantData['variationColor']));
