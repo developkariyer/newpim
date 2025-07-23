@@ -95,31 +95,32 @@ class ImportCommand extends AbstractCommand
     private function groupDirtyVariationSizeList($data)
     {
         $dirtyProducts = $this->getDirtyProducts($data);
-        $product = $dirtyProducts[0];
-        print_r($product);
         $sizeListCounts = [];
-        $dirtyProducts = $this->getDirtyProducts($data);
         echo 'Dirty products count: ' . count($dirtyProducts) . PHP_EOL;
         foreach ($dirtyProducts as $product) {
             echo 'Processing product with ID: ' . $product['id'] . PHP_EOL;
-            echo 'Processing product with variationSizeList: ' . $product['variationSizeList'] . PHP_EOL;
-            if (!empty($variant['variationSizeList']) && is_string($product['variationSizeList'])) {
-                $sizeList = explode("\n", $product['variationSizeList']);
-                echo 'Split variationSizeList: ' . implode(', ', $sizeList) . PHP_EOL;
-                foreach ($sizeList as $size) {
-                    $sizeKey = trim($size);
-                    if (empty($sizeKey)) {
-                        echo 'Skipping empty size key.' . PHP_EOL;
-                        continue;
+            if (isset($product['variants']) && is_array($product['variants'])) {
+                foreach ($product['variants'] as $variant) {
+                    echo 'Processing variant with variationSizeList: ' . $variant['variationSizeList'] . PHP_EOL;
+                    if (!empty($variant['variationSizeList']) && is_string($variant['variationSizeList'])) {
+                        $sizeList = explode("\n", $variant['variationSizeList']);
+                        echo 'Split variationSizeList: ' . implode(', ', $sizeList) . PHP_EOL;
+                        foreach ($sizeList as $size) {
+                            $sizeKey = trim($size);
+
+                            if (empty($sizeKey)) {
+                                echo 'Skipping empty size key.' . PHP_EOL;
+                                continue;
+                            }
+                            echo 'Processing size: ' . $sizeKey . PHP_EOL;
+                            if (!isset($sizeListCounts[$sizeKey])) {
+                                $sizeListCounts[$sizeKey] = 0;
+                            }
+                            $sizeListCounts[$sizeKey]++;
+                        }
                     }
-                    echo 'Processing size: ' . $sizeKey . PHP_EOL;
-                    if (!isset($sizeListCounts[$sizeKey])) {
-                        $sizeListCounts[$sizeKey] = 0;
-                    }
-                    $sizeListCounts[$sizeKey]++;
                 }
             }
-                
         }
         echo 'Size counts: ' . print_r($sizeListCounts, true) . PHP_EOL;
         echo 'Grouped sizes and counts: ' . PHP_EOL;
