@@ -55,7 +55,7 @@ class ImportCommand extends AbstractCommand
 
         $count = 0;
         foreach ($data as $index => $product) {
-            if ($count >= 100) {
+            if ($count >= 500) {
                 break;
             }
             $this->createProduct($product);
@@ -157,6 +157,10 @@ class ImportCommand extends AbstractCommand
         $isExist = $this->checkExistProduct($data['identifier']);
         if ($isExist) {
             echo 'Product with identifier ' . $data['identifier'] . ' already exists.' . PHP_EOL;
+            return;
+        }
+        if ($data['isDirty']) {
+            echo 'Product with identifier ' . $data['identifier'] . ' is dirty, skipping.' . PHP_EOL;
             return;
         }
         $imageAsset = null;
