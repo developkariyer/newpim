@@ -62,7 +62,8 @@ class ImportCommand extends AbstractCommand
         //     $count++;
         // }
         // echo $this->exportDirtyProducts($data) . ' dirty products found.' . PHP_EOL;
-        $this->groupDirtyVariationSizeList($data);
+        //$this->groupDirtyVariationSizeList($data);
+        $this->processDirtyProducts();
         return Command::SUCCESS;
     }
 
@@ -89,6 +90,29 @@ class ImportCommand extends AbstractCommand
     {
         // TekEbat, 
 
+
+    }
+
+    private function processDirtyProducts()
+    {
+        $sizeMap = [
+            'TekEbat' => 'Standart',
+            'Tek Ebat' => 'Standart',
+        ];
+
+        $dirtyProducts = $this->getDirtyProducts();
+        if (empty($dirtyProducts)) {
+            echo 'No dirty products found.' . PHP_EOL;
+            return;
+        }
+        foreach ($dirtyProducts as $product) {
+            print_r($product);
+        }
+
+    }
+
+    private function standartSizeProductFillData()
+    {
 
     }
 
