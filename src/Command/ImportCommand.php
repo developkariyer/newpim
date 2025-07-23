@@ -63,7 +63,7 @@ class ImportCommand extends AbstractCommand
         // }
         // echo $this->exportDirtyProducts($data) . ' dirty products found.' . PHP_EOL;
         //$this->groupDirtyVariationSizeList($data);
-        $this->processDirtyProducts();
+        $this->processDirtyProducts($data);
         return Command::SUCCESS;
     }
 
