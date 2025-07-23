@@ -166,7 +166,6 @@ class ImportCommand extends AbstractCommand
             if (!str_ends_with($imageName, '.png')) {
                 $imageName .= '.png';
             }
-            echo $imageName . PHP_EOL;
             $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $imageName);
             $imageAsset = $this->assetService->uploadProductImage(
                 $uploadedFile,
