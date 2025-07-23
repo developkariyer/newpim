@@ -154,10 +154,14 @@ class ImportCommand extends AbstractCommand
 
     private function createProduct(array $data)
     {
+        $isExist = $this->checkExistProduct($data['identifier']);
+        if ($isExist) {
+            echo 'Product with identifier ' . $data['identifier'] . ' already exists.' . PHP_EOL;
+            return;
+        }
         $imageAsset = null;
-        $data['image'] = 'https://iwa.web.tr' . $data['image'];
-        echo $data['image'] . PHP_EOL;
         if ($data['image']) {
+            $data['image'] = 'https://iwa.web.tr' . $data['image'];
             $imageName = $data['identifier'] ?: $data['name'];
             if (!str_ends_with($imageName, '.png')) {
                 $imageName .= '.png';
@@ -169,7 +173,6 @@ class ImportCommand extends AbstractCommand
                 $imageName
             );
         }
-
         $parentFolder = $this->createProductFolderStructure($data['identifier'], $data['category']);
         $product = new Product();
         $product->setParent($parentFolder);
@@ -188,6 +191,15 @@ class ImportCommand extends AbstractCommand
         }
         $product->save();
         $this->createVariant($product, $data['variants'] ?? []);
+    }
+
+    private function checkExistProduct($productIdentifier)
+    {
+        $listing = new Product\Listing();
+        $listing->setCondition('productIdentifier = ?', [$productIdentifier]);
+        $listing->setLimit(1);
+        $listing->load();
+        return $listing->count() > 0;
     }
 
     private function createVariant($parentProduct, $data)
