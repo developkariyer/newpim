@@ -125,7 +125,9 @@ class ImportCommand extends AbstractCommand
                 }
             }
         }
-        print_r($dirtyProducts);
+        foreach ($dirtyProducts as $product) {
+            $this->createDirtyProduct($product);
+        }
     }
 
     private function groupDirtyVariationSizeList($data)
@@ -269,6 +271,54 @@ class ImportCommand extends AbstractCommand
         } 
     }
 
+    private function createDirtyProduct($data)
+    {
+        $isExist = $this->checkExistProduct($data['identifier']);
+        if ($isExist) {
+            echo 'Product with identifier ' . $data['identifier'] . ' already exists.' . PHP_EOL;
+            $this->updateProduct($data);
+            return;
+        }
+        $imageAsset = null;
+        if ($data['image']) {
+            $data['image'] = 'https://iwa.web.tr' . $data['image'];
+            $imageName = $data['identifier'] ?: $data['name'];
+            $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $imageName);
+            $imageAsset = $this->assetService->uploadProductImage(
+                $uploadedFile,
+                $imageName
+            );
+        }
+        $parentFolder = $this->createProductFolderStructure($data['identifier'], $data['category']);
+        $product = new Product();
+        $product->setParent($parentFolder);
+        $key = $data['identifier'] . ' ' . $data['name'];
+        if (empty(trim($key))) {
+            echo 'Product key is empty for identifier ' . $data['identifier'] . ', skipping.' . PHP_EOL;
+            return;
+        }
+        $product->setKey($key);
+        $product->setProductIdentifier($data['identifier']);
+        $product->setName($data['name']);
+        $product->setDescription($data['description']);
+        $product->setProductCategory($this->getProductCategory($data['category']));
+        $product->setProductCode($data['productCode']);
+
+        $product->setMarketplaces($this->getMarketplaceObjects($data['variants'] ?? []));
+        if (isset($data['sizeTable'])) {
+            $product->setVariationSizeTable($this->createSizeTable($data['sizeTable'] ?? []));
+        }
+        if (isset($data['customTable'])) {
+            $product->setCustomTable($data['customTable']);
+        }
+        $product->setPublished($data['published'] ?? true);
+        if ($imageAsset) {
+            $product->setImage($imageAsset);
+        }
+        $product->save();
+        $this->createDirtyVariant($product, $data['variants'] ?? []);
+    }
+
     private function createProduct(array $data)
     {
         $isExist = $this->checkExistProduct($data['identifier']);
@@ -358,6 +408,41 @@ class ImportCommand extends AbstractCommand
         $listing->setLimit(1);
         $listing->load();
         return $listing->count() > 0;
+    }
+
+    private function createDirtyVariant($parentProduct, $data)
+    {
+        if (!is_array($data) || empty($data)) {
+            return;
+        }
+        foreach ($data as $variantData) {
+            $variant = new Product();
+            $variant->setParent($parentProduct);
+            $variant->setType(Product::OBJECT_TYPE_VARIANT);
+            $variant->setProductCode($variantData['productCode']);
+            $variant->setIwasku($variantData['iwasku']);
+            if (empty(trim($variantData['key']))) {
+                echo 'Variant key is empty for product ' . $parentProduct->getProductIdentifier() . ', skipping.' . PHP_EOL;
+                continue;
+            }
+            $variant->setKey($variantData['key']);
+            $variant->setName($variantData['name']);
+            $color = $this->createColor($variantData['variationColor']);
+            if ($color) {
+                $variant->setVariationColor($color);
+            } else {
+                echo 'Skipping variant due to empty color for product ' . $parentProduct->getProductIdentifier() . PHP_EOL;
+                continue;
+            }
+            if (isset($variantData['variationSize'])) {
+                $variant->setVariationSize($variantData['variationSize']);
+            }
+            if (isset($variantData['customField'])) {
+                $variant->setCustomField($variantData['customField']);
+            }
+            $variant->setPublished($variantData['published']);
+            $variant->save();
+        }
     }
 
     private function createVariant($parentProduct, $data)
