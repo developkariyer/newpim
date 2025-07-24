@@ -117,6 +117,12 @@ class ImportCommand extends AbstractCommand
                         'value' => 'Standart'
                     ]
                 ];
+                if (isset($product['variants']) && is_array($product['variants'])) {
+                    foreach ($product['variants'] as &$variant) {
+                        $variant['variationSize'] = '';
+                        $variant['customField'] = 'Standart';
+                    }
+                }
             }
         }
         print_r($dirtyProducts);
