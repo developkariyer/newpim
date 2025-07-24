@@ -163,10 +163,10 @@ class ImportCommand extends AbstractCommand
             //     }
             // }
         }
-        foreach ($dirtyProducts as $product) {
-            $this->createDirtyProduct($product);
-        }
-        //print_r($dirtyProducts); 
+        // foreach ($dirtyProducts as $product) {
+        //     $this->createDirtyProduct($product);
+        // }
+        print_r($dirtyProducts); 
     }
 
     private function groupDirtyVariationSizeList($data)
