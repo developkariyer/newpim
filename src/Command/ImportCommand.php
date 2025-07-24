@@ -108,6 +108,7 @@ class ImportCommand extends AbstractCommand
         }
         foreach ($dirtyProducts as &$product) {
             $sizeList = $product['variationSizeList'] ?? null;
+            $adetValues = [];
             if ($sizeList) {
                 $lines = explode("\n", $sizeList);
                 foreach ($lines as $line) {
@@ -117,32 +118,42 @@ class ImportCommand extends AbstractCommand
                         if (isset($matches[1])) {
                             $adet = $matches[1];
                             echo "Adetli ürün bulundu: [{$id}] - '{$line}' | Adet: {$adet}" . PHP_EOL;
+                            $adetValues[] = ['value' => $adet];
                         } else {
                             echo "Adetli ürün bulundu: [{$id}] - '{$line}' | Adet: bulunamadı" . PHP_EOL;
                         }
+
                     }
                 }
             }
-            if ($sizeList && isset($standardSizeMap[$sizeList])) {
-                $product['customTable'] = [
-                    [
-                        'value' => 'Standart'
-                    ],
-                    [
-                        'value' => 'Standart'
-                    ]
-                ];
-                if (isset($product['variants']) && is_array($product['variants'])) {
-                    foreach ($product['variants'] as &$variant) {
-                        $variant['variationSize'] = '';
-                        $variant['customField'] = 'Standart';
-                    }
-                }
+            if (!empty($adetValues)) {
+                $product['customTable'] = array_merge(
+                    [['value' => 'Adet']],
+                    $adetValues
+                )
             }
+
+            // if ($sizeList && isset($standardSizeMap[$sizeList])) {
+            //     $product['customTable'] = [
+            //         [
+            //             'value' => 'Standart'
+            //         ],
+            //         [
+            //             'value' => 'Standart'
+            //         ]
+            //     ];
+            //     if (isset($product['variants']) && is_array($product['variants'])) {
+            //         foreach ($product['variants'] as &$variant) {
+            //             $variant['variationSize'] = '';
+            //             $variant['customField'] = 'Standart';
+            //         }
+            //     }
+            // }
         }
         // foreach ($dirtyProducts as $product) {
         //     $this->createDirtyProduct($product);
         // }
+        print_r($dirtyProducts); 
     }
 
     private function groupDirtyVariationSizeList($data)
