@@ -134,7 +134,7 @@ class ImportCommand extends AbstractCommand
                 if (isset($product['variants']) && is_array($product['variants'])) {
                     foreach ($product['variants'] as &$variant) {
                         $variantSize = trim($variant['variationSize'] ?? '');
-                        preg_match('/(\d+)\s*adet/i', $line, $matches);
+                        preg_match('/(\d+)\s*adet/i', $variantSize, $matches);
                         if (isset($matches[1])) {
                             $adet = $matches[1];
                             $variant['variationSize'] = $variantSize;
