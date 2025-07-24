@@ -98,6 +98,7 @@ class ImportCommand extends AbstractCommand
         $standardSizeMap = [
             'TekEbat' => 'Standart',
             'Tek Ebat' => 'Standart',
+            'Standart' => 'Standart'
         ];
 
         $dirtyProducts = $this->getDirtyProducts($data);
