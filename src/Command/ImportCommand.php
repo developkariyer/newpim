@@ -95,7 +95,7 @@ class ImportCommand extends AbstractCommand
 
     private function processDirtyProducts($data)
     {
-        $sizeMap = [
+        $standardSizeMap = [
             'TekEbat' => 'Standart',
             'Tek Ebat' => 'Standart',
         ];
@@ -105,15 +105,29 @@ class ImportCommand extends AbstractCommand
             echo 'No dirty products found.' . PHP_EOL;
             return;
         }
-        foreach ($dirtyProducts as $product) {
-            print_r($product);
+        foreach ($dirtyProducts as &$product) {
+            $sizeList = $product['variationSizeList'] ?? null;
+            if ($sizeList && isset($standardSizeMap[$sizeList])) {
+                $this->standartSizeProductFillData($product);
+            }
         }
+        print_r
+
 
     }
 
-    private function standartSizeProductFillData()
+    private function standartSizeProductFillData($product)
     {
-
+        echo "Standart product fill data {$product['id']}" . PHP_EOL;
+        $product['customTable'] = [
+            [
+                'value' => 'Standart'
+            ],
+            [
+                'value' => 'Standart'
+            ]
+        ];
+        
     }
 
     private function groupDirtyVariationSizeList($data)
