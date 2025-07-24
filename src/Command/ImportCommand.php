@@ -309,7 +309,7 @@ class ImportCommand extends AbstractCommand
             $product->setVariationSizeTable($this->createSizeTable($data['sizeTable'] ?? []));
         }
         if (isset($data['customTable'])) {
-            $product->setCustomTable($data['customTable']);
+            $product->setCustomFieldTable($data['customTable']);
         }
         $product->setPublished($data['published'] ?? true);
         if ($imageAsset) {
