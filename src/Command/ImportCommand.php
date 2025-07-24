@@ -108,6 +108,15 @@ class ImportCommand extends AbstractCommand
         }
         foreach ($dirtyProducts as &$product) {
             $sizeList = $product['variationSizeList'] ?? null;
+            if ($sizeList) {
+                $lines = explode("\n", $sizeList);
+                foreach ($lines as $line) {
+                    if (stripos($line, 'adet') !== false) {
+                        $id = $product['id'] ?? ($product['identifier'] ?? 'no-id');
+                        echo "Adetli ürün bulundu: [{$id}] - '{$line}'" . PHP_EOL;
+                    }
+                }
+            }
             if ($sizeList && isset($standardSizeMap[$sizeList])) {
                 $product['customTable'] = [
                     [
@@ -125,9 +134,9 @@ class ImportCommand extends AbstractCommand
                 }
             }
         }
-        foreach ($dirtyProducts as $product) {
-            $this->createDirtyProduct($product);
-        }
+        // foreach ($dirtyProducts as $product) {
+        //     $this->createDirtyProduct($product);
+        // }
     }
 
     private function groupDirtyVariationSizeList($data)
