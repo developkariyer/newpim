@@ -137,7 +137,7 @@ class ImportCommand extends AbstractCommand
                         preg_match('/(\d+)\s*adet/i', $line, $matches);
                         if (isset($matches[1])) {
                             $adet = $matches[1];
-                            $variant['variationSize'] = '';
+                            $variant['variationSize'] = $variantSize;
                             $variant['customField'] = $adet;
                         } else {
                             echo "Adetli varyant bulundu: [{$product['id']}] - '{$variantSize}' | Adet: bulunamadı" . PHP_EOL;
