@@ -130,7 +130,7 @@ class ImportCommand extends AbstractCommand
                 $product['customTable'] = array_merge(
                     [['value' => 'Adet']],
                     $adetValues
-                )
+                );
             }
 
             // if ($sizeList && isset($standardSizeMap[$sizeList])) {
