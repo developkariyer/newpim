@@ -344,10 +344,10 @@ class ImportCommand extends AbstractCommand
         $product->setProductCode($data['productCode']);
 
         $product->setMarketplaces($this->getMarketplaceObjects($data['variants'] ?? []));
-        if (!isset($data['sizeTable']) || !isset($data['customTable'])) {
-            echo 'Size table or custom table is not set for product ' . $data['identifier'] . ', skipping.' . PHP_EOL;
-            return;
-        }
+        // if (!isset($data['sizeTable']) || !isset($data['customTable'])) {
+        //     echo 'Size table or custom table is not set for product ' . $data['identifier'] . ', skipping.' . PHP_EOL;
+        //     return;
+        // }
         if (isset($data['sizeTable'])) {
             $product->setVariationSizeTable($this->createSizeTable($data['sizeTable'] ?? []));
         }
