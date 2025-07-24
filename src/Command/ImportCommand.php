@@ -111,9 +111,7 @@ class ImportCommand extends AbstractCommand
                 $this->standartSizeProductFillData($product);
             }
         }
-        print_r
-
-
+        print_r($dirtyProducts);
     }
 
     private function standartSizeProductFillData($product)
