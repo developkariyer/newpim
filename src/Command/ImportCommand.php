@@ -113,7 +113,13 @@ class ImportCommand extends AbstractCommand
                 foreach ($lines as $line) {
                     if (stripos($line, 'adet') !== false) {
                         $id = $product['id'] ?? ($product['identifier'] ?? 'no-id');
-                        echo "Adetli ürün bulundu: [{$id}] - '{$line}'" . PHP_EOL;
+                        preg_match('/(\d+)\s*adet/i', $line, $matches);
+                        if (isset($matches[1])) {
+                            $adet = $matches[1];
+                            echo "Adetli ürün bulundu: [{$id}] - '{$line}' | Adet: {$adet}" . PHP_EOL;
+                        } else {
+                            echo "Adetli ürün bulundu: [{$id}] - '{$line}' | Adet: bulunamadı" . PHP_EOL;
+                        }
                     }
                 }
             }
