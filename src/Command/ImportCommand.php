@@ -109,24 +109,17 @@ class ImportCommand extends AbstractCommand
         foreach ($dirtyProducts as &$product) {
             $sizeList = $product['variationSizeList'] ?? null;
             if ($sizeList && isset($standardSizeMap[$sizeList])) {
-                $this->standartSizeProductFillData($product);
+                $product['customTable'] = [
+                    [
+                        'value' => 'Standart'
+                    ],
+                    [
+                        'value' => 'Standart'
+                    ]
+                ];
             }
         }
         print_r($dirtyProducts);
-    }
-
-    private function standartSizeProductFillData($product)
-    {
-        echo "Standart product fill data {$product['id']}" . PHP_EOL;
-        $product['customTable'] = [
-            [
-                'value' => 'Standart'
-            ],
-            [
-                'value' => 'Standart'
-            ]
-        ];
-        
     }
 
     private function groupDirtyVariationSizeList($data)
