@@ -131,6 +131,19 @@ class ImportCommand extends AbstractCommand
                     [['value' => 'Adet']],
                     $adetValues
                 );
+                if (isset($product['variants']) && is_array($product['variants'])) {
+                    foreach ($product['variants'] as &$variant) {
+                        $variantSize = trim($variant['variationSize'] ?? '');
+                        preg_match('/(\d+)\s*adet/i', $line, $matches);
+                        if (isset($matches[1])) {
+                            $adet = $matches[1];
+                            $variant['variationSize'] = '';
+                            $variant['customField'] = $adet;
+                        } else {
+                            echo "Adetli varyant bulundu: [{$product['id']}] - '{$variantSize}' | Adet: bulunamadı" . PHP_EOL;
+                        }
+                    }
+                }
             }
 
             // if ($sizeList && isset($standardSizeMap[$sizeList])) {
@@ -150,10 +163,10 @@ class ImportCommand extends AbstractCommand
             //     }
             // }
         }
-        // foreach ($dirtyProducts as $product) {
-        //     $this->createDirtyProduct($product);
-        // }
-        print_r($dirtyProducts); 
+        foreach ($dirtyProducts as $product) {
+            $this->createDirtyProduct($product);
+        }
+        //print_r($dirtyProducts); 
     }
 
     private function groupDirtyVariationSizeList($data)
