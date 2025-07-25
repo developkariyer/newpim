@@ -165,10 +165,12 @@ class ImportCommand extends AbstractCommand
             $data['image'] = 'https://iwa.web.tr' . $data['image'];
             $imageName = $data['identifier'] ?: $data['name'];
             $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $imageName);
-            $imageAsset = $this->assetService->uploadProductImage(
-                $uploadedFile,
-                $imageName
-            );
+            if ($uploadedFile) {
+                $imageAsset = $this->assetService->uploadProductImage(
+                    $uploadedFile,
+                    $imageName
+                );
+            }
         }
         $parentFolder = $this->createProductFolderStructure($data['identifier'], $data['category']);
         $product = new Product();
