@@ -155,10 +155,6 @@ class ImportCommand extends AbstractCommand
     private function createProduct(array $data)
     {
         $isExist = $this->checkExistProduct($data['identifier']);
-        if ($data['isDirty']) {
-            echo 'Product with identifier ' . $data['identifier'] . ' is dirty, skipping.' . PHP_EOL;
-            return;
-        }
         if ($isExist) {
             echo 'Product with identifier ' . $data['identifier'] . ' already exists.' . PHP_EOL;
             $this->updateProduct($data);
