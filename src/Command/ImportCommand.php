@@ -55,9 +55,9 @@ class ImportCommand extends AbstractCommand
 
         $count = 0;
         foreach ($data as $index => $product) {
-            if ($count >= 500) {
-                break;
-            }
+            // if ($count >= 500) {
+            //     break;
+            // }
             $this->createProduct($product);
             $count++;
         }
