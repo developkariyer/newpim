@@ -53,175 +53,17 @@ class ImportCommand extends AbstractCommand
         $output->writeln('<info>Products:</info>');
         //$this->createAsinFnsku($data);
 
-        // $count = 0;
-        // foreach ($data as $index => $product) {
-        //     // if ($count >= 500) {
-        //     //     break;
-        //     // }
-        //     $this->createProduct($product);
-        //     $count++;
-        // }
-        // echo $this->exportDirtyProducts($data) . ' dirty products found.' . PHP_EOL;
-        //$this->groupDirtyVariationSizeList($data);
-        $this->processDirtyProducts($data);
+        $count = 0;
+        foreach ($data as $index => $product) {
+            if ($count >= 500) {
+                break;
+            }
+            $this->createProduct($product);
+            $count++;
+        }
         return Command::SUCCESS;
     }
-
-
-
-    private function exportDirtyProducts($data)
-    {
-        $dirtyProducts = [];
-        foreach ($data as $product) {
-            if (isset($product['isDirty']) && $product['isDirty']) {
-                $dirtyProducts[] = $product;
-            }
-        }
-        if (empty($dirtyProducts)) {
-            echo 'No dirty products found.' . PHP_EOL;
-            return;
-        }
-        $filePath = PIMCORE_PROJECT_ROOT . '/tmp/dirty_products.json';
-        file_put_contents($filePath, json_encode($dirtyProducts, JSON_PRETTY_PRINT));
-        echo 'Dirty products exported to: ' . $filePath . PHP_EOL;
-    }
     
-    private function groupDirtyProducts($data)
-    {
-        // TekEbat, 
-
-
-    }
-
-    private function processDirtyProducts($data)
-    {
-        $standardSizeMap = [
-            'TekEbat' => 'Standart',
-            'Tek Ebat' => 'Standart',
-            'Standart' => 'Standart'
-        ];
-
-        $dirtyProducts = $this->getDirtyProducts($data);
-        if (empty($dirtyProducts)) {
-            echo 'No dirty products found.' . PHP_EOL;
-            return;
-        }
-        foreach ($dirtyProducts as &$product) {
-            $sizeList = $product['variationSizeList'] ?? null;
-            $adetValues = [];
-            if ($sizeList) {
-                $lines = explode("\n", $sizeList);
-                foreach ($lines as $line) {
-                    if (stripos($line, 'adet') !== false) {
-                        $id = $product['id'] ?? ($product['identifier'] ?? 'no-id');
-                        preg_match('/(\d+)\s*adet/i', $line, $matches);
-                        if (isset($matches[1])) {
-                            $adet = $matches[1];
-                            echo "Adetli ürün bulundu: [{$id}] - '{$line}' | Adet: {$adet}" . PHP_EOL;
-                            $adetValues[] = ['value' => $adet];
-                        } else {
-                            echo "Adetli ürün bulundu: [{$id}] - '{$line}' | Adet: bulunamadı" . PHP_EOL;
-                        }
-
-                    }
-                }
-            }
-            if (!empty($adetValues)) {
-                $product['customTable'] = array_merge(
-                    [['value' => 'Adet']],
-                    $adetValues
-                );
-                if (isset($product['variants']) && is_array($product['variants'])) {
-                    foreach ($product['variants'] as &$variant) {
-                        $variantSize = trim($variant['variationSize'] ?? '');
-                        preg_match('/(\d+)\s*adet/i', $variantSize, $matches);
-                        if (isset($matches[1])) {
-                            $adet = $matches[1];
-                            $variant['variationSize'] = $variantSize;
-                            $variant['customField'] = $adet;
-                        } else {
-                            echo "Adetli varyant bulundu: [{$product['id']}] - '{$variantSize}' | Adet: bulunamadı" . PHP_EOL;
-                        }
-                    }
-                }
-            }
-
-            // if ($sizeList && isset($standardSizeMap[$sizeList])) {
-            //     $product['customTable'] = [
-            //         [
-            //             'value' => 'Standart'
-            //         ],
-            //         [
-            //             'value' => 'Standart'
-            //         ]
-            //     ];
-            //     if (isset($product['variants']) && is_array($product['variants'])) {
-            //         foreach ($product['variants'] as &$variant) {
-            //             $variant['variationSize'] = '';
-            //             $variant['customField'] = 'Standart';
-            //         }
-            //     }
-            // }
-        }
-        foreach ($dirtyProducts as $product) {
-            $this->createDirtyProduct($product);
-        }
-        //print_r($dirtyProducts); 
-    }
-
-    private function groupDirtyVariationSizeList($data)
-    {
-        $dirtyProducts = $this->getDirtyProducts($data);
-        $sizeListAnalysis = [];
-        echo 'Dirty products count: ' . count($dirtyProducts) . PHP_EOL;
-        foreach ($dirtyProducts as $product) {
-            if (!empty($product['variationSizeList']) && is_string($product['variationSizeList'])) {
-                $sizeKey = trim(strtolower($product['variationSizeList'])); 
-                $originalSizeLabel = trim($product['variationSizeList']);
-                $productId = $product['id'];
-                if (!isset($sizeListAnalysis[$sizeKey])) {
-                    $sizeListAnalysis[$sizeKey] = [
-                        'count' => 0,
-                        'product_ids' => [],
-                        'original_labels' => []
-                    ];
-                }
-                $sizeListAnalysis[$sizeKey]['count']++;
-                $sizeListAnalysis[$sizeKey]['product_ids'][] = $productId;
-                if (!in_array($originalSizeLabel, $sizeListAnalysis[$sizeKey]['original_labels'])) {
-                    $sizeListAnalysis[$sizeKey]['original_labels'][] = $originalSizeLabel;
-                }
-            }
-        }
-        uasort($sizeListAnalysis, function ($a, $b) {
-            return $b['count'] <=> $a['count'];
-        });
-        echo 'Size Analysis: ' . print_r($sizeListAnalysis, true) . PHP_EOL;
-        return $sizeListAnalysis;
-    }
-    
-    private function getDirtyProducts($data)
-    {
-        $dirtyProducts = [];
-        foreach ($data as $product) {
-            if (isset($product['isDirty']) && $product['isDirty']) {
-                $dirtyProducts[] = $product;
-            }
-        }
-        return $dirtyProducts;
-    }
-
-    private function dirtyDataCount($data)
-    {
-        $dirtyCount = 0;
-        foreach ($data as $product) {
-            if (isset($product['isDirty']) && $product['isDirty']) {
-                $dirtyCount++;
-            }
-        }
-        return $dirtyCount;
-    }
-
     private function createAsinFnsku($data)
     {
         $uniqueAsins = [];
@@ -310,58 +152,6 @@ class ImportCommand extends AbstractCommand
         } 
     }
 
-    private function createDirtyProduct($data)
-    {
-        $isExist = $this->checkExistProduct($data['identifier']);
-        if ($isExist) {
-            echo 'Product with identifier ' . $data['identifier'] . ' already exists.' . PHP_EOL;
-            $this->updateProduct($data);
-            return;
-        }
-        $imageAsset = null;
-        if ($data['image']) {
-            $data['image'] = 'https://iwa.web.tr' . $data['image'];
-            $imageName = $data['identifier'] ?: $data['name'];
-            $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $imageName);
-            $imageAsset = $this->assetService->uploadProductImage(
-                $uploadedFile,
-                $imageName
-            );
-        }
-        $parentFolder = $this->createProductFolderStructure($data['identifier'], $data['category']);
-        $product = new Product();
-        $product->setParent($parentFolder);
-        $key = $data['identifier'] . ' ' . $data['name'];
-        if (empty(trim($key))) {
-            echo 'Product key is empty for identifier ' . $data['identifier'] . ', skipping.' . PHP_EOL;
-            return;
-        }
-        $product->setKey($key);
-        $product->setProductIdentifier($data['identifier']);
-        $product->setName($data['name']);
-        $product->setDescription($data['description']);
-        $product->setProductCategory($this->getProductCategory($data['category']));
-        $product->setProductCode($data['productCode']);
-
-        $product->setMarketplaces($this->getMarketplaceObjects($data['variants'] ?? []));
-        // if (!isset($data['sizeTable']) || !isset($data['customTable'])) {
-        //     echo 'Size table or custom table is not set for product ' . $data['identifier'] . ', skipping.' . PHP_EOL;
-        //     return;
-        // }
-        if (isset($data['sizeTable'])) {
-            $product->setVariationSizeTable($this->createSizeTable($data['sizeTable'] ?? []));
-        }
-        if (isset($data['customTable'])) {
-            $product->setCustomFieldTable($data['customTable']);
-        }
-        $product->setPublished($data['published'] ?? true);
-        if ($imageAsset) {
-            $product->setImage($imageAsset);
-        }
-        $product->save();
-        $this->createDirtyVariant($product, $data['variants'] ?? []);
-    }
-
     private function createProduct(array $data)
     {
         $isExist = $this->checkExistProduct($data['identifier']);
@@ -398,9 +188,9 @@ class ImportCommand extends AbstractCommand
         $product->setDescription($data['description']);
         $product->setProductCategory($this->getProductCategory($data['category']));
         $product->setProductCode($data['productCode']);
-
         $product->setMarketplaces($this->getMarketplaceObjects($data['variants'] ?? []));
         $product->setVariationSizeTable($this->createSizeTable($data['sizeTable'] ?? []));
+        $product->setCustomFieldTable($this->createCustomTable($data['customFieldTable'] ?? []));
         $product->setPublished($data['published'] ?? true);
         if ($imageAsset) {
             $product->setImage($imageAsset);
@@ -453,41 +243,6 @@ class ImportCommand extends AbstractCommand
         return $listing->count() > 0;
     }
 
-    private function createDirtyVariant($parentProduct, $data)
-    {
-        if (!is_array($data) || empty($data)) {
-            return;
-        }
-        foreach ($data as $variantData) {
-            $variant = new Product();
-            $variant->setParent($parentProduct);
-            $variant->setType(Product::OBJECT_TYPE_VARIANT);
-            $variant->setProductCode($variantData['productCode']);
-            $variant->setIwasku($variantData['iwasku']);
-            if (empty(trim($variantData['key']))) {
-                echo 'Variant key is empty for product ' . $parentProduct->getProductIdentifier() . ', skipping.' . PHP_EOL;
-                continue;
-            }
-            $variant->setKey($variantData['key']);
-            $variant->setName($variantData['name']);
-            $color = $this->createColor($variantData['variationColor']);
-            if ($color) {
-                $variant->setVariationColor($color);
-            } else {
-                echo 'Skipping variant due to empty color for product ' . $parentProduct->getProductIdentifier() . PHP_EOL;
-                continue;
-            }
-            if (isset($variantData['variationSize'])) {
-                $variant->setVariationSize($variantData['variationSize']);
-            }
-            if (isset($variantData['customField'])) {
-                $variant->setCustomField($variantData['customField']);
-            }
-            $variant->setPublished($variantData['published']);
-            $variant->save();
-        }
-    }
-
     private function createVariant($parentProduct, $data)
     {
         if (!is_array($data) || empty($data)) {
@@ -512,7 +267,8 @@ class ImportCommand extends AbstractCommand
                 echo 'Skipping variant due to empty color for product ' . $parentProduct->getProductIdentifier() . PHP_EOL;
                 continue;
             }
-            $variant->setVariationSize($variantData['variationSize']);
+            $variant->setVariationSize($variantData['variationSize'] ?? '');
+            $variant->setCustomField($variantData['customField'] ?? '');
             $variant->setPublished($variantData['published']);
             $variant->save();
         }
@@ -544,6 +300,19 @@ class ImportCommand extends AbstractCommand
         $listing->setCondition('color = ?', [$colorName]);
         $listing->setLimit(1);
         return $listing->current();
+    }
+
+    private function createCustomTable(array $customTable): array
+    {
+        $result = [];
+        foreach ($customTable as $item) {
+            if (!empty($item)) {
+                $result[] = [
+                    'value' => (string)$item,
+                ];
+            }
+        }
+        return $result;
     }
 
     private function createSizeTable($sizeTable): array
