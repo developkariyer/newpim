@@ -318,14 +318,15 @@ class ImportCommand extends AbstractCommand
         $result = [];
         foreach ($sizeTable as $row) {
             $count = count($row);
-            if ($count >= 3) {
-                $result[] = [
-                    'label'  => (string)$row[$count - 1],
-                    'width'  => (string)$row[0],
-                    'length' => (string)($row[1] ?? '0'),
-                    'height' => (string)($row[2] ?? '0'),
-                ];
+            if ($count == 0) {
+                continue; 
             }
+            $result[] = [
+                'label'  => (string)$row[$count - 1],
+                'width'  => (string)($row[0] ?? '0'),
+                'length' => (string)($row[1] ?? '0'),
+                'height' => (string)($row[2] ?? '0'),
+            ];
         }
         return $result;
     }
