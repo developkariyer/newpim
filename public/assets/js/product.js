@@ -636,11 +636,18 @@ class ProductFormManager {
     }
 
     removeVariantFromLocked(color, size, custom) {
-        const normalize = v => (v === undefined || v === null || v === '' || v === 'null' || v === 'undefined') ? null : v;
+        const normalize = v => {
+            if (v === undefined || v === null) return null;
+            if (typeof v === 'string') {
+                const val = v.trim().toLowerCase();
+                if (val === '' || val === 'null' || val === 'undefined') return null;
+                return val;
+            }
+            return v;
+        };
         const normalizedColor = normalize(color);
         const normalizedSize = normalize(size);
         const normalizedCustom = normalize(custom);
-
         this.state.lockedVariants = this.state.lockedVariants.filter(v => {
             const lockedColor = normalize(v.color);
             const lockedSize = normalize(v.size);
