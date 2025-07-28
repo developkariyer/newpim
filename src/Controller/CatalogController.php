@@ -54,27 +54,23 @@ class CatalogController extends AbstractController
             $asinFilter = trim($request->query->get('asin', ''));
             $brandFilter = trim($request->query->get('brand', ''));
             $eanFilter = trim($request->query->get('ean', ''));
+            $filters = $this->extractFiltersFromRequest($request);
             $initialProducts = $this->searchService->getFilteredProducts(
                 limit: self::DEFAULT_LIMIT,
                 offset: 0,
-                categoryFilter: $categoryFilter,
-                searchQuery: $searchQuery,
-                iwaskuFilter: $iwaskuFilter,
-                asinFilter: $asinFilter,
-                brandFilter: $brandFilter,
-                eanFilter: $eanFilter
+                ...$filters
             );
             return $this->render('catalog/catalog.html.twig', [
                 'categories' => $categories,
                 'initialProducts' => $initialProducts['products'],
                 'totalProducts' => $initialProducts['total'],
                 'hasMore' => $initialProducts['hasMore'],
-                'currentCategory' => $categoryFilter,
-                'currentSearch' => $searchQuery,
-                'currentIwasku' => $iwaskuFilter,
-                'currentAsin' => $asinFilter,
-                'currentBrand' => $brandFilter,
-                'currentEan' => $eanFilter,
+                'currentCategory' => $filters['categoryFilter'],
+                'currentSearch' => $filters['searchQuery'],
+                'currentIwasku' => $filters['iwaskuFilter'],
+                'currentAsin' => $filters['asinFilter'],
+                'currentBrand' => $filters['brandFilter'],
+                'currentEan' => $filters['eanFilter'],
                 'limit' => self::DEFAULT_LIMIT
             ]);
         } catch (\Exception $e) {
@@ -197,6 +193,18 @@ class CatalogController extends AbstractController
             $this->addFlash('danger', 'Excel dosyası oluşturulurken hata oluştu.');
             return $this->redirectToRoute('catalog');
         }
+    }
+
+    private function extractFiltersFromRequest(Request $request): array
+    {
+        return [
+            'categoryFilter' => $request->query->get('category'),
+            'searchQuery'    => trim($request->query->get('search', $request->query->get('q', ''))), 
+            'iwaskuFilter'   => trim($request->query->get('iwasku', '')),
+            'asinFilter'     => trim($request->query->get('asin', '')),
+            'brandFilter'    => trim($request->query->get('brand', '')),
+            'eanFilter'      => trim($request->query->get('ean', '')),
+        ];
     }
 
 }

@@ -375,7 +375,6 @@ class SearchService
             $variantListing = new ProductListing();
             $variantListing->setCondition("type = 'variant' AND published = 1");
             $variants = $variantListing->getObjects();
-            
             $parentIds = [];
             foreach ($variants as $variant) {
                 $eanObjects = $variant->getEans();
@@ -388,7 +387,6 @@ class SearchService
                     }
                 }
             }
-            
             return array_unique(array_filter($parentIds));
         } catch (\Exception $e) {
             error_log('Get parent product IDs by variant EAN error: ' . $e->getMessage());
