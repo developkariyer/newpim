@@ -1585,13 +1585,13 @@ class ValidationService {
             this.clearContainerError('colorsSelected');
         }
 
-        const sizeTableData = document.getElementById('sizeTableData')?.value;
-        if (!sizeTableData || sizeTableData === '[]') {
-            this.showContainerError('sizeTableBtn', 'Beden tablosu oluşturmalısınız.');
-            isValid = false;
-        } else {
-            this.clearContainerError('sizeTableBtn');
-        }
+        // const sizeTableData = document.getElementById('sizeTableData')?.value;
+        // if (!sizeTableData || sizeTableData === '[]') {
+        //     this.showContainerError('sizeTableBtn', 'Beden tablosu oluşturmalısınız.');
+        //     isValid = false;
+        // } else {
+        //     this.clearContainerError('sizeTableBtn');
+        // }
 
         if (!isValid) {
             if (window.productFormManager) {
