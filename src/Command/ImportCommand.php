@@ -50,17 +50,15 @@ class ImportCommand extends AbstractCommand
             $output->writeln('<error>Decoded JSON is not an array.</error>');
             return Command::FAILURE;
         }
-        $output->writeln('<info>Products:</info>');
-        //$this->createAsinFnsku($data);
+        $output->writeln('<info>Processing products...</info>');
 
-        $count = 0;
-        foreach ($data as $index => $product) {
-            // if ($count >= 500) {
-            //     break;
-            // }
-            $this->createProduct($product);
-            $count++;
-        }
+        $total = count($data);
+        $successCount = 0;
+        $failureCount = 0;
+        echo "Total products to process: $total" . PHP_EOL;
+        // foreach ($data as $index => $product) {
+        //     $this->createProduct($product);
+        // }
         return Command::SUCCESS;
     }
     
