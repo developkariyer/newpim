@@ -86,22 +86,11 @@ class CatalogController extends AbstractController
         try {
             $limit = min((int)$request->query->get('limit', self::DEFAULT_LIMIT), self::MAX_LIMIT);
             $offset = max((int)$request->query->get('offset', 0), 0);
-            $categoryFilter = $request->query->get('category');
-            $searchQuery = trim($request->query->get('search', ''));
-            $iwaskuFilter = trim($request->query->get('iwasku', ''));
-            $asinFilter = trim($request->query->get('asin', ''));
-            $brandFilter = trim($request->query->get('brand', ''));
-            $eanFilter = trim($request->query->get('ean', ''));
-            
+            $filters = $this->extractFiltersFromRequest($request);
             $result = $this->searchService->getFilteredProducts(
+                ... $filters,
                 $limit, 
-                $offset, 
-                $categoryFilter, 
-                $searchQuery,
-                $iwaskuFilter,
-                $asinFilter,
-                $brandFilter,
-                $eanFilter
+                $offset
             );
             return new JsonResponse([
                 'success' => true,
@@ -161,22 +150,12 @@ class CatalogController extends AbstractController
     public function exportToExcel(Request $request): StreamedResponse
     {
         try {
-            $categoryFilter = $request->query->get('category');
-            $searchQuery = trim($request->query->get('search', ''));
-            $iwaskuFilter = trim($request->query->get('iwasku', ''));
-            $asinFilter = trim($request->query->get('asin', ''));
-            $brandFilter = trim($request->query->get('brand', ''));
-            $eanFilter = trim($request->query->get('ean', ''));
+            $filters = $this->extractFiltersFromRequest($request);
             
             return $this->exportService->exportFilteredProductsToCsv(
+                ...$filters,
                 self::EXPORT_MAX_PRODUCTS,
-                0,
-                $categoryFilter,
-                $searchQuery,
-                $iwaskuFilter,
-                $asinFilter,
-                $brandFilter,
-                $eanFilter
+                0
             );
         } catch (\Exception $e) {
             $this->logger->error('Excel export error', [
