@@ -57,7 +57,7 @@ class ExportService
         $response = new StreamedResponse();
         $response->setCallback(function() use ($limit, $offset, $categoryFilter, $searchQuery, $iwaskuFilter, $asinFilter, $brandFilter, $eanFilter) {
             set_time_limit(0);
-            echo "\xEF\xBB\xBF"; 
+            echo "\xEF\xBB\xBF";
             $output = fopen('php://output', 'w');
             $headers = [
                 'Ürün ID', 'Ürün Adı', 'Ürün Tanıtıcı', 'Ürün Kodu', 'Kategori', 'Açıklama',
@@ -66,30 +66,54 @@ class ExportService
                 'Varyant Kodu', 'Beden', 'Renk', 'Custom Alan', 'Varyant Durumu', 'Varyant Oluşturma'
             ];
             fputcsv($output, $headers, ';');
+            $totalExportedRows = 0;
+            $totalChunks = 0;
             for ($currentOffset = $offset; $currentOffset < $limit; $currentOffset += self::EXPORT_CHUNK_SIZE) {
+                $this->logger->info("Fetching chunk", ['offset' => $currentOffset]);
                 $result = $this->searchService->getFilteredProducts(
-                    self::EXPORT_CHUNK_SIZE, 
-                    $currentOffset,          
+                    self::EXPORT_CHUNK_SIZE,
+                    $currentOffset,
                     $categoryFilter, $searchQuery, $iwaskuFilter,
                     $asinFilter, $brandFilter, $eanFilter
                 );
-                $productsChunk = $result['products'];
+                $productsChunk = $result['products'] ?? [];
+                $chunkCount = count($productsChunk);
+                $totalChunks++;
+                $this->logger->info("Chunk fetched", [
+                    'offset' => $currentOffset,
+                    'count' => $chunkCount
+                ]);
                 if (empty($productsChunk)) {
+                    $this->logger->warning("No more products found at offset {$currentOffset}");
                     break;
                 }
                 foreach ($productsChunk as $product) {
-                    if (empty($product['variants'])) {
+                    $productId = $product['id'] ?? 'N/A';
+                    if (empty($product['variants']) || !is_array($product['variants'])) {
                         $row = $this->formatProductRowWithoutVariants($product);
                         fputcsv($output, $row, ';');
-                    } else {
-                        foreach ($product['variants'] as $index => $variant) {
-                            $row = $this->formatProductRowWithVariant($product, $variant, $index);
-                            fputcsv($output, $row, ';');
+                        $totalExportedRows++;
+                        continue;
+                    }
+                    foreach ($product['variants'] as $index => $variant) {
+                        if (!is_array($variant)) {
+                            $this->logger->warning("Skipping invalid variant", [
+                                'product_id' => $productId,
+                                'variant_index' => $index
+                            ]);
+                            continue;
                         }
+                        $row = $this->formatProductRowWithVariant($product, $variant, $index);
+                        fputcsv($output, $row, ';');
+                        $totalExportedRows++;
                     }
                 }
             }
             fclose($output);
+            $this->logger->info("Export completed", [
+                'total_chunks' => $totalChunks,
+                'total_rows_exported' => $totalExportedRows
+            ]);
         });
         $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
         $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
