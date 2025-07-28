@@ -1483,13 +1483,11 @@ class VariationService {
             if (v.published === false) {
                 return false;
             }
-            
             const colorMatch = (v.color === color);
-            const sizeMatch = (v.size === size);
+            const sizeMatch = (v.size === size || (!v.size && !size));
             const normalizedLockedCustom = (v.custom === undefined || v.custom === null) ? null : v.custom;
             const normalizedCheckingCustom = (custom === undefined || custom === null) ? null : custom;
             const customMatch = (normalizedLockedCustom === normalizedCheckingCustom);
-
             return colorMatch && sizeMatch && customMatch;
         });
     }
