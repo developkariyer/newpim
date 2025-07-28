@@ -1430,9 +1430,10 @@ class VariationService {
 
     generateMatrixHTML(combos, sizesData, customs) {
         const hasCustomData = customs.length > 0;
-
+        const hasSizeData = combos.some(combo => combo[1]);
         let html = '<table class="table table-bordered"><thead><tr>';
-        html += '<th>Seç</th><th>Renk</th><th>Beden</th>';
+        html += '<th>Seç</th><th>Renk</th>';
+        if (hasSizeData) html += '<th>Beden</th>';
         if (hasCustomData) html += '<th>Custom</th>';
         html += '<th>İşlem</th>';
         html += '</tr></thead><tbody>';
@@ -1451,9 +1452,11 @@ class VariationService {
                     <input type="checkbox" class="variation-checkbox" data-index="${i}" ${checkboxAttributes}>
                     ${isLocked ? '<br><small>Mevcut varyant</small>' : ''}
                 </td>
-                <td>${lockIcon}${color}</td>
-                <td>${lockIcon}${sizeLabel}</td>`;
+                <td>${lockIcon}${color}</td>`;
 
+            if (hasSizeData) {
+                html += `<td>${lockIcon}${sizeLabel || ''}</td>`;
+            }
             if (hasCustomData) {
                 html += `<td>${lockIcon}${custom || ''}</td>`;
             }
