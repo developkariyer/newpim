@@ -35,33 +35,275 @@ class ImportCommand extends AbstractCommand
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        
+        return Command::SUCCESS;
+    }
+    
+    private function importProducts()
+    {
         $filePath = PIMCORE_PROJECT_ROOT . '/tmp/exportProduct.json';
         if (!file_exists($filePath)) {
-            $output->writeln('<error>File not found: ' . $filePath . '</error>');
+            echo 'File not found: ' . $filePath . PHP_EOL;
             return Command::FAILURE;
         }
         $jsonContent = file_get_contents($filePath);
         $data = json_decode($jsonContent, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            $output->writeln('<error>JSON decode error: ' . json_last_error_msg() . '</error>');
+            echo 'JSON decode error: ' . json_last_error_msg() . PHP_EOL;
             return Command::FAILURE;
         }
         if (!is_array($data)) {
-            $output->writeln('<error>Decoded JSON is not an array.</error>');
+            echo 'Decoded JSON is not an array.' . PHP_EOL;
             return Command::FAILURE;
         }
-        $output->writeln('<info>Processing products...</info>');
-
-        $total = count($data);
-        $successCount = 0;
-        $failureCount = 0;
-        echo "Total products to process: $total" . PHP_EOL;
-        // foreach ($data as $index => $product) {
-        //     $this->createProduct($product);
-        // }
+        echo 'Processing products...' . PHP_EOL;
+        $summary = [
+            'total_products' => count($data),
+            'created' => 0,
+            'updated' => 0,
+            'skipped' => 0,
+            'failed' => 0,
+            'total_variants' => 0,
+            'imported_variants' => 0,
+        ];
+        foreach ($data as $index => $product) {
+            $result = $this->createProduct($product);
+            switch ($result['product_status']) {
+                case 'created':
+                    $summary['created']++;
+                    break;
+                case 'updated':
+                    $summary['updated']++;
+                    break;
+                case 'skipped':
+                    $summary['skipped']++;
+                    break;
+                case 'failed':
+                    $summary['failed']++;
+                    break;
+            }
+            $summary['total_variants'] += $result['variant_total'];
+            $summary['imported_variants'] += $result['variant_success'];
+        }
+        echo PHP_EOL;
+        echo 'Summary:' . PHP_EOL;
+        echo '---------------' . PHP_EOL;
+        echo 'Total Products        : ' . $summary['total_products'] . PHP_EOL;
+        echo 'Created               : ' . $summary['created'] . PHP_EOL;
+        echo 'Updated               : ' . $summary['updated'] . PHP_EOL;
+        echo 'Skipped               : ' . $summary['skipped'] . PHP_EOL;
+        echo 'Failed                : ' . $summary['failed'] . PHP_EOL;
+        echo 'Total Variants        : ' . $summary['total_variants'] . PHP_EOL;
+        echo 'Imported Variants     : ' . $summary['imported_variants'] . PHP_EOL;
         return Command::SUCCESS;
     }
-    
+
+    private function createProduct(array $data)
+    {
+        $status = [
+            'identifier' => $data['identifier'] ?? '',
+            'product_status' = null,
+            'variant_total' => 0,
+            'variant_success' => 0
+        ];
+        try {
+            $isExist = $this->checkExistProduct($data['identifier']);
+            if ($isExist) {
+                echo 'Product with identifier ' . $data['identifier'] . ' already exists.' . PHP_EOL;
+                $this->updateProduct($data);
+                $status['product_status'] = 'updated';
+                return $status;
+            }
+            $imageAsset = null;
+            if ($data['image']) {
+                $data['image'] = 'https://iwa.web.tr' . $data['image'];
+                $imageName = $data['identifier'] ?: $data['name'];
+                $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $imageName);
+                if ($uploadedFile) {
+                    $imageAsset = $this->assetService->uploadProductImage(
+                        $uploadedFile,
+                        $imageName
+                    );
+                }
+            }
+            $parentFolder = $this->createProductFolderStructure($data['identifier'], $data['category']);
+            $key = $data['identifier'] . ' ' . $data['name'];
+            if (empty(trim($key))) {
+                echo 'Product key is empty for identifier ' . $data['identifier'] . ', skipping.' . PHP_EOL;
+                $status['product_status'] = 'skipped';
+                return;
+            }
+
+            $product = new Product();
+            $product->setParent($parentFolder);
+            $product->setKey($key);
+            $product->setProductIdentifier($data['identifier']);
+            $product->setName($data['name']);
+            $product->setDescription($data['description']);
+            $product->setProductCategory($this->getProductCategory($data['category']));
+            $product->setProductCode($data['productCode']);
+            $product->setMarketplaces($this->getMarketplaceObjects($data['variants'] ?? []));
+            $product->setVariationSizeTable($this->createSizeTable($data['sizeTable'] ?? []));
+            $product->setCustomFieldTable($this->createCustomTable($data['customFieldTable'] ?? []));
+            $product->setPublished($data['published'] ?? true);
+            if ($imageAsset) {
+                $product->setImage($imageAsset);
+            }
+            $product->save();
+            $variants = $data['variants'] ?? [];
+            $status['variant_total'] = count($variants);
+            $status['variant_success'] = $this->createVariant($product, $variants);
+            $status['product_status'] = 'created';
+            return $status;
+        } catch (\Exception $e) {
+            echo 'Error processing product with identifier ' . $data['identifier'] . ': ' . $e->getMessage() . PHP_EOL;
+            $status['product_status'] = 'failed';
+            return $status;
+        }
+    }
+
+    private function updateProduct(array $data)
+    {
+        // $imageAsset = null;
+        // if ($data['image']) {
+        //     $data['image'] = 'https://iwa.web.tr' . $data['image'];
+        //     $imageName = $data['identifier'] ?: $data['name'];
+        //     $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $imageName);
+        //     if ($uploadedFile instanceof \Symfony\Component\HttpFoundation\File\UploadedFile) {
+        //         $imageAsset = $this->assetService->uploadProductImage(
+        //             $uploadedFile,
+        //             $imageName
+        //         );
+        //     } else {
+        //         echo "Image could not be downloaded or processed for product: " . $data['identifier'] . PHP_EOL;
+        //     }
+        // }
+        // $listing = new Product\Listing();
+        // $listing->setCondition('productIdentifier = ?', [$data['identifier']]);
+        // $listing->setLimit(1);
+        // $listing->load();
+        // $product = $listing->current();
+        // if (!$product) {
+        //     echo 'Product not found for identifier ' . $data['identifier'] . ', skipping update.' . PHP_EOL;
+        //     return;
+        // }
+        // $imageCheck  = $product->getImage();
+        // if ($imageCheck) {
+        //    return;
+        // }
+        // if ($imageAsset) {
+        //     $product->setImage($imageAsset);
+        // }
+        // $product->save();
+    }
+
+    private function checkExistProduct($productIdentifier)
+    {
+        $listing = new Product\Listing();
+        $listing->setCondition('productIdentifier = ?', [$productIdentifier]);
+        $listing->setLimit(1);
+        $listing->load();
+        return $listing->count() > 0;
+    }
+
+    private function createVariant($parentProduct, $data): int
+    {
+        if (!is_array($data) || empty($data)) {
+            return 0;
+        }
+        $successCount = 0;
+        foreach ($data as $variantData) {
+            if (empty(trim($variantData['key']))) {
+                echo 'Variant key is empty for product ' . $parentProduct->getProductIdentifier() . ', skipping.' . PHP_EOL;
+                continue;
+            }
+            $color = $this->createColor($variantData['variationColor']);
+            if (!$color) {
+                echo 'Skipping variant due to empty color for product ' . $parentProduct->getProductIdentifier() . PHP_EOL;
+                continue;
+            }
+            try {
+                $variant = new Product();
+                $variant->setParent($parentProduct);
+                $variant->setType(Product::OBJECT_TYPE_VARIANT);
+                $variant->setProductCode($variantData['productCode']);
+                $variant->setIwasku($variantData['iwasku']);
+                $variant->setKey($variantData['key']);
+                $variant->setName($variantData['name']);
+                $variant->setVariationColor($color);
+                $variant->setVariationSize($variantData['variationSize'] ?? '');
+                $variant->setCustomField($variantData['customField'] ?? '');
+                $variant->setPublished($variantData['published']);
+                $variant->save();
+                $successCount++;
+            } catch (\Exception $e) {
+                echo 'Error saving variant for product ' . $parentProduct->getProductIdentifier() . ': ' . $e->getMessage() . PHP_EOL;
+            }
+        }
+
+        return $successCount;
+    }
+
+    private function createColor($variationColor)
+    {
+        $color = $this->findColorByName($variationColor);
+        if (!$color) {
+            $color = new Color();
+            if (empty(trim($variationColor))) {
+                echo 'Color key is empty, skipping.' . PHP_EOL;
+                return null;
+            }
+            $color->setKey($variationColor);
+            $color->setParentId(1247);
+            $color->setColor($variationColor);
+            $color->setPublished(true);
+            $color->save();
+            return $color;
+        }
+        return $color;
+    }
+
+    public function findColorByName(string $colorName)
+    {
+        $listing = new ColorListing();
+        $listing->setCondition('color = ?', [$colorName]);
+        $listing->setLimit(1);
+        return $listing->current();
+    }
+
+    private function createCustomTable(array $customTable): array
+    {
+        $result = [];
+        foreach ($customTable as $item) {
+            if (!empty($item)) {
+                $result[] = [
+                    'value' => (string)$item,
+                ];
+            }
+        }
+        return $result;
+    }
+
+    private function createSizeTable($sizeTable): array
+    {
+        $result = [];
+        foreach ($sizeTable as $row) {
+            if (empty($row)) {
+                continue; 
+            }
+
+            $label = (string)array_pop($row); 
+
+            $result[] = [
+                'label'  => $label,
+                'width'  => (string)($row[0] ?? '0'),
+                'length' => (string)($row[1] ?? '0'),
+                'height' => (string)($row[2] ?? '0'),
+            ];
+        }
+        return $result;
+    }
+
     private function createAsinFnsku($data)
     {
         $uniqueAsins = [];
@@ -148,187 +390,6 @@ class ImportCommand extends AbstractCommand
             $color->setPublished(true);
             $color->save();
         } 
-    }
-
-    private function createProduct(array $data)
-    {
-        $isExist = $this->checkExistProduct($data['identifier']);
-        if ($isExist) {
-            echo 'Product with identifier ' . $data['identifier'] . ' already exists.' . PHP_EOL;
-            $this->updateProduct($data);
-            return;
-        }
-        $imageAsset = null;
-        if ($data['image']) {
-            $data['image'] = 'https://iwa.web.tr' . $data['image'];
-            $imageName = $data['identifier'] ?: $data['name'];
-            $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $imageName);
-            if ($uploadedFile) {
-                $imageAsset = $this->assetService->uploadProductImage(
-                    $uploadedFile,
-                    $imageName
-                );
-            }
-        }
-        $parentFolder = $this->createProductFolderStructure($data['identifier'], $data['category']);
-        $product = new Product();
-        $product->setParent($parentFolder);
-        $key = $data['identifier'] . ' ' . $data['name'];
-        if (empty(trim($key))) {
-            echo 'Product key is empty for identifier ' . $data['identifier'] . ', skipping.' . PHP_EOL;
-            return;
-        }
-        $product->setKey($key);
-        $product->setProductIdentifier($data['identifier']);
-        $product->setName($data['name']);
-        $product->setDescription($data['description']);
-        $product->setProductCategory($this->getProductCategory($data['category']));
-        $product->setProductCode($data['productCode']);
-        $product->setMarketplaces($this->getMarketplaceObjects($data['variants'] ?? []));
-        $product->setVariationSizeTable($this->createSizeTable($data['sizeTable'] ?? []));
-        $product->setCustomFieldTable($this->createCustomTable($data['customFieldTable'] ?? []));
-        $product->setPublished($data['published'] ?? true);
-        if ($imageAsset) {
-            $product->setImage($imageAsset);
-        }
-        $product->save();
-        $this->createVariant($product, $data['variants'] ?? []);
-    }
-
-    private function updateProduct(array $data)
-    {
-        // $imageAsset = null;
-        // if ($data['image']) {
-        //     $data['image'] = 'https://iwa.web.tr' . $data['image'];
-        //     $imageName = $data['identifier'] ?: $data['name'];
-        //     $uploadedFile = $this->createUploadedFileFromUrl($data['image'], $imageName);
-        //     if ($uploadedFile instanceof \Symfony\Component\HttpFoundation\File\UploadedFile) {
-        //         $imageAsset = $this->assetService->uploadProductImage(
-        //             $uploadedFile,
-        //             $imageName
-        //         );
-        //     } else {
-        //         echo "Image could not be downloaded or processed for product: " . $data['identifier'] . PHP_EOL;
-        //     }
-        // }
-        // $listing = new Product\Listing();
-        // $listing->setCondition('productIdentifier = ?', [$data['identifier']]);
-        // $listing->setLimit(1);
-        // $listing->load();
-        // $product = $listing->current();
-        // if (!$product) {
-        //     echo 'Product not found for identifier ' . $data['identifier'] . ', skipping update.' . PHP_EOL;
-        //     return;
-        // }
-        // $imageCheck  = $product->getImage();
-        // if ($imageCheck) {
-        //    return;
-        // }
-        // if ($imageAsset) {
-        //     $product->setImage($imageAsset);
-        // }
-        // $product->save();
-    }
-
-    private function checkExistProduct($productIdentifier)
-    {
-        $listing = new Product\Listing();
-        $listing->setCondition('productIdentifier = ?', [$productIdentifier]);
-        $listing->setLimit(1);
-        $listing->load();
-        return $listing->count() > 0;
-    }
-
-    private function createVariant($parentProduct, $data)
-    {
-        if (!is_array($data) || empty($data)) {
-            return;
-        }
-        foreach ($data as $variantData) {
-            $variant = new Product();
-            $variant->setParent($parentProduct);
-            $variant->setType(Product::OBJECT_TYPE_VARIANT);
-            $variant->setProductCode($variantData['productCode']);
-            $variant->setIwasku($variantData['iwasku']);
-            if (empty(trim($variantData['key']))) {
-                echo 'Variant key is empty for product ' . $parentProduct->getProductIdentifier() . ', skipping.' . PHP_EOL;
-                continue;
-            }
-            $variant->setKey($variantData['key']);
-            $variant->setName($variantData['name']);
-            $color = $this->createColor($variantData['variationColor']);
-            if ($color) {
-                $variant->setVariationColor($color);
-            } else {
-                echo 'Skipping variant due to empty color for product ' . $parentProduct->getProductIdentifier() . PHP_EOL;
-                continue;
-            }
-            $variant->setVariationSize($variantData['variationSize'] ?? '');
-            $variant->setCustomField($variantData['customField'] ?? '');
-            $variant->setPublished($variantData['published']);
-            $variant->save();
-        }
-       
-    }
-
-    private function createColor($variationColor)
-    {
-        $color = $this->findColorByName($variationColor);
-        if (!$color) {
-            $color = new Color();
-            if (empty(trim($variationColor))) {
-                echo 'Color key is empty, skipping.' . PHP_EOL;
-                return null;
-            }
-            $color->setKey($variationColor);
-            $color->setParentId(1247);
-            $color->setColor($variationColor);
-            $color->setPublished(true);
-            $color->save();
-            return $color;
-        }
-        return $color;
-    }
-
-    public function findColorByName(string $colorName)
-    {
-        $listing = new ColorListing();
-        $listing->setCondition('color = ?', [$colorName]);
-        $listing->setLimit(1);
-        return $listing->current();
-    }
-
-    private function createCustomTable(array $customTable): array
-    {
-        $result = [];
-        foreach ($customTable as $item) {
-            if (!empty($item)) {
-                $result[] = [
-                    'value' => (string)$item,
-                ];
-            }
-        }
-        return $result;
-    }
-
-    private function createSizeTable($sizeTable): array
-    {
-        $result = [];
-        foreach ($sizeTable as $row) {
-            if (empty($row)) {
-                continue; 
-            }
-
-            $label = (string)array_pop($row); 
-
-            $result[] = [
-                'label'  => $label,
-                'width'  => (string)($row[0] ?? '0'),
-                'length' => (string)($row[1] ?? '0'),
-                'height' => (string)($row[2] ?? '0'),
-            ];
-        }
-        return $result;
     }
 
     private function getMarketplaceObjects(array $variants): array
