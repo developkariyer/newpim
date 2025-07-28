@@ -1346,7 +1346,7 @@ class VariationService {
             const sizes = sizesData.map(s => s.beden);
             const customs = this.getCustomsData();
 
-            if (colors.length === 0 || sizes.length === 0) {
+            if (colors.length === 0 ) {
                 this.showMatrixError('Varyasyon matrisini oluşturmak için lütfen en az bir Renk ve bir Beden seçin.');
                 return;
             }
