@@ -102,7 +102,7 @@ class ImportCommand extends AbstractCommand
     {
         $status = [
             'identifier' => $data['identifier'] ?? '',
-            'product_status' = '',
+            'product_status' => null,
             'variant_total' => 0,
             'variant_success' => 0
         ];
