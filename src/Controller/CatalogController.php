@@ -56,9 +56,9 @@ class CatalogController extends AbstractController
             $eanFilter = trim($request->query->get('ean', ''));
             $filters = $this->extractFiltersFromRequest($request);
             $initialProducts = $this->searchService->getFilteredProducts(
+                ...$filters,
                 limit: self::DEFAULT_LIMIT,
                 offset: 0,
-                ...$filters
             );
             return $this->render('catalog/catalog.html.twig', [
                 'categories' => $categories,
