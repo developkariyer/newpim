@@ -47,13 +47,6 @@ class CatalogController extends AbstractController
     public function index(Request $request): Response
     {
         try {
-            $categories = $this->searchService->getAvailableCategories();
-            $categoryFilter = $request->query->get('category');
-            $searchQuery = $request->query->get('search', '');
-            $iwaskuFilter = trim($request->query->get('iwasku', ''));
-            $asinFilter = trim($request->query->get('asin', ''));
-            $brandFilter = trim($request->query->get('brand', ''));
-            $eanFilter = trim($request->query->get('ean', ''));
             $filters = $this->extractFiltersFromRequest($request);
             $initialProducts = $this->searchService->getFilteredProducts(
                 ...$filters,
