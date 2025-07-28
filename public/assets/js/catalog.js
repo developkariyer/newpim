@@ -481,14 +481,10 @@ class CatalogSystem {
             }
             
             if (variant.variationSize) {
-                let sizeLabel = this.escapeHtml(variant.variationSize);
-                if (variant.en && variant.boy) {
-                    sizeLabel += ` (${this.escapeHtml(variant.en)}x${this.escapeHtml(variant.boy)})`;
-                }
                 fields.push(`
                     <div class="variant-field size">
                         <span class="variant-field-label">📏 Beden</span>
-                        <span class="variant-field-value">${sizeLabel}</span>
+                        <span class="variant-field-value">${this.escapeHtml(variant.variationSize)}</span>
                     </div>
                 `);
             }
