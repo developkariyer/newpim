@@ -47,6 +47,7 @@ class CatalogController extends AbstractController
     public function index(Request $request): Response
     {
         try {
+            $categories = $this->searchService->getAvailableCategories();
             $filters = $this->extractFiltersFromRequest($request);
             $initialProducts = $this->searchService->getFilteredProducts(
                 ...$filters,
