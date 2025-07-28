@@ -56,6 +56,7 @@ class ExportService
         $filename = $this->generateExcelFilename($categoryFilter, $searchQuery);
         $response = new StreamedResponse();
         $response->setCallback(function() use ($limit, $offset, $categoryFilter, $searchQuery, $iwaskuFilter, $asinFilter, $brandFilter, $eanFilter) {
+            set_time_limit(0);
             echo "\xEF\xBB\xBF"; 
             $output = fopen('php://output', 'w');
             $headers = [
