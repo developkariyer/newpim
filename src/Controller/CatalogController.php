@@ -89,8 +89,8 @@ class CatalogController extends AbstractController
             $filters = $this->extractFiltersFromRequest($request);
             $result = $this->searchService->getFilteredProducts(
                 ... $filters,
-                $limit, 
-                $offset
+                limit: $limit, 
+                offset: $offset
             );
             return new JsonResponse([
                 'success' => true,
@@ -154,8 +154,8 @@ class CatalogController extends AbstractController
             
             return $this->exportService->exportFilteredProductsToCsv(
                 ...$filters,
-                self::EXPORT_MAX_PRODUCTS,
-                0
+                limit: self::EXPORT_MAX_PRODUCTS,
+                offset: 0
             );
         } catch (\Exception $e) {
             $this->logger->error('Excel export error', [
