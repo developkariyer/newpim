@@ -637,21 +637,18 @@ class ProductFormManager {
 
     removeVariantFromLocked(color, size, custom) {
         const normalizedCustom = (custom === undefined || custom === null || custom === '') ? null : custom;
-
         this.state.lockedVariants = this.state.lockedVariants.filter(v => {
             const normalizedLockedCustom = (v.custom === undefined || v.custom === null) ? null : v.custom;
-
+            const sizeMatch = (v.size === size || (!v.size && !size));
             const isMatch = (
                 v.color === color &&
-                v.size === size &&
+                sizeMatch &&
                 normalizedLockedCustom === normalizedCustom
             );
-
             return !isMatch;
         });
     }
 
-    // Form Submission Methods
     async handleFormSubmit() {
         try {
             if (!this.validationService.validateStep1()) {
