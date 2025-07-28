@@ -1413,12 +1413,19 @@ class VariationService {
             if (filteredArrays.length === 0) return [];
             return filteredArrays.reduce((a, b) => a.flatMap(d => b.map(e => [...(Array.isArray(d) ? d : [d]), e])));
         };
-
-        if (customs.length > 0) {
-            return cartesianProduct([colors, sizes, customs]);
-        } else {
-            return cartesianProduct([colors, sizes]).map(item => [...item, null]);
+        if (colors.length > 0 && sizes.length === 0 && customs.length === 0) {
+            return colors.map(color => [color, null, null]);
         }
+        if (colors.length > 0 && sizes.length === 0 && customs.length > 0) {
+            return cartesianProduct([colors, customs]).map(item => [item[0], null, item[1]]);
+        }
+        if (colors.length > 0 && sizes.length > 0 && customs.length === 0) {
+            return cartesianProduct([colors, sizes]).map(item => [item[0], item[1], null]);
+        }
+        if (colors.length > 0 && sizes.length > 0 && customs.length > 0) {
+            return cartesianProduct([colors, sizes, customs]);
+        }
+        return [];
     }
 
     generateMatrixHTML(combos, sizesData, customs) {
