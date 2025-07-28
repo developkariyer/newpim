@@ -442,7 +442,7 @@ class SearchService
                 }
                 $variants[] = [
                     'id' => $variant->getId(),
-                    'name' => $variant->getName(),
+                    'name' => $variant->getKey(),
                     'eans' => $eans ?? [],
                     'asins' => $formattedAsins ?? [],
                     'iwasku' => $variant->getIwasku(),
