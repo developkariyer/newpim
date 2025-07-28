@@ -146,12 +146,11 @@ class CatalogController extends AbstractController
         }
     }
 
-     #[Route('/export/excel', name: 'catalog_export_excel', methods: ['GET'])]
+    #[Route('/export/excel', name: 'catalog_export_excel', methods: ['GET'])]
     public function exportToExcel(Request $request): StreamedResponse
     {
         try {
             $filters = $this->extractFiltersFromRequest($request);
-            
             return $this->exportService->exportFilteredProductsToCsv(
                 ...$filters,
                 limit: self::EXPORT_MAX_PRODUCTS,

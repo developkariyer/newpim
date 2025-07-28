@@ -10,6 +10,8 @@ class ExportService
     private LoggerInterface $logger;
     private SearchService $searchService;
 
+    private const EXPORT_CHUNK_SIZE = 50; 
+
     public function __construct(LoggerInterface $logger, SearchService $searchService)
     {
         $this->logger = $logger;
@@ -27,7 +29,7 @@ class ExportService
         $response->setCallback(function() use ($products) {
             $this->generateCsvOutput($products);
         });
-        $response->headers->set('Content-Type', 'application/vnd.ms-excel; charset=utf-8');
+        $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
         $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
         $response->headers->set('Cache-Control', 'max-age=0');
         return $response;
@@ -44,31 +46,54 @@ class ExportService
         ?string $eanFilter = null
     ): StreamedResponse
     {
-        $this->logger->info('Exporting filtered products to CSV', [
-            'limit' => $limit,
-            'offset' => $offset,
+        $this->logger->info('Starting chunked product export to CSV.', [
+            'total_limit' => $limit,
+            'chunk_size' => self::EXPORT_CHUNK_SIZE,
             'category' => $categoryFilter,
             'search' => $searchQuery,
-            'iwasku' => $iwaskuFilter,
-            'asin' => $asinFilter,
-            'brand' => $brandFilter,
-            'ean' => $eanFilter
         ]);
-        $result = $this->searchService->getFilteredProducts(
-            $limit, 
-            $offset, 
-            $categoryFilter, 
-            $searchQuery,
-            $iwaskuFilter,
-            $asinFilter,
-            $brandFilter,
-            $eanFilter
-        );
-        return $this->exportProductsToCsv(
-            $result['products'],
-            $categoryFilter,
-            $searchQuery
-        );
+        
+        $filename = $this->generateExcelFilename($categoryFilter, $searchQuery);
+        $response = new StreamedResponse();
+        $response->setCallback(function() use ($limit, $offset, $categoryFilter, $searchQuery, $iwaskuFilter, $asinFilter, $brandFilter, $eanFilter) {
+            echo "\xEF\xBB\xBF"; 
+            $output = fopen('php://output', 'w');
+            $headers = [
+                'Ürün ID', 'Ürün Adı', 'Ürün Tanıtıcı', 'Ürün Kodu', 'Kategori', 'Açıklama',
+                'Toplam Varyant', 'Oluşturma Tarihi', 'Güncelleme Tarihi', 'Varyant ID',
+                'Varyant Adı', 'EAN Kodları', 'ASIN Kodları', 'FNSKU Kodları', 'IWASKU',
+                'Varyant Kodu', 'Beden', 'Renk', 'Custom Alan', 'Varyant Durumu', 'Varyant Oluşturma'
+            ];
+            fputcsv($output, $headers, ';');
+            for ($currentOffset = $offset; $currentOffset < $limit; $currentOffset += self::EXPORT_CHUNK_SIZE) {
+                $result = $this->searchService->getFilteredProducts(
+                    self::EXPORT_CHUNK_SIZE, 
+                    $currentOffset,          
+                    $categoryFilter, $searchQuery, $iwaskuFilter,
+                    $asinFilter, $brandFilter, $eanFilter
+                );
+                $productsChunk = $result['products'];
+                if (empty($productsChunk)) {
+                    break;
+                }
+                foreach ($productsChunk as $product) {
+                    if (empty($product['variants'])) {
+                        $row = $this->formatProductRowWithoutVariants($product);
+                        fputcsv($output, $row, ';');
+                    } else {
+                        foreach ($product['variants'] as $index => $variant) {
+                            $row = $this->formatProductRowWithVariant($product, $variant, $index);
+                            fputcsv($output, $row, ';');
+                        }
+                    }
+                }
+            }
+            fclose($output);
+        });
+        $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
+        $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
+        $response->headers->set('Cache-Control', 'max-age=0');
+        return $response;
     }
 
     private function generateCsvOutput(array $products): void
@@ -76,27 +101,10 @@ class ExportService
         echo "\xEF\xBB\xBF";
         $output = fopen('php://output', 'w');
         $headers = [
-            'Ürün ID',
-            'Ürün Adı',
-            'Ürün Tanıtıcı',
-            'Ürün Kodu',
-            'Kategori',
-            'Açıklama',
-            'Toplam Varyant',
-            'Oluşturma Tarihi',
-            'Güncelleme Tarihi',
-            'Varyant ID',
-            'Varyant Adı',
-            'EAN Kodları',
-            'ASIN Kodları',
-            'FNSKU Kodları',
-            'IWASKU',
-            'Varyant Kodu',
-            'Beden',
-            'Renk',
-            'Custom Alan',
-            'Varyant Durumu',
-            'Varyant Oluşturma'
+            'Ürün ID', 'Ürün Adı', 'Ürün Tanıtıcı', 'Ürün Kodu', 'Kategori', 'Açıklama',
+            'Toplam Varyant', 'Oluşturma Tarihi', 'Güncelleme Tarihi', 'Varyant ID',
+            'Varyant Adı', 'EAN Kodları', 'ASIN Kodları', 'FNSKU Kodları', 'IWASKU',
+            'Varyant Kodu', 'Beden', 'Renk', 'Custom Alan', 'Varyant Durumu', 'Varyant Oluşturma'
         ];
         fputcsv($output, $headers, ';');
         foreach ($products as $product) {
@@ -116,22 +124,19 @@ class ExportService
     private function formatProductRowWithoutVariants(array $product): array
     {
         return [
-            $product['id'],                                         // Ürün ID
-            $product['name'],                                       // Ürün Adı
-            $product['productIdentifier'],                          // Ürün Tanıtıcı
-            $product['productCode'],                               // Ürün Kodu
-            $product['category'] ? $product['category']['displayName'] : '',  // Kategori
-            $product['description'],                                // Açıklama
-            0,                                                      // Toplam Varyant
-            $product['createdAt'] ?? '',                            // Oluşturma Tarihi
-            $product['modifiedAt'] ?? '',                           // Güncelleme Tarihi
-            '', '', '', '', '', '', '', '', '', ''                   // Varyant bilgileri (boş)
+            $product['id'],
+            $product['name'],
+            $product['productIdentifier'],
+            $product['productCode'],
+            $product['category'] ? $product['category']['displayName'] : '',
+            $product['description'],
+            0,
+            $product['createdAt'] ?? '',
+            $product['modifiedAt'] ?? '',
+            '', '', '', '', '', '', '', '', '', '', ''
         ];
     }
-
-    /**
-     * Varyantlı ürün satırını formatlar
-     */
+    
     private function formatProductRowWithVariant(array $product, array $variant, int $index): array
     {
         $eansString = '';
@@ -158,27 +163,27 @@ class ExportService
             $fnskusString = implode(', ', $allFnskus);
         }
         return [
-            $index === 0 ? $product['id'] : '',                      // Ürün ID (sadece ilk satırda)
-            $index === 0 ? $product['name'] : '',                    // Ürün Adı (sadece ilk satırda)
-            $index === 0 ? $product['productIdentifier'] : '',       // Ürün Tanıtıcı (sadece ilk satırda)
-            $index === 0 ? $product['productCode'] : '',             // Ürün Kodu (sadece ilk satırda)
-            $index === 0 ? ($product['category'] ? $product['category']['displayName'] : '') : '',  // Kategori (sadece ilk satırda)
-            $index === 0 ? $product['description'] : '',             // Açıklama (sadece ilk satırda)
-            $index === 0 ? count($product['variants']) : '',         // Toplam Varyant (sadece ilk satırda)
-            $index === 0 ? ($product['createdAt'] ?? '') : '',       // Oluşturma Tarihi (sadece ilk satırda)
-            $index === 0 ? ($product['modifiedAt'] ?? '') : '',      // Güncelleme Tarihi (sadece ilk satırda)
-            $variant['id'],                                          // Varyant ID
-            $variant['name'],                                        // Varyant Adı
-            $eansString,                                             // EAN Kodları
-            $asinsString,                                            // ASIN Kodları 
-            $fnskusString,                                           // FNSKU Kodları 
-            $variant['iwasku'] ?? '',                                // IWASKU
-            $variant['productCode'] ?? '',                           // Varyant Kodu
-            $variant['variationSize'] ?? '',                         // Beden
-            $variant['color'] ? ($variant['color']['name'] ?? '') : '', // Renk
-            $variant['customField'] ?? '',                           // Custom Alan
-            isset($variant['published']) ? ($variant['published'] ? 'Aktif' : 'Pasif') : '', // Varyant Durumu
-            $variant['createdAt'] ?? ''                              // Varyant Oluşturma
+            $index === 0 ? $product['id'] : '',
+            $index === 0 ? $product['name'] : '',
+            $index === 0 ? $product['productIdentifier'] : '',
+            $index === 0 ? $product['productCode'] : '',
+            $index === 0 ? ($product['category'] ? $product['category']['displayName'] : '') : '',
+            $index === 0 ? $product['description'] : '',
+            $index === 0 ? count($product['variants']) : '',
+            $index === 0 ? ($product['createdAt'] ?? '') : '',
+            $index === 0 ? ($product['modifiedAt'] ?? '') : '',
+            $variant['id'],
+            $variant['name'],
+            $eansString,
+            $asinsString,
+            $fnskusString,
+            $variant['iwasku'] ?? '',
+            $variant['productCode'] ?? '',
+            $variant['variationSize'] ?? '',
+            $variant['color'] ? ($variant['color']['name'] ?? '') : '',
+            $variant['customField'] ?? '',
+            isset($variant['published']) ? ($variant['published'] ? 'Aktif' : 'Pasif') : '',
+            $variant['createdAt'] ?? ''
         ];
     }
 
