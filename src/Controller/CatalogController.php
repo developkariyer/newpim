@@ -78,7 +78,7 @@ class CatalogController extends AbstractController
                 'limit' => self::DEFAULT_LIMIT
             ]);
         } catch (\Exception $e) {
-            $this->addFlash('danger', 'Katalog yüklenirken bir hata oluştu.');
+            $this->addFlash('danger', 'Katalog Yüklenirken Bir Hata Oluştu.');
             return $this->render('catalog/catalog.html.twig', [
                 'categories' => [],
                 'initialProducts' => [],

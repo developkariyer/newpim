@@ -87,7 +87,6 @@ class SearchService
     ): array
     {
         try {
-            $listing = new ProductListing();
             $conditions = ["published = 1", "type IS NULL OR type != 'variant'"];
             $params = [];
             $parentIdsFromAdvancedFilters = [];
@@ -107,31 +106,26 @@ class SearchService
                 $params[] = $searchParam;
                 $params[] = $searchParam;
             }
-
             if (!empty($iwaskuFilter)) {
                 $hasAdvancedFilter = true;
                 $iwaskuParentIds = $this->getParentProductIdsByVariantIwasku($iwaskuFilter);
                 $parentIdsFromAdvancedFilters[] = $iwaskuParentIds;
             }
-            
             if (!empty($asinFilter)) {
                 $hasAdvancedFilter = true;
                 $asinParentIds = $this->getParentProductIdsByVariantAsin($asinFilter);
                 $parentIdsFromAdvancedFilters[] = $asinParentIds;
             }
-            
             if (!empty($brandFilter)) {
                 $hasAdvancedFilter = true;
                 $brandParentIds = $this->getParentProductIdsByVariantBrand($brandFilter);
                 $parentIdsFromAdvancedFilters[] = $brandParentIds;
             }
-            
             if (!empty($eanFilter)) {
                 $hasAdvancedFilter = true;
                 $eanParentIds = $this->getParentProductIdsByVariantEan($eanFilter);
                 $parentIdsFromAdvancedFilters[] = $eanParentIds;
             }
-            
             if ($hasAdvancedFilter) {
                 if (count($parentIdsFromAdvancedFilters) === 1) {
                     $finalParentIds = $parentIdsFromAdvancedFilters[0];
@@ -146,7 +140,7 @@ class SearchService
                     $params = array_merge($params, array_values($finalParentIds));
                 }
             }
-            
+            $listing = new ProductListing();
             $listing->setCondition(implode(" AND ", $conditions), $params);
             $listing->setLimit($limit);
             $listing->setOffset($offset);
@@ -289,13 +283,14 @@ class SearchService
     {
         try {
             $variantListing = new ProductListing();
-            $variantListing->setCondition("type = 'variant' AND published = 1");
+            $variantListing->setCondition(
+                "type = 'variant' AND published = 1 AND iwasku LIKE ?",
+                ["%" . $iwaskuValue . "%"]
+            );
             $variants = $variantListing->getObjects();
             $parentIds = [];
             foreach ($variants as $variant) {
-                if ($variant->getIwasku() && stripos($variant->getIwasku(), $iwaskuValue) !== false) {
-                    $parentIds[] = $variant->getParentId();
-                }
+                $parentIds[] = $variant->getParentId();
             }
             return array_unique(array_filter($parentIds));
         } catch (\Exception $e) {
