@@ -320,10 +320,7 @@ class SearchService
                 FROM object_query_product 
                 WHERE FIND_IN_SET(:asin, asin);";
         $result = $this->databaseService->fetchAllSql($sql, ['asin' => $asinId]);
-        if (empty($result)) {
-            return [];
-        }
-        $this->logger->info("result: " . json_encode($result));
+        $this->logger->info('SQL Result: ' . json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         
         // $variantListing = new ProductListing();
         // $variantListing->setCondition("type = 'variant' AND published = 1 AND asin = ?", [$asinId]);
