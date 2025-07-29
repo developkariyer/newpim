@@ -60,7 +60,6 @@ class ImportCommand extends AbstractCommand
         }
 
         if ($input->getOption('connectEan')) {
-            $data = $this->readDataJsonFile();
             $this->connectProductEan($data);
         }
 
@@ -93,17 +92,17 @@ class ImportCommand extends AbstractCommand
         $filePath = PIMCORE_PROJECT_ROOT . '/tmp/exportProduct.json';
         if (!file_exists($filePath)) {
             echo 'File not found: ' . $filePath . PHP_EOL;
-            return Command::FAILURE;
+            return null;
         }
         $jsonContent = file_get_contents($filePath);
         $data = json_decode($jsonContent, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             echo 'JSON decode error: ' . json_last_error_msg() . PHP_EOL;
-            return Command::FAILURE;
+            return null;
         }
         if (!is_array($data)) {
             echo 'Decoded JSON is not an array.' . PHP_EOL;
-            return Command::FAILURE;
+            return null;
         }
         return $data;
     }
