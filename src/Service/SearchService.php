@@ -303,14 +303,17 @@ class SearchService
     {
         $asinListing = new AsinListing();
         $asinListing->setCondition("LOWER(asin) LIKE LOWER(?) OR LOWER(fnskus) LIKE LOWER(?)", ["%$asinValue%", "%$asinValue%"]);
-        $asinObject = $asinListing->getCurrent();
-        if (!$asinObject) {
+        $asinObjects = $asinListing->getObjects();
+
+        if (empty($asinObjects)) {
             return [];
         }
-        $parentIds = [];
+        $asinIds = array_map(fn($a) => $a->getId(), $asinObjects);
+        $placeholders = implode(',', array_fill(0, count($asinIds), '?'));
         $variantListing = new ProductListing();
-        $variantListing->setCondition("type = 'variant' AND published = 1 AND (asin__id = ?)", [$asinObject->getId()]);
+        $variantListing->setCondition("type = 'variant' AND published = 1 AND asin__id IN ($placeholders)", $asinIds);
         $variants = $variantListing->getObjects();
+        $parentIds = [];
         foreach ($variants as $variant) {
             $parentIds[] = $variant->getParentId();
         }
