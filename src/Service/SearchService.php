@@ -307,6 +307,8 @@ class SearchService
         if (!$asinObject) {
             return [];
         }
+        $this->logger->info('Found ASIN object: ' . $asinObject->getId() . ' for ASIN value: ' . $asinValue);
+
         $variantListing = new ProductListing();
         $variantListing->setCondition("type = 'variant' AND published = 1 AND asin__id = ?", [$asinObject->getId()]);
         $variants = $variantListing->getObjects();
