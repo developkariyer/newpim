@@ -116,16 +116,9 @@ class ImportCommand extends AbstractCommand
                     echo 'Skipping variant with empty iwasku for product ' . $product['identifier'] . PHP_EOL;
                     continue;
                 }
-                $asinMap = $product['asinMap'] ?? [];
-                $asinKeys = array_keys($asinMap);
-                $asinCode = $asinKeys[0] ?? '';
-                if (empty($asinCode)) {
-                    echo 'Skipping variant with empty ASIN for iwasku ' . $iwasku . PHP_EOL;
-                    continue;
-                }
-                $asin = $this->findAsinByCode($asinCode);
-                if (!$asin) {
-                    echo 'ASIN not found for code ' . $asinCode . ', skipping variant with iwasku ' . $iwasku . PHP_EOL;
+                $asinMap = $variant['asinMap'] ?? [];
+                if (empty($asinMap)) {
+                    echo 'No ASIN map found for product ' . $product['identifier'] . ', skipping variant ' . $iwasku . PHP_EOL;
                     continue;
                 }
                 $variantObject = $this->findVariantByIwasku($iwasku);
@@ -137,18 +130,36 @@ class ImportCommand extends AbstractCommand
                 if (!is_array($currentAsins)) {
                     $currentAsins = [];
                 }
-                if (in_array($asinCode, $currentAsins)) {
-                    echo 'ASIN ' . $asinCode . ' already connected to variant with iwasku ' . $iwasku . PHP_EOL;
-                    continue;
+                $updated = false;
+                foreach (array_keys($asinMap) as $asinCode) {
+                    if (empty($asinCode)) {
+                        echo 'Skipping empty ASIN key for iwasku ' . $iwasku . PHP_EOL;
+                        continue;
+                    }
+                    $asin = $this->findAsinByCode($asinCode);
+                    if (!$asin) {
+                        echo 'ASIN not found for code ' . $asinCode . ', skipping for iwasku ' . $iwasku . PHP_EOL;
+                        continue;
+                    }
+                    if (in_array($asinCode, $currentAsins)) {
+                        echo 'ASIN ' . $asinCode . ' already connected to variant with iwasku ' . $iwasku . PHP_EOL;
+                        continue;
+                    }
+                    $currentAsins[] = $asinCode;
+                    echo 'Prepared to connect ASIN ' . $asinCode . ' to variant with iwasku ' . $iwasku . PHP_EOL;
+                    $updated = true;
                 }
-                $currentAsins[] = $asinCode;
-                $variantObject->setAsin($currentAsins);
-                $variantObject->setPublished(true);
-                try {
-                    $variantObject->save();
-                    echo 'Connected ASIN ' . $asinCode . ' to variant with iwasku ' . $iwasku . PHP_EOL;
-                } catch (\Exception $e) {
-                    echo 'Failed to connect ASIN ' . $asinCode . ' to variant with iwasku ' . $iwasku . ': ' . $e->getMessage() . PHP_EOL;
+                if ($updated) {
+                    $variantObject->setAsin($currentAsins);
+                    $variantObject->setPublished(true);
+                    try {
+                        $variantObject->save();
+                        echo 'Saved variant ' . $iwasku . ' with new ASINs.' . PHP_EOL;
+                    } catch (\Exception $e) {
+                        echo 'Failed to save variant ' . $iwasku . ': ' . $e->getMessage() . PHP_EOL;
+                    }
+                } else {
+                    echo 'No ASINs added for iwasku ' . $iwasku . PHP_EOL;
                 }
             }
         }
