@@ -90,18 +90,13 @@ class ImportCommand extends AbstractCommand
                     echo 'Variant not found for iwasku ' . $iwasku . ', skipping EAN connection.' . PHP_EOL;
                     continue;
                 }
-                if ($variantObject->getEans() && in_array($eanCode, $variantObject->getEans())) {
-                    echo 'EAN ' . $eanCode . ' already connected to variant with iwasku ' . $iwasku . PHP_EOL;
-                    continue;
-                }
-                $currentEans = $variantObject->getEans() ?: [];
-                $currentEans[] = $eanCode;
-                $variantObject->setEans($currentEans);
+                $ean->setProduct($variantObject);
+                $ean->setPublished(true);
                 try {
-                    $variantObject->save();
+                    $ean->save();
                     echo 'Connected EAN ' . $eanCode . ' to variant with iwasku ' . $iwasku . PHP_EOL;
                 } catch (\Exception $e) {
-                    echo 'Error connecting EAN ' . $eanCode . ' to variant with iwasku ' . $iwasku . ': ' . $e->getMessage() . PHP_EOL;
+                    echo 'Failed to connect EAN ' . $eanCode . ' to variant with iwasku ' . $iwasku . ': ' . $e->getMessage() . PHP_EOL;
                 }
                 break;
             }
