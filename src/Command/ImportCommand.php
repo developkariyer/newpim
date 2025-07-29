@@ -141,11 +141,18 @@ class ImportCommand extends AbstractCommand
                         echo 'ASIN not found for code ' . $asinCode . ', skipping for iwasku ' . $iwasku . PHP_EOL;
                         continue;
                     }
-                    if (in_array($asinCode, $currentAsins)) {
+                    $alreadyExists = false;
+                    foreach ($currentAsins as $existingAsin) {
+                        if ($existingAsin instanceof \Pimcore\Model\DataObject\Asin && $existingAsin->getId() === $asin->getId()) {
+                            $alreadyExists = true;
+                            break;
+                        }
+                    }
+                    if ($alreadyExists) {
                         echo 'ASIN ' . $asinCode . ' already connected to variant with iwasku ' . $iwasku . PHP_EOL;
                         continue;
                     }
-                    $currentAsins[] = $asinCode;
+                    $currentAsins[] = $asin;
                     echo 'Prepared to connect ASIN ' . $asinCode . ' to variant with iwasku ' . $iwasku . PHP_EOL;
                     $updated = true;
                 }
