@@ -314,7 +314,7 @@ class SearchService
             return [];
         }
         $asinId = $asinObject->getId();
-        $sql = "SELECT * 
+        $sql = "SELECT oo_id 
                 FROM object_query_product 
                 WHERE FIND_IN_SET(:asin, asin);";
         $result = $this->databaseService->fetchAllSql($sql, ['asin' => (string)$asinId]);
