@@ -309,25 +309,22 @@ class SearchService
             return [];
         }
         try {
-            $variantListing->addJoins([
-                'asin' => [
-                    'type' => 'INNER',
-                    'from' => 'object_Product', 
-                    'to'   => 'object_Asin',      
-                    'on'   => 'object_Product.asin__id = asin.o_id'
-                ]
-            ]);
+            $queryBuilder = $variantListing->getQueryBuilder();
+            $queryBuilder
+                ->innerJoin(
+                    'o',                         
+                    'object_Asin',              
+                    'asin',                      
+                    'o.asin__id = asin.o_id'     
+                );
             $variantListing->setCondition(
-                "object_Product.type = 'variant' AND object_Product.published = 1 AND (LOWER(TRIM(asin.asin)) = LOWER(?) OR FIND_IN_SET(?, asin.fnskus))",
-                [$cleanedAsinValue, $cleanedAsinValue]
+                "o.type = 'variant' AND o.published = 1 AND (LOWER(TRIM(asin.asin)) = LOWER(:asinValue) OR FIND_IN_SET(:fnskuValue, asin.fnskus))",
+                ['asinValue' => $cleanedAsinValue, 'fnskuValue' => $cleanedAsinValue]
             );
-            $variantListing->setSelect(new \Zend_Db_Expr('DISTINCT object_Product.o_parentId'));
+            $variantListing->setSelect(new \Zend_Db_Expr('DISTINCT o.o_parentId'));
             $sql = $variantListing->getQueryBuilder()->getSQL();
             $params = $variantListing->getParams();
-            $this->logger->debug("Oluşturulan SQL sorgusu", [
-                'sql' => $sql,
-                'params' => $params
-            ]);          
+            $this->logger->debug("Oluşturulan SQL sorgusu", ['sql' => $sql, 'params' => $params]);
             $results = $variantListing->load();
             $this->logger->debug("Sorgu sonucu satır sayısı.", ['count' => count($results)]);
             $parentIds = [];
@@ -338,16 +335,14 @@ class SearchService
             }
             $this->logger->info("Arama tamamlandı. Bulunan parent ID sayısı.", [
                 'asinValue' => $asinValue,
-                'count' => count($parentIds),
-                'parentIds' => $parentIds 
+                'count' => count($parentIds)
             ]);
             return array_filter($parentIds);
-
         } catch (\Exception $e) {
             $this->logger->error("ASIN araması sırasında bir istisna oluştu.", [
                 'asinValue' => $asinValue,
                 'errorMessage' => $e->getMessage(),
-                'trace' => $e->getTraceAsString() 
+                'trace' => $e->getTraceAsString()
             ]);
             return [];
         }
