@@ -102,6 +102,60 @@ class ImportCommand extends AbstractCommand
         }
     }
 
+    private function connectProductAsin($data)
+    {
+        foreach ($data as $product) {
+            foreach ($product['variants'] as $variant) {
+                $iwasku = $variant['iwasku'] ?? '';
+                if (empty($iwasku)) {
+                    echo 'Skipping variant with empty iwasku for product ' . $product['identifier'] . PHP_EOL;
+                    continue;
+                }
+                $asinMap = $product['asinMap'] ?? [];
+                $asinKeys = array_keys($asinMap);
+                $asinCode = $asinKeys[0] ?? '';
+                if (empty($asinCode)) {
+                    echo 'Skipping variant with empty ASIN for iwasku ' . $iwasku . PHP_EOL;
+                    continue;
+                }
+                $asin = $this->findAsinByCode($asinCode);
+                if (!$asin) {
+                    echo 'ASIN not found for code ' . $asinCode . ', skipping variant with iwasku ' . $iwasku . PHP_EOL;
+                    continue;
+                }
+                $variantObject = $this->findVariantByIwasku($iwasku);
+                if (!$variantObject) {
+                    echo 'Variant not found for iwasku ' . $iwasku . ', skipping ASIN connection.' . PHP_EOL;
+                    continue;
+                }
+                $currentAsins = $variantObject->getAsin();
+                if (is_array($currentAsins)) {
+                    $currentAsins[] = $asinCode;
+                } else {
+                    $currentAsins = [$asinCode];
+                }
+                $variantObject->setAsin($currentAsins);
+                $variantObject->setPublished(true);
+                try {
+                    $variantObject->save();
+                    echo 'Connected ASIN ' . $asinCode . ' to variant with iwasku ' . $iwasku . PHP_EOL;
+                } catch (\Exception $e) {
+                    echo 'Failed to connect ASIN ' . $asinCode . ' to variant with iwasku ' . $iwasku . ': ' . $e->getMessage() . PHP_EOL;
+                }
+            }
+        }
+
+    }
+
+    private function findAsinByCode($asinCode)
+    {
+        $listing = new Asin\Listing();
+        $listing->setCondition('asin = ?', [$asinCode]);
+        $listing->setLimit(1);
+        $listing->load();
+        return $listing->current();
+    }
+
     private function findEanByCode($eanCode)
     {
         $listing = new Ean\Listing();
