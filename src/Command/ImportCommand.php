@@ -37,10 +37,10 @@ class ImportCommand extends AbstractCommand
     {
         $this
             ->setDescription('Import NewPim Sync Data')
-            ->addOption('products', null, InputOption::VALUE_OPTIONAL, 'Source Marketplace Name')
-            ->addOption('eans', null, InputOption::VALUE_OPTIONAL, 'Target Marketplace Name')
-            ->addOption('asins', null, InputOption::VALUE_OPTIONAL, 'Target Marketplace Name')
-            ->addOption('connectEan', null, InputOption::VALUE_OPTIONAL, 'Connect Product EAN');
+            ->addOption('products', null, InputOption::VALUE_NONE, 'Source Marketplace Name')
+            ->addOption('eans', null, InputOption::VALUE_NONE, 'Target Marketplace Name')
+            ->addOption('asins', null, InputOption::VALUE_NONE, 'Target Marketplace Name')
+            ->addOption('connectEan', null, InputOption::VALUE_NONE, 'Connect Product EAN');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -60,7 +60,6 @@ class ImportCommand extends AbstractCommand
         }
 
         if ($input->getOption('connectEan')) {
-            echo 'Connecting EANs to Products...' . PHP_EOL;
             $this->connectProductEan($data);
         }
 
@@ -69,7 +68,6 @@ class ImportCommand extends AbstractCommand
 
     private function connectProductEan($data)
     {
-        echo 'Connecting EANs to Products...' . PHP_EOL;
         foreach ($data as $product) {
             print_r($product);
             // foreach ($product['variants'] as $variant) {
