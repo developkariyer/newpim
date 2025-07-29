@@ -301,23 +301,25 @@ class SearchService
 
     private function getParentProductIdsByVariantAsin(string $asinValue): array
     {
-        $asinListing = new AsinListing();
-        $asinListing->setCondition("LOWER(asin) LIKE LOWER(?) OR LOWER(fnskus) LIKE LOWER(?)", ["%$asinValue%", "%$asinValue%"]);
-        $asinObjects = $asinListing->getObjects();
-
-        if (empty($asinObjects)) {
-            return [];
-        }
-        $asinIds = array_map(fn($a) => $a->getId(), $asinObjects);
-        $placeholders = implode(',', array_fill(0, count($asinIds), '?'));
-        $variantListing = new ProductListing();
-        $variantListing->setCondition("type = 'variant' AND published = 1 AND asin__id IN ($placeholders)", $asinIds);
-        $variants = $variantListing->getObjects();
+         $variantListing = new \Pimcore\Model\DataObject\Product\Listing();
+        $variantListing->addJoins([
+            'asin' => [
+                'type' => 'INNER',
+                'from' => 'object_Product', 
+                'to' => 'object_Asin',     
+                'on' => 'object_Product.asin__id = asin.oo_id' 
+            ]
+        ]);
+        $variantListing->setCondition(
+            "object_Product.type = 'variant' AND object_Product.published = 1 AND (LOWER(asin.asin) = LOWER(?) OR LOWER(asin.fnskus) = LOWER(?))",
+            [$asinValue, $asinValue]
+        );
+        $variantListing->setSelect(new \Zend_Db_Expr('DISTINCT object_Product.o_parentId'));
         $parentIds = [];
-        foreach ($variants as $variant) {
-            $parentIds[] = $variant->getParentId();
+        foreach ($variantListing as $row) {
+            $parentIds[] = $row['o_parentId'];
         }
-        return array_unique(array_filter($parentIds));
+        return array_filter($parentIds);
 
 
 
