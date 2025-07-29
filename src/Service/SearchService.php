@@ -301,25 +301,56 @@ class SearchService
 
     private function getParentProductIdsByVariantAsin(string $asinValue): array
     {
-         $variantListing = new \Pimcore\Model\DataObject\Product\Listing();
-        $variantListing->addJoins([
-            'asin' => [
-                'type' => 'INNER',
-                'from' => 'object_Product', 
-                'to' => 'object_Asin',     
-                'on' => 'object_Product.asin__id = asin.oo_id' 
-            ]
-        ]);
-        $variantListing->setCondition(
-            "object_Product.type = 'variant' AND object_Product.published = 1 AND (LOWER(asin.asin) = LOWER(?) OR LOWER(asin.fnskus) = LOWER(?))",
-            [$asinValue, $asinValue]
-        );
-        $variantListing->setSelect(new \Zend_Db_Expr('DISTINCT object_Product.o_parentId'));
-        $parentIds = [];
-        foreach ($variantListing as $row) {
-            $parentIds[] = $row['o_parentId'];
+        $this->logger->info("Yeni ASIN/FNSKU araması başlatıldı.", ['asinValue' => $asinValue]);
+        $variantListing = new \Pimcore\Model\DataObject\Product\Listing();
+        $cleanedAsinValue = trim($asinValue);
+        if (empty($cleanedAsinValue)) {
+            $this->logger->warning("Boş bir ASIN değeri ile arama yapılmaya çalışıldı.");
+            return [];
         }
-        return array_filter($parentIds);
+        try {
+            $variantListing->addJoins([
+                'asin' => [
+                    'type' => 'INNER',
+                    'from' => 'object_Product', 
+                    'to'   => 'object_Asin',      
+                    'on'   => 'object_Product.asin__id = asin.o_id'
+                ]
+            ]);
+            $variantListing->setCondition(
+                "object_Product.type = 'variant' AND object_Product.published = 1 AND (LOWER(TRIM(asin.asin)) = LOWER(?) OR FIND_IN_SET(?, asin.fnskus))",
+                [$cleanedAsinValue, $cleanedAsinValue]
+            );
+            $variantListing->setSelect(new \Zend_Db_Expr('DISTINCT object_Product.o_parentId'));
+            $sql = $variantListing->getQueryBuilder()->getSQL();
+            $params = $variantListing->getParams();
+            $this->logger->debug("Oluşturulan SQL sorgusu", [
+                'sql' => $sql,
+                'params' => $params
+            ]);          
+            $results = $variantListing->load();
+            $this->logger->debug("Sorgu sonucu satır sayısı.", ['count' => count($results)]);
+            $parentIds = [];
+            foreach ($results as $row) {
+                if (isset($row['o_parentId'])) {
+                    $parentIds[] = $row['o_parentId'];
+                }
+            }
+            $this->logger->info("Arama tamamlandı. Bulunan parent ID sayısı.", [
+                'asinValue' => $asinValue,
+                'count' => count($parentIds),
+                'parentIds' => $parentIds 
+            ]);
+            return array_filter($parentIds);
+
+        } catch (\Exception $e) {
+            $this->logger->error("ASIN araması sırasında bir istisna oluştu.", [
+                'asinValue' => $asinValue,
+                'errorMessage' => $e->getMessage(),
+                'trace' => $e->getTraceAsString() 
+            ]);
+            return [];
+        }
 
 
 
