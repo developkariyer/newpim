@@ -60,13 +60,14 @@ class ImportCommand extends AbstractCommand
         }
 
         if ($input->getOption('connectEan')) {
+            echo 'Connecting EANs to Products...' . PHP_EOL;
             $this->connectProductEan($data);
         }
 
         return Command::SUCCESS;
     }
 
-    public function connectProductEan($data)
+    private function connectProductEan($data)
     {
         echo 'Connecting EANs to Products...' . PHP_EOL;
         foreach ($data as $product) {
