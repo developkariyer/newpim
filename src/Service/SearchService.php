@@ -319,7 +319,23 @@ class SearchService
                 WHERE FIND_IN_SET(:asin, asin);";
         $result = $this->databaseService->fetchAllSql($sql, ['asin' => (string)$asinId]);
         $this->logger->info('SQL Result: ' . json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-        
+        $variantIds = [];
+        foreach ($result as $row) {
+            $variantIds[] = (int)$row['oo_id'];
+        }
+        $this->logger->info('Found parent product IDs: ' . json_encode($variantIds, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        $parentIds = [];
+        foreach ($variantIds as $variantId) {
+            $variant = Product::getById($variantId);
+            if ($variant && $variant->getType() === 'variant') {
+                $parentId = $variant->getParentId();
+                if ($parentId) {
+                    $this->logger->info('Found parent ID: ' . $parentId);
+                    $parentIds[] = $parentId;
+                }
+            }
+        }
+        return array_unique(array_filter($parentIds));
         // $variantListing = new ProductListing();
         // $variantListing->setCondition("type = 'variant' AND published = 1 AND asin = ?", [$asinId]);
         // $variants = $variantListing->load();
