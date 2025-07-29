@@ -60,6 +60,7 @@ class ImportCommand extends AbstractCommand
         }
 
         if ($input->getOption('connectEan')) {
+            $data = $this->readDataJsonFile();
             $this->connectProductEan($data);
         }
 
