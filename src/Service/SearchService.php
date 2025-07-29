@@ -301,6 +301,7 @@ class SearchService
 
     private function getParentProductIdsByVariantAsin(string $asinValue): array
     {
+        $this->logger->info('Searching for parent product IDs by variant ASIN: ' . $asinValue);
         $asinListing = new AsinListing();
         $asinListing->setCondition("LOWER(asin) LIKE LOWER(?) OR LOWER(fnskus) LIKE LOWER(?)", ["%$asinValue%", "%$asinValue%"]);
         $asinListing->setLimit(1);
