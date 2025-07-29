@@ -66,7 +66,7 @@ class ImportCommand extends AbstractCommand
         return Command::SUCCESS;
     }
 
-    private function connectProductEan($data)
+    public function connectProductEan($data)
     {
         echo 'Connecting EANs to Products...' . PHP_EOL;
         foreach ($data as $product) {
