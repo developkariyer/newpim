@@ -12,13 +12,16 @@ use Pimcore\Model\DataObject\Brand\Listing as BrandListing;
 use Pimcore\Model\DataObject\Ean\Listing as EanListing;
 
 
+
 class SearchService
 {
     private const MIN_SEARCH_LENGTH = 2;
 
     public function __construct(
         private LoggerInterface $logger,
-        private DataProcessingService $dataProcessor
+        private DataProcessingService $dataProcessor,
+        private DatabaseService $databaseService
+    
     ) {}
 
     public function buildSearchCondition(string $query, bool $includePublishedCheck = true): string
@@ -313,14 +316,23 @@ class SearchService
         $asinId = $asinObject->getId();
 
 
-        $variantListing = new ProductListing();
-        $variantListing->setCondition("type = 'variant' AND published = 1 AND asin = ?", [$asinId]);
-        $variants = $variantListing->load();
-        $parentIds = [];
-        foreach ($variants as $variant) {
-            $parentIds[] = $variant->getParentId();
+        $sql = "SELECT oo_id 
+                FROM object_query_product 
+                WHERE FIND_IN_SET(:asin, asin);";
+        $result = $this->databaseService->fetchAllSql($sql, ['asin' => $asinId]);
+        if (empty($result)) {
+            return [];
         }
-        return array_unique(array_filter($parentIds));
+        $this->logger->info("result: " . json_encode($result));
+        
+        // $variantListing = new ProductListing();
+        // $variantListing->setCondition("type = 'variant' AND published = 1 AND asin = ?", [$asinId]);
+        // $variants = $variantListing->load();
+        // $parentIds = [];
+        // foreach ($variants as $variant) {
+        //     $parentIds[] = $variant->getParentId();
+        // }
+        // return array_unique(array_filter($parentIds));
 
 
 
