@@ -341,7 +341,7 @@ class SearchService
    
     private function getParentProductIdsByVariantEan(string $eanValue): array
     {
-        $sql = "SELECT product__id FROM object_query_ean WHERE GTIN :eanValue";
+        $sql = "SELECT product__id FROM object_query_ean WHERE GTIN = :eanValue";
         $result  = $this->databaseService->fetchAllSql($sql, ['eanValue' => $eanValue]);
         $variantIds = [];
         foreach ($result as $row) {
