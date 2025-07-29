@@ -69,13 +69,52 @@ class ImportCommand extends AbstractCommand
     private function connectProductEan($data)
     {
         foreach ($data as $product) {
-            print_r($product);
-            // foreach ($product['variants'] as $variant) {
-            //     break;
-            // }
+            foreach ($product['variants'] as $variant) {
+                $iwasku = $variant['iwasku'] ?? '';
+                if (empty($iwasku)) {
+                    echo 'Skipping variant with empty iwasku for product ' . $product['identifier'] . PHP_EOL;
+                    continue;
+                }
+                $eanCode = $variant['ean'] ?? '';
+                if (empty($eanCode)) {
+                    echo 'Skipping variant with empty EAN for iwasku ' . $iwasku . PHP_EOL;
+                    continue;
+                }
+                $ean = $this->findEanByCode($eanCode);
+                if (!$ean) {
+                    echo 'EAN not found for code ' . $eanCode . ', skipping variant with iwasku ' . $iwasku . PHP_EOL;
+                    continue;
+                }
+                $variantObject = $this->findVariantByIwasku($iwasku);
+                if (!$variantObject) {
+                    echo 'Variant not found for iwasku ' . $iwasku . ', skipping EAN connection.' . PHP_EOL;
+                    continue;
+                }
+                if ($variantObject->getEan()) {
+                    echo 'Variant with iwasku ' . $iwasku . ' already has an EAN, skipping.' . PHP_EOL;
+                    continue;
+                }
+                $variantObject->setEan($ean);
+                try {
+                    $variantObject->save();
+                    echo 'Connected EAN ' . $eanCode . ' to variant with iwasku ' . $iwasku . PHP_EOL;
+                } catch (\Exception $e) {
+                    echo 'Error connecting EAN ' . $eanCode . ' to variant with iwasku ' . $iwasku . ': ' . $e->getMessage() . PHP_EOL;
+                }
+                break;
+            }
             break;
         }
 
+    }
+
+    private function findEanByCode($eanCode)
+    {
+        $listing = new Ean\Listing();
+        $listing->setCondition('GTIN = ?', [$eanCode]);
+        $listing->setLimit(1);
+        $listing->load();
+        return $listing->current();
     }
 
     private function findVariantByIwasku($iwasku)
