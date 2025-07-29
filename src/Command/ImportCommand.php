@@ -39,7 +39,8 @@ class ImportCommand extends AbstractCommand
             ->setDescription('Import NewPim Sync Data')
             ->addOption('products', null, InputOption::VALUE_OPTIONAL, 'Source Marketplace Name')
             ->addOption('eans', null, InputOption::VALUE_OPTIONAL, 'Target Marketplace Name')
-            ->addOption('asins', null, InputOption::VALUE_OPTIONAL, 'Target Marketplace Name');
+            ->addOption('asins', null, InputOption::VALUE_OPTIONAL, 'Target Marketplace Name')
+            ->addOption('connectEan', null, InputOption::VALUE_OPTIONAL, 'Connect Product EAN');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
