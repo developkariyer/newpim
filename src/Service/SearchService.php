@@ -302,7 +302,7 @@ class SearchService
         }
     }
 
-    private function getParentProductIdsByVariantAsin(string $asinValue): array
+    private function getParentProductIdsByVariantAsin(string $asinValue)
     {
         $this->logger->info('Searching for parent product IDs by variant ASIN: ' . $asinValue);
         $asinListing = new AsinListing();
