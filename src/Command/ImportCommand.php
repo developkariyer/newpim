@@ -33,14 +33,60 @@ class ImportCommand extends AbstractCommand
         parent::__construct();
     }
 
+    protected function configure(): void
+    {
+        $this
+            ->setDescription('Import NewPim Sync Data')
+            ->addOption('products', null, InputOption::VALUE_OPTIONAL, 'Source Marketplace Name')
+            ->addOption('eans', null, InputOption::VALUE_OPTIONAL, 'Target Marketplace Name')
+            ->addOption('asins', null, InputOption::VALUE_OPTIONAL, 'Target Marketplace Name');
+    }
+
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->importProducts();
+        $data = $this->readDataJsonFile();
+
+        if ($input->getOption('products')) {
+            $this->importProducts($data);
+        }
+
+        if ($input->getOption('eans')) {
+            $this->createEan($data);
+        }    
         
+        if ($input->getOption('asins')) {
+            $this->createAsinFnsku($data);
+        }
+
+        if ($input->getOption('connectEan')) {
+            $this->connectProductEan($data);
+        }
+
         return Command::SUCCESS;
     }
-    
-    private function importProducts()
+
+    private function connectProductEan($data)
+    {
+        foreach ($data as $product) {
+            print_r($product);
+            // foreach ($product['variants'] as $variant) {
+            //     break;
+            // }
+            break;
+        }
+
+    }
+
+    private function findVariantByIwasku($iwasku)
+    {
+        $listing = new Product\Listing();
+        $listing->setCondition('iwasku = ?', [$iwasku]);
+        $listing->setLimit(1);
+        $listing->load();
+        return $listing->current();
+    }
+
+    private function readDataJsonFile()
     {
         $filePath = PIMCORE_PROJECT_ROOT . '/tmp/exportProduct.json';
         if (!file_exists($filePath)) {
@@ -57,7 +103,11 @@ class ImportCommand extends AbstractCommand
             echo 'Decoded JSON is not an array.' . PHP_EOL;
             return Command::FAILURE;
         }
-        echo 'Processing products...' . PHP_EOL;
+        return $data;
+    }
+    
+    private function importProducts($data)
+    {
         $summary = [
             'total_products' => count($data),
             'created' => 0,
@@ -336,7 +386,7 @@ class ImportCommand extends AbstractCommand
             foreach ($product['variants'] as $variant) {
                 if (
                     isset($variant['ean']) &&
-                    !empty($variant['ean']) && // BOŞLARI ATLAR
+                    !empty($variant['ean']) && 
                     !in_array($variant['ean'], $uniqueEans)
                 ) {
                     $uniqueEans[] = $variant['ean'];

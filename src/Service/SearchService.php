@@ -62,18 +62,18 @@ class SearchService
         return $results;
     }
 
-    public function getObjectById(string $className, int $id): ?object
-    {
-        if (!class_exists($className)) {
-            return null;
-        }
-        try {
-            $object = $className::getById($id);
-            return $object;
-        } catch (\Exception $e) {
-            return null;
-        }
-    }
+//    public function getObjectById(string $className, int $id): ?object
+//    {
+//        if (!class_exists($className)) {
+//            return null;
+//        }
+//        try {
+//            $object = $className::getById($id);
+//            return $object;
+//        } catch (\Exception $e) {
+//            return null;
+//        }
+//    }
 
     public function getFilteredProducts(
         int $limit, 

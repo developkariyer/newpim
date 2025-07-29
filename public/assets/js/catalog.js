@@ -25,6 +25,7 @@ class CatalogSystem {
         this.updateUI();
         console.log('✅ Catalog System initialized successfully');
     }
+    
     loadConfig() {
         try {
             const configElement = document.getElementById('catalogData');
@@ -129,14 +130,14 @@ class CatalogSystem {
             }
         });
 
-        // Infinite scroll (optional)
+        // Infinite scroll
         window.addEventListener('scroll', this.throttle(() => {
             if (this.shouldLoadMore()) {
                 this.loadMoreProducts();
             }
         }, 200));
 
-        // Product row clicks - UPDATED
+        // Product row clicks
         if (this.elements.productsGrid) {
             this.elements.productsGrid.addEventListener('click', (e) => {
                 if (e.target.closest('.edit-btn')) {
@@ -208,7 +209,7 @@ class CatalogSystem {
             } else {
                 this.resetAndReload();
             }
-        }, 300);
+        }, 500);
     }
 
     async performSearch(query = '') {
@@ -227,7 +228,6 @@ class CatalogSystem {
             this.state.currentOffset = 0;
             this.state.hasMore = true;
             this.state.expandedProducts.clear();
-            
             this.showLoading();
             await this.loadProducts(true);
             this.hideLoading();
@@ -243,11 +243,9 @@ class CatalogSystem {
     // Edit Product Method
     editProduct(productId) {
         try {
-            console.log(`🎯 Edit button clicked for product: ${productId}`);
             this.showLoading();
             const editUrl = `/product?edit=${productId}`;
             window.location.href = editUrl;
-            console.log(`✅ Redirecting to edit product: ${productId}`);
         } catch (error) {
             console.error('❌ Edit product failed:', error);
             this.hideLoading();
@@ -275,7 +273,6 @@ class CatalogSystem {
         if (this.elements.asinFilter) this.elements.asinFilter.value = '';
         if (this.elements.brandFilter) this.elements.brandFilter.value = '';
         if (this.elements.eanFilter) this.elements.eanFilter.value = '';
-        
         this.resetAndReload();
     }
 
@@ -595,7 +592,6 @@ class CatalogSystem {
         if (this.elements.searchInput) {
             this.elements.searchInput.value = '';
         }
-        
         if (this.elements.categoryFilter) {
             this.elements.categoryFilter.selectedIndex = 0;
         }
