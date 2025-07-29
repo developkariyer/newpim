@@ -302,35 +302,17 @@ class SearchService
     private function getParentProductIdsByVariantAsin(string $asinValue): array
     {
         try {
-            $variantListing = new ProductListing();
-            $variantListing->setCondition("type = 'variant' AND published = 1");
-            $variants = $variantListing->getObjects();
-            $parentIds = [];
-            foreach ($variants as $variant) {
-                $asinObjects = $variant->getAsin();
-                if ($asinObjects) {
-                    if (is_array($asinObjects)) {
-                        foreach ($asinObjects as $asinObj) {
-                            if ($asinObj->getAsin() && stripos($asinObj->getAsin(), $asinValue) !== false) {
-                                $parentIds[] = $variant->getParentId();
-                                break;
-                            }
-                            if ($asinObj->getFnskus() && stripos($asinObj->getFnskus(), $asinValue) !== false) {
-                                $parentIds[] = $variant->getParentId();
-                                break;
-                            }
-                        }
-                    } else {
-                        if ($asinObjects->getAsin() && stripos($asinObjects->getAsin(), $asinValue) !== false) {
-                            $parentIds[] = $variant->getParentId();
-                        }
-                        if ($asinObjects->getFnskus() && stripos($asinObjects->getFnskus(), $asinValue) !== false) {
-                            $parentIds[] = $variant->getParentId();
-                        }
-                    }
-                }
+            $asinObject = $this->findAsinByCode($asinValue);
+            if (!$asinObject) {
+                return [];
             }
-            
+
+            $listing = new ProductListing();
+            $listing->setCondition("type = 'variant' AND published = 1");
+            $listing->setObjectRelation("asin", $asinObject);
+            $variants = $listing->getObjects();
+
+            $parentIds = array_map(fn($v) => $v->getParentId(), $variants);
             return array_unique(array_filter($parentIds));
         } catch (\Exception $e) {
             error_log('Get parent product IDs by variant ASIN error: ' . $e->getMessage());
