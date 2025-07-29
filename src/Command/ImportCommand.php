@@ -98,11 +98,8 @@ class ImportCommand extends AbstractCommand
                 } catch (\Exception $e) {
                     echo 'Failed to connect EAN ' . $eanCode . ' to variant with iwasku ' . $iwasku . ': ' . $e->getMessage() . PHP_EOL;
                 }
-                break;
             }
-            break;
         }
-
     }
 
     private function findEanByCode($eanCode)
