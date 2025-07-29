@@ -303,7 +303,9 @@ class SearchService
     {
         $asinListing = new AsinListing();
         $asinListing->setCondition("LOWER(asin) LIKE LOWER(?) OR LOWER(fnskus) LIKE LOWER(?)", ["%$asinValue%", "%$asinValue%"]);
-        $asinObject = $asinListing->getCurrent();
+        $asinListing->setLimit(1);
+        $asin = $asinListing->load();
+        $asinObject = $asin[0] ?? null;
         $this->logger->info('Found ASIN object: ' . $asinObject->getId() . ' for ASIN value: ' . $asinValue);
         if (!$asinObject) {
             return [];
