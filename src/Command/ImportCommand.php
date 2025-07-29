@@ -40,7 +40,8 @@ class ImportCommand extends AbstractCommand
             ->addOption('products', null, InputOption::VALUE_NONE, 'Source Marketplace Name')
             ->addOption('eans', null, InputOption::VALUE_NONE, 'Target Marketplace Name')
             ->addOption('asins', null, InputOption::VALUE_NONE, 'Target Marketplace Name')
-            ->addOption('connectEan', null, InputOption::VALUE_NONE, 'Connect Product EAN');
+            ->addOption('connectEan', null, InputOption::VALUE_NONE, 'Connect Product EAN')
+            ->addOption('connectAsin', null, InputOption::VALUE_NONE, 'Connect Product ASIN');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -61,6 +62,10 @@ class ImportCommand extends AbstractCommand
 
         if ($input->getOption('connectEan')) {
             $this->connectProductEan($data);
+        }
+
+        if ($input->getOption('connectAsin')) {
+            $this->connectProductAsin($data);
         }
 
         return Command::SUCCESS;
