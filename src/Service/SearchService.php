@@ -314,12 +314,10 @@ class SearchService
             return [];
         }
         $asinId = $asinObject->getId();
-
-
         $sql = "SELECT oo_id 
                 FROM object_query_product 
                 WHERE FIND_IN_SET(:asin, asin);";
-        $result = $this->databaseService->fetchAllSql($sql, ['asin' => $asinId]);
+        $result = $this->databaseService->fetchAllSql($sql, ['asin' => str($asinId)]);
         $this->logger->info('SQL Result: ' . json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         
         // $variantListing = new ProductListing();
