@@ -129,11 +129,14 @@ class ImportCommand extends AbstractCommand
                     continue;
                 }
                 $currentAsins = $variantObject->getAsin();
-                if (is_array($currentAsins)) {
-                    $currentAsins[] = $asinCode;
-                } else {
-                    $currentAsins = [$asinCode];
+                if (!is_array($currentAsins)) {
+                    $currentAsins = [];
                 }
+                if (in_array($asinCode, $currentAsins)) {
+                    echo 'ASIN ' . $asinCode . ' already connected to variant with iwasku ' . $iwasku . PHP_EOL;
+                    continue;
+                }
+                $currentAsins[] = $asinCode;
                 $variantObject->setAsin($currentAsins);
                 $variantObject->setPublished(true);
                 try {
@@ -144,7 +147,6 @@ class ImportCommand extends AbstractCommand
                 }
             }
         }
-
     }
 
     private function findAsinByCode($asinCode)
