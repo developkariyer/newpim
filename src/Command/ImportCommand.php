@@ -68,6 +68,7 @@ class ImportCommand extends AbstractCommand
 
     private function connectProductEan($data)
     {
+        echo 'Connecting EANs to Products...' . PHP_EOL;
         foreach ($data as $product) {
             print_r($product);
             // foreach ($product['variants'] as $variant) {
