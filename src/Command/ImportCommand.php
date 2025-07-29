@@ -89,6 +89,7 @@ class ImportCommand extends AbstractCommand
 
     private function readDataJsonFile()
     {
+        echo "Reading data from JSON file..." . PHP_EOL;
         $filePath = PIMCORE_PROJECT_ROOT . '/tmp/exportProduct.json';
         if (!file_exists($filePath)) {
             echo 'File not found: ' . $filePath . PHP_EOL;
