@@ -304,10 +304,11 @@ class SearchService
         $asinListing = new AsinListing();
         $asinListing->setCondition("LOWER(asin) LIKE LOWER(?) OR LOWER(fnskus) LIKE LOWER(?)", ["%$asinValue%", "%$asinValue%"]);
         $asinObject = $asinListing->getCurrent();
+        $this->logger->info('Found ASIN object: ' . $asinObject->getId() . ' for ASIN value: ' . $asinValue);
         if (!$asinObject) {
             return [];
         }
-        $this->logger->info('Found ASIN object: ' . $asinObject->getId() . ' for ASIN value: ' . $asinValue);
+        
 
         $variantListing = new ProductListing();
         $variantListing->setCondition("type = 'variant' AND published = 1 AND asin__id = ?", [$asinObject->getId()]);
