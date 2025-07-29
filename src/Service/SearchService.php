@@ -336,52 +336,32 @@ class SearchService
             }
         }
         return array_unique(array_filter($parentIds));
-        // $variantListing = new ProductListing();
-        // $variantListing->setCondition("type = 'variant' AND published = 1 AND asin = ?", [$asinId]);
-        // $variants = $variantListing->load();
-        // $parentIds = [];
-        // foreach ($variants as $variant) {
-        //     $parentIds[] = $variant->getParentId();
-        // }
-        // return array_unique(array_filter($parentIds));
+    }
 
-
-
-
-        // try {
-        //     $variantListing = new ProductListing();
-        //     $variantListing->setCondition("type = 'variant' AND published = 1");
-        //     $variants = $variantListing->getObjects();
-        //     $parentIds = [];
-        //     foreach ($variants as $variant) {
-        //         $asinObjects = $variant->getAsin();
-        //         if ($asinObjects) {
-        //             if (is_array($asinObjects)) {
-        //                 foreach ($asinObjects as $asinObj) {
-        //                     if ($asinObj->getAsin() && stripos($asinObj->getAsin(), $asinValue) !== false) {
-        //                         $parentIds[] = $variant->getParentId();
-        //                         break;
-        //                     }
-        //                     if ($asinObj->getFnskus() && stripos($asinObj->getFnskus(), $asinValue) !== false) {
-        //                         $parentIds[] = $variant->getParentId();
-        //                         break;
-        //                     }
-        //                 }
-        //             } else {
-        //                 if ($asinObjects->getAsin() && stripos($asinObjects->getAsin(), $asinValue) !== false) {
-        //                     $parentIds[] = $variant->getParentId();
-        //                 }
-        //                 if ($asinObjects->getFnskus() && stripos($asinObjects->getFnskus(), $asinValue) !== false) {
-        //                     $parentIds[] = $variant->getParentId();
-        //                 }
-        //             }
-        //         }
-        //     }
-        //     return array_unique(array_filter($parentIds));
-        // } catch (\Exception $e) {
-        //     error_log('Get parent product IDs by variant ASIN error: ' . $e->getMessage());
-        //     return [];
-        // }
+   
+    private function getParentProductIdsByVariantEan(string $eanValue): array
+    {
+        $sql = "SELECT product__id FROM object_query_ean WHERE GTIN :eanValue";
+        $result  = $this->databaseService->fetchAllSql($sql, ['eanValue' => $eanValue]);
+        $variantIds = [];
+        foreach ($result as $row) {
+            $variantIds[] = (int)$row['product__id'];
+        }
+        if (empty($variantIds)) {
+            return [];
+        }
+        $parentIds = [];
+        foreach ($variantIds as $variantId) {
+            $variant = Product::getById($variantId);
+            if ($variant && $variant->getType() === 'variant') {
+                $parentId = $variant->getParentId();
+                if ($parentId) {
+                    $this->logger->info('Found parent ID: ' . $parentId);
+                    $parentIds[] = $parentId;
+                }
+            }
+        }
+        return array_unique(array_filter($parentIds));
     }
 
     private function getParentProductIdsByVariantBrand(string $brandValue): array
@@ -411,31 +391,6 @@ class SearchService
             return array_unique(array_filter($parentIds));
         } catch (\Exception $e) {
             error_log('Get parent product IDs by variant Brand error: ' . $e->getMessage());
-            return [];
-        }
-    }
-
-    private function getParentProductIdsByVariantEan(string $eanValue): array
-    {
-        try {
-            $variantListing = new ProductListing();
-            $variantListing->setCondition("type = 'variant' AND published = 1");
-            $variants = $variantListing->getObjects();
-            $parentIds = [];
-            foreach ($variants as $variant) {
-                $eanObjects = $variant->getEans();
-                if ($eanObjects && is_array($eanObjects)) {
-                    foreach ($eanObjects as $eanObj) {
-                        if ($eanObj->getGTIN() && stripos($eanObj->getGTIN(), $eanValue) !== false) {
-                            $parentIds[] = $variant->getParentId();
-                            break;
-                        }
-                    }
-                }
-            }
-            return array_unique(array_filter($parentIds));
-        } catch (\Exception $e) {
-            error_log('Get parent product IDs by variant EAN error: ' . $e->getMessage());
             return [];
         }
     }
