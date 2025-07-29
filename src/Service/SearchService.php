@@ -307,15 +307,15 @@ class SearchService
         $asinListing->setLimit(1);
         $asin = $asinListing->load();
         $asinObject = $asin[0] ?? null;
-        $this->logger->info('Found ASIN object: ' . $asinObject->getId() . ' for ASIN value: ' . $asinValue);
         if (!$asinObject) {
             return [];
         }
-        
+        $asinId = $asinObject->getId();
+
 
         $variantListing = new ProductListing();
-        $variantListing->setCondition("type = 'variant' AND published = 1 AND asin__id = ?", [$asinObject->getId()]);
-        $variants = $variantListing->getObjects();
+        $variantListing->setCondition("type = 'variant' AND published = 1 AND asin = ?", [$asinId]);
+        $variants = $variantListing->load();
         $parentIds = [];
         foreach ($variants as $variant) {
             $parentIds[] = $variant->getParentId();
