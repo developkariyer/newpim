@@ -1366,19 +1366,34 @@ class VariationService {
             if (filteredArrays.length === 0) return [];
             return filteredArrays.reduce((a, b) => a.flatMap(d => b.map(e => [...(Array.isArray(d) ? d : [d]), e])));
         };
-        if (colors.length > 0 && sizes.length === 0 && customs.length === 0) {
-            return colors.map(color => [color, null, null]);
+
+        const combinations = [];
+
+        if (colors.length > 0 && sizes.length > 0 && customs.length === 0) {
+            combinations.push(...cartesianProduct([colors, sizes]).map(item => [item[0], item[1], null]));
         }
         if (colors.length > 0 && sizes.length === 0 && customs.length > 0) {
-            return cartesianProduct([colors, customs]).map(item => [item[0], null, item[1]]);
+            combinations.push(...cartesianProduct([colors, customs]).map(item => [item[0], null, item[1]]));
         }
-        if (colors.length > 0 && sizes.length > 0 && customs.length === 0) {
-            return cartesianProduct([colors, sizes]).map(item => [item[0], item[1], null]);
+        if (colors.length === 0 && sizes.length > 0 && customs.length > 0) {
+            combinations.push(...cartesianProduct([sizes, customs]).map(item => [null, item[0], item[1]]));
         }
+
         if (colors.length > 0 && sizes.length > 0 && customs.length > 0) {
-            return cartesianProduct([colors, sizes, customs]);
+            combinations.push(...cartesianProduct([colors, sizes, customs]));
         }
-        return [];
+
+        if (colors.length > 0 && sizes.length === 0 && customs.length === 0) {
+            combinations.push(...colors.map(color => [color, null, null]));
+        }
+        if (sizes.length > 0 && colors.length === 0 && customs.length === 0) {
+            combinations.push(...sizes.map(size => [null, size, null]));
+        }
+        if (customs.length > 0 && colors.length === 0 && sizes.length === 0) {
+            combinations.push(...customs.map(custom => [null, null, custom]));
+        }
+
+        return combinations;
     }
 
     generateMatrixHTML(combos, sizesData, customs) {
