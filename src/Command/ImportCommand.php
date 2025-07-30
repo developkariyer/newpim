@@ -453,6 +453,7 @@ class ImportCommand extends AbstractCommand
 
     private function createSizeTable($sizeTable): array
     {
+        print_r($sizeTable);
         $result = [];
         foreach ($sizeTable as $row) {
             if (empty($row)) {
