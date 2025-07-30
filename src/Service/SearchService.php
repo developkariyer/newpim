@@ -338,6 +338,41 @@ class SearchService
         return array_unique(array_filter($parentIds));
     }
 
+    private function getParentProductIdsByVariantBrand(string $brandValue): array
+    {
+        $this->logger->info('Searching for parent product IDs by variant Brand: ' . $brandValue);
+        $brandListing = new BrandListing();
+        $brandListing->setCondition("LOWER(name) LIKE LOWER(?)", ["%$brandValue%"]);
+        $brandListing->setLimit(1);
+        $brand = $brandListing->load();
+        $brandObject = $brand[0] ?? null;
+        if (!$brandObject) {
+            return [];
+        }
+        $brandId = $brandObject->getId();
+        $sql = "SELECT oo_id 
+                FROM object_query_product 
+                WHERE FIND_IN_SET(:brandItems, brandItems);";
+        $result = $this->databaseService->fetchAllSql($sql, ['brandItems' => (string)$brandId]);
+        $this->logger->info('SQL Result: ' . json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        $variantIds = [];
+        foreach ($result as $row) {
+            $variantIds[] = (int)$row['oo_id'];
+        }
+        $this->logger->info('Found parent product IDs: ' . json_encode($variantIds, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        $parentIds = [];
+        foreach ($variantIds as $variantId) {
+            $variant = Product::getById($variantId);
+            if ($variant && $variant->getType() === 'variant') {
+                $parentId = $variant->getParentId();
+                if ($parentId) {
+                    $this->logger->info('Found parent ID: ' . $parentId);
+                    $parentIds[] = $parentId;
+                }
+            }
+        }
+        return array_unique(array_filter($parentIds));
+    }
    
     private function getParentProductIdsByVariantEan(string $eanValue): array
     {
@@ -362,37 +397,6 @@ class SearchService
             }
         }
         return array_unique(array_filter($parentIds));
-    }
-
-    private function getParentProductIdsByVariantBrand(string $brandValue): array
-    {
-        try {
-            $variantListing = new ProductListing();
-            $variantListing->setCondition("type = 'variant' AND published = 1");
-            $variants = $variantListing->getObjects();            
-            $parentIds = [];
-            foreach ($variants as $variant) {
-                $brandObjects = $variant->getBrandItems();
-                if ($brandObjects) {
-                    if (is_array($brandObjects)) {
-                        foreach ($brandObjects as $brandObj) {
-                            if ($brandObj->getKey() && stripos($brandObj->getKey(), $brandValue) !== false) {
-                                $parentIds[] = $variant->getParentId();
-                                break;
-                            }
-                        }
-                    } else {
-                        if ($brandObjects->getKey() && stripos($brandObjects->getKey(), $brandValue) !== false) {
-                            $parentIds[] = $variant->getParentId();
-                        }
-                    }
-                }
-            }
-            return array_unique(array_filter($parentIds));
-        } catch (\Exception $e) {
-            error_log('Get parent product IDs by variant Brand error: ' . $e->getMessage());
-            return [];
-        }
     }
 
     public function getProductVariants(Product $product, $customTableTitle): array
