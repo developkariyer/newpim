@@ -71,6 +71,8 @@ class ImportCommand extends AbstractCommand
         return Command::SUCCESS;
     }
 
+    // set product set
+
     private function connectProductEan($data)
     {
         foreach ($data as $product) {
@@ -458,6 +460,7 @@ class ImportCommand extends AbstractCommand
             }
 
             $label = (string)array_pop($row); 
+            echo 'Size Table Row: ' . implode(', ', $row) . PHP_EOL;
 
             $result[] = [
                 'label'  => $label,
