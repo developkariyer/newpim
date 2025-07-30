@@ -60,11 +60,11 @@
                     <h3>📝 Temel Ürün Bilgileri</h3>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="productName">Ürün Adı *</label>
+                            <label for="productName">Ürün Adı</label>
                             <input type="text" id="productName" name="productName" class="form-control" placeholder="Örn: Premium Cotton T-Shirt" required>
                         </div>
                         <div class="form-group">
-                            <label>Ürün Resmi *</label>
+                            <label>Ürün Resmi</label>
                             <div class="image-upload">
                                 <div class="image-preview" id="imagePreview" onclick="document.getElementById('imageInput').click()">📷</div>
                                 <small style="color: #6c757d; text-align: center;">Resim yüklemek için tıklayın</small>
@@ -74,11 +74,11 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="productIdentifier">Ürün Tanıtıcı Adı *</label>
+                            <label for="productIdentifier">Ürün Tanıtıcı Adı</label>
                             <input type="text" id="productIdentifier" name="productIdentifier" class="form-control" placeholder="Örn: PTS-001" required>
                         </div>
                         <div class="form-group">
-                            <label for="productCategory">Kategori *</label>
+                            <label for="productCategory">Kategori</label>
                             <select id="categoriesSearch" class="form-control" style="margin-bottom: 0.5rem;">
                                 <option value="">Kategori seçin...</option>
                                 {% for category in categories %}
@@ -101,7 +101,7 @@
                     <h3>🛒 Pazaryeri Bilgileri</h3>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="brands">Markalar *</label>
+                            <label for="brands">Markalar</label>
                             <select id="brandsSearch" class="form-control" style="margin-bottom: 0.5rem;">
                                 <option value="">Marka seçin...</option>
                                 {% for brand in brands %}
@@ -114,7 +114,7 @@
                             <div id="brandsHidden"></div>
                         </div>
                         <div class="form-group">
-                            <label for="marketplaces">Pazaryerleri *</label>
+                            <label for="marketplaces">Pazaryerleri</label>
                             <select id="marketplacesSearch" class="form-control" style="margin-bottom: 0.5rem;">
                                 <option value="">Pazaryeri seçin...</option>
                                 {% for marketplace in marketplaces %}
@@ -132,7 +132,7 @@
                 <div class="form-section">
                     <h3>🎨 Varyasyon Şablonları</h3>
                     <div class="form-group">
-                        <label for="colorTemplate">Renkler *</label>
+                        <label for="colorTemplate">Renkler</label>
                         <input type="text" id="colorsSearch" placeholder="Renk ara..." class="form-control" style="margin-bottom: 0.5rem;">
                         <div id="colorsResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; background: white;"></div>
                         <div id="colorsSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
@@ -145,7 +145,7 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="sizeTableBtn">Beden Tablosu *</label>
+                        <label for="sizeTableBtn">Beden Tablosu</label>
                         <button type="button" class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2" id="sizeTableBtn" data-bs-toggle="modal" data-bs-target="#sizeTableModal" style="font-size:1.1rem; font-weight:500;">
                             <span style="font-size:1.5rem; margin-right:0.5rem;">📏</span> Beden Tablosu Oluştur/Düzenle
                         </button>
@@ -164,7 +164,7 @@
                 </div>
 
                 <div style="text-align: right; margin-top: 2rem;">
-                    <button type="button" class="btn btn-secondary">İptal</button>
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">İptal</button>
                     <button type="button" class="btn btn-primary" id="goToVariationsBtn">İlerle</button>
                 </div>
             </div>

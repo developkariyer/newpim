@@ -22,7 +22,7 @@ class ProductFormManager {
         };
 
         this.config = {
-            searchDelay: 300,
+            searchDelay: 400,
             minSearchLength: 2,
             endpoints: {
                 productSearch: '/product/search-products',
@@ -241,16 +241,12 @@ class ProductFormManager {
         try {
             this.state.selectedProduct = product;
             this.state.isEditMode = true;
-
             this.uiService.hideElement('productSearchResults');
             this.getElement('productSearchInput').value = '';
-
             this.displaySelectedProduct(product);
             this.formService.fillForm(product);
             this.formService.setEditMode();
-
             this.variationService.updateLockedVariants(product);
-
             Object.keys(this.state.selectedItems).forEach(type => {
                 this.updateSelectedItems(type);
             });
@@ -291,13 +287,11 @@ class ProductFormManager {
     async handleItemSearch(type) {
         const searchInput = this.getElement(`${type}Search`);
         if (!searchInput) return;
-
         const query = searchInput.value.trim();
         if (query.length < this.config.minSearchLength) {
             this.uiService.hideElement(`${type}Results`);
             return;
         }
-
         try {
             const results = await this.searchService.searchItems(type, query);
             this.displayItemSearchResults(type, results);
@@ -309,20 +303,17 @@ class ProductFormManager {
     displayItemSearchResults(type, items) {
         const resultsDiv = this.getElement(`${type}Results`);
         if (!resultsDiv) return;
-
         if (items.length === 0) {
             resultsDiv.innerHTML = '<div style="padding: 1rem; text-align: center; color: #6c757d;">Sonuç bulunamadı</div>';
             this.uiService.showElement(`${type}Results`);
             return;
         }
-
         resultsDiv.innerHTML = items.map(item => `
             <div class="item-result" data-item-id="${item.id}" data-item-name="${this.escapeHtml(item.name)}" 
                     style="padding: 0.5rem; cursor: pointer; border-bottom: 1px solid #f1f3f4;">
                 ${this.config.icons[type] || '📋'} ${this.escapeHtml(item.name)}
             </div>
         `).join('');
-
         resultsDiv.addEventListener('click', (e) => {
             const resultItem = e.target.closest('.item-result');
             if (resultItem) {
@@ -333,7 +324,6 @@ class ProductFormManager {
                 this.addSelectedItem(type, item);
             }
         });
-
         this.uiService.showElement(`${type}Results`);
     }
 
@@ -352,7 +342,6 @@ class ProductFormManager {
     addSelectedItem(type, item) {
         try {
             const singleSelectTypes = ['categories'];
-
             if (singleSelectTypes.includes(type)) {
                 this.state.selectedItems[type] = [item];
             } else {
@@ -361,7 +350,6 @@ class ProductFormManager {
                 }
                 this.state.selectedItems[type].push(item);
             }
-
             this.updateSelectedItems(type);
             this.clearSearchInput(type);
         } catch (error) {
@@ -372,22 +360,18 @@ class ProductFormManager {
     updateSelectedItems(type) {
         const selectedDiv = this.getElement(`${type}Selected`);
         const hiddenDiv = this.getElement(`${type}Hidden`);
-
         if (!selectedDiv || !hiddenDiv) return;
-
         if (this.state.selectedItems[type].length === 0) {
             selectedDiv.innerHTML = `<small style="color: #6c757d;">Seçilen ${this.config.typeLabels[type] || type} burada görünecek...</small>`;
             hiddenDiv.innerHTML = '';
             return;
         }
-
         selectedDiv.innerHTML = this.state.selectedItems[type].map(item => {
             const isLocked = this.isItemLocked(type, item);
             const lockIcon = isLocked ? '🔒 ' : '';
             const removeButton = isLocked ?
                 `<span style="margin-left: 0.5rem; color: #6c757d; cursor: not-allowed;" title="Bu ${this.config.typeLabels[type]} varyantlarda kullanıldığı için kaldırılamaz">🔒</span>` :
                 `<span onclick="productFormManager.removeSelectedItem('${type}', ${item.id})" style="margin-left: 0.5rem; cursor: pointer; font-weight: bold;">×</span>`;
-
             return `
                 <span style="display: inline-block; background: ${isLocked ? '#6c757d' : '#007bff'}; color: white; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 12px; font-size: 0.875rem;">
                     ${lockIcon}${this.config.icons[type] || '📋'} ${this.escapeHtml(item.name)}
@@ -395,7 +379,6 @@ class ProductFormManager {
                 </span>
             `;
         }).join('');
-
         hiddenDiv.innerHTML = this.state.selectedItems[type].map(item =>
             `<input type="hidden" name="${this.config.inputNames[type] || type + '[]'}" value="${item.id}">`
         ).join('');
@@ -411,12 +394,10 @@ class ProductFormManager {
     removeSelectedItem(type, itemId) {
         const item = this.state.selectedItems[type].find(item => item.id == itemId);
         if (!item) return;
-
         if (this.isItemLocked(type, item)) {
             this.uiService.showError(`Bu ${this.config.typeLabels[type]} varyantlarda kullanıldığı için kaldırılamaz.`);
             return;
         }
-
         this.state.selectedItems[type] = this.state.selectedItems[type].filter(item => item.id != itemId);
         this.updateSelectedItems(type);
     }
@@ -433,22 +414,18 @@ class ProductFormManager {
     handleImageUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
-
         if (!file.type.startsWith('image/')) {
             this.uiService.showError('Lütfen geçerli bir resim dosyası seçin.');
             event.target.value = '';
             return;
         }
-
         const maxSize = 5 * 1024 * 1024; // 5MB
         if (file.size > maxSize) {
             this.uiService.showError('Resim dosyası çok büyük. Maksimum 5MB olmalıdır.');
             event.target.value = '';
             return;
         }
-
         const reader = new FileReader();
-
         reader.onload = (e) => {
             try {
                 const preview = this.getElement('imagePreview');
@@ -460,12 +437,10 @@ class ProductFormManager {
                 this.uiService.showError('Resim önizleme başarısız.');
             }
         };
-
         reader.onerror = () => {
             this.uiService.showError('Resim yüklenirken bir hata oluştu.');
             event.target.value = '';
         };
-
         reader.readAsDataURL(file);
     }
 
@@ -537,13 +512,11 @@ class ProductFormManager {
     async handleAddNewColor() {
         const colorInput = this.getElement('newColorInput');
         if (!colorInput) return;
-
         const newColor = colorInput.value.trim();
         if (!newColor) {
             this.uiService.showError('Lütfen bir renk girin.');
             return;
         }
-
         try {
             const result = await this.searchService.addColor(newColor);
             this.addSelectedItem('colors', { id: result.id, name: newColor });
@@ -560,7 +533,6 @@ class ProductFormManager {
         if (!this.validationService.validateStep1()) {
             return;
         }
-
         try {
             this.variationService.generateMatrix();
             this.showStep(2);
@@ -572,7 +544,6 @@ class ProductFormManager {
 
     showStep(stepNumber) {
         this.state.currentStep = stepNumber;
-
         for (let i = 1; i <= 2; i++) {
             const stepElement = this.getElement(`step${i}`);
             if (stepElement) {
@@ -586,16 +557,12 @@ class ProductFormManager {
         const color = button.dataset.color;
         const size = button.dataset.size;
         const custom = button.dataset.custom || null;
-
         const confirmMessage = `"${color} - ${size}${custom ? ' - ' + custom : ''}" varyantını silmek istediğinizden emin misiniz?\n\nBu işlem ürünü yayından kaldıracaktır (unpublish).`;
-
         if (!confirm(confirmMessage)) {
             return;
         }
-
         try {
             this.uiService.showLoading();
-
             const response = await fetch(this.config.endpoints.deleteVariant, {
                 method: 'POST',
                 headers: {
@@ -612,13 +579,10 @@ class ProductFormManager {
                     }
                 })
             });
-
             if (!response.ok) {
                 throw new Error('Variant silme başarısız');
             }
-
             const result = await response.json();
-
             if (result.success) {
                 this.uiService.showSuccess('Varyant silindi.');
                 this.removeVariantFromLocked(color, size, custom);
@@ -626,7 +590,6 @@ class ProductFormManager {
             } else {
                 throw new Error(result.message || 'Variant silme başarısız');
             }
-
         } catch (error) {
             console.error('Delete variant failed:', error);
             this.uiService.showError(`Variant silinemedi: ${error.message}`);
@@ -667,12 +630,9 @@ class ProductFormManager {
             if (!this.validationService.validateStep1()) {
                 return;
             }
-
             this.uiService.showLoading();
             this.variationService.collectVariationsData();
-
             await this.submitFormWithFormData();
-
         } catch (error) {
             console.error('Form submit failed:', error);
             this.uiService.showError('Form gönderilirken bir hata oluştu.');
@@ -684,14 +644,11 @@ class ProductFormManager {
     async submitFormWithFormData() {
         try {
             console.log('🚀 Starting FormData submission');
-            
             const form = this.getElement('productForm');
             if (!form) {
                 throw new Error('Form element not found');
             }
-            
             const formData = new FormData();
-            
             const imageInput = this.getElement('imageInput');
             console.log('🔍 Image input check:', {
                 element: !!imageInput,
@@ -699,7 +656,6 @@ class ProductFormManager {
                 filesLength: imageInput && imageInput.files ? imageInput.files.length : 0,
                 hasFile: !!(imageInput && imageInput.files && imageInput.files.length > 0)
             });
-            
             if (imageInput && imageInput.files && imageInput.files.length > 0) {
                 const file = imageInput.files[0];
                 console.log('🔍 File details:', {
@@ -710,8 +666,7 @@ class ProductFormManager {
                 });
                 
                 formData.append('productImage', file, file.name);
-                console.log('✅ File appended to FormData');
-                
+                console.log('✅ File appended to FormData'); 
                 const hasImageInFormData = formData.has('productImage');
                 const imageFromFormData = formData.get('productImage');
                 console.log('🔍 FormData verification:', {
@@ -756,21 +711,17 @@ class ProductFormManager {
                     console.log(`✅ Added ${name}:`, (field.value || '').substring(0, 50) + '...');
                 }
             });
-
             const hiddenInputs = form.querySelectorAll('input[type="hidden"][name$="[]"], input[type="hidden"][name="productCategory"]');
             console.log('🔍 Found hidden inputs:', hiddenInputs.length);
-            
             hiddenInputs.forEach(input => {
                 if (input.name && input.value) {
                     formData.append(input.name, input.value);
                     console.log(`✅ Added ${input.name}:`, input.value);
                 }
             });
-            
             console.log('📋 Final FormData check:');
             let totalEntries = 0;
             let hasImageFile = false;
-            
             for (let [key, value] of formData.entries()) {
                 totalEntries++;
                 if (key === 'productImage') {
@@ -780,39 +731,31 @@ class ProductFormManager {
                     console.log(`  ${key}: ${value}`);
                 }
             }
-            
             console.log(`📊 FormData summary: ${totalEntries} entries, hasImage: ${hasImageFile}`);
-            
             if (!hasImageFile && !this.state.isEditMode) {
                 throw new Error('Resim dosyası FormData\'ya eklenemedi!');
             }
-            
             console.log('📡 Sending request to:', form.action);
-            
             const response = await fetch(form.action, {
                 method: 'POST',
                 body: formData,
                 credentials: 'same-origin'
             });
-            
             console.log('📡 Response received:', {
                 status: response.status,
                 statusText: response.statusText,
                 ok: response.ok
             });
-            
             console.log('📄 Response headers:');
             for (let [key, value] of response.headers.entries()) {
                 console.log(`  ${key}: ${value}`);
             }
-            
             if (response.ok) {
                 const contentType = response.headers.get('content-type');
                 
                 if (contentType && contentType.includes('application/json')) {
                     const result = await response.json();
                     console.log('📄 JSON Response:', result);
-                    
                     if (result.success) {
                         this.uiService.showSuccess(result.message);
                         setTimeout(() => window.location.reload(), 1500);
