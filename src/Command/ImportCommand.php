@@ -111,9 +111,7 @@ class ImportCommand extends AbstractCommand
                         continue;
                     }
                     $metadata = new ObjectMetadata($setVariant);
-                    $metadata->setMetadata([
-                        'amount' => $amountValue 
-                    ]);
+                    $metadata->setMetadata(['amount' => $amountValue]);
                     $currentSetProducts[] = $metadata;
                     echo 'Prepared set product with iwasku ' . $setIwasku . ' and amount ' . $amountValue . PHP_EOL;
                 }
