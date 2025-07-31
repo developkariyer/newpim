@@ -85,9 +85,16 @@ class ImportCommand extends AbstractCommand
                 if (!is_array($setProductIwaskus) || count($setProductIwaskus) === 0) {
                     continue;
                 }
+                $iwasku = $variant['iwasku'] ?? '';
+                if (empty($iwasku)) {
+                    echo 'Skipping variant with empty iwasku for product ' . $product['identifier'] . PHP_EOL;
+                    continue;
+                }
+                echo 'Setting product set for variant with iwasku ' . $iwasku . PHP_EOL;
                 foreach ($setProductIwaskus as $iwasku => $value) {
                     echo "- $iwasku => $value\n";
                 }
+                echo "--------------------------------------------------\n";
             }
         }
 
