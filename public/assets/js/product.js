@@ -1366,40 +1366,44 @@ class VariationService {
             if (filteredArrays.length === 0) return [];
             return filteredArrays.reduce((a, b) => a.flatMap(d => b.map(e => [...(Array.isArray(d) ? d : [d]), e])));
         };
-        if (colors.length > 0 && sizes.length === 0 && customs.length === 0) {
-            return colors.map(color => [color, null, null]);
+
+        const hasColors = colors && colors.length > 0;
+        const hasSizes = sizes && sizes.length > 0;
+        const hasCustoms = customs && customs.length > 0;
+        if (hasColors && hasSizes && hasCustoms) {
+            const combosColorSize = cartesianProduct([colors, sizes]).map(item => [item[0], item[1], null]);
+            const combosColorCustom = cartesianProduct([colors, customs]).map(item => [item[0], null, item[1]]);
+            const combosAllThree = cartesianProduct([colors, sizes, customs]);
+            return [...combosColorSize, ...combosColorCustom, ...combosAllThree];
         }
-        if (colors.length > 0 && sizes.length === 0 && customs.length > 0) {
+        if (hasColors && !hasSizes && hasCustoms) {
             return cartesianProduct([colors, customs]).map(item => [item[0], null, item[1]]);
         }
-        if (colors.length > 0 && sizes.length > 0 && customs.length === 0) {
+        if (hasColors && hasSizes && !hasCustoms) {
             return cartesianProduct([colors, sizes]).map(item => [item[0], item[1], null]);
         }
-        if (colors.length > 0 && sizes.length > 0 && customs.length > 0) {
-            return cartesianProduct([colors, sizes, customs]);
+        if (hasColors && !hasSizes && !hasCustoms) {
+            return colors.map(color => [color, null, null]);
         }
         return [];
     }
 
     generateMatrixHTML(combos, sizesData, customs) {
         const hasCustomData = customs.length > 0;
-        const hasSizeData = combos.some(combo => combo[1]);
+        const hasSizeData = combos.some(combo => combo[1]); 
         let html = '<table class="table table-bordered"><thead><tr>';
         html += '<th>Seç</th><th>Renk</th>';
         if (hasSizeData) html += '<th>Beden</th>';
         if (hasCustomData) html += '<th>Custom</th>';
         html += '<th>İşlem</th>';
         html += '</tr></thead><tbody>';
-
         combos.forEach((combo, i) => {
-            const [color, size, custom] = combo;
+            const [color, size, custom] = combo; 
             const isLocked = this.isVariantLocked(color, size, custom);
             const sizeLabel = this.formatSizeLabel(size, sizesData);
-
             const rowClass = isLocked ? 'variant-locked' : '';
             const lockIcon = isLocked ? '🔒 ' : '';
             const checkboxAttributes = isLocked ? 'disabled checked' : '';
-
             html += `<tr class="${rowClass}">
                 <td>
                     <input type="checkbox" class="variation-checkbox" data-index="${i}" ${checkboxAttributes}>
@@ -1413,11 +1417,10 @@ class VariationService {
             if (hasCustomData) {
                 html += `<td>${lockIcon}${custom || ''}</td>`;
             }
-
             html += `<td>`;
             if (isLocked) {
                 html += `<button type="button" class="btn btn-danger btn-sm delete-variant-btn" 
-                            data-color="${color}" data-size="${size}" data-custom="${custom || ''}"
+                            data-color="${color}" data-size="${size || ''}" data-custom="${custom || ''}"
                             title="Bu varyantı sil ve ürünü unpublish yap">
                             🗑️ Sil
                         </button>`;
@@ -1426,7 +1429,6 @@ class VariationService {
             }
             html += `</td></tr>`;
         });
-
         html += '</tbody></table>';
         return html;
     }
