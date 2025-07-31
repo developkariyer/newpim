@@ -110,9 +110,13 @@ class ImportCommand extends AbstractCommand
 
 
 
-                    $newSetProducts[] = $setVariant;
+              
 
-                    
+                    $objectMetadata = new ObjectMetadata('metadata', ['amount'],  $setVariant);
+                    $objectMetadata->setAmount($amountValue);
+                    $setVariant->setMetadata($objectMetadata);
+                    $setVariant->save();
+                    $newSetProducts[] = $setVariant;
                     // try {
                     //     $objectMetadata = new ObjectMetadata($setVariant); 
                     //     $objectMetadata->setMetadata([
