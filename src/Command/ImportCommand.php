@@ -112,11 +112,16 @@ class ImportCommand extends AbstractCommand
 
               
 
-                    $objectMetadata = new ObjectMetadata('metadata', ['amount'],  $setVariant);
-                    $objectMetadata->setAmount($amountValue);
-                    $setVariant->setMetadata($objectMetadata);
-                    $setVariant->save();
-                    $newSetProducts[] = $setVariant;
+                    try {
+                        $objectMetadata = new ObjectMetadata('metadata', ['amount'], $setVariant);
+                        $objectMetadata->setAmount($amountValue);
+                        $setVariant->setMetadata($objectMetadata);
+                        $setVariant->save();
+                        $newSetProducts[] = $setVariant;
+                        echo 'Prepared set product with iwasku ' . $setIwasku . ' (ID: ' . $setVariant->getId() . ') and amount ' . $amountValue . PHP_EOL;
+                    } catch (\Exception $e) {
+                        echo 'Failed to create ObjectMetadata for ' . $setIwasku . ': ' . $e->getMessage() . PHP_EOL;
+                    }
                     // try {
                     //     $objectMetadata = new ObjectMetadata($setVariant); 
                     //     $objectMetadata->setMetadata([
