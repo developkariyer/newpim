@@ -106,7 +106,7 @@ class ImportCommand extends AbstractCommand
                         continue;
                     }
                     echo 'Found set variant with iwasku ' . $setIwasku . ' (ID: ' . $setVariant->getId() . ')' . PHP_EOL;
-                    $objectMetadata = new ObjectMetadata($setVariant, ['amount' => $amountValue], true);
+                    $objectMetadata = new ObjectMetadata($setVariant, ['amount' => $amountValue]);
                     $objectMetadata->save();
                     $newSetProducts[] = $objectMetadata;
 
