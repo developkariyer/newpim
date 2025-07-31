@@ -96,7 +96,7 @@ class ImportCommand extends AbstractCommand
                     echo 'Variant not found for iwasku ' . $iwasku . ', skipping set product.' . PHP_EOL;
                     continue;
                 }
-                $currentSetProducts = $variantObject->getBundleProducts()?->getItems() ?? [];
+                $currentSetProducts = $variantObject->getBundleProducts() ?? [];
                 $existingIwaskus = array_map(function ($item) {
                     return $item['object']?->getIwasku();
                 }, $currentSetProducts);
