@@ -100,11 +100,12 @@ class ImportCommand extends AbstractCommand
                 $newSetProducts = [];
                 foreach ($setProductIwaskus as $setIwasku => $amountValue) {
                     echo 'Processing set product with iwasku ' . $setIwasku . ' and amount ' . $amountValue . PHP_EOL;
-                    // $setVariant = $this->findVariantByIwasku($setIwasku);
-                    // if (!$setVariant) {
-                    //     echo 'Set variant not found for iwasku ' . $setIwasku . ', skipping.' . PHP_EOL;
-                    //     continue;
-                    // }
+                    $setVariant = $this->findVariantByIwasku($setIwasku);
+                    if (!$setVariant) {
+                        echo 'Set variant not found for iwasku ' . $setIwasku . ', skipping.' . PHP_EOL;
+                        continue;
+                    }
+                    echo 'Found set variant with iwasku ' . $setIwasku . ' (ID: ' . $setVariant->getId() . ')' . PHP_EOL;
                     // if (!$setVariant->getId()) {
                     //     try {
                     //         $setVariant->save();  
