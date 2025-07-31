@@ -1015,12 +1015,10 @@ class TableService {
     addSizeRow(values = {}, isLocked = false) {
         const tbody = document.querySelector('#sizeTable tbody');
         if (!tbody) return;
-
         const tr = document.createElement('tr');
         if (isLocked) {
             tr.classList.add('locked-row');
         }
-
         tr.innerHTML = `
             <td data-label="Beden">
                 <input type="text" class="form-control" value="${values.beden || ''}" ${isLocked ? 'readonly' : ''} required>
@@ -1035,21 +1033,17 @@ class TableService {
                 </button>
             </td>
         `;
-
         tbody.appendChild(tr);
     }
 
     addCustomRow(value = {}, isLocked = false) {
         const tbody = document.querySelector('#customTable tbody');
         if (!tbody) return;
-
         const tr = document.createElement('tr');
         if (isLocked) {
             tr.classList.add('locked-row');
         }
-
         const degerValue = typeof value === 'object' ? (value.deger || '') : value;
-
         tr.innerHTML = `
             <td data-label="Değer">
                 <input type="text" class="form-control" value="${degerValue}" ${isLocked ? 'readonly' : ''} required>
@@ -1061,7 +1055,6 @@ class TableService {
                 </button>
             </td>
         `;
-
         tbody.appendChild(tr);
     }
 
@@ -1071,7 +1064,6 @@ class TableService {
             window.productFormManager.uiService.showError('Lütfen tablodaki tüm alanları doldurun.');
             return;
         }
-
         document.getElementById('sizeTableData').value = JSON.stringify(rows);
         this.updateSizeTablePreview(rows);
         this.closeModal('sizeTableModal');
@@ -1080,18 +1072,15 @@ class TableService {
     saveCustomTable() {
         const titleInput = document.getElementById('customTableTitle');
         const title = titleInput ? titleInput.value.trim() : '';
-
         if (!title) {
             window.productFormManager.uiService.showError('Lütfen Custom Tablo için bir başlık girin.');
             return;
         }
-
         const rows = this.collectTableData('#customTable tbody tr', ['deger']);
         if (!this.validateTableData(rows)) {
             window.productFormManager.uiService.showError('Lütfen tablodaki tüm değer alanlarını doldurun.');
             return;
         }
-
         const tableData = { title, rows };
         document.getElementById('customTableData').value = JSON.stringify(tableData);
         this.updateCustomTablePreview(tableData);
@@ -1118,7 +1107,6 @@ class TableService {
     updateSizeTablePreview(rows) {
         const previewContainer = document.getElementById('sizeTablePreview');
         if (!previewContainer) return;
-
         if (rows.length > 0) {
             let html = '<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>Beden</th><th>En</th><th>Boy</th><th>Yükseklik</th></tr></thead><tbody>';
             rows.forEach(row => {
@@ -1135,7 +1123,6 @@ class TableService {
     updateCustomTablePreview(tableData) {
         const previewContainer = document.getElementById('customTablePreview');
         if (!previewContainer) return;
-
         if (tableData.rows && tableData.rows.length > 0) {
             let html = `<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th>${tableData.title || 'Custom'}</th></tr></thead><tbody>`;
             tableData.rows.forEach(row => {
@@ -1154,7 +1141,6 @@ class TableService {
         if (tbody) {
             tbody.innerHTML = '';
         }
-
         sizeTable.forEach(row => {
             const sizeValue = row.beden || '';
             const isLocked = usedSizes.some(usedSize => {
@@ -1166,10 +1152,8 @@ class TableService {
                 }
                 return usedSize === sizeValue;
             });
-
             this.addSizeRow(row, isLocked);
         });
-
         document.getElementById('sizeTableData').value = JSON.stringify(sizeTable);
         this.updateSizeTablePreview(sizeTable);
     }
@@ -1179,12 +1163,10 @@ class TableService {
         if (customTitleElement) {
             customTitleElement.value = customTable.title || '';
         }
-
         const tbody = document.querySelector('#customTable tbody');
         if (tbody) {
             tbody.innerHTML = '';
         }
-
         if (customTable.rows && customTable.rows.length > 0) {
             customTable.rows.forEach(row => {
                 const customValue = row.deger || '';
@@ -1192,7 +1174,6 @@ class TableService {
                 this.addCustomRow(row, isLocked);
             });
         }
-
         document.getElementById('customTableData').value = JSON.stringify(customTable);
         this.updateCustomTablePreview(customTable);
     }
