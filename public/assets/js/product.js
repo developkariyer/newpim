@@ -1277,6 +1277,9 @@ class VariationService {
                     sizeValue = sizeValue.split(' (')[0];
                 }
             }
+            if (sizeValue === undefined || sizeValue === '' || sizeValue === 'undefined') {
+                sizeValue = null;
+            }
             if (customValue === undefined || customValue === '' || customValue === 'undefined') {
                 customValue = null;
             }
