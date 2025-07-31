@@ -85,7 +85,6 @@ class ImportCommand extends AbstractCommand
                 if (!is_array($setProductIwaskus) || count($setProductIwaskus) === 0) {
                     continue;
                 }
-                echo "Set product iwaskus for variant: $variantIwasku\n";
                 foreach ($setProductIwaskus as $iwasku => $value) {
                     echo "- $iwasku => $value\n";
                 }
