@@ -41,7 +41,7 @@ class ImportCommand extends AbstractCommand
             ->addOption('eans', null, InputOption::VALUE_NONE, 'Target Marketplace Name')
             ->addOption('asins', null, InputOption::VALUE_NONE, 'Target Marketplace Name')
             ->addOption('connectEan', null, InputOption::VALUE_NONE, 'Connect Product EAN')
-            ->addOption('connectAsin', null, InputOption::VALUE_NONE, 'Connect Product ASIN');
+            ->addOption('connectAsin', null, InputOption::VALUE_NONE, 'Connect Product ASIN')
             ->addOption('setProduct', null, InputOption::VALUE_NONE, 'Set Product Set');
     }
 
