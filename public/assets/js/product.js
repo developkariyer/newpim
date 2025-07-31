@@ -555,7 +555,7 @@ class ProductFormManager {
     // Variant Management Methods
     async handleDeleteVariant(button) {
         const color = button.dataset.color;
-        const size = button.dataset.size;
+        const size = button.dataset.size || null;
         const custom = button.dataset.custom || null;
         const confirmMessage = `"${color} - ${size}${custom ? ' - ' + custom : ''}" varyantını silmek istediğinizden emin misiniz?\n\nBu işlem ürünü yayından kaldıracaktır (unpublish).`;
         if (!confirm(confirmMessage)) {
