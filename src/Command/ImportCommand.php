@@ -42,6 +42,7 @@ class ImportCommand extends AbstractCommand
             ->addOption('asins', null, InputOption::VALUE_NONE, 'Target Marketplace Name')
             ->addOption('connectEan', null, InputOption::VALUE_NONE, 'Connect Product EAN')
             ->addOption('connectAsin', null, InputOption::VALUE_NONE, 'Connect Product ASIN');
+            ->addOption('setProduct', null, InputOption::VALUE_NONE, 'Set Product Set');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -68,10 +69,22 @@ class ImportCommand extends AbstractCommand
             $this->connectProductAsin($data);
         }
 
+        if ($input->getOption('setProduct')) {
+            $this->setProductSetProduct($data);
+        }
+
         return Command::SUCCESS;
     }
 
     // set product set
+    private function setProductSetProduct($data)
+    {
+        foreach ($data as $product) {
+            print_r($product);
+            break; 
+        }
+
+    }
 
     private function connectProductEan($data)
     {
