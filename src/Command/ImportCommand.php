@@ -80,7 +80,6 @@ class ImportCommand extends AbstractCommand
     private function setProductSetProduct($data)
     {
         foreach ($data as $product) {
-            print_r($product);
             foreach ($product['variants'] as $variant) {
                 $setProductIwaskus = $variant['setProductIwaskus'] ?? [];
                 if (!is_array($setProductIwaskus) || count($setProductIwaskus) === 0) {
