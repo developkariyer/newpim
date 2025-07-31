@@ -18,7 +18,6 @@ use Pimcore\Model\DataObject\Color;
 use Pimcore\Model\DataObject\Ean;
 use Pimcore\Model\DataObject\Asin;
 use Pimcore\Model\DataObject\Color\Listing as ColorListing;
-use Pimcore\Model\DataObject\Data\ObjectMetadata;
 
 #[AsCommand(
     name: 'app:import',
@@ -105,34 +104,8 @@ class ImportCommand extends AbstractCommand
                         echo 'Set variant not found for iwasku ' . $setIwasku . ', skipping.' . PHP_EOL;
                         continue;
                     }
-                    echo 'Found set variant with iwasku ' . $setIwasku . ' (ID: ' . $setVariant->getId() . ')' . PHP_EOL;
-                    
-
-
-
-              
-
-                    try {
-                        $objectMetadata = new ObjectMetadata('metadata', ['amount'], $setVariant);
-                        $objectMetadata->setAmount($amountValue);
-                        $setVariant->setMetadata($objectMetadata);
-                        $setVariant->save();
-                        $newSetProducts[] = $setVariant;
-                        echo 'Prepared set product with iwasku ' . $setIwasku . ' (ID: ' . $setVariant->getId() . ') and amount ' . $amountValue . PHP_EOL;
-                    } catch (\Exception $e) {
-                        echo 'Failed to create ObjectMetadata for ' . $setIwasku . ': ' . $e->getMessage() . PHP_EOL;
-                    }
-                    // try {
-                    //     $objectMetadata = new ObjectMetadata($setVariant); 
-                    //     $objectMetadata->setMetadata([
-                    //         'amount' => $amountValue 
-                    //     ]);
-                    //     $newSetProducts[] = $objectMetadata;
-                    //     echo 'Prepared set product with iwasku ' . $setIwasku . ' (ID: ' . $setVariant->getId() . ') and amount ' . $amountValue . PHP_EOL;
-                    // } catch (\Exception $e) {
-                    //     echo 'Failed to create ObjectMetadata for ' . $setIwasku . ': ' . $e->getMessage() . PHP_EOL;
-                    //     continue;
-                    // }
+                    $newSetProducts[] = $setVariant;
+                    echo 'Added set product with iwasku ' . $setIwasku . ' to the variant.' . PHP_EOL;
                 }
                 if (!empty($newSetProducts)) {
                     $variantObject->setBundleProducts($newSetProducts);
@@ -144,19 +117,6 @@ class ImportCommand extends AbstractCommand
                         echo 'Failed to save variant with iwasku ' . $variantObject->getIwasku() . ': ' . $e->getMessage() . PHP_EOL;
                     }
                 }
-                // if (!empty($newSetProducts)) {
-                //     $allSetProducts = array_merge($currentSetProducts, $newSetProducts);
-                //     $variantObject->setBundleProducts($allSetProducts);
-                //     try {
-                //         $variantObject->save();
-                //         echo 'Saved variant with iwasku ' . $variantObject->getIwasku() . ' successfully with ' . count($newSetProducts) . ' new bundle products.' . PHP_EOL;
-                //     } catch (\Exception $e) {
-                //         echo 'Failed to save variant with iwasku ' . $variantObject->getIwasku() . ': ' . $e->getMessage() . PHP_EOL;
-                //     }
-                // } else {
-                //     echo 'No new valid set products to add for variant ' . $iwasku . PHP_EOL;
-                // }
-                // echo "--------------------------------------------------\n";
             }
         }
     }
