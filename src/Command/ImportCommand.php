@@ -135,10 +135,6 @@ class ImportCommand extends AbstractCommand
                     }
                     try {
                         $objectMetadata = new ObjectMetadata($setVariant, ['amount' => $amountValue]);
-                        if (!$objectMetadata->getObject() || !$objectMetadata->getObject()->getId()) {
-                            echo 'ObjectMetadata for ' . $setIwasku . ' has invalid object reference, skipping.' . PHP_EOL;
-                            continue;
-                        }
                         $newSetProducts[] = $objectMetadata;
                         echo 'Prepared set product with iwasku ' . $setIwasku . ' (ID: ' . $setVariant->getId() . ') and amount ' . $amountValue . PHP_EOL;
                         
