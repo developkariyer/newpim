@@ -385,10 +385,21 @@ class ProductFormManager {
     }
 
     isItemLocked(type, item) {
-        if (type === 'colors' && this.state.lockedVariants.length > 0) {
-            return this.state.lockedVariants.some(v => v.color === item.name);
+        if (this.state.lockedVariants.length === 0) {
+            return false;
         }
-        return false;
+        const propertyMap = {
+            'colors': 'color',
+            'sizes': 'size',
+            'customs': 'custom'
+        };
+        const propertyToCheck = propertyMap[type];
+        if (!propertyToCheck) {
+            return false;
+        }
+        return this.state.lockedVariants.some(v => 
+            v.published !== false && v[propertyToCheck] === item.name
+        );
     }
 
     removeSelectedItem(type, itemId) {
