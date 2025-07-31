@@ -18,6 +18,7 @@ use Pimcore\Model\DataObject\Color;
 use Pimcore\Model\DataObject\Ean;
 use Pimcore\Model\DataObject\Asin;
 use Pimcore\Model\DataObject\Color\Listing as ColorListing;
+use Pimcore\Model\DataObject\Data\ObjectMetadata;
 
 #[AsCommand(
     name: 'app:import',
@@ -76,28 +77,57 @@ class ImportCommand extends AbstractCommand
         return Command::SUCCESS;
     }
 
-    // set product set
-    private function setProductSetProduct($data)
+    private function setProductSetProduct(array $data): void
     {
         foreach ($data as $product) {
             foreach ($product['variants'] as $variant) {
                 $setProductIwaskus = $variant['setProductIwaskus'] ?? [];
-                if (!is_array($setProductIwaskus) || count($setProductIwaskus) === 0) {
+                if (!is_array($setProductIwaskus) || empty($setProductIwaskus)) {
                     continue;
                 }
                 $iwasku = $variant['iwasku'] ?? '';
                 if (empty($iwasku)) {
-                    echo 'Skipping variant with empty iwasku for product ' . $product['identifier'] . PHP_EOL;
+                    echo 'Skipping variant with empty iwasku for product ' . ($product['identifier'] ?? 'N/A') . PHP_EOL;
                     continue;
                 }
                 echo 'Setting product set for variant with iwasku ' . $iwasku . PHP_EOL;
-                foreach ($setProductIwaskus as $iwasku => $value) {
-                    echo "- $iwasku => $value\n";
+                $variantObject = $this->findVariantByIwasku($iwasku);
+                if (!$variantObject) {
+                    echo 'Variant not found for iwasku ' . $iwasku . ', skipping set product.' . PHP_EOL;
+                    continue;
+                }
+                $currentSetProducts = $variantObject->getBundleProducts()?->getItems() ?? [];
+                $existingIwaskus = array_map(function ($item) {
+                    return $item['object']?->getIwasku();
+                }, $currentSetProducts);
+                foreach ($setProductIwaskus as $setIwasku => $amountValue) {
+                    $setVariant = $this->findVariantByIwasku($setIwasku);
+                    if (!$setVariant) {
+                        echo 'Set variant not found for iwasku ' . $setIwasku . ', skipping.' . PHP_EOL;
+                        continue;
+                    }
+                    if (in_array($setVariant->getIwasku(), $existingIwaskus, true)) {
+                        echo 'Set product with iwasku ' . $setIwasku . ' already exists, skipping.' . PHP_EOL;
+                        continue;
+                    }
+                    $metadata = new ObjectMetadata($setVariant);
+                    $metadata->setMetadata([
+                        'amount' => $amountValue 
+                    ]);
+                    $currentSetProducts[] = $metadata;
+                    echo 'Prepared set product with iwasku ' . $setIwasku . ' and amount ' . $amountValue . PHP_EOL;
+                }
+                $variantObject->setBundleProducts($currentSetProducts);
+                $variantObject->setPublished(true);
+                try {
+                    $variantObject->save();
+                    echo 'Saved variant with iwasku ' . $variantObject->getIwasku() . ' successfully.' . PHP_EOL;
+                } catch (\Exception $e) {
+                    echo 'Failed to save variant with iwasku ' . $variantObject->getIwasku() . ': ' . $e->getMessage() . PHP_EOL;
                 }
                 echo "--------------------------------------------------\n";
             }
         }
-
     }
 
     private function connectProductEan($data)
