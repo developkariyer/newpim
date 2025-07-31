@@ -453,7 +453,7 @@ class ImportCommand extends AbstractCommand
 
     private function createSizeTable($sizeTable): array
     {
-        print_r($sizeTable);
+        //print_r($sizeTable);
         $result = [];
         foreach ($sizeTable as $row) {
             if (empty($row)) {
@@ -461,7 +461,7 @@ class ImportCommand extends AbstractCommand
             }
 
             $label = (string)array_pop($row); 
-            echo 'Size Table Row: ' . implode(', ', $row) . PHP_EOL;
+            //echo 'Size Table Row: ' . implode(', ', $row) . PHP_EOL;
 
             $result[] = [
                 'label'  => $label,
