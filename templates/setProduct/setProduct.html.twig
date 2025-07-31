@@ -1,0 +1,189 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="{{ asset('assets/css/catalog.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Set Ürün Oluştur{% endblock %}
+
+{% block content %}
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p>Yükleniyor...</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Flash Messages -->
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label == 'danger' ? 'danger' : (label == 'success' ? 'success' : 'warning') }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <!-- Controls Section -->
+        <div class="catalog-controls">
+            <div class="controls-row">
+                <!-- Search -->
+                <div class="form-group">
+                    <label for="searchInput" class="form-label">🔍 Arama</label>
+                    <div class="search-container">
+                        <span class="search-icon">🔍</span>
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            class="form-control search-input" 
+                            placeholder="Ürün adı, identifier veya açıklama..."
+                            value="{{ currentSearch }}"
+                        >
+                    </div>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="form-group">
+                    <label for="categoryFilter" class="form-label">📂 Kategori</label>
+                    <select id="categoryFilter" class="form-control">
+                        <option value="">Tüm Kategoriler</option>
+                        {% for category in categories %}
+                            <option value="{{ category.key }}" {{ currentCategory == category.key ? 'selected' : '' }}>
+                                {{ category.name }} ({{ category.productCount }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <button type="button" id="advancedToggle" class="btn btn-outline">
+                        ⚙️ Gelişmiş
+                    </button>
+                </div>
+
+                <!-- Clear Filters -->
+                <div class="form-group">
+                    <button type="button" id="clearFilters" class="btn btn-outline">
+                        🗑️ Temizle
+                    </button>
+                </div>
+
+                <!-- Export Excel -->
+                <div class="form-group">
+                    <a href="#" id="exportExcel" class="btn btn-success">
+                        📊 Excel İndir
+                    </a>
+                </div>
+            </div>
+            <div id="advancedPanel" class="advanced-panel" style="display: none;">
+                <div class="advanced-row">
+                    <div class="form-group">
+                        <label for="iwaskuFilter" class="form-label">🔖 IWASKU</label>
+                        <input type="text" id="iwaskuFilter" class="form-control" placeholder="IWASKU...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="asinFilter" class="form-label">🏷️ ASIN/FNSKU</label>
+                        <input type="text" id="asinFilter" class="form-control" placeholder="ASIN veya FNSKU...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="brandFilter" class="form-label">🏢 Marka</label>
+                        <input type="text" id="brandFilter" class="form-control" placeholder="Marka adı...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="eanFilter" class="form-label">📊 EAN</label>
+                        <input type="text" id="eanFilter" class="form-control" placeholder="EAN kodu...">
+                    </div>
+
+                    <div class="form-group">
+                        <button type="button" id="clearAdvanced" class="btn btn-outline">
+                            🧹 Gelişmiş Temizle
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stats-info">
+                <span class="stats-count" id="totalCount">{{ totalProducts }}</span> ürün listeleniyor
+                <span id="filterInfo"></span>
+            </div>
+        </div>
+
+        <!-- Products Container -->
+        <div class="products-container">
+            <div class="products-grid" id="productsGrid">
+                <!-- Initial products will be loaded here -->
+            </div>
+            
+            <!-- Load More Button -->
+            <div class="load-more-container" id="loadMoreContainer" style="display: none;">
+                <button type="button" id="loadMoreBtn" class="load-more-btn">
+                    📦 Daha Fazla Ürün Yükle
+                </button>
+            </div>
+
+            <!-- Loading State -->
+            <div class="loading-products" id="loadingProducts" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>Ürünler yükleniyor...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <div class="empty-icon">📦</div>
+                <h3 class="empty-title">Ürün bulunamadı</h3>
+                <p class="empty-message">
+                    Arama kriterlerinizi değiştirmeyi deneyin veya yeni ürün ekleyin.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="exportConfirmModal" tabindex="-1" aria-labelledby="exportConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportConfirmModalLabel">Excel İndirme Onayı</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bu filtreleme sonuçlarını Excel formatında indirmek istediğinize emin misiniz?</p>
+                <p id="exportProductCount" class="text-muted"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <a href="#" id="confirmExportBtn" class="btn btn-primary">İndir</a>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden data for JavaScript -->
+    <script type="application/json" id="catalogData">
+        {
+            "initialProducts": {{ initialProducts|json_encode|raw }},
+            "totalProducts": {{ totalProducts }},
+            "hasMore": {{ hasMore ? 'true' : 'false' }},
+            "currentCategory": {{ currentCategory|json_encode|raw }},
+            "currentSearch": {{ currentSearch|json_encode|raw }},
+            "limit": {{ limit }},
+            "apiEndpoints": {
+                "products": "{{ path('catalog_api_products') }}",
+                "search": "{{ path('catalog_api_search') }}",
+                "export": "{{ path('catalog_export_excel') }}"
+            }
+        }
+    </script>
+{% endblock %}
+
+{% block body_scripts %}
+    {{ parent() }}
+    <script src="{{ asset('assets/js/setProduct.js') }}"></script>
+{% endblock %}
