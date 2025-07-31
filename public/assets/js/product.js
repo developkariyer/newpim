@@ -1322,18 +1322,22 @@ class VariationService {
     filterUniqueCombinations(combos) {
         const seen = new Set();
         const uniqueCombos = [];
-
+        const normalize = (value) => {
+            if (value === undefined || value === null || value === '') {
+                return null;
+            }
+            return value;
+        };
         combos.forEach(combo => {
-            const [color, size, custom] = combo;
-            const normalizedCustom = (custom === undefined || custom === null || custom === '') ? null : custom;
-            const key = `${color}-${size}-${normalizedCustom || 'null'}`;
-            
+            const normalizedColor = normalize(combo[0]);
+            const normalizedSize = normalize(combo[1]);
+            const normalizedCustom = normalize(combo[2]);
+            const key = `${normalizedColor}-${normalizedSize}-${normalizedCustom}`;
             if (!seen.has(key)) {
                 seen.add(key);
-                uniqueCombos.push([color, size, normalizedCustom]);
+                uniqueCombos.push([normalizedColor, normalizedSize, normalizedCustom]);
             }
         });
-
         return uniqueCombos;
     }
 
