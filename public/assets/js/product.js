@@ -1261,6 +1261,12 @@ class VariationService {
     }
 
     updateLockedVariants(product) {
+        const normalizeValue = (value) => {
+            if (value === undefined || value === '' || value === 'undefined' || value === null) {
+                return null;
+            }
+            return value;
+        };
         if (!product || !product.variants || product.variants.length === 0) {
             this.state.lockedVariants = [];
             return;
@@ -1281,9 +1287,9 @@ class VariationService {
                 customValue = null;
             }
             return {
-                color: colorValue,
-                size: sizeValue,
-                custom: customValue,
+                color: normalizeValue(colorValue),
+                size: normalizeValue(sizeValue),
+                custom: normalizeValue(customValue),
                 published: published, 
                 id: v.id
             };
