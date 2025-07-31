@@ -81,7 +81,14 @@ class ImportCommand extends AbstractCommand
     {
         foreach ($data as $product) {
             print_r($product);
-            break; 
+            foreach ($product['variants'] as $variant) {
+                $setProductIwaskus = $variant['setProductIwaskus'] ?? [];
+                if (empty($setProductIwaskus)) {
+                    echo 'No set product iwaskus found for variant ' . $variant['iwasku'] . PHP_EOL;
+                    continue;
+                }
+                print_r($setProductIwaskus);
+            }
         }
 
     }
