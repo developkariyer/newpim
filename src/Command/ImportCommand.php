@@ -146,19 +146,20 @@ class ImportCommand extends AbstractCommand
                 if (!empty($newSetProducts)) {
                     $allSetProducts = array_merge($currentSetProducts, $newSetProducts);
                     $variantObject->setBundleProducts($allSetProducts);
-                    try {
-                        $variantObject->save();
-                        echo 'Saved variant with iwasku ' . $variantObject->getIwasku() . ' successfully with ' . count($newSetProducts) . ' new bundle products.' . PHP_EOL;
-                    } catch (\Exception $e) {
-                        echo 'Failed to save variant with iwasku ' . $variantObject->getIwasku() . ': ' . $e->getMessage() . PHP_EOL;
-                        echo 'Debug - Main variant ID: ' . ($variantObject->getId() ?? 'NULL') . PHP_EOL;
-                        echo 'Debug - Bundle products count: ' . count($allSetProducts) . PHP_EOL;
-                        foreach ($allSetProducts as $index => $bp) {
-                            $obj = $bp->getObject();
-                            echo 'Debug - Bundle product ' . $index . ': ' . 
-                                ($obj ? $obj->getIwasku() . ' (ID: ' . ($obj->getId() ?? 'NULL') . ')' : 'NULL OBJECT') . PHP_EOL;
-                        }
-                    }
+                    $variantObject->save();
+                    // try {
+                    //     $variantObject->save();
+                    //     echo 'Saved variant with iwasku ' . $variantObject->getIwasku() . ' successfully with ' . count($newSetProducts) . ' new bundle products.' . PHP_EOL;
+                    // } catch (\Exception $e) {
+                    //     echo 'Failed to save variant with iwasku ' . $variantObject->getIwasku() . ': ' . $e->getMessage() . PHP_EOL;
+                    //     echo 'Debug - Main variant ID: ' . ($variantObject->getId() ?? 'NULL') . PHP_EOL;
+                    //     echo 'Debug - Bundle products count: ' . count($allSetProducts) . PHP_EOL;
+                    //     foreach ($allSetProducts as $index => $bp) {
+                    //         $obj = $bp->getObject();
+                    //         echo 'Debug - Bundle product ' . $index . ': ' . 
+                    //             ($obj ? $obj->getIwasku() . ' (ID: ' . ($obj->getId() ?? 'NULL') . ')' : 'NULL OBJECT') . PHP_EOL;
+                    //     }
+                    // }
                 } else {
                     echo 'No new valid set products to add for variant ' . $iwasku . PHP_EOL;
                 }
