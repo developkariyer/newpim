@@ -1466,33 +1466,58 @@ class VariationService {
 
     collectVariationsData() {
         const rows = [];
-        const customData = this.getCustomsData();
-        const hasCustomData = customData.length > 0;
-
-        document.querySelectorAll('#variationTableContainer tbody tr').forEach(tr => {
+        const variationTable = document.getElementById('variationTableContainer');
+        if (!variationTable) return;
+        const headers = variationTable.querySelectorAll('thead th');
+        const columnIndex = {
+            renk: -1,
+            beden: -1,
+            custom: -1
+        };
+        headers.forEach((th, index) => {
+            const headerText = th.innerText.toLowerCase();
+            if (headerText.includes('renk')) {
+                columnIndex.renk = index;
+            } else if (headerText.includes('beden')) {
+                columnIndex.beden = index;
+            } else if (headerText.includes('custom')) {
+                columnIndex.custom = index;
+            }
+        });
+        if (columnIndex.renk === -1) {
+            console.error("Renk sütunu bulunamadı. Veri toplanamıyor.");
+            return;
+        }
+        variationTable.querySelectorAll('tbody tr').forEach(tr => {
             const checkbox = tr.querySelector('.variation-checkbox');
             if (checkbox && checkbox.checked && !checkbox.disabled) {
                 const tds = tr.querySelectorAll('td');
-                const renk = tds[1].innerText.replace('🔒 ', '');
-                const beden = tds[2].innerText.replace('🔒 ', '').split(' (')[0];
-
-                const rowData = { renk, beden };
-
-                if (hasCustomData && tds.length > 3) {
-                    const customValue = tds[3].innerText.replace('🔒 ', '').trim();
-                    if (customValue && customValue !== '') {
-                        rowData.custom = customValue;
+                const rowData = {
+                    renk: null,
+                    beden: null,
+                    custom: null
+                };
+                rowData.renk = tds[columnIndex.renk].innerText.replace('🔒 ', '').trim();
+                if (columnIndex.beden > -1) {
+                    const bedenText = tds[columnIndex.beden].innerText.replace('🔒 ', '').split(' (')[0].trim();
+                    if (bedenText !== '') {
+                        rowData.beden = bedenText;
                     }
                 }
-
+                if (columnIndex.custom > -1) {
+                    const customText = tds[columnIndex.custom].innerText.replace('🔒 ', '').trim();
+                    if (customText !== '') {
+                        rowData.custom = customText;
+                    }
+                }
                 rows.push(rowData);
             }
         });
-
         const variationsInput = document.getElementById('variationsData');
         if (variationsInput) {
             variationsInput.value = JSON.stringify(rows);
         }
+        console.log('Collected Variations Data:', JSON.stringify(rows, null, 2));
     }
 }
 
