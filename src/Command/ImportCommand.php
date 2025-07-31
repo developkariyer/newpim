@@ -96,55 +96,53 @@ class ImportCommand extends AbstractCommand
                     echo 'Variant not found for iwasku ' . $iwasku . ', skipping set product.' . PHP_EOL;
                     continue;
                 }
-                $currentSetProducts = $variantObject->getBundleProducts() ?? [];
-                $existingIwaskus = array_map(function ($item) {
-                    return $item['object']?->getIwasku();
-                }, $currentSetProducts);
+                
                 $newSetProducts = [];
                 foreach ($setProductIwaskus as $setIwasku => $amountValue) {
-                    $setVariant = $this->findVariantByIwasku($setIwasku);
-                    if (!$setVariant) {
-                        echo 'Set variant not found for iwasku ' . $setIwasku . ', skipping.' . PHP_EOL;
-                        continue;
-                    }
-                    if (!$setVariant->getId()) {
-                        try {
-                            $setVariant->save();  
-                            echo 'Saved set variant ' . $setIwasku . ' to ensure it has an ID (ID: ' . $setVariant->getId() . ')' . PHP_EOL;
-                        } catch (\Exception $e) {
-                            echo 'Failed to save set variant ' . $setIwasku . ': ' . $e->getMessage() . PHP_EOL;
-                            continue;
-                        }
-                    }
-                    if (!$setVariant->getId()) {
-                        echo 'Set variant ' . $setIwasku . ' still has no ID after save, skipping.' . PHP_EOL;
-                        continue;
-                    }
-                    try {
-                        $objectMetadata = new ObjectMetadata($setVariant); 
-                        $objectMetadata->setMetadata([
-                            'amount' => $amountValue 
-                        ]);
-                        $newSetProducts[] = $objectMetadata;
-                        echo 'Prepared set product with iwasku ' . $setIwasku . ' (ID: ' . $setVariant->getId() . ') and amount ' . $amountValue . PHP_EOL;
-                    } catch (\Exception $e) {
-                        echo 'Failed to create ObjectMetadata for ' . $setIwasku . ': ' . $e->getMessage() . PHP_EOL;
-                        continue;
-                    }
+                    echo 'Processing set product with iwasku ' . $setIwasku . ' and amount ' . $amountValue . PHP_EOL;
+                    // $setVariant = $this->findVariantByIwasku($setIwasku);
+                    // if (!$setVariant) {
+                    //     echo 'Set variant not found for iwasku ' . $setIwasku . ', skipping.' . PHP_EOL;
+                    //     continue;
+                    // }
+                    // if (!$setVariant->getId()) {
+                    //     try {
+                    //         $setVariant->save();  
+                    //         echo 'Saved set variant ' . $setIwasku . ' to ensure it has an ID (ID: ' . $setVariant->getId() . ')' . PHP_EOL;
+                    //     } catch (\Exception $e) {
+                    //         echo 'Failed to save set variant ' . $setIwasku . ': ' . $e->getMessage() . PHP_EOL;
+                    //         continue;
+                    //     }
+                    // }
+                    // if (!$setVariant->getId()) {
+                    //     echo 'Set variant ' . $setIwasku . ' still has no ID after save, skipping.' . PHP_EOL;
+                    //     continue;
+                    // }
+                    // try {
+                    //     $objectMetadata = new ObjectMetadata($setVariant); 
+                    //     $objectMetadata->setMetadata([
+                    //         'amount' => $amountValue 
+                    //     ]);
+                    //     $newSetProducts[] = $objectMetadata;
+                    //     echo 'Prepared set product with iwasku ' . $setIwasku . ' (ID: ' . $setVariant->getId() . ') and amount ' . $amountValue . PHP_EOL;
+                    // } catch (\Exception $e) {
+                    //     echo 'Failed to create ObjectMetadata for ' . $setIwasku . ': ' . $e->getMessage() . PHP_EOL;
+                    //     continue;
+                    // }
                 }
-                if (!empty($newSetProducts)) {
-                    $allSetProducts = array_merge($currentSetProducts, $newSetProducts);
-                    $variantObject->setBundleProducts($allSetProducts);
-                    try {
-                        $variantObject->save();
-                        echo 'Saved variant with iwasku ' . $variantObject->getIwasku() . ' successfully with ' . count($newSetProducts) . ' new bundle products.' . PHP_EOL;
-                    } catch (\Exception $e) {
-                        echo 'Failed to save variant with iwasku ' . $variantObject->getIwasku() . ': ' . $e->getMessage() . PHP_EOL;
-                    }
-                } else {
-                    echo 'No new valid set products to add for variant ' . $iwasku . PHP_EOL;
-                }
-                echo "--------------------------------------------------\n";
+                // if (!empty($newSetProducts)) {
+                //     $allSetProducts = array_merge($currentSetProducts, $newSetProducts);
+                //     $variantObject->setBundleProducts($allSetProducts);
+                //     try {
+                //         $variantObject->save();
+                //         echo 'Saved variant with iwasku ' . $variantObject->getIwasku() . ' successfully with ' . count($newSetProducts) . ' new bundle products.' . PHP_EOL;
+                //     } catch (\Exception $e) {
+                //         echo 'Failed to save variant with iwasku ' . $variantObject->getIwasku() . ': ' . $e->getMessage() . PHP_EOL;
+                //     }
+                // } else {
+                //     echo 'No new valid set products to add for variant ' . $iwasku . PHP_EOL;
+                // }
+                // echo "--------------------------------------------------\n";
             }
         }
     }
