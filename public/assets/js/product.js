@@ -1261,12 +1261,6 @@ class VariationService {
     }
 
     updateLockedVariants(product) {
-        const normalizeValue = (value) => {
-            if (value === undefined || value === '' || value === 'undefined' || value === null) {
-                return null;
-            }
-            return value;
-        };
         if (!product || !product.variants || product.variants.length === 0) {
             this.state.lockedVariants = [];
             return;
@@ -1287,9 +1281,9 @@ class VariationService {
                 customValue = null;
             }
             return {
-                color: normalizeValue(colorValue),
-                size: normalizeValue(sizeValue),
-                custom: normalizeValue(customValue),
+                color: colorValue,
+                size: sizeValue,
+                custom: customValue,
                 published: published, 
                 id: v.id
             };
@@ -1445,9 +1439,11 @@ class VariationService {
                 return false;
             }
             const colorMatch = (v.color === color);
-            const sizeMatch = (v.size === size || (!v.size && !size));
-            const normalizedLockedCustom = (v.custom === undefined || v.custom === null) ? null : v.custom;
-            const normalizedCheckingCustom = (custom === undefined || custom === null) ? null : custom;
+            const normalizedLockedSize = (v.size === undefined || v.size === null || v.size === '') ? null : v.size;
+            const normalizedCheckingSize = (size === undefined || size === null || size === '') ? null : size;
+            const sizeMatch = (normalizedLockedSize === normalizedCheckingSize);
+            const normalizedLockedCustom = (v.custom === undefined || v.custom === null || v.custom === '') ? null : v.custom;
+            const normalizedCheckingCustom = (custom === undefined || custom === null || custom === '') ? null : custom;
             const customMatch = (normalizedLockedCustom === normalizedCheckingCustom);
             return colorMatch && sizeMatch && customMatch;
         });
