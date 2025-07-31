@@ -2,9 +2,6 @@
 window.csrfToken = '{{ csrf_token }}';
 'use strict';
 
-/**
- * Ana Ürün Form Yöneticisi
- */
 class ProductFormManager {
     constructor() {
         this.state = {
@@ -20,7 +17,6 @@ class ProductFormManager {
             searchTimeout: null,
             currentStep: 1
         };
-
         this.config = {
             searchDelay: 400,
             minSearchLength: 2,
@@ -49,14 +45,12 @@ class ProductFormManager {
                 categories: 'productCategory'
             }
         };
-
         this.searchService = new SearchService(this.config);
         this.formService = new FormService(this.config, this.state);
         this.tableService = new TableService();
         this.variationService = new VariationService(this.state);
         this.validationService = new ValidationService();
         this.uiService = new UIService();
-
         this.initialize();
         this.checkForEditProduct();
     }
@@ -89,7 +83,6 @@ class ProductFormManager {
                 this.config.searchDelay
             ));
         }
-
         const clearButton = this.getElement('clearSelectedProduct');
         if (clearButton) {
             clearButton.addEventListener('click', () => this.clearForm());
@@ -104,12 +97,10 @@ class ProductFormManager {
                 this.handleFormSubmit();
             });
         }
-
         const imageInput = this.getElement('imageInput');
         if (imageInput) {
             imageInput.addEventListener('change', (e) => this.handleImageUpload(e));
         }
-
         const addColorBtn = this.getElement('addNewColorBtn');
         if (addColorBtn) {
             addColorBtn.addEventListener('click', () => this.handleAddNewColor());
@@ -117,7 +108,6 @@ class ProductFormManager {
     }
 
     bindSelectionEvents() {
-        // Searchable items (colors)
         const colorsSearch = this.getElement('colorsSearch');
         if (colorsSearch) {
             colorsSearch.addEventListener('input', this.debounce(
@@ -125,8 +115,6 @@ class ProductFormManager {
                 this.config.searchDelay
             ));
         }
-
-        // Selectable items (categories, brands, marketplaces)
         ['categories', 'brands', 'marketplaces'].forEach(type => {
             const selectElement = this.getElement(`${type}Search`);
             if (selectElement) {
@@ -140,7 +128,6 @@ class ProductFormManager {
         if (goToVariationsBtn) {
             goToVariationsBtn.addEventListener('click', () => this.handleGoToVariations());
         }
-
         const backToStep1Btn = this.getElement('backToStep1Btn');
         if (backToStep1Btn) {
             backToStep1Btn.addEventListener('click', () => this.showStep(1));
@@ -154,14 +141,12 @@ class ProductFormManager {
             { id: 'saveSizeTableBtn', handler: () => this.tableService.saveSizeTable() },
             { id: 'saveCustomTableBtn', handler: () => this.tableService.saveCustomTable() }
         ];
-
         tableButtons.forEach(({ id, handler }) => {
             const element = this.getElement(id);
             if (element) {
                 element.addEventListener('click', handler);
             }
         });
-
         this.bindTableRowDeletion('sizeTable');
         this.bindTableRowDeletion('customTable');
     }
@@ -195,7 +180,6 @@ class ProductFormManager {
             this.uiService.hideElement('productSearchResults');
             return;
         }
-
         try {
             const results = await this.searchService.searchProducts(query);
             this.displayProductSearchResults(results);
@@ -208,13 +192,11 @@ class ProductFormManager {
     displayProductSearchResults(items) {
         const resultsDiv = this.getElement('productSearchResults');
         if (!resultsDiv) return;
-
         if (items.length === 0) {
             resultsDiv.innerHTML = '<div style="padding: 1rem; text-align: center; color: #6c757d;">Ürün bulunamadı</div>';
             this.uiService.showElement('productSearchResults');
             return;
         }
-
         resultsDiv.innerHTML = items.map(item => `
             <div class="search-result-item" data-product-id="${item.id}" style="padding: 0.75rem; cursor: pointer; border-bottom: 1px solid #f1f3f4;">
                 <div style="font-weight: 500;">${this.escapeHtml(item.name)}</div>
@@ -222,7 +204,6 @@ class ProductFormManager {
                 <div style="font-size: 0.75rem; color: #28a745;">${item.hasVariants ? '✅ Varyantları var' : '⚠️ Varyant yok'}</div>
             </div>
         `).join('');
-
         resultsDiv.addEventListener('click', (e) => {
             const resultItem = e.target.closest('.search-result-item');
             if (resultItem) {
@@ -233,7 +214,6 @@ class ProductFormManager {
                 }
             }
         });
-
         this.uiService.showElement('productSearchResults');
     }
 
@@ -251,7 +231,6 @@ class ProductFormManager {
                 this.updateSelectedItems(type);
             });
             this.cleanEditUrl();
-
         } catch (error) {
             console.error('Product selection failed:', error);
             this.uiService.showError('Ürün seçimi başarısız.');
@@ -430,7 +409,7 @@ class ProductFormManager {
             event.target.value = '';
             return;
         }
-        const maxSize = 5 * 1024 * 1024; // 5MB
+        const maxSize = 10 * 1024 * 1024; 
         if (file.size > maxSize) {
             this.uiService.showError('Resim dosyası çok büyük. Maksimum 5MB olmalıdır.');
             event.target.value = '';
@@ -626,7 +605,6 @@ class ProductFormManager {
             const lockedColor = normalize(v.color);
             const lockedSize = normalize(v.size);
             const lockedCustom = normalize(v.custom);
-
             const isMatch =
                 lockedColor === normalizedColor &&
                 lockedSize === normalizedSize &&
@@ -675,7 +653,6 @@ class ProductFormManager {
                     type: file.type,
                     lastModified: file.lastModified
                 });
-                
                 formData.append('productImage', file, file.name);
                 console.log('✅ File appended to FormData'); 
                 const hasImageInFormData = formData.has('productImage');
@@ -693,13 +670,11 @@ class ProductFormManager {
                     throw new Error('Lütfen bir resim seçin.');
                 }
             }
-            
             const textFields = [
                 { id: 'productName', name: 'productName' },
                 { id: 'productIdentifier', name: 'productIdentifier' }, 
                 { id: 'productDescription', name: 'productDescription' }
             ];
-            
             textFields.forEach(({ id, name }) => {
                 const field = this.getElement(id);
                 if (field) {
@@ -707,14 +682,12 @@ class ProductFormManager {
                     console.log(`✅ Added ${name}:`, field.value || '(empty)');
                 }
             });
-            
             const hiddenFields = [
                 { id: 'editingProductId', name: 'editingProductId' },
                 { id: 'sizeTableData', name: 'sizeTableData' },
                 { id: 'customTableData', name: 'customTableData' },
                 { id: 'variationsData', name: 'variationsData' }
             ];
-            
             hiddenFields.forEach(({ id, name }) => {
                 const field = this.getElement(id);
                 if (field) {
@@ -763,7 +736,6 @@ class ProductFormManager {
             }
             if (response.ok) {
                 const contentType = response.headers.get('content-type');
-                
                 if (contentType && contentType.includes('application/json')) {
                     const result = await response.json();
                     console.log('📄 JSON Response:', result);
@@ -782,7 +754,6 @@ class ProductFormManager {
                 console.error('❌ Server Error Response:', errorText.substring(0, 1000));
                 throw new Error(`Server error: ${response.status}`);
             }
-            
         } catch (error) {
             console.error('❌ Submit failed:', error);
             throw error;
@@ -825,20 +796,15 @@ class ProductFormManager {
     validateEnvironment() {
         const requiredElements = ['productForm', 'step1', 'step2'];
         const missingElements = requiredElements.filter(id => !document.getElementById(id));
-
         if (missingElements.length > 0) {
             console.error('Missing required elements:', missingElements);
             this.uiService.showError('Uygulama düzgün yüklenemedi. Sayfayı yenileyin.');
             return false;
         }
-
         return true;
     }
 }
 
-/**
- * Arama Servisi
- */
 class SearchService {
     constructor(config) {
         this.config = config;
@@ -868,21 +834,15 @@ class SearchService {
             },
             body: JSON.stringify({ name })
         });
-
         if (!response.ok) throw new Error('Add color failed');
         const data = await response.json();
-
         if (!data.success) {
             throw new Error(data.message || 'Add color failed');
         }
-
         return data;
     }
 }
 
-/**
- * Form Servisi
- */
 class FormService {
     constructor(config, state) {
         this.config = config;
@@ -932,7 +892,6 @@ class FormService {
                 name: product.categoryName
             }];
         }
-
         ['brands', 'marketplaces', 'variantColors'].forEach(key => {
             if (product[key] && Array.isArray(product[key])) {
                 const targetKey = key === 'variantColors' ? 'colors' : key;
@@ -958,7 +917,6 @@ class FormService {
                 processedUsedSizes
             );
         }
-
         if (product.customTable && product.customTable.rows) {
             const processedUsedCustoms = this.processUsedItems(product.usedCustoms);
             window.productFormManager.tableService.populateCustomTable(
@@ -984,12 +942,10 @@ class FormService {
             identifierField.style.backgroundColor = '#e9ecef';
             identifierField.style.cursor = 'not-allowed';
         }
-
         const imageInput = document.getElementById('imageInput');
         if (imageInput) {
             imageInput.removeAttribute('required');
         }
-
         const submitBtn = document.getElementById('submitBtn');
         if (submitBtn) {
             submitBtn.textContent = '💾 Ürünü Güncelle';
@@ -1000,12 +956,10 @@ class FormService {
         this.resetState();
         this.state.selectedProduct = null;
         this.state.isEditMode = false;
-
         const form = document.getElementById('productForm');
         if (form) {
             form.reset();
         }
-
         this.clearUIElements();
         this.clearEditMode();
     }
@@ -1018,7 +972,6 @@ class FormService {
                 element.style.display = 'none';
             }
         });
-
         const hiddenInputs = ['editingProductId', 'sizeTableData', 'customTableData'];
         hiddenInputs.forEach(id => {
             const input = document.getElementById(id);
@@ -1026,12 +979,10 @@ class FormService {
                 input.value = '';
             }
         });
-
         const imagePreview = document.getElementById('imagePreview');
         if (imagePreview) {
             imagePreview.innerHTML = '📷';
         }
-
         const tableBodies = ['#sizeTable tbody', '#customTable tbody'];
         tableBodies.forEach(selector => {
             const tbody = document.querySelector(selector);
@@ -1048,12 +999,10 @@ class FormService {
             identifierField.style.backgroundColor = '';
             identifierField.style.cursor = '';
         }
-
         const imageInput = document.getElementById('imageInput');
         if (imageInput) {
             imageInput.setAttribute('required', 'required');
         }
-
         const submitBtn = document.getElementById('submitBtn');
         if (submitBtn) {
             submitBtn.textContent = 'Kaydet';
@@ -1061,9 +1010,6 @@ class FormService {
     }
 }
 
-/**
- * Tablo Servisi
- */
 class TableService {
     
     addSizeRow(values = {}, isLocked = false) {
@@ -1262,9 +1208,6 @@ class TableService {
     }
 }
 
-/**
- * Varyasyon Servisi
- */
 class VariationService {
 
     constructor(state) {
@@ -1379,7 +1322,6 @@ class VariationService {
             if (filteredArrays.length === 0) return [];
             return filteredArrays.reduce((a, b) => a.flatMap(d => b.map(e => [...(Array.isArray(d) ? d : [d]), e])));
         };
-
         const hasColors = colors && colors.length > 0;
         const hasSizes = sizes && sizes.length > 0;
         const hasCustoms = customs && customs.length > 0;
@@ -1534,9 +1476,6 @@ class VariationService {
     }
 }
 
-/**
- * Doğrulama Servisi
- */
 class ValidationService {
 
     validateStep1() {
@@ -1632,9 +1571,6 @@ class ValidationService {
     }
 }
 
-/**
- * UI Servisi
- */
 class UIService {
     
     showElement(elementId) {
@@ -1676,9 +1612,6 @@ class UIService {
     }
 }
 
-/**
- * Uygulama Başlatma
- */
 document.addEventListener('DOMContentLoaded', function() {
     try {
         window.productFormManager = new ProductFormManager();
