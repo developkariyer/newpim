@@ -106,11 +106,11 @@ class ImportCommand extends AbstractCommand
                         continue;
                     }
                     echo 'Found set variant with iwasku ' . $setIwasku . ' (ID: ' . $setVariant->getId() . ')' . PHP_EOL;
-                    $objectMetadata = new ObjectMetadata($setVariant);
-                    $objectMetadata->setMetadata([
-                        'amount' => $amountValue
-                    ]);
-                    $newSetProducts[] = $objectMetadata;
+                    
+
+
+
+                    $newSetProducts[] = $setVariant;
 
                     
                     // try {
@@ -126,7 +126,7 @@ class ImportCommand extends AbstractCommand
                     // }
                 }
                 if (!empty($newSetProducts)) {
-                    $variantObject->setBundleProducts($allSetProducts);
+                    $variantObject->setBundleProducts($newSetProducts);
                     try {
                         $variantObject->save();
                         echo 'Saved variant with iwasku ' . $variantObject->getIwasku() . ' successfully with ' . count($newSetProducts) . ' new bundle products.' . PHP_EOL;
