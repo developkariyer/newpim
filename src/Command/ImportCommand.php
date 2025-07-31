@@ -106,19 +106,11 @@ class ImportCommand extends AbstractCommand
                         continue;
                     }
                     echo 'Found set variant with iwasku ' . $setIwasku . ' (ID: ' . $setVariant->getId() . ')' . PHP_EOL;
-                    // if (!$setVariant->getId()) {
-                    //     try {
-                    //         $setVariant->save();  
-                    //         echo 'Saved set variant ' . $setIwasku . ' to ensure it has an ID (ID: ' . $setVariant->getId() . ')' . PHP_EOL;
-                    //     } catch (\Exception $e) {
-                    //         echo 'Failed to save set variant ' . $setIwasku . ': ' . $e->getMessage() . PHP_EOL;
-                    //         continue;
-                    //     }
-                    // }
-                    // if (!$setVariant->getId()) {
-                    //     echo 'Set variant ' . $setIwasku . ' still has no ID after save, skipping.' . PHP_EOL;
-                    //     continue;
-                    // }
+                    $objectMetadata = new ObjectMetadata($setVariant, ['amount' => $amountValue], true);
+                    $objectMetadata->save();
+                    $newSetProducts[] = $objectMetadata;
+
+                    
                     // try {
                     //     $objectMetadata = new ObjectMetadata($setVariant); 
                     //     $objectMetadata->setMetadata([
@@ -130,6 +122,16 @@ class ImportCommand extends AbstractCommand
                     //     echo 'Failed to create ObjectMetadata for ' . $setIwasku . ': ' . $e->getMessage() . PHP_EOL;
                     //     continue;
                     // }
+                }
+                if (!empty($newSetProducts)) {
+                    $variantObject->setBundleProducts($allSetProducts);
+                    try {
+                        $variantObject->save();
+                        echo 'Saved variant with iwasku ' . $variantObject->getIwasku() . ' successfully with ' . count($newSetProducts) . ' new bundle products.' . PHP_EOL;
+                    }
+                    catch (\Exception $e) {
+                        echo 'Failed to save variant with iwasku ' . $variantObject->getIwasku() . ': ' . $e->getMessage() . PHP_EOL;
+                    }
                 }
                 // if (!empty($newSetProducts)) {
                 //     $allSetProducts = array_merge($currentSetProducts, $newSetProducts);
