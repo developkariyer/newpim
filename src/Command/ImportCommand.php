@@ -96,7 +96,7 @@ class ImportCommand extends AbstractCommand
                     echo 'Variant not found for iwasku ' . $iwasku . ', skipping set product.' . PHP_EOL;
                     continue;
                 }
-                $currentSetProducts = $variantObject->getBundleProducts() ?? [];
+                $currentSetProducts = $variantObject->getBundleProducts()?->getItems() ?? [];
                 $existingIwaskus = array_map(function ($item) {
                     return $item['object']?->getIwasku();
                 }, $currentSetProducts);
@@ -110,8 +110,10 @@ class ImportCommand extends AbstractCommand
                         echo 'Set product with iwasku ' . $setIwasku . ' already exists, skipping.' . PHP_EOL;
                         continue;
                     }
-                    $objectMetadata = new ObjectMetadata('metadata', ['amount'], $variantObject);
-                    $objectMetadata->setAmount($amountValue); 
+                    $objectMetadata = new ObjectMetadata($setVariant);
+                    $objectMetadata->setMetadata([
+                        'amount' => $amountValue 
+                    ]);
                     $currentSetProducts[] = $objectMetadata;
                     echo 'Prepared set product with iwasku ' . $setIwasku . ' and amount ' . $amountValue . PHP_EOL;
                 }
