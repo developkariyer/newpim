@@ -22,25 +22,25 @@ class CostCalculator implements CalculatorClassInterface
 
     private function calculateProductCost(Product $object): string
     {
-        $totalCost = '0.00';
-        $bundleItems = $object->getBundleProducts();
-        if (!empty($bundleItems)) {
-            foreach ($bundleItems as $bundleItem) {
-                $product = $bundleItem->getObject();
-                $bundleItemCost = $product->getProductCost() ?? '0.00';
-                $totalCost = bcadd($totalCost, $bundleItemCost, 4);
-            }
-            return number_format($totalCost, 4, '.', '');
-        }
-        foreach ($object->getParent()->getCostModelProduct() as $costModel) {
-            $costModelCost = $costModel->getCost($object) ?? '0.00';
-            $totalCost = bcadd($totalCost, $costModelCost, 4);
-        }
-        foreach ($object->getCostModelVariant() as $costModel) {
-            $costModelCost = $costModel->getCost($object) ?? '0.00';
-            $totalCost = bcadd($totalCost, $costModelCost, 4);
-        }
-        return number_format($totalCost, 4, '.', '');
+        // $totalCost = '0.00';
+        // $bundleItems = $object->getBundleProducts();
+        // if (!empty($bundleItems)) {
+        //     foreach ($bundleItems as $bundleItem) {
+        //         $product = $bundleItem->getObject();
+        //         $bundleItemCost = $product->getProductCost() ?? '0.00';
+        //         $totalCost = bcadd($totalCost, $bundleItemCost, 4);
+        //     }
+        //     return number_format($totalCost, 4, '.', '');
+        // }
+        // foreach ($object->getParent()->getCostModelProduct() as $costModel) {
+        //     $costModelCost = $costModel->getCost($object) ?? '0.00';
+        //     $totalCost = bcadd($totalCost, $costModelCost, 4);
+        // }
+        // foreach ($object->getCostModelVariant() as $costModel) {
+        //     $costModelCost = $costModel->getCost($object) ?? '0.00';
+        //     $totalCost = bcadd($totalCost, $costModelCost, 4);
+        // }
+        // return number_format($totalCost, 4, '.', '');
     }    
 
     public function getCalculatedValueForEditMode(Concrete $object, CalculatedValue $context): string
