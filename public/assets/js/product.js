@@ -1281,15 +1281,15 @@ class VariationService {
             let colorValue = v.color || v.colorName || v.renk || v.productVariantColor?.name;
             let customValue = v.custom || v.customName || v.customValue || v.productVariantCustom?.deger;
             let published = typeof v.published !== 'undefined' ? v.published : true;
+            if (sizeValue === undefined || sizeValue === '' || sizeValue === 'undefined') {
+                sizeValue = null;
+            }
             if (sizeValue && typeof sizeValue === 'string') {
                 if (sizeValue.includes(' (En:')) {
                     sizeValue = sizeValue.split(' (En:')[0];
                 } else if (sizeValue.includes(' (')) {
                     sizeValue = sizeValue.split(' (')[0];
                 }
-            }
-            if (sizeValue === undefined || sizeValue === '' || sizeValue === 'undefined') {
-                sizeValue = null;
             }
             if (customValue === undefined || customValue === '' || customValue === 'undefined') {
                 customValue = null;
@@ -1302,7 +1302,6 @@ class VariationService {
                 id: v.id
             };
         });
-        
         console.log('Locked variants updated:', this.state.lockedVariants);
     }
 
@@ -1312,21 +1311,17 @@ class VariationService {
             const sizesData = this.getSizesData();
             const sizes = sizesData.map(s => s.beden);
             const customs = this.getCustomsData();
-
             if (colors.length === 0 ) {
                 this.showMatrixError('Varyasyon matrisini oluşturmak için lütfen en az bir Renk ve bir Beden seçin.');
                 return;
             }
-
             const combos = this.generateCombinations(colors, sizes, customs);
             const uniqueCombos = this.filterUniqueCombinations(combos);
             const html = this.generateMatrixHTML(uniqueCombos, sizesData, customs);
-
             const container = document.getElementById('variationTableContainer');
             if (container) {
                 container.innerHTML = html;
             }
-
         } catch (error) {
             console.error('Generate matrix failed:', error);
             this.showMatrixError('Varyasyon matrisi oluşturulurken bir hata oluştu.');
