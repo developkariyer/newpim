@@ -59,7 +59,7 @@ class SetProductController extends AbstractController
                 return new JsonResponse(['items' => []]);
             }
             $listing = new ProductListing();
-            $listing->setCondition("published = 1 AND iwasku LIKE ?", 
+            $listing->setCondition("iwasku LIKE ?", 
                 ['%' . $query . '%']);
             $listing->setLimit(11);
             $results = [];
@@ -67,15 +67,13 @@ class SetProductController extends AbstractController
                 $bundleProducts = [];
                 if ($product->getBundleProducts()) {
                     foreach ($product->getBundleProducts() as $bundleItem) {
-                        if ($bundleItem->getProduct()) {
-                            $bundleProducts[] = [
-                                'id' => $bundleItem->getProduct()->getId(),
-                                'name' => $bundleItem->getProduct()->getName() ?? '',
-                                'iwasku' => $bundleItem->getProduct()->getIwasku() ?? '',
-                                'identifier' => $bundleItem->getProduct()->getIdentifier() ?? '',
-                                'quantity' => $bundleItem->getQuantity() ?? 1
-                            ];
-                        }
+                        $bundleProducts[] = [
+                            'id' => $bundleItem->getId(),
+                            'name' => $bundleItem->getName() ?? '',
+                            'iwasku' => $bundleItem->getIwasku() ?? '',
+                            'identifier' => $bundleItem->getIdentifier() ?? '',
+                            'quantity' =>  1
+                        ];
                     }
                 }
 
