@@ -191,7 +191,7 @@ class SearchService
                 }
             }
             $variants = $this->getProductVariants($product, $customTableTitle);
-            $bundleProducts = $this->getBundleProducts($product);
+            $bundleProducts = $this->getBundleProducts($product, $variants);
             $category = $product->getProductCategory();
             $categoryInfo = $category ? [
                 'id' => $category->getId(),
@@ -239,35 +239,69 @@ class SearchService
         }
     }
 
-    private function getBundleProducts(Product $product): array
+    private function getBundleProducts(Product $product, array $variants = []): array
     {
         try {
             $bundleProducts = $product->getBundleProducts();
-            if (!$bundleProducts || !is_array($bundleProducts)) {
+            if ($bundleProducts && is_array($bundleProducts) && !empty($bundleProducts)) {
+                return $this->formatBundleProductsArray($bundleProducts);
+            }
+            if (empty($variants)) {
                 return [];
             }
-            $formattedBundleProducts = [];
-            foreach ($bundleProducts as $bundleProduct) {
-                $quantity = 1;
-                $colorObject = method_exists($bundleProduct, 'getVariationColor') ? $bundleProduct->getVariationColor() : null;
-                $variationColor = $colorObject ? $colorObject->getColor() : null;
-                $formattedBundleProducts[] = [
-                    'id' => $bundleProduct->getId(),
-                    'key' => $bundleProduct->getKey() ?? '',
-                    'identifier' => $bundleProduct->getProductIdentifier() ?? '',
-                    'iwasku' => $bundleProduct->getIwasku() ?? '',
-                    'quantity' => $quantity,
-                    'published' => $bundleProduct->getPublished() ?? true,
-                    'size' => $bundleProduct->getVariationSize() ?? '',
-                    'color' => $variationColor,
-                    'customField' => $bundleProduct->getCustomField() ?? ''
-                ];
+            $allBundleProducts = [];
+            foreach ($variants as $variantData) {
+                $variant = Product::getById($variantData['id']);
+                if (!$variant) {
+                    continue;
+                }
+                $variantBundleProducts = $variant->getBundleProducts();
+                if ($variantBundleProducts && is_array($variantBundleProducts) && !empty($variantBundleProducts)) {
+                    $formattedVariantBundles = $this->formatBundleProductsArray($variantBundleProducts);
+                    $allBundleProducts = array_merge($allBundleProducts, $formattedVariantBundles);
+                    break;
+                }
             }
-            return $formattedBundleProducts;
+            return $this->removeDuplicateBundles($allBundleProducts);
         } catch (\Exception $e) {
             error_log('Get bundle products error: ' . $e->getMessage());
             return [];
         }
+    }
+
+    private function formatBundleProductsArray(array $bundleProducts): array
+    {
+        $formattedBundleProducts = [];
+        foreach ($bundleProducts as $bundleProduct) {
+            $quantity = 1;
+            $colorObject = method_exists($bundleProduct, 'getVariationColor') ? $bundleProduct->getVariationColor() : null;
+            $variationColor = $colorObject ? $colorObject->getColor() : null;
+            $formattedBundleProducts[] = [
+                'id' => $bundleProduct->getId(),
+                'key' => $bundleProduct->getKey() ?? '',
+                'identifier' => $bundleProduct->getProductIdentifier() ?? '',
+                'iwasku' => $bundleProduct->getIwasku() ?? '',
+                'quantity' => $quantity,
+                'published' => $bundleProduct->getPublished() ?? true,
+                'size' => $bundleProduct->getVariationSize() ?? '',
+                'color' => $variationColor,
+                'customField' => $bundleProduct->getCustomField() ?? ''
+            ];
+        }
+        return $formattedBundleProducts;
+    }
+
+    private function removeDuplicateBundles(array $bundleProducts): array
+    {
+        $uniqueBundles = [];
+        $seenIds = [];
+        foreach ($bundleProducts as $bundle) {
+            if (!in_array($bundle['id'], $seenIds)) {
+                $uniqueBundles[] = $bundle;
+                $seenIds[] = $bundle['id'];
+            }
+        }
+        return $uniqueBundles;
     }
 
     public function getAvailableCategories(): array
