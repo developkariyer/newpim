@@ -258,7 +258,7 @@ class SearchService
                     'iwasku' => $bundleProduct->getIwasku() ?? '',
                     'quantity' => $quantity,
                     'published' => $bundleProduct->getPublished() ?? true,
-                    'size' => $bundleProduct->getVariationSize() : null,
+                    'size' => $bundleProduct->getVariationSize() ?? '',
                     'color' => $variationColor,
                     'customField' => $bundleProduct->getCustomField() ?? ''
                 ];
