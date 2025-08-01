@@ -24,7 +24,7 @@ use App\Service\DataProcessingService;
 use App\Service\VariantService;
 use App\Service\SearchService;
 use App\Service\ProductService;
-
+use Psr\Log\LoggerInterface; 
 
 #[Route('/product')]
 class ProductController extends AbstractController
