@@ -1,11 +1,9 @@
 
-//window.csrfToken = '{{ csrf_token }}';
+window.csrfToken = '{{ csrf_token }}';
 'use strict';
 
 class ProductFormManager {
     constructor() {
-        this.csrfToken = document.querySelector('input[name="_token"]')?.value || '';
-        console.log('🔧 CSRF Token loaded:', this.csrfToken ? 'Yes' : 'No');
         this.state = {
             selectedProduct: null,
             isEditMode: false,
@@ -559,7 +557,7 @@ class ProductFormManager {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': this.csrfToken,
+                    'X-CSRF-TOKEN': window.csrfToken,
                     'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
@@ -810,7 +808,6 @@ class ProductFormManager {
 class SearchService {
     constructor(config) {
         this.config = config;
-        this.csrfToken = document.querySelector('input[name="_token"]')?.value || '';
     }
 
     async searchProducts(query) {
@@ -833,7 +830,7 @@ class SearchService {
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': this.csrfToken
+                'X-CSRF-TOKEN': window.csrfToken
             },
             body: JSON.stringify({ name })
         });
