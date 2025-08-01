@@ -134,21 +134,21 @@ class ProductController extends AbstractController
     #[Route('/search-products', name: 'product_search_products', methods: ['GET'])]
     public function searchProducts(Request $request): JsonResponse
     {
-        // try {
-        //     $query = trim($request->query->get('q', ''));
-        //     if (strlen($query) < 2) {
-        //         return new JsonResponse(['items' => []]);
-        //     }
-        //     $product = $this->searchService->findProductByQuery($query);
-        //     if (!$product) {
-        //         return new JsonResponse(['items' => []]);
-        //     }
-        //     $productData = $this->dataProcessor->buildProductData($product);
-        //     return new JsonResponse(['items' => [$productData]]);
+        try {
+            $query = trim($request->query->get('q', ''));
+            if (strlen($query) < 2) {
+                return new JsonResponse(['items' => []]);
+            }
+            $product = $this->searchService->findProductByQuery($query);
+            if (!$product) {
+                return new JsonResponse(['items' => []]);
+            }
+            $productData = $this->dataProcessor->buildProductData($product);
+            return new JsonResponse(['items' => [$productData]]);
 
-        // } catch (\Exception $e) {
-        //     return new JsonResponse(['error' => $e->getMessage()], 500);
-        // }
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 500);
+        }
     }
 
     #[Route('/add-color', name: 'product_add_color', methods: ['POST'])]

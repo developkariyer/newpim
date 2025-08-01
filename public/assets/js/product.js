@@ -811,28 +811,10 @@ class SearchService {
     }
 
     async searchProducts(query) {
-        console.log('🔍 Starting search with query:', query);
-        console.log('🌐 Full URL:', `${this.config.endpoints.productSearch}?q=${encodeURIComponent(query)}`);
-        console.log('🔧 Config endpoints:', this.config.endpoints);
-        
-        try {
-            const response = await fetch(`${this.config.endpoints.productSearch}?q=${encodeURIComponent(query)}`);
-            console.log('📡 Response status:', response.status);
-            console.log('📡 Response headers:', [...response.headers.entries()]);
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('❌ Error response body:', errorText);
-                throw new Error(`Product search failed: ${response.status} - ${errorText}`);
-            }
-            
-            const data = await response.json();
-            console.log('✅ Success response:', data);
-            return data.items || [];
-        } catch (error) {
-            console.error('❌ Fetch error:', error);
-            throw error;
-        }
+        const response = await fetch(`${this.config.endpoints.productSearch}?q=${encodeURIComponent(query)}`);
+        if (!response.ok) throw new Error('Product search failed');
+        const data = await response.json();
+        return data.items || [];
     }
 
     async searchItems(type, query) {
