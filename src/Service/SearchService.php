@@ -191,7 +191,6 @@ class SearchService
                 }
             }
             $variants = $this->getProductVariants($product, $customTableTitle);
-            $bundleProducts = $this->getBundleProducts($product);
             $category = $product->getProductCategory();
             $categoryInfo = $category ? [
                 'id' => $category->getId(),
@@ -212,9 +211,6 @@ class SearchService
                 'variants' => $variants,
                 'variantCount' => count($variants),
                 'hasVariants' => !empty($variants),
-                'bundleProducts' => $bundleProducts,
-                'bundleProductCount' => count($bundleProducts),
-                'hasBundleProducts' => !empty($bundleProducts),
             ];
         } catch (\Exception $e) {
             error_log('Format product error: ' . $e->getMessage());
@@ -230,68 +226,9 @@ class SearchService
                 'variants' => [],
                 'variantCount' => 0,
                 'hasVariants' => false,
-                'bundleProducts' => [], 
-                'bundleProductCount' => 0, 
-                'hasBundleProducts' => false,
                 'createdAt' => null,
                 'modifiedAt' => null
             ];
-        }
-    }
-
-    private function getBundleProducts(Product $product): array
-    {
-        try {
-            $bundleProducts = $product->getBundleProducts();
-            if (!$bundleProducts || !is_array($bundleProducts)) {
-                return [];
-            }
-            
-            $formattedBundleProducts = [];
-            foreach ($bundleProducts as $bundleItem) {
-                $bundleProduct = null;
-                if (method_exists($bundleItem, 'getProduct')) {
-                    $bundleProduct = $bundleItem->getProduct();
-                    $quantity = method_exists($bundleItem, 'getQuantity') ? $bundleItem->getQuantity() : 1;
-                } else {
-                    $bundleProduct = $bundleItem;
-                    $quantity = 1;
-                }
-                if (!$bundleProduct) {
-                    continue;
-                }
-                $colorObject = method_exists($bundleProduct, 'getVariationColor') ? $bundleProduct->getVariationColor() : null;
-                $colorInfo = $colorObject ? [
-                    'id' => $colorObject->getId(),
-                    'name' => $colorObject->getColor()
-                ] : null;
-                $customTableData = $product->getCustomFieldTable();
-                $customTableTitle = '';
-                if (is_array($customTableData) && !empty($customTableData)) {
-                    $firstRow = $customTableData[0] ?? [];
-                    $customTableTitle = $firstRow['deger'] ?? $firstRow['value'] ?? '';
-                }
-                $formattedBundleProducts[] = [
-                    'id' => $bundleProduct->getId(),
-                    'name' => $bundleProduct->getName() ?? $bundleProduct->getKey() ?? '',
-                    'key' => $bundleProduct->getKey() ?? '',
-                    'identifier' => $bundleProduct->getIdentifier() ?? $bundleProduct->getProductIdentifier() ?? '',
-                    'iwasku' => $bundleProduct->getIwasku() ?? '',
-                    'quantity' => $quantity,
-                    'published' => $bundleProduct->getPublished() ?? true,
-                    'size' => method_exists($bundleProduct, 'getVariationSize') ? $bundleProduct->getVariationSize() : null,
-                    'variationSize' => method_exists($bundleProduct, 'getVariationSize') ? $bundleProduct->getVariationSize() : null,
-                    'color' => $colorInfo,
-                    'customField' => method_exists($bundleProduct, 'getCustomField') ? $bundleProduct->getCustomField() : null,
-                    'customFieldTitle' => $customTableTitle,
-                    'productCode' => method_exists($bundleProduct, 'getProductCode') ? $bundleProduct->getProductCode() : null,
-                ];
-            }
-            return $formattedBundleProducts;
-            
-        } catch (\Exception $e) {
-            error_log('Get bundle products error: ' . $e->getMessage());
-            return [];
         }
     }
 
