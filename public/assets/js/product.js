@@ -181,11 +181,21 @@ class ProductFormManager {
             return;
         }
         try {
+            console.log('🔍 Starting product search for:', query);
             const results = await this.searchService.searchProducts(query);
             this.displayProductSearchResults(results);
         } catch (error) {
-            console.error('Product search failed:', error);
-            this.uiService.showError('Ürün arama başarısız.');
+            console.error('❌ Product search failed:', error);
+            let errorMessage = 'Ürün arama başarısız.';
+            if (error.message.includes('404')) {
+                errorMessage = 'Arama endpoint\'i bulunamadı. Lütfen yöneticiye başvurun.';
+            } else if (error.message.includes('500')) {
+                errorMessage = 'Sunucu hatası. Lütfen daha sonra tekrar deneyin.';
+            } else if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Bağlantı hatası. İnternet bağlantınızı kontrol edin.';
+            }
+            this.uiService.showError(errorMessage);
+            this.uiService.hideElement('productSearchResults');
         }
     }
 
