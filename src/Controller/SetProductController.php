@@ -64,27 +64,27 @@ class SetProductController extends AbstractController
             $listing->setLimit(11);
             $results = [];
             foreach ($listing->getObjects() as $product) {
-                // $bundleProducts = [];
-                // if ($product->getBundleProducts()) {
-                //     foreach ($product->getBundleProducts() as $bundleItem) {
-                //         $bundleProducts[] = [
-                //             'id' => $bundleItem->getId(),
-                //             'name' => $bundleItem->getName() ?? '',
-                //             'iwasku' => $bundleItem->getIwasku() ?? '',
-                //             'identifier' => $bundleItem->getIdentifier() ?? '',
-                //             'quantity' =>  1
-                //         ];
-                //     }
-                // }
-
+                $bundleProducts = [];
+                $existBundleProducts = $product->getBundleProducts();
+                if ($existBundleProducts && is_array($existBundleProducts) && !empty($existBundleProducts)) {
+                    foreach ($existBundleProducts as $bundleItem) {
+                        $bundleProducts[] = [
+                            'id' => $bundleItem->getId(),
+                            'name' => $bundleItem->getKey() ?? '',
+                            'iwasku' => $bundleItem->getIwasku() ?? '',
+                            'identifier' => $bundleItem->getProductIdentifier() ?? '',
+                            'quantity' => 1
+                        ];
+                    }
+                }
                 $results[] = [
                     'id' => $product->getId(),
                     'name' => $product->getKey() ?? '',
                     'identifier' => $product->getProductIdentifier() ?? '',
                     'iwasku' => $product->getIwasku() ?? '',
                     'description' => $product->getDescription() ?? '',
-                    //'bundleProducts' => $bundleProducts,
-                    //'isSetProduct' => !empty($bundleProducts)
+                    'bundleProducts' => $bundleProducts,
+                    'isSetProduct' => !empty($bundleProducts)
                 ];
             }
             return new JsonResponse(['items' => $results]);
