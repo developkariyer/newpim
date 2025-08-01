@@ -78,12 +78,12 @@
 
 {% block body_scripts %}
     {{ parent() }}
-    <script>
+        <script>
         window.setProductConfig = {
             csrfToken: '{{ csrf_token }}',
             endpoints: {
-                searchProducts: '{{ path('set_product_search_products') }}',
-                searchIwasku: '{{ path('set_product_search_iwasku') }}'
+                searchProducts: '{{ path('set_product_search_products') }}'
+                // searchIwasku artık gerekli değil
             }
         };
 
@@ -96,12 +96,12 @@
             },
 
             bindEvents() {
-                // Ana ürün arama - ProductController'daki gibi
+                // Ana ürün arama
                 document.getElementById('productSearch').addEventListener('input', (e) => {
                     this.handleSearch(e.target.value, 'product');
                 });
                 
-                // İwasku arama
+                // İwasku arama - aynı endpoint'i kullan
                 document.getElementById('iwaskuSearch').addEventListener('input', (e) => {
                     this.handleSearch(e.target.value, 'iwasku');
                 });
@@ -133,11 +133,8 @@
                     return;
                 }
 
-                const endpoint = type === 'product' ? 
-                    window.setProductConfig.endpoints.searchProducts : 
-                    window.setProductConfig.endpoints.searchIwasku;
-
-                fetch(`${endpoint}?q=${encodeURIComponent(query)}`)
+                // Her iki arama da aynı endpoint'i kullanıyor
+                fetch(`${window.setProductConfig.endpoints.searchProducts}?q=${encodeURIComponent(query)}`)
                     .then(response => response.json())
                     .then(data => {
                         this.displayResults(data.items || [], type);
@@ -151,16 +148,22 @@
                 const container = document.getElementById(type + 'SearchResults');
                 
                 if (items.length === 0) {
-                    container.innerHTML = '<div style="padding: 0.75rem; color: #6c757d;">Ürün bulunamadı</div>';
+                    container.innerHTML = '<div style="padding: 0.75rem; color: #6c757d;">İwasku ürünü bulunamadı</div>';
                     container.style.display = 'block';
                     return;
                 }
 
                 const html = items.map(item => {
-                    const displayText = `${item.iwasku || item.identifier} - ${item.name}`;
+                    const displayText = `${item.iwasku} - ${item.name}`;
+                    
+                    // String'leri güvenli şekilde escape edelim
+                    const safeName = (item.name || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+                    const safeDescription = (item.description || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+                    const safeIwasku = (item.iwasku || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+                    
                     const clickHandler = type === 'product' ? 
-                        `SetProduct.selectProduct(${item.id}, '${this.escapeQuotes(item.name)}', '${item.identifier}', '${item.iwasku || ''}', '${this.escapeQuotes(item.description || '')}')` :
-                        `SetProduct.addIwaskuProduct(${item.id}, '${this.escapeQuotes(item.name)}', '${item.iwasku}', '${item.identifier}')`;
+                        `SetProduct.selectProduct(${item.id}, '${safeName}', '${item.identifier}', '${safeIwasku}', '${safeDescription}')` :
+                        `SetProduct.addIwaskuProduct(${item.id}, '${safeName}', '${safeIwasku}', '${item.identifier}')`;
                         
                     return `
                         <div style="padding: 0.75rem; border-bottom: 1px solid #eee; cursor: pointer;" 
@@ -180,13 +183,13 @@
             selectProduct(id, name, identifier, iwasku, description) {
                 this.selectedProduct = { id, name, identifier, iwasku, description };
                 
-                document.getElementById('productSearch').value = `${iwasku || identifier} - ${name}`;
+                document.getElementById('productSearch').value = `${iwasku} - ${name}`;
                 document.getElementById('selectedProductId').value = id;
                 document.getElementById('productSearchResults').style.display = 'none';
                 
                 const detailsHtml = `
                     <p><strong>ID:</strong> ${id}</p>
-                    <p><strong>İwasku:</strong> ${iwasku || 'Yok'}</p>
+                    <p><strong>İwasku:</strong> ${iwasku}</p>
                     <p><strong>Identifier:</strong> ${identifier}</p>
                     <p><strong>İsim:</strong> ${name}</p>
                     ${description ? `<p><strong>Açıklama:</strong> ${description}</p>` : ''}
@@ -207,6 +210,12 @@
             },
 
             addIwaskuProduct(id, name, iwasku, identifier) {
+                // Ana ürün ile aynı ürün seçilmesin
+                if (this.selectedProduct && this.selectedProduct.id === id) {
+                    alert('Ana ürün ile aynı ürünü set ürünü olarak ekleyemezsiniz!');
+                    return;
+                }
+
                 // Zaten eklenmiş mi kontrol et
                 if (this.selectedIwasku.find(item => item.id === id)) {
                     alert('Bu ürün zaten eklenmiş!');
@@ -289,14 +298,9 @@
                 }
 
                 document.getElementById('iwaskuItemsData').value = JSON.stringify(this.selectedIwasku);
-            },
-
-            escapeQuotes(str) {
-                return str ? str.replace(/'/g, "\\'") : '';
             }
         };
 
-        // Sayfa yüklendiğinde başlat
         document.addEventListener('DOMContentLoaded', function() {
             SetProduct.init();
         });

@@ -82,35 +82,6 @@ class SetProductController extends AbstractController
         }
     }
 
-    #[Route('/search-iwasku', name: 'set_product_search_iwasku', methods: ['GET'])]
-    public function searchIwasku(Request $request): JsonResponse
-    {
-        try {
-            $query = trim($request->query->get('q', ''));
-            if (strlen($query) < 2) {
-                return new JsonResponse(['items' => []]);
-            }
-            $listing = new ProductListing();
-            $listing->setCondition("published = 1 AND (iwasku LIKE ? OR name LIKE ? OR identifier LIKE ?)", 
-                ['%' . $query . '%', '%' . $query . '%', '%' . $query . '%']);
-            $listing->setLimit(10);
-            $results = [];
-            foreach ($listing->getObjects() as $product) {
-                $results[] = [
-                    'id' => $product->getId(),
-                    'name' => $product->getName(),
-                    'identifier' => $product->getIdentifier(),
-                    'iwasku' => $product->getIwasku(),
-                    'description' => $product->getDescription()
-                ];
-            }
-            return new JsonResponse(['items' => $results]);
-
-        } catch (\Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage()], 500);
-        }
-    }
-
     #[Route('/create', name: 'set_product_create', methods: ['POST'])]
     public function create(Request $request): Response
     {
