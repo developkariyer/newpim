@@ -24,7 +24,7 @@ use App\Service\DataProcessingService;
 use App\Service\VariantService;
 use App\Service\SearchService;
 use App\Service\ProductService;
-use Psr\Log\LoggerInterface; 
+
 
 #[Route('/product')]
 class ProductController extends AbstractController
@@ -53,8 +53,7 @@ class ProductController extends AbstractController
         DataProcessingService $dataProcessor,
         VariantService $variantService,
         SearchService $searchService,
-        ProductService $productService,
-        LoggerInterface $logger
+        ProductService $productService
     ) {
         $this->csrfTokenManager = $csrfTokenManager;
         $this->securityService = $securityService;
@@ -62,7 +61,6 @@ class ProductController extends AbstractController
         $this->variantService = $variantService;
         $this->searchService = $searchService;
         $this->productService = $productService;
-        $this->logger = $logger;
     }
     
     // ===========================================
@@ -136,35 +134,21 @@ class ProductController extends AbstractController
     #[Route('/search-products', name: 'product_search_products', methods: ['GET'])]
     public function searchProducts(Request $request): JsonResponse
     {
-        $this->logger->info('🎯 Route HIT: /product/search-products');
-        $this->logger->info('🔍 Query parameter: ' . $request->query->get('q', 'NO_QUERY'));
-        
-        try {
-            $query = trim($request->query->get('q', ''));
-            $this->logger->info('🔍 Processed query: ' . $query);
-            
-            if (strlen($query) < 2) {
-                $this->logger->warning('⚠️ Query too short, returning empty');
-                return new JsonResponse(['items' => []]);
-            }
-            
-            $this->logger->info('🔍 Calling SearchService...');
-            $product = $this->searchService->findProductByQuery($query);
-            $this->logger->info('🔍 SearchService result: ' . ($product ? 'FOUND' : 'NOT_FOUND'));
-            
-            if (!$product) {
-                return new JsonResponse(['items' => []]);
-            }
-            
-            $productData = $this->dataProcessor->buildProductData($product);
-            $this->logger->info('✅ Returning product data');
-            return new JsonResponse(['items' => [$productData]]);
+        // try {
+        //     $query = trim($request->query->get('q', ''));
+        //     if (strlen($query) < 2) {
+        //         return new JsonResponse(['items' => []]);
+        //     }
+        //     $product = $this->searchService->findProductByQuery($query);
+        //     if (!$product) {
+        //         return new JsonResponse(['items' => []]);
+        //     }
+        //     $productData = $this->dataProcessor->buildProductData($product);
+        //     return new JsonResponse(['items' => [$productData]]);
 
-        } catch (\Exception $e) {
-            $this->logger->error('❌ Exception in searchProducts: ' . $e->getMessage());
-            $this->logger->error('❌ Stack trace: ' . $e->getTraceAsString());
-            return new JsonResponse(['error' => $e->getMessage()], 500);
-        }
+        // } catch (\Exception $e) {
+        //     return new JsonResponse(['error' => $e->getMessage()], 500);
+        // }
     }
 
     #[Route('/add-color', name: 'product_add_color', methods: ['POST'])]
