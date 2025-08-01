@@ -559,7 +559,7 @@ class ProductFormManager {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': window.csrfToken,
+                    'X-CSRF-TOKEN': this.csrfToken,
                     'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
@@ -832,7 +832,7 @@ class SearchService {
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': window.csrfToken
+                'X-CSRF-TOKEN': this.csrfToken
             },
             body: JSON.stringify({ name })
         });
