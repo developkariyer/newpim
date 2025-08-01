@@ -398,13 +398,14 @@ class CatalogSystem {
         row.setAttribute('aria-expanded', 'false');
 
         const hasVariants = product.hasVariants;
-        const hasSetProducts = product.bundleProducts && product.bundleProducts.length > 0;
+        const hasSetProducts = product.hasBundleProducts || (product.bundleProducts && product.bundleProducts.length > 0);
+        console.log('Product:', product.id, 'has bundleProducts:', hasSetProducts, 'bundleProducts:', product.bundleProducts); // Debug için
         const variantBadge = hasVariants 
             ? `<span class="variant-badge">✅ ${product.variantCount} Varyant</span>`
             : `<span class="no-variant-badge">➖ Varyant Yok</span>`;
 
         const setBadge = hasSetProducts 
-            ? `<span class="set-badge">🎁 ${product.bundleProducts.length} Set Ürünü</span>`
+            ? `<span class="set-badge">🎁 ${product.bundleProducts ? product.bundleProducts.length : product.bundleProductCount || 0} Set Ürünü</span>`
             : '';
 
         row.innerHTML = `
