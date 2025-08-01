@@ -810,6 +810,7 @@ class ProductFormManager {
 class SearchService {
     constructor(config) {
         this.config = config;
+        this.csrfToken = document.querySelector('input[name="_token"]')?.value || '';
     }
 
     async searchProducts(query) {
