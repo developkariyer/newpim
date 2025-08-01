@@ -1,5 +1,4 @@
 
-window.csrfToken = '{{ csrf_token }}';
 'use strict';
 
 class ProductFormManager {
@@ -19,7 +18,7 @@ class ProductFormManager {
         };
         this.config = {
             searchDelay: 400,
-            minSearchLength: 2,
+            minSearchLength: 3,
             endpoints: {
                 productSearch: '/product/search-products',
                 itemSearch: '/product/search',
@@ -45,6 +44,7 @@ class ProductFormManager {
                 categories: 'productCategory'
             }
         };
+        this.csrfToken = this.config.csrfToken || '';
         this.searchService = new SearchService(this.config);
         this.formService = new FormService(this.config, this.state);
         this.tableService = new TableService();
@@ -557,7 +557,7 @@ class ProductFormManager {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': window.csrfToken,
+                    'X-CSRF-TOKEN': this.csrfToken,
                     'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
@@ -808,9 +808,11 @@ class ProductFormManager {
 class SearchService {
     constructor(config) {
         this.config = config;
+        this.csrfToken = this.config.csrfToken || '';
     }
 
     async searchProducts(query) {
+        console.log(`Searching for: ${query} at URL: ${this.config.endpoints.productSearch}`);
         const response = await fetch(`${this.config.endpoints.productSearch}?q=${encodeURIComponent(query)}`);
         if (!response.ok) throw new Error('Product search failed');
         const data = await response.json();
@@ -830,7 +832,7 @@ class SearchService {
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': window.csrfToken
+                'X-CSRF-TOKEN': this.csrfToken
             },
             body: JSON.stringify({ name })
         });

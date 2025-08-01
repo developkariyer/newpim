@@ -258,5 +258,16 @@
 
 {% block body_scripts %}
     {{ parent() }}
+    <script>
+        window.appConfig = {
+            csrfToken: '{{ csrf_token('product_form') }}',
+            endpoints: {
+                productSearch: '{{ path('product_search_products') }}',
+                itemSearch: '{{ path('product_search', {type: '__TYPE__'}) }}'.replace('__TYPE__', ''), // Placeholder'ı kaldır
+                addColor: '{{ path('product_add_color') }}',
+                deleteVariant: '{{ path('product_delete_variant') }}'
+            }
+        };
+    </script>
     <script src="{{ asset('assets/js/product.js') }}"></script> 
 {% endblock %}
