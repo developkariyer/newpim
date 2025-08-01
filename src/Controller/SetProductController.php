@@ -129,13 +129,10 @@ class SetProductController extends AbstractController
 
     private function createSetProduct(Product $product, array $iwaskuItems): void
     {
-        // Set ürün oluşturma logic'i
-        // Bu method ProductService'e taşınabilir
-        
-        // Örnek implementasyon:
-        // $product->setIsSetProduct(true);
-        // $product->setSetItems($iwaskuItems);
-        // $product->save();
+        $this->logger->info('Set product created', [
+            'productId' => $product->getId(),
+            'iwaskuCount' => count($iwaskuItems)
+        ]);
         $bundleProducts = [];
         foreach ($iwaskuItems as $item) {
             $bundleProduct = Product::getById((int)$item['id']);
@@ -153,10 +150,5 @@ class SetProductController extends AbstractController
             ]);
             throw new \RuntimeException('Set ürün kaydedilirken hata: ' . $e->getMessage());
         }
-        
-        $this->logger->info('Set product created', [
-            'productId' => $product->getId(),
-            'iwaskuCount' => count($iwaskuItems)
-        ]);
     }
 }
