@@ -136,6 +136,23 @@ class SetProductController extends AbstractController
         // $product->setIsSetProduct(true);
         // $product->setSetItems($iwaskuItems);
         // $product->save();
+        $bundleProducts = [];
+        foreach ($iwaskuItems as $item) {
+            $bundleProduct = Product::getById((int)$item['id']);
+            if ($bundleProduct) {
+                $bundleProducts[] = $bundleProduct;
+            } 
+        }
+        $product->setBundleProducts($bundleProducts);
+        try {
+            $product->save();
+        } catch (\Exception $e) {
+            $this->logger->error('Set product save error', [
+                'productId' => $product->getId(),
+                'error' => $e->getMessage()
+            ]);
+            throw new \RuntimeException('Set ürün kaydedilirken hata: ' . $e->getMessage());
+        }
         
         $this->logger->info('Set product created', [
             'productId' => $product->getId(),
