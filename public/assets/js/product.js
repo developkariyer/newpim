@@ -4,6 +4,8 @@
 
 class ProductFormManager {
     constructor() {
+        this.csrfToken = document.querySelector('input[name="_token"]')?.value || '';
+        console.log('🔧 CSRF Token loaded:', this.csrfToken ? 'Yes' : 'No');
         this.state = {
             selectedProduct: null,
             isEditMode: false,
