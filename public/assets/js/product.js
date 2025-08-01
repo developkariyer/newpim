@@ -1,5 +1,5 @@
 
-window.csrfToken = '{{ csrf_token }}';
+//window.csrfToken = '{{ csrf_token }}';
 'use strict';
 
 class ProductFormManager {

@@ -140,7 +140,7 @@ class ProductController extends AbstractController
         
         try {
             $query = trim($request->query->get('q', ''));
-            if (strlen($query) < 3) {
+            if (strlen($query) < 2) {
                 return new JsonResponse(['items' => []]);
             }
             $product = $this->searchService->findProductByQuery($query);
