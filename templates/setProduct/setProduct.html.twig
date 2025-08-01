@@ -2,188 +2,261 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    <link href="{{ asset('assets/css/catalog.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/product.css') }}" rel="stylesheet">
 {% endblock %}
 
-{% block title %}Set Ürün Oluştur{% endblock %}
+{% block title %}Katalog Yeni Ürün Girişi{% endblock %}
 
 {% block content %}
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="loading-content">
-            <div class="loading-spinner"></div>
-            <p>Yükleniyor...</p>
-        </div>
-    </div>
+    <input type="hidden" name="_token" value="{{ csrf_token }}">
+    <div class="product-form-container">
+        {% if errors is defined and errors|length > 0 %}
+            <div class="alert alert-danger" style="margin-bottom: 2rem; padding: 1rem; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; color: #721c24;">
+                <h4 style="margin: 0 0 1rem 0;">❌ Hatalar:</h4>
+                <ul style="margin: 0; padding-left: 1.5rem;">
+                    {% for error in errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
 
-    <div class="container">
-        <!-- Flash Messages -->
+        <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+            <div style="background: white; padding: 2rem; border-radius: 8px; text-align: center;">
+                <div style="width: 40px; height: 40px; margin: 0 auto 1rem; border: 4px solid #f3f3f3; border-top: 4px solid #007bff; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p style="margin: 0; font-size: 1.1rem; color: #333;">Ürün işleniyor...</p>
+            </div>
+        </div>
+
         {% for label, messages in app.flashes %}
             {% for message in messages %}
-                <div class="alert alert-{{ label == 'danger' ? 'danger' : (label == 'success' ? 'success' : 'warning') }}">
+                <div class="alert alert-{{ label == 'danger' ? 'danger' : (label == 'success' ? 'success' : 'info') }}" style="margin-bottom: 1rem;">
                     {{ message }}
                 </div>
             {% endfor %}
         {% endfor %}
 
-        <!-- Controls Section -->
-        <div class="catalog-controls">
-            <div class="controls-row">
-                <!-- Search -->
+        <form id="productForm" method="POST" enctype="multipart/form-data" action="{{ path('product_create') }}">
+            <!-- Search Product Start -->
+            <div class="form-section" style="background: #f8f9fa; border-color: #17a2b8;">
+                <h3 style="border-color: #17a2b8; color: #17a2b8;">🔍 Ürün Ara ve Düzenle</h3>
                 <div class="form-group">
-                    <label for="searchInput" class="form-label">🔍 Arama</label>
-                    <div class="search-container">
-                        <span class="search-icon">🔍</span>
-                        <input 
-                            type="text" 
-                            id="searchInput" 
-                            class="form-control search-input" 
-                            placeholder="Ürün adı, identifier veya açıklama..."
-                            value="{{ currentSearch }}"
-                        >
-                    </div>
+                    <label for="productSearchInput">Mevcut Ürün Ara (Identifier veya İsim)</label>
+                    <input type="text" id="productSearchInput" class="form-control" placeholder="Örn: PTS-001 veya Premium Cotton T-Shirt">
+                    <div id="productSearchResults" style="display: none; position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; background: white; border-radius: 4px; margin-top: 2px;"></div>
                 </div>
-
-                <!-- Category Filter -->
-                <div class="form-group">
-                    <label for="categoryFilter" class="form-label">📂 Kategori</label>
-                    <select id="categoryFilter" class="form-control">
-                        <option value="">Tüm Kategoriler</option>
-                        {% for category in categories %}
-                            <option value="{{ category.key }}" {{ currentCategory == category.key ? 'selected' : '' }}>
-                                {{ category.name }} ({{ category.productCount }})
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <button type="button" id="advancedToggle" class="btn btn-outline">
-                        ⚙️ Gelişmiş
-                    </button>
-                </div>
-
-                <!-- Clear Filters -->
-                <div class="form-group">
-                    <button type="button" id="clearFilters" class="btn btn-outline">
-                        🗑️ Temizle
-                    </button>
-                </div>
-
-                <!-- Export Excel -->
-                <div class="form-group">
-                    <a href="#" id="exportExcel" class="btn btn-success">
-                        📊 Excel İndir
-                    </a>
+                <div id="selectedProductInfo" style="display: none; padding: 1rem; background: #e3f2fd; border-radius: 4px; margin-top: 1rem;">
+                    <h5 style="margin: 0 0 0.5rem 0; color: #1976d2;">✅ Seçilen Ürün:</h5>
+                    <div id="selectedProductDetails"></div>
+                    <button type="button" id="clearSelectedProduct" class="btn btn-outline-secondary btn-sm" style="margin-top: 0.5rem;">❌ Seçimi Temizle</button>
                 </div>
             </div>
-            <div id="advancedPanel" class="advanced-panel" style="display: none;">
-                <div class="advanced-row">
-                    <div class="form-group">
-                        <label for="iwaskuFilter" class="form-label">🔖 IWASKU</label>
-                        <input type="text" id="iwaskuFilter" class="form-control" placeholder="IWASKU...">
-                    </div>
+            <input type="hidden" id="editingProductId" name="editingProductId" value="">   
+            <!-- Search Product End -->
 
-                    <div class="form-group">
-                        <label for="asinFilter" class="form-label">🏷️ ASIN/FNSKU</label>
-                        <input type="text" id="asinFilter" class="form-control" placeholder="ASIN veya FNSKU...">
+            <!-- Form Step1:Product Info Start -->
+            <div id="step1">
+                <div class="form-section">
+                    <h3>📝 Temel Ürün Bilgileri</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productName">Ürün Adı</label>
+                            <input type="text" id="productName" name="productName" class="form-control" placeholder="Örn: Premium Cotton T-Shirt" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Ürün Resmi</label>
+                            <div class="image-upload">
+                                <div class="image-preview" id="imagePreview" onclick="document.getElementById('imageInput').click()">📷</div>
+                                <small style="color: #6c757d; text-align: center;">Resim yüklemek için tıklayın</small>
+                                <input type="file" id="imageInput" name="productImage" accept="image/*">
+                            </div>
+                        </div>
                     </div>
-
-                    <div class="form-group">
-                        <label for="brandFilter" class="form-label">🏢 Marka</label>
-                        <input type="text" id="brandFilter" class="form-control" placeholder="Marka adı...">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productIdentifier">Ürün Tanıtıcı Adı</label>
+                            <input type="text" id="productIdentifier" name="productIdentifier" class="form-control" placeholder="Örn: PTS-001" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productCategory">Kategori</label>
+                            <select id="categoriesSearch" class="form-control" style="margin-bottom: 0.5rem;">
+                                <option value="">Kategori seçin...</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div id="categoriesSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
+                                <small style="color: #6c757d;">Seçilen kategori burada görünecek...</small>
+                            </div>
+                            <div id="categoriesHidden"></div>
+                        </div>
                     </div>
-
                     <div class="form-group">
-                        <label for="eanFilter" class="form-label">📊 EAN</label>
-                        <input type="text" id="eanFilter" class="form-control" placeholder="EAN kodu...">
+                        <label for="productDescription">Açıklama</label>
+                        <textarea id="productDescription" name="productDescription" class="form-control" rows="3" placeholder="Ürün hakkında detaylı açıklama..."></textarea>
                     </div>
+                </div>
 
+                <div class="form-section">
+                    <h3>🛒 Pazaryeri Bilgileri</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="brands">Markalar</label>
+                            <select id="brandsSearch" class="form-control" style="margin-bottom: 0.5rem;">
+                                <option value="">Marka seçin...</option>
+                                {% for brand in brands %}
+                                    <option value="{{ brand.id }}">{{ brand.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div id="brandsSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
+                                <small style="color: #6c757d;">Seçilen markalar burada görünecek...</small>
+                            </div>
+                            <div id="brandsHidden"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="marketplaces">Pazaryerleri</label>
+                            <select id="marketplacesSearch" class="form-control" style="margin-bottom: 0.5rem;">
+                                <option value="">Pazaryeri seçin...</option>
+                                {% for marketplace in marketplaces %}
+                                    <option value="{{ marketplace.id }}">{{ marketplace.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div id="marketplacesSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
+                                <small style="color: #6c757d;">Seçilen pazaryerleri burada görünecek...</small>
+                            </div>
+                            <div id="marketplacesHidden"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>🎨 Varyasyon Şablonları</h3>
                     <div class="form-group">
-                        <button type="button" id="clearAdvanced" class="btn btn-outline">
-                            🧹 Gelişmiş Temizle
+                        <label for="colorTemplate">Renkler</label>
+                        <input type="text" id="colorsSearch" placeholder="Renk ara..." class="form-control" style="margin-bottom: 0.5rem;">
+                        <div id="colorsResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 0.5rem; background: white;"></div>
+                        <div id="colorsSelected" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
+                            <small style="color: #6c757d;">Seçilen renkler burada görünecek...</small>
+                        </div>
+                        <div id="colorsHidden"></div>
+                        <div class="input-group" style="margin-top: 0.5rem; max-width: 400px;">
+                            <input type="text" id="newColorInput" placeholder="Yeni renk girin..." class="form-control" aria-label="Yeni renk girin">
+                            <button type="button" id="addNewColorBtn" class="btn btn-primary" style="min-width: 120px;">+ Yeni Renk Ekle</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="sizeTableBtn">Beden Tablosu</label>
+                        <button type="button" class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2" id="sizeTableBtn" data-bs-toggle="modal" data-bs-target="#sizeTableModal" style="font-size:1.1rem; font-weight:500;">
+                            <span style="font-size:1.5rem; margin-right:0.5rem;">📏</span> Beden Tablosu Oluştur/Düzenle
                         </button>
+                        <input type="hidden" name="sizeTableData" id="sizeTableData">
+                        <div id="sizeTablePreview" class="table-preview-container" style="display: none;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="customTableBtn">Custom Tablo</label>
+                        <input type="text" id="customTableTitle" class="form-control mb-2" placeholder="Tablo başlığı (ör: Malzeme İçeriği)">
+                        <button type="button" class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-3 mb-2" id="customTableBtn" data-bs-toggle="modal" data-bs-target="#customTableModal" style="font-size:1.1rem; font-weight:500;">
+                            <span style="font-size:1.5rem; margin-right:0.5rem;">⚙️</span> Custom Tablo Oluştur/Düzenle
+                        </button>
+                        <input type="hidden" name="customTableData" id="customTableData">
+                        <div id="customTablePreview" class="table-preview-container" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div style="text-align: right; margin-top: 2rem;">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">İptal</button>
+                    <button type="button" class="btn btn-primary" id="goToVariationsBtn">İlerle</button>
+                </div>
+            </div>
+            <!-- Form Step1 End -->
+
+            <!-- Form Step2:Select Variations Start -->
+            <div id="step2" style="display:none;">
+                <h3><span style="font-size:1.3rem;">🧩</span> Varyasyonları Seç</h3>
+                <div id="variationTableContainer"></div>
+                <input type="hidden" name="variationsData" id="variationsData">
+                <div style="text-align: right; margin-top: 2rem;">
+                    <button type="button" class="btn btn-secondary" id="backToStep1Btn">Geri</button>
+                    <button type="submit" class="btn btn-success" id="submitBtn">Kaydet</button>
+                </div>
+            </div>
+            <!-- Form Step2 End -->
+
+        </form>
+
+        <!-- Size Table Model Start -->
+        <div class="modal fade" id="sizeTableModal" tabindex="-1" aria-labelledby="sizeTableModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="sizeTableModalLabel"><span style="font-size:1.3rem;">📏</span> Beden Tablosu Oluştur</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="sizeTable">
+                                <thead>
+                                    <tr>
+                                        <th>Beden</th>
+                                        <th>En</th>
+                                        <th>Boy</th>
+                                        <th>Yükseklik</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                        <button type="button" class="btn btn-success" id="addSizeRowBtn">+ Satır Ekle</button>
+                        <button type="button" class="btn btn-primary" id="saveSizeTableBtn">Kaydet</button>
                     </div>
                 </div>
             </div>
         </div>
+        <!-- Size Table Model End -->
 
-        <!-- Stats Bar -->
-        <div class="stats-bar">
-            <div class="stats-info">
-                <span class="stats-count" id="totalCount">{{ totalProducts }}</span> ürün listeleniyor
-                <span id="filterInfo"></span>
+        <!-- Custom Table Model Start -->
+        <div class="modal fade" id="customTableModal" tabindex="-1" aria-labelledby="customTableModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="customTableModalLabel"><span style="font-size:1.3rem;">⚙️</span> Custom Tablo Oluştur</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="customTable">
+                                <thead>
+                                    <tr>
+                                        <th>Değer</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                        <button type="button" class="btn btn-success" id="addCustomRowBtn">+ Satır Ekle</button>
+                        <button type="button" class="btn btn-primary" id="saveCustomTableBtn">Kaydet</button>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <!-- Products Container -->
-        <div class="products-container">
-            <div class="products-grid" id="productsGrid">
-                <!-- Initial products will be loaded here -->
-            </div>
-            
-            <!-- Load More Button -->
-            <div class="load-more-container" id="loadMoreContainer" style="display: none;">
-                <button type="button" id="loadMoreBtn" class="load-more-btn">
-                    📦 Daha Fazla Ürün Yükle
-                </button>
-            </div>
-
-            <!-- Loading State -->
-            <div class="loading-products" id="loadingProducts" style="display: none;">
-                <div class="loading-spinner"></div>
-                <p>Ürünler yükleniyor...</p>
-            </div>
-
-            <!-- Empty State -->
-            <div class="empty-state" id="emptyState" style="display: none;">
-                <div class="empty-icon">📦</div>
-                <h3 class="empty-title">Ürün bulunamadı</h3>
-                <p class="empty-message">
-                    Arama kriterlerinizi değiştirmeyi deneyin veya yeni ürün ekleyin.
-                </p>
-            </div>
-        </div>
+        <!-- Custom Table Model End -->
     </div>
-
-    <div class="modal fade" id="exportConfirmModal" tabindex="-1" aria-labelledby="exportConfirmModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exportConfirmModalLabel">Excel İndirme Onayı</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
-            </div>
-            <div class="modal-body">
-                <p>Bu filtreleme sonuçlarını Excel formatında indirmek istediğinize emin misiniz?</p>
-                <p id="exportProductCount" class="text-muted"></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-                <a href="#" id="confirmExportBtn" class="btn btn-primary">İndir</a>
-            </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Hidden data for JavaScript -->
-    <script type="application/json" id="catalogData">
-        {
-            "initialProducts": {{ initialProducts|json_encode|raw }},
-            "totalProducts": {{ totalProducts }},
-            "hasMore": {{ hasMore ? 'true' : 'false' }},
-            "currentCategory": {{ currentCategory|json_encode|raw }},
-            "currentSearch": {{ currentSearch|json_encode|raw }},
-            "limit": {{ limit }},
-            "apiEndpoints": {
-                "products": "{{ path('catalog_api_products') }}",
-                "search": "{{ path('catalog_api_search') }}",
-                "export": "{{ path('catalog_export_excel') }}"
-            }
-        }
-    </script>
+    {% if selectedProduct %}
+        <script type="application/json" id="selectedProductData">
+            {{ selectedProduct|json_encode|raw }}
+        </script>
+    {% endif %}
 {% endblock %}
 
 {% block body_scripts %}
     {{ parent() }}
-    <script src="{{ asset('assets/js/setProduct.js') }}"></script>
+    <script src="{{ asset('assets/js/setProduct.js') }}"></script> 
 {% endblock %}
