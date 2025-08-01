@@ -24,6 +24,7 @@ use App\Service\DataProcessingService;
 use App\Service\VariantService;
 use App\Service\SearchService;
 use App\Service\ProductService;
+use Psr\Log\LoggerInterface;
 
 
 #[Route('/product')]
@@ -53,7 +54,8 @@ class ProductController extends AbstractController
         DataProcessingService $dataProcessor,
         VariantService $variantService,
         SearchService $searchService,
-        ProductService $productService
+        ProductService $productService,
+        LoggerInterface $logger
     ) {
         $this->csrfTokenManager = $csrfTokenManager;
         $this->securityService = $securityService;
@@ -61,6 +63,7 @@ class ProductController extends AbstractController
         $this->variantService = $variantService;
         $this->searchService = $searchService;
         $this->productService = $productService;
+        $this->logger = $logger;
     }
     
     // ===========================================
@@ -134,9 +137,10 @@ class ProductController extends AbstractController
     #[Route('/search-products', name: 'product_search_products', methods: ['GET'])]
     public function searchProducts(Request $request): JsonResponse
     {
+        
         try {
             $query = trim($request->query->get('q', ''));
-            if (strlen($query) < 2) {
+            if (strlen($query) < 3) {
                 return new JsonResponse(['items' => []]);
             }
             $product = $this->searchService->findProductByQuery($query);
