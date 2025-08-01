@@ -26,11 +26,11 @@
             <div class="form-section" style="background: #f8f9fa; border-color: #17a2b8;">
                 <h3 style="border-color: #17a2b8; color: #17a2b8;">🔍 Set Olacak Ürün</h3>
                 <div class="form-group" style="position: relative;">
-                    <label for="productSearch">ARA (IWASKU)</label>
+                    <label for="productSearch">Ara (IWASKU)</label>
                     <input type="text" 
                            id="productSearch" 
                            class="form-control" 
-                           placeholder="Örn: IM33200KZRQC veya IM33200KZRQC - IWASKU"
+                           placeholder="e.g. IM33200KZRQC or IM33200KZRQC - IWASKU"
                            autocomplete="off">
                     <div id="productSearchResults" style="display: none; position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; background: white; border-radius: 4px; margin-top: 2px;"></div>
                 </div>
@@ -46,23 +46,22 @@
             <div class="form-section">
                 <h3>📦 Sete Ait Ürünleri Ekle</h3>
                 <div class="form-group" style="position: relative;">
-                    <label for="iwaskuSearch">İwasku Ürün Ara</label>
+                    <label for="iwaskuSearch">IWASKU Ara</label>
                     <input type="text" 
                            id="iwaskuSearch" 
                            class="form-control" 
-                           placeholder="İwasku kodu veya ürün adı ile ara..."
+                           placeholder="e.g. IM33200KZRQC or IM33200KZRQC - IWASKU"
                            autocomplete="off">
                     <div id="iwaskuSearchResults" style="display: none; position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; background: white; border-radius: 4px; margin-top: 2px;"></div>
                 </div>
 
                 <div id="selectedIwaskuContainer" style="margin-top: 1rem;">
-                    <h5>Seçilen İwasku Ürünleri:</h5>
+                    <h5>Seçilen Sete Ait Ürünler:</h5>
                     <div id="selectedIwaskuList" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 1rem; background: #f8f9fa;">
-                        <small style="color: #6c757d;">Henüz İwasku ürünü seçilmedi</small>
+                        <small style="color: #6c757d;">Henüz Ürün Seçilmedi</small>
                     </div>
                 </div>
             </div>
-
             <!-- Submit Butonu -->
             <div style="text-align: right; margin-top: 2rem;">
                 <button type="button" class="btn btn-secondary me-2" onclick="window.location.href='{{ path('product') }}'">
@@ -83,25 +82,20 @@
             csrfToken: '{{ csrf_token('set_product_form') }}',
             endpoints: {
                 searchProducts: '{{ path('set_product_search_products') }}'
-                // searchIwasku artık gerekli değil
             }
         };
-
         const SetProduct = {
             selectedProduct: null,
             selectedIwasku: [],
-
             init() {
                 this.bindEvents();
             },
-
             bindEvents() {
                 // Ana ürün arama
                 document.getElementById('productSearch').addEventListener('input', (e) => {
                     this.handleSearch(e.target.value, 'product');
                 });
                 
-                // İwasku arama - aynı endpoint'i kullan
                 document.getElementById('iwaskuSearch').addEventListener('input', (e) => {
                     this.handleSearch(e.target.value, 'iwasku');
                 });
@@ -133,7 +127,6 @@
                     return;
                 }
 
-                // Her iki arama da aynı endpoint'i kullanıyor
                 fetch(`${window.setProductConfig.endpoints.searchProducts}?q=${encodeURIComponent(query)}`)
                     .then(response => response.json())
                     .then(data => {
@@ -146,18 +139,14 @@
 
             displayResults(items, type) {
                 const container = document.getElementById(type + 'SearchResults');
-                
                 if (items.length === 0) {
                     container.innerHTML = '<div style="padding: 0.75rem; color: #6c757d;">İwasku ürünü bulunamadı</div>';
                     container.style.display = 'block';
                     return;
                 }
-
                 const html = items.map((item, itemIndex) => {
                     const displayText = `${item.iwasku} - ${item.name}`;
                     const setIndicator = item.isSetProduct ? ' 📦 (Set Ürün)' : '';
-                    
-                    // onclick eventi yerine data attribute kullanıp event listener ekleyelim
                     return `
                         <div class="search-result-item" 
                              data-type="${type}"
@@ -171,7 +160,6 @@
                         </div>
                     `;
                 }).join('');
-
                 container.innerHTML = html;
                 container.style.display = 'block';
                 this.bindResultClickEvents(items, type);
@@ -180,7 +168,6 @@
             bindResultClickEvents(items, type) {
                 const container = document.getElementById(type + 'SearchResults');
                 const resultItems = container.querySelectorAll('.search-result-item');
-                
                 resultItems.forEach((element, index) => {
                     element.addEventListener('click', () => {
                         const item = items[index];
@@ -194,14 +181,10 @@
             },
 
             selectProduct(id, name, identifier, iwasku, description, bundleProducts = []) {
-                console.log('selectProduct çağrıldı:', id, name, bundleProducts);
-                
                 this.selectedProduct = { id, name, identifier, iwasku, description, bundleProducts };
-                
                 document.getElementById('productSearch').value = `${iwasku} - ${name}`;
                 document.getElementById('selectedProductId').value = id;
                 document.getElementById('productSearchResults').style.display = 'none';
-                
                 const setInfo = bundleProducts.length > 0 ? 
                     `<p><strong>📦 Set Ürün:</strong> ${bundleProducts.length} ürün içeriyor</p>` : '';
                 
@@ -216,8 +199,6 @@
                 
                 document.getElementById('selectedProductDetails').innerHTML = detailsHtml;
                 document.getElementById('selectedProductInfo').style.display = 'block';
-                
-                // Eğer mevcut set ürünleri varsa bunları ekle
                 if (bundleProducts.length > 0) {
                     console.log('Bundle products bulundu, ekleniyor:', bundleProducts);
                     this.selectedIwasku = bundleProducts.map(bp => ({
@@ -232,7 +213,6 @@
                     this.selectedIwasku = [];
                     this.updateIwaskuList();
                 }
-                
                 this.updateSubmitButton();
             },
 
@@ -302,7 +282,6 @@
                         </div>
                     `;
                 }).join('');
-
                 container.innerHTML = html;
                 document.getElementById('iwaskuItemsData').value = JSON.stringify(this.selectedIwasku);
             },
@@ -331,13 +310,11 @@
                     alert('Lütfen bir ana ürün seçin!');
                     return;
                 }
-
                 if (this.selectedIwasku.length === 0) {
                     e.preventDefault();
                     alert('Lütfen en az bir İwasku ürünü ekleyin!');
                     return;
                 }
-
                 document.getElementById('iwaskuItemsData').value = JSON.stringify(this.selectedIwasku);
             }
         };
