@@ -18,7 +18,7 @@
         {% endfor %}
 
         <form id="setProductForm" method="POST" action="{{ path('set_product_create') }}">
-            <input type="hidden" name="_token" value="{{ csrf_token }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('set_product_form') }}">
             <input type="hidden" id="selectedProductId" name="selectedProductId" value="">
             <input type="hidden" id="iwaskuItemsData" name="iwaskuItems" value="">
 
@@ -80,7 +80,7 @@
     {{ parent() }}
         <script>
         window.setProductConfig = {
-            csrfToken: '{{ csrf_token }}',
+            csrfToken: '{{ csrf_token('set_product_form') }}',
             endpoints: {
                 searchProducts: '{{ path('set_product_search_products') }}'
                 // searchIwasku artık gerekli değil

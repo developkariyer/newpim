@@ -110,6 +110,11 @@ class SetProductController extends AbstractController
             if (!$productId) {
                 throw new \InvalidArgumentException('Ürün seçilmedi');
             }
+            $iwaskuItems = json_decode($iwaskuItemsJson, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \InvalidArgumentException('İwasku ürünleri JSON formatı hatalı: ' . json_last_error_msg());
+            }
+            
             if (empty($iwaskuItems)) {
                 throw new \InvalidArgumentException('İwasku ürünleri seçilmedi');
             }
