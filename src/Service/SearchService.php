@@ -191,6 +191,7 @@ class SearchService
                 }
             }
             $variants = $this->getProductVariants($product, $customTableTitle);
+            $bundleProducts = $this->getBundleProducts($product);
             $category = $product->getProductCategory();
             $categoryInfo = $category ? [
                 'id' => $category->getId(),
@@ -211,6 +212,9 @@ class SearchService
                 'variants' => $variants,
                 'variantCount' => count($variants),
                 'hasVariants' => !empty($variants),
+                'bundleProducts' => $bundleProducts,
+                'bundleProductCount' => count($bundleProducts),
+                'hasBundleProducts' => !empty($bundleProducts)
             ];
         } catch (\Exception $e) {
             error_log('Format product error: ' . $e->getMessage());
@@ -227,8 +231,42 @@ class SearchService
                 'variantCount' => 0,
                 'hasVariants' => false,
                 'createdAt' => null,
-                'modifiedAt' => null
+                'modifiedAt' => null,
+                'bundleProducts' => [],
+                'bundleProductCount' => 0,
+                'hasBundleProducts' => false
             ];
+        }
+    }
+
+    private function getBundleProducts(Product $product): array
+    {
+        try {
+            $bundleProducts = $product->getBundleProducts();
+            if (!$bundleProducts || !is_array($bundleProducts)) {
+                return [];
+            }
+            $formattedBundleProducts = [];
+            foreach ($bundleProducts as $bundleProduct) {
+                $quantity = 1;
+                $colorObject = method_exists($bundleProduct, 'getVariationColor') ? $bundleProduct->getVariationColor() : null;
+                $variationColor = $colorObject ? $colorObject->getColor() : null;
+                $formattedBundleProducts[] = [
+                    'id' => $bundleProduct->getId(),
+                    'key' => $bundleProduct->getKey() ?? '',
+                    'identifier' => $bundleProduct->getProductIdentifier() ?? '',
+                    'iwasku' => $bundleProduct->getIwasku() ?? '',
+                    'quantity' => $quantity,
+                    'published' => $bundleProduct->getPublished() ?? true,
+                    'size' => $bundleProduct->getVariationSize() : null,
+                    'color' => $variationColor,
+                    'customField' => $bundleProduct->getCustomField() ?? ''
+                ];
+            }
+            return $formattedBundleProducts;
+        } catch (\Exception $e) {
+            error_log('Get bundle products error: ' . $e->getMessage());
+            return [];
         }
     }
 

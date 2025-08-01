@@ -398,9 +398,15 @@ class CatalogSystem {
         row.setAttribute('aria-expanded', 'false');
 
         const hasVariants = product.hasVariants;
+        const hasBundleProducts = product.hasBundleProducts || (product.bundleProducts && product.bundleProducts.length > 0);
+    
         const variantBadge = hasVariants 
             ? `<span class="variant-badge">✅ ${product.variantCount} Varyant</span>`
             : `<span class="no-variant-badge">➖ Varyant Yok</span>`;
+
+        const setBadge = hasBundleProducts 
+            ? `<span class="set-badge">🎁 ${product.bundleProducts.length} Set Ürünü</span>`
+            : '';
 
         row.innerHTML = `
             <div class="product-content">
@@ -409,15 +415,13 @@ class CatalogSystem {
                         ? `<img src="${this.escapeHtml(product.imageUrl)}" alt="${this.escapeHtml(product.name)}" loading="lazy">` 
                         : '<div class="no-image">📷</div>'
                     }
-                </div>
-                
+                </div>                
                 <div class="product-info">
                     <h3 class="product-name">${this.escapeHtml(product.name)}</h3>
                     <div class="product-identifier">${this.escapeHtml(product.productIdentifier)}</div>
                     ${product.category ? `<span class="product-category">${this.escapeHtml(product.category.displayName)}</span>` : ''}
                     ${product.description ? `<p class="product-description">${this.escapeHtml(product.description)}</p>` : ''}
-                </div>
-                
+                </div>                
                 <div class="product-meta">
                     <div class="product-actions">
                         <button class="edit-btn" data-product-id="${product.id}" data-action="edit" title="Ürünü Düzenle">
@@ -425,15 +429,100 @@ class CatalogSystem {
                             <span>Düzenle</span>
                         </button>
                         ${variantBadge}
-                        ${hasVariants ? '<span class="expand-icon" data-action="expand">▼</span>' : ''}
+                        ${setBadge}
+                        ${(hasVariants || hasBundleProducts) ? '<span class="expand-icon" data-action="expand">▼</span>' : ''}
                     </div>
                 </div>
-            </div>
-            
+            </div>            
             ${hasVariants ? this.createVariantsSection(product.variants) : ''}
+            ${hasBundleProducts ? this.createSetProductsSection(product.bundleProducts) : ''}
         `;
-
         return row;
+    }
+
+    createSetProductsSection(bundleProducts) {
+        if (!bundleProducts || bundleProducts.length === 0) return '';
+        const setProductRows = bundleProducts.map(bundleProduct => {
+            const fields = [];
+            if (bundleProduct.iwasku) {
+                fields.push(`
+                    <div class="set-field iwasku">
+                        <span class="set-field-label">🏷️ IWASKU</span>
+                        <span class="set-field-value">${this.escapeHtml(bundleProduct.iwasku)}</span>
+                    </div>
+                `);
+            }
+            // Key/Name
+            if (bundleProduct.key) {
+                fields.push(`
+                    <div class="set-field name">
+                        <span class="set-field-label">📦 Ürün</span>
+                        <span class="set-field-value">${this.escapeHtml(bundleProduct.key)}</span>
+                    </div>
+                `);
+            }
+            // Beden
+            if (bundleProduct.size) {
+                fields.push(`
+                    <div class="set-field size">
+                        <span class="set-field-label">📏 Beden</span>
+                        <span class="set-field-value">${this.escapeHtml(bundleProduct.size)}</span>
+                    </div>
+                `);
+            }
+            // Renk
+            if (bundleProduct.color?.name) {
+                fields.push(`
+                    <div class="set-field color">
+                        <span class="set-field-label">🎨 Renk</span>
+                        <span class="set-field-value">${this.escapeHtml(bundleProduct.color)}</span>
+                    </div>
+                `);
+            }
+            // Custom field
+            if (bundleProduct.customField && bundleProduct.customFieldTitle) {
+                fields.push(`
+                    <div class="set-field custom">
+                        <span class="set-field-label">⚙️ Custom</span>
+                        <span class="set-field-value">${this.escapeHtml(bundleProduct.customField)}</span>
+                    </div>
+                `);
+            }
+            // Miktar (1'den fazlaysa göster)
+            if (bundleProduct.quantity && bundleProduct.quantity > 1) {
+                fields.push(`
+                    <div class="set-field quantity">
+                        <span class="set-field-label">🔢 Adet</span>
+                        <span class="set-field-value">${bundleProduct.quantity}</span>
+                    </div>
+                `);
+            }
+            const isPublished = bundleProduct.published !== false;
+            const statusClass = isPublished ? 'set-status-active' : 'set-status-inactive';
+            const statusText = isPublished ? '✨ Aktif' : '❌ Pasif';
+            return `
+                <div class="set-product-row ${isPublished ? '' : 'set-product-row-inactive'}">
+                    <span class="set-status ${statusClass}">${statusText}</span>
+                    <div class="set-product-info">
+                        ${fields.join('')}
+                    </div>
+                    <div class="set-product-identifier">
+                        ${bundleProduct.identifier ? `<small>ID: ${this.escapeHtml(bundleProduct.identifier)}</small>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+        return `
+            <div class="set-products-section">
+                <h4 class="set-products-title">
+                    🎁 Set İçeriği
+                    <span style="font-weight: 400; color: var(--text-secondary); font-size: 0.85rem;">(${bundleProducts.length} ürün)</span>
+                </h4>
+                <div class="set-products-table">
+                    ${setProductRows}
+                </div>
+            </div>
+        `;
     }
 
     createVariantsSection(variants) {
