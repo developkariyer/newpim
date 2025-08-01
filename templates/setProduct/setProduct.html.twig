@@ -201,7 +201,9 @@
 
 {% block body_scripts %}
     {{ parent() }}
-    <script>
+        <script>
+        console.log('Script başladı');
+        
         window.setProductConfig = {
             csrfToken: '{{ csrf_token }}',
             endpoints: {
@@ -210,31 +212,57 @@
             }
         };
 
+        console.log('Config:', window.setProductConfig);
+
         // Set Product functionality
         const SetProduct = {
             selectedProduct: null,
             selectedIwasku: [],
 
             init() {
+                console.log('SetProduct.init() çağrıldı');
                 this.bindEvents();
             },
 
             bindEvents() {
+                console.log('bindEvents çağrıldı');
+                
                 // Ana ürün arama
-                document.getElementById('productSearch').addEventListener('input', this.handleProductSearch.bind(this));
-                document.getElementById('clearSelectedProduct').addEventListener('click', this.clearSelectedProduct.bind(this));
+                const productSearch = document.getElementById('productSearch');
+                if (productSearch) {
+                    console.log('productSearch bulundu, event listener ekleniyor');
+                    productSearch.addEventListener('input', this.handleProductSearch.bind(this));
+                } else {
+                    console.error('productSearch elementi bulunamadı!');
+                }
+                
+                const clearBtn = document.getElementById('clearSelectedProduct');
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', this.clearSelectedProduct.bind(this));
+                }
                 
                 // İwasku arama
-                document.getElementById('iwaskuSearch').addEventListener('input', this.handleIwaskuSearch.bind(this));
+                const iwaskuSearch = document.getElementById('iwaskuSearch');
+                if (iwaskuSearch) {
+                    console.log('iwaskuSearch bulundu, event listener ekleniyor');
+                    iwaskuSearch.addEventListener('input', this.handleIwaskuSearch.bind(this));
+                } else {
+                    console.error('iwaskuSearch elementi bulunamadı!');
+                }
                 
                 // Form submit
-                document.getElementById('setProductForm').addEventListener('submit', this.handleSubmit.bind(this));
+                const form = document.getElementById('setProductForm');
+                if (form) {
+                    form.addEventListener('submit', this.handleSubmit.bind(this));
+                }
                 
                 // Dış tıklama ile sonuçları gizle
                 document.addEventListener('click', this.handleOutsideClick.bind(this));
             },
 
             handleProductSearch(e) {
+                console.log('handleProductSearch çağrıldı, değer:', e.target.value);
+                
                 const query = e.target.value.trim();
                 const resultsContainer = document.getElementById('productSearchResults');
                 
@@ -243,9 +271,18 @@
                     return;
                 }
 
+                console.log('Fetch yapılıyor:', window.setProductConfig.endpoints.searchProducts);
+
                 fetch(`${window.setProductConfig.endpoints.searchProducts}?q=${encodeURIComponent(query)}`)
-                    .then(response => response.json())
+                    .then(response => {
+                        console.log('Response alındı:', response);
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
                     .then(data => {
+                        console.log('Data alındı:', data);
                         this.displayProductResults(data.items || []);
                     })
                     .catch(error => {
@@ -255,10 +292,13 @@
             },
 
             displayProductResults(products) {
+                console.log('displayProductResults çağrıldı, ürün sayısı:', products.length);
+                
                 const resultsContainer = document.getElementById('productSearchResults');
                 
                 if (products.length === 0) {
-                    resultsContainer.style.display = 'none';
+                    resultsContainer.innerHTML = '<div class="search-result-item">Ürün bulunamadı</div>';
+                    resultsContainer.style.display = 'block';
                     return;
                 }
 
@@ -270,11 +310,14 @@
                     </div>
                 `).join('');
 
+                console.log('HTML oluşturuldu:', html);
                 resultsContainer.innerHTML = html;
                 resultsContainer.style.display = 'block';
             },
 
             selectProduct(id, name, identifier, iwasku, description) {
+                console.log('selectProduct çağrıldı:', id, name, identifier, iwasku);
+                
                 this.selectedProduct = { id, name, identifier, iwasku, description };
                 
                 document.getElementById('productSearch').value = `${iwasku} - ${name}`;
@@ -304,6 +347,8 @@
             },
 
             handleIwaskuSearch(e) {
+                console.log('handleIwaskuSearch çağrıldı, değer:', e.target.value);
+                
                 const query = e.target.value.trim();
                 const resultsContainer = document.getElementById('iwaskuSearchResults');
                 
@@ -315,6 +360,7 @@
                 fetch(`${window.setProductConfig.endpoints.searchIwasku}?q=${encodeURIComponent(query)}`)
                     .then(response => response.json())
                     .then(data => {
+                        console.log('İwasku data:', data);
                         this.displayIwaskuResults(data.items || []);
                     })
                     .catch(error => {
@@ -327,7 +373,8 @@
                 const resultsContainer = document.getElementById('iwaskuSearchResults');
                 
                 if (products.length === 0) {
-                    resultsContainer.style.display = 'none';
+                    resultsContainer.innerHTML = '<div class="search-result-item">İwasku ürünü bulunamadı</div>';
+                    resultsContainer.style.display = 'block';
                     return;
                 }
 
@@ -343,6 +390,8 @@
             },
 
             addIwaskuProduct(id, name, iwasku, identifier) {
+                console.log('addIwaskuProduct çağrıldı:', id, name, iwasku);
+                
                 // Zaten eklenmiş mi kontrol et
                 if (this.selectedIwasku.find(item => item.id === id)) {
                     alert('Bu ürün zaten eklenmiş!');
@@ -443,6 +492,7 @@
 
         // Sayfa yüklendiğinde başlat
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM yüklendi, SetProduct.init çağrılıyor');
             SetProduct.init();
         });
     </script>
