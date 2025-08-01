@@ -295,26 +295,6 @@
                 this.updateSubmitButton();
             },
 
-            selectProduct(id, name, identifier, description) {
-                this.selectedProduct = { id, name, identifier, description };
-                
-                document.getElementById('productSearch').value = `${identifier} - ${name}`;
-                document.getElementById('selectedProductId').value = id;
-                document.getElementById('productSearchResults').style.display = 'none';
-                
-                const detailsHtml = `
-                    <p><strong>ID:</strong> ${id}</p>
-                    <p><strong>Identifier:</strong> ${identifier}</p>
-                    <p><strong>İsim:</strong> ${name}</p>
-                    ${description ? `<p><strong>Açıklama:</strong> ${description}</p>` : ''}
-                `;
-                
-                document.getElementById('selectedProductDetails').innerHTML = detailsHtml;
-                document.getElementById('selectedProductInfo').style.display = 'block';
-                
-                this.updateSubmitButton();
-            },
-
             clearSelectedProduct() {
                 this.selectedProduct = null;
                 document.getElementById('productSearch').value = '';
