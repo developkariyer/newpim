@@ -87,23 +87,20 @@ class SetProductController extends AbstractController
             if (strlen($query) < 2) {
                 return new JsonResponse(['items' => []]);
             }
-
-            // İwasku ürünlerini ara (Product modelinde iwasku field'ı olduğunu varsayıyorum)
             $listing = new ProductListing();
-            $listing->setCondition("published = 1 AND (iwasku LIKE ? OR name LIKE ?)", 
-                ['%' . $query . '%', '%' . $query . '%']);
+            $listing->setCondition("published = 1 AND (iwasku LIKE ? OR name LIKE ? OR identifier LIKE ?)", 
+                ['%' . $query . '%', '%' . $query . '%', '%' . $query . '%']);
             $listing->setLimit(10);
-            
             $results = [];
             foreach ($listing->getObjects() as $product) {
                 $results[] = [
                     'id' => $product->getId(),
                     'name' => $product->getName(),
+                    'identifier' => $product->getIdentifier(),
                     'iwasku' => $product->getIwasku(),
-                    'identifier' => $product->getIdentifier()
+                    'description' => $product->getDescription()
                 ];
             }
-
             return new JsonResponse(['items' => $results]);
 
         } catch (\Exception $e) {
