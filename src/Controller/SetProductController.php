@@ -60,15 +60,14 @@ class SetProductController extends AbstractController
                 return new JsonResponse(['items' => []]);
             }
             $listing = new ProductListing();
-            $listing->setCondition("published = 1 AND (iwasku LIKE ? OR name LIKE ? OR identifier LIKE ?)", 
-                ['%' . $query . '%', '%' . $query . '%', '%' . $query . '%']);
-            $listing->setLimit(10);
+            $listing->setCondition("published = 1 AND iwasku LIKE ?", 
+                ['%' . $query . '%']);
+            $listing->setLimit(11);
             $results = [];
             foreach ($listing->getObjects() as $product) {
                 $results[] = [
                     'id' => $product->getId(),
-                    'name' => $product->getName() ?? '',
-                    'identifier' => $product->getIdentifier() ?? '',
+                    'name' => $product->getKey() ?? '',
                     'iwasku' => $product->getIwasku() ?? '',
                     'description' => $product->getDescription() ?? ''
                 ];
