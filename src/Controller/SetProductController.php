@@ -106,7 +106,7 @@ class SetProductController extends AbstractController
                 throw new \InvalidArgumentException('Geçersiz CSRF token');
             }
             $productId = $request->get('selectedProductId');
-            $iwaskuItems = $request->get('iwaskuItems', []);
+            $iwaskuItemsJson = $request->get('iwaskuItems', '[]');
             if (!$productId) {
                 throw new \InvalidArgumentException('Ürün seçilmedi');
             }
