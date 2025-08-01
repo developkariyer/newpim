@@ -53,7 +53,8 @@ class ProductController extends AbstractController
         DataProcessingService $dataProcessor,
         VariantService $variantService,
         SearchService $searchService,
-        ProductService $productService
+        ProductService $productService,
+        LoggerInterface $logger
     ) {
         $this->csrfTokenManager = $csrfTokenManager;
         $this->securityService = $securityService;
@@ -61,6 +62,7 @@ class ProductController extends AbstractController
         $this->variantService = $variantService;
         $this->searchService = $searchService;
         $this->productService = $productService;
+        $this->logger = $logger;
     }
     
     // ===========================================
@@ -134,34 +136,33 @@ class ProductController extends AbstractController
     #[Route('/search-products', name: 'product_search_products', methods: ['GET'])]
     public function searchProducts(Request $request): JsonResponse
     {
-        // Debug log'ları ekleyin
-        error_log('🎯 Route HIT: /product/search-products');
-        error_log('🔍 Query parameter: ' . $request->query->get('q', 'NO_QUERY'));
+        $this->logger->info('🎯 Route HIT: /product/search-products');
+        $this->logger->info('🔍 Query parameter: ' . $request->query->get('q', 'NO_QUERY'));
         
         try {
             $query = trim($request->query->get('q', ''));
-            error_log('🔍 Processed query: ' . $query);
+            $this->logger->info('🔍 Processed query: ' . $query);
             
             if (strlen($query) < 2) {
-                error_log('⚠️ Query too short, returning empty');
+                $this->logger->warning('⚠️ Query too short, returning empty');
                 return new JsonResponse(['items' => []]);
             }
             
-            error_log('🔍 Calling SearchService...');
+            $this->logger->info('🔍 Calling SearchService...');
             $product = $this->searchService->findProductByQuery($query);
-            error_log('🔍 SearchService result: ' . ($product ? 'FOUND' : 'NOT_FOUND'));
+            $this->logger->info('🔍 SearchService result: ' . ($product ? 'FOUND' : 'NOT_FOUND'));
             
             if (!$product) {
                 return new JsonResponse(['items' => []]);
             }
             
             $productData = $this->dataProcessor->buildProductData($product);
-            error_log('✅ Returning product data');
+            $this->logger->info('✅ Returning product data');
             return new JsonResponse(['items' => [$productData]]);
 
         } catch (\Exception $e) {
-            error_log('❌ Exception in searchProducts: ' . $e->getMessage());
-            error_log('❌ Stack trace: ' . $e->getTraceAsString());
+            $this->logger->error('❌ Exception in searchProducts: ' . $e->getMessage());
+            $this->logger->error('❌ Stack trace: ' . $e->getTraceAsString());
             return new JsonResponse(['error' => $e->getMessage()], 500);
         }
     }
