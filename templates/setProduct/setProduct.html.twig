@@ -180,11 +180,12 @@
             },
 
             selectProduct(id, name, identifier, iwasku, description, bundleProductsJson = '[]') {
+                console.log('selectProduct çağrıldı:', id, name, bundleProductsJson);
                 let bundleProducts = [];
                 try {
-                    bundleProducts = JSON.parse(bundleProductsJson);
+                    bundleProducts = JSON.parse(bundleProductsJson.replace(/\\"/g, '"').replace(/\\'/g, "'"));
                 } catch (e) {
-                    console.warn('Bundle products parse hatası:', e);
+                    console.warn('Bundle products parse hatası:', e, bundleProductsJson);
                 }
                 this.selectedProduct = { id, name, identifier, iwasku, description, bundleProducts };
                 document.getElementById('productSearch').value = `${iwasku} - ${name}`;
@@ -204,46 +205,45 @@
                 document.getElementById('selectedProductDetails').innerHTML = detailsHtml;
                 document.getElementById('selectedProductInfo').style.display = 'block';
                 if (bundleProducts.length > 0) {
+                    console.log('Bundle products bulundu, ekleniyor:', bundleProducts);
                     this.selectedIwasku = bundleProducts.map(bp => ({
                         id: bp.id,
                         name: bp.name,
                         iwasku: bp.iwasku,
                         identifier: bp.identifier,
-                        quantity: bp.quantity
+                        quantity: bp.quantity || 1
                     }));
                     this.updateIwaskuList();
+                } else {
+                    this.selectedIwasku = [];
+                    this.updateIwaskuList();
                 }
-                
                 this.updateSubmitButton();
             },
 
             clearSelectedProduct() {
                 this.selectedProduct = null;
+                this.selectedIwasku = []; 
                 document.getElementById('productSearch').value = '';
                 document.getElementById('selectedProductId').value = '';
                 document.getElementById('selectedProductInfo').style.display = 'none';
+                this.updateIwaskuList(); 
                 this.updateSubmitButton();
             },
 
             addIwaskuProduct(id, name, iwasku, identifier) {
-                // Ana ürün ile aynı ürün seçilmesin
                 if (this.selectedProduct && this.selectedProduct.id === id) {
                     alert('Ana ürün ile aynı ürünü set ürünü olarak ekleyemezsiniz!');
                     return;
                 }
-
-                // Zaten eklenmiş mi kontrol et
                 if (this.selectedIwasku.find(item => item.id === id)) {
                     alert('Bu ürün zaten eklenmiş!');
                     return;
                 }
-
                 const iwaskuItem = { id, name, iwasku, identifier, quantity: 1 };
                 this.selectedIwasku.push(iwaskuItem);
-                
                 document.getElementById('iwaskuSearch').value = '';
                 document.getElementById('iwaskuSearchResults').style.display = 'none';
-                
                 this.updateIwaskuList();
                 this.updateSubmitButton();
             },
