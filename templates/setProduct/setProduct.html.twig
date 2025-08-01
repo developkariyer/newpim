@@ -146,32 +146,31 @@
 
             displayResults(items, type) {
                 const container = document.getElementById(type + 'SearchResults');
-                
                 if (items.length === 0) {
                     container.innerHTML = '<div style="padding: 0.75rem; color: #6c757d;">İwasku ürünü bulunamadı</div>';
                     container.style.display = 'block';
                     return;
                 }
-
                 const html = items.map(item => {
                     const displayText = `${item.iwasku} - ${item.name}`;
-                    
-                    // String'leri güvenli şekilde escape edelim
+                    const setIndicator = item.isSetProduct ? ' 📦 (Set Ürün)' : '';
                     const safeName = (item.name || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
                     const safeDescription = (item.description || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
                     const safeIwasku = (item.iwasku || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+                    const safeBundleProducts = JSON.stringify(item.bundleProducts || []).replace(/'/g, "\\'").replace(/"/g, '\\"');
                     
                     const clickHandler = type === 'product' ? 
-                        `SetProduct.selectProduct(${item.id}, '${safeName}', '${item.identifier}', '${safeIwasku}', '${safeDescription}')` :
+                        `SetProduct.selectProduct(${item.id}, '${safeName}', '${item.identifier}', '${safeIwasku}', '${safeDescription}', '${safeBundleProducts}')` :
                         `SetProduct.addIwaskuProduct(${item.id}, '${safeName}', '${safeIwasku}', '${item.identifier}')`;
                         
                     return `
-                        <div style="padding: 0.75rem; border-bottom: 1px solid #eee; cursor: pointer;" 
+                        <div style="padding: 0.75rem; border-bottom: 1px solid #eee; cursor: pointer; ${item.isSetProduct ? 'background-color: #fff3cd;' : ''}" 
                              onclick="${clickHandler}"
                              onmouseover="this.style.backgroundColor='#f8f9fa'" 
-                             onmouseout="this.style.backgroundColor='white'">
-                            <strong>${displayText}</strong>
+                             onmouseout="this.style.backgroundColor='${item.isSetProduct ? '#fff3cd' : 'white'}'">
+                            <strong>${displayText}${setIndicator}</strong>
                             ${item.description ? `<br><small style="color: #6c757d;">${item.description}</small>` : ''}
+                            ${item.isSetProduct ? `<br><small style="color: #856404;">Mevcut ${item.bundleProducts.length} set ürünü var</small>` : ''}
                         </div>
                     `;
                 }).join('');
@@ -180,12 +179,19 @@
                 container.style.display = 'block';
             },
 
-            selectProduct(id, name, identifier, iwasku, description) {
-                this.selectedProduct = { id, name, identifier, iwasku, description };
-                
+            selectProduct(id, name, identifier, iwasku, description, bundleProductsJson = '[]') {
+                let bundleProducts = [];
+                try {
+                    bundleProducts = JSON.parse(bundleProductsJson);
+                } catch (e) {
+                    console.warn('Bundle products parse hatası:', e);
+                }
+                this.selectedProduct = { id, name, identifier, iwasku, description, bundleProducts };
                 document.getElementById('productSearch').value = `${iwasku} - ${name}`;
                 document.getElementById('selectedProductId').value = id;
                 document.getElementById('productSearchResults').style.display = 'none';
+                const setInfo = bundleProducts.length > 0 ? 
+                    `<p><strong>📦 Set Ürün:</strong> ${bundleProducts.length} ürün içeriyor</p>` : '';
                 
                 const detailsHtml = `
                     <p><strong>ID:</strong> ${id}</p>
@@ -193,10 +199,20 @@
                     <p><strong>Identifier:</strong> ${identifier}</p>
                     <p><strong>İsim:</strong> ${name}</p>
                     ${description ? `<p><strong>Açıklama:</strong> ${description}</p>` : ''}
+                    ${setInfo}
                 `;
-                
                 document.getElementById('selectedProductDetails').innerHTML = detailsHtml;
                 document.getElementById('selectedProductInfo').style.display = 'block';
+                if (bundleProducts.length > 0) {
+                    this.selectedIwasku = bundleProducts.map(bp => ({
+                        id: bp.id,
+                        name: bp.name,
+                        iwasku: bp.iwasku,
+                        identifier: bp.identifier,
+                        quantity: bp.quantity
+                    }));
+                    this.updateIwaskuList();
+                }
                 
                 this.updateSubmitButton();
             },
@@ -234,33 +250,43 @@
 
             updateIwaskuList() {
                 const container = document.getElementById('selectedIwaskuList');
-                
                 if (this.selectedIwasku.length === 0) {
                     container.innerHTML = '<small style="color: #6c757d;">Henüz İwasku ürünü seçilmedi</small>';
                     return;
                 }
+                const isEditingSet = this.selectedProduct && this.selectedProduct.bundleProducts && this.selectedProduct.bundleProducts.length > 0;
+                const headerText = isEditingSet ? 
+                    `<div style="background: #d1ecf1; padding: 0.5rem; border-radius: 4px; margin-bottom: 1rem; color: #0c5460;">
+                        <strong>📝 Set Ürün Düzenleniyor:</strong> Mevcut ürünleri görebilir, silebilir veya yeni ürünler ekleyebilirsiniz.
+                    </div>` : '';
 
-                const html = this.selectedIwasku.map((item, index) => `
-                    <div style="display: flex; align-items: center; justify-content: space-between; background: white; border: 1px solid #dee2e6; border-radius: 4px; padding: 0.75rem; margin-bottom: 0.5rem;">
-                        <div style="flex: 1;">
-                            <strong>${item.iwasku}</strong> - ${item.name}
-                            <br><small style="color: #6c757d;">ID: ${item.identifier}</small>
+                const html = headerText + this.selectedIwasku.map((item, index) => {
+                    const isOriginal = isEditingSet && this.selectedProduct.bundleProducts.some(bp => bp.id === item.id);
+                    const originalBadge = isOriginal ? '<span style="background: #28a745; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-left: 5px;">Mevcut</span>' : '<span style="background: #007bff; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-left: 5px;">Yeni</span>';
+                    
+                    return `
+                        <div style="display: flex; align-items: center; justify-content: space-between; background: white; border: 1px solid #dee2e6; border-radius: 4px; padding: 0.75rem; margin-bottom: 0.5rem; ${isOriginal ? 'border-left: 4px solid #28a745;' : 'border-left: 4px solid #007bff;'}">
+                            <div style="flex: 1;">
+                                <strong>${item.iwasku}</strong> - ${item.name}${originalBadge}
+                                <br><small style="color: #6c757d;">ID: ${item.identifier}</small>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <label>Adet:</label>
+                                <input type="number" 
+                                       value="${item.quantity}" 
+                                       min="1" 
+                                       style="width: 60px; text-align: center; padding: 0.25rem;"
+                                       onchange="SetProduct.updateQuantity(${index}, this.value)">
+                                <button type="button" 
+                                        onclick="SetProduct.removeIwaskuProduct(${index})"
+                                        style="background: #dc3545; color: white; border: none; border-radius: 4px; padding: 0.25rem 0.5rem; cursor: pointer;"
+                                        title="${isOriginal ? 'Mevcut ürünü kaldır' : 'Yeni ürünü kaldır'}">
+                                    🗑️
+                                </button>
+                            </div>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <label>Adet:</label>
-                            <input type="number" 
-                                   value="${item.quantity}" 
-                                   min="1" 
-                                   style="width: 60px; text-align: center; padding: 0.25rem;"
-                                   onchange="SetProduct.updateQuantity(${index}, this.value)">
-                            <button type="button" 
-                                    onclick="SetProduct.removeIwaskuProduct(${index})"
-                                    style="background: #dc3545; color: white; border: none; border-radius: 4px; padding: 0.25rem 0.5rem; cursor: pointer;">
-                                🗑️
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
 
                 container.innerHTML = html;
                 document.getElementById('iwaskuItemsData').value = JSON.stringify(this.selectedIwasku);

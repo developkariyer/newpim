@@ -41,7 +41,6 @@ class SetProductController extends AbstractController
     {
         try {
             $csrfToken = $this->csrfTokenManager->getToken(self::CSRF_TOKEN_ID)->getValue();
-            
             return $this->render('setProduct/setProduct.html.twig', [
                 'csrf_token' => $csrfToken
             ]);
@@ -65,11 +64,29 @@ class SetProductController extends AbstractController
             $listing->setLimit(11);
             $results = [];
             foreach ($listing->getObjects() as $product) {
+                $bundleProducts = [];
+                if ($product->getBundleProducts()) {
+                    foreach ($product->getBundleProducts() as $bundleItem) {
+                        if ($bundleItem->getProduct()) {
+                            $bundleProducts[] = [
+                                'id' => $bundleItem->getProduct()->getId(),
+                                'name' => $bundleItem->getProduct()->getName() ?? '',
+                                'iwasku' => $bundleItem->getProduct()->getIwasku() ?? '',
+                                'identifier' => $bundleItem->getProduct()->getIdentifier() ?? '',
+                                'quantity' => $bundleItem->getQuantity() ?? 1
+                            ];
+                        }
+                    }
+                }
+
                 $results[] = [
                     'id' => $product->getId(),
                     'name' => $product->getKey() ?? '',
+                    'identifier' => $product->getProductIdentifier() ?? '',
                     'iwasku' => $product->getIwasku() ?? '',
-                    'description' => $product->getDescription() ?? ''
+                    'description' => $product->getDescription() ?? '',
+                    'bundleProducts' => $bundleProducts,
+                    'isSetProduct' => !empty($bundleProducts)
                 ];
             }
             return new JsonResponse(['items' => $results]);
@@ -86,32 +103,23 @@ class SetProductController extends AbstractController
     public function create(Request $request): Response
     {
         try {
-            // CSRF token kontrolü
             $token = $request->get('_token');
             if (!$this->isCsrfTokenValid(self::CSRF_TOKEN_ID, $token)) {
                 throw new \InvalidArgumentException('Geçersiz CSRF token');
             }
-
             $productId = $request->get('selectedProductId');
             $iwaskuItems = $request->get('iwaskuItems', []);
-
             if (!$productId) {
                 throw new \InvalidArgumentException('Ürün seçilmedi');
             }
-
             if (empty($iwaskuItems)) {
                 throw new \InvalidArgumentException('İwasku ürünleri seçilmedi');
             }
-
             $product = Product::getById((int)$productId);
             if (!$product) {
                 throw new \InvalidArgumentException('Seçilen ürün bulunamadı');
             }
-
-            // Set ürün oluşturma işlemi burada yapılacak
-            // Bu kısım ProductService'e eklenebilir
             $this->createSetProduct($product, $iwaskuItems);
-
             $this->addFlash('success', 'Set ürün başarıyla oluşturuldu');
             return $this->redirectToRoute('set-product');
 
