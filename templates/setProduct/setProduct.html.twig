@@ -3,128 +3,12 @@
 {% block stylesheets %}
     {{ parent() }}
     <link href="{{ asset('assets/css/product.css') }}" rel="stylesheet">
-    <style>
-        .set-product-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-        
-        .form-section {
-            background: #fff;
-            border: 2px solid #dee2e6;
-            border-radius: 8px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .form-section h3 {
-            margin: 0 0 1.5rem 0;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #007bff;
-            color: #007bff;
-            font-weight: 600;
-        }
-        
-        .search-container {
-            position: relative;
-            margin-bottom: 1rem;
-        }
-        
-        .search-results {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
-        
-        .search-result-item {
-            padding: 0.75rem;
-            border-bottom: 1px solid #eee;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .search-result-item:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .search-result-item:last-child {
-            border-bottom: none;
-        }
-        
-        .selected-product {
-            background: #e3f2fd;
-            border: 2px solid #2196f3;
-            border-radius: 6px;
-            padding: 1rem;
-            margin-top: 1rem;
-        }
-        
-        .iwasku-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .iwasku-item-info {
-            flex: 1;
-        }
-        
-        .iwasku-item-quantity {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin: 0 1rem;
-        }
-        
-        .quantity-input {
-            width: 80px;
-            text-align: center;
-        }
-        
-        .btn-remove {
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 0.25rem 0.5rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-        
-        .btn-remove:hover {
-            background: #c82333;
-        }
-        
-        .empty-state {
-            text-align: center;
-            color: #6c757d;
-            padding: 2rem;
-            background: #f8f9fa;
-            border-radius: 4px;
-            border: 2px dashed #dee2e6;
-        }
-    </style>
 {% endblock %}
 
 {% block title %}Set Ürün Oluştur{% endblock %}
 
 {% block content %}
-    <div class="set-product-container">
+    <div class="product-form-container">
         {% for label, messages in app.flashes %}
             {% for message in messages %}
                 <div class="alert alert-{{ label == 'danger' ? 'danger' : (label == 'success' ? 'success' : 'info') }}" style="margin-bottom: 1rem;">
@@ -139,49 +23,42 @@
             <input type="hidden" id="iwaskuItemsData" name="iwaskuItems" value="">
 
             <!-- Ana Ürün Seçimi -->
-            <div class="form-section">
-                <h3>🔍 Ana Ürün Seç</h3>
-                <div class="search-container">
-                    <label for="productSearch">Ürün Ara (Identifier veya İsim)</label>
+            <div class="form-section" style="background: #f8f9fa; border-color: #17a2b8;">
+                <h3 style="border-color: #17a2b8; color: #17a2b8;">🔍 Ana Ürün Seç</h3>
+                <div class="form-group" style="position: relative;">
+                    <label for="productSearch">Ürün Ara (İwasku veya İsim)</label>
                     <input type="text" 
                            id="productSearch" 
                            class="form-control" 
-                           placeholder="Örn: PTS-001 veya Premium Cotton T-Shirt"
+                           placeholder="Örn: IW-001 veya Premium Cotton T-Shirt"
                            autocomplete="off">
-                    <div id="productSearchResults" class="search-results" style="display: none;"></div>
+                    <div id="productSearchResults" style="display: none; position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; background: white; border-radius: 4px; margin-top: 2px;"></div>
                 </div>
                 
-                <div id="selectedProductInfo" style="display: none;">
-                    <div class="selected-product">
-                        <h5 style="margin: 0 0 0.5rem 0; color: #1976d2;">✅ Seçilen Ürün:</h5>
-                        <div id="selectedProductDetails"></div>
-                        <button type="button" id="clearSelectedProduct" class="btn btn-outline-secondary btn-sm" style="margin-top: 0.5rem;">
-                            ❌ Seçimi Temizle
-                        </button>
-                    </div>
+                <div id="selectedProductInfo" style="display: none; padding: 1rem; background: #e3f2fd; border-radius: 4px; margin-top: 1rem;">
+                    <h5 style="margin: 0 0 0.5rem 0; color: #1976d2;">✅ Seçilen Ürün:</h5>
+                    <div id="selectedProductDetails"></div>
+                    <button type="button" id="clearSelectedProduct" class="btn btn-outline-secondary btn-sm" style="margin-top: 0.5rem;">❌ Seçimi Temizle</button>
                 </div>
             </div>
 
             <!-- İwasku Ürünleri Seçimi -->
             <div class="form-section">
                 <h3>📦 İwasku Ürünleri Ekle</h3>
-                <div class="search-container">
+                <div class="form-group" style="position: relative;">
                     <label for="iwaskuSearch">İwasku Ürün Ara</label>
                     <input type="text" 
                            id="iwaskuSearch" 
                            class="form-control" 
                            placeholder="İwasku kodu veya ürün adı ile ara..."
                            autocomplete="off">
-                    <div id="iwaskuSearchResults" class="search-results" style="display: none;"></div>
+                    <div id="iwaskuSearchResults" style="display: none; position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; background: white; border-radius: 4px; margin-top: 2px;"></div>
                 </div>
 
-                <div id="selectedIwaskuContainer">
-                    <h5 style="margin: 1.5rem 0 1rem 0;">Seçilen İwasku Ürünleri:</h5>
-                    <div id="selectedIwaskuList">
-                        <div class="empty-state">
-                            <p style="margin: 0; font-size: 1.1rem;">📭 Henüz İwasku ürünü seçilmedi</p>
-                            <small>Yukarıdaki arama kutusunu kullanarak İwasku ürünleri ekleyin</small>
-                        </div>
+                <div id="selectedIwaskuContainer" style="margin-top: 1rem;">
+                    <h5>Seçilen İwasku Ürünleri:</h5>
+                    <div id="selectedIwaskuList" style="min-height: 50px; border: 2px dashed #dee2e6; border-radius: 4px; padding: 1rem; background: #f8f9fa;">
+                        <small style="color: #6c757d;">Henüz İwasku ürünü seçilmedi</small>
                     </div>
                 </div>
             </div>
@@ -201,9 +78,7 @@
 
 {% block body_scripts %}
     {{ parent() }}
-        <script>
-        console.log('Script başladı');
-        
+    <script>
         window.setProductConfig = {
             csrfToken: '{{ csrf_token }}',
             endpoints: {
@@ -212,121 +87,106 @@
             }
         };
 
-        console.log('Config:', window.setProductConfig);
-
-        // Set Product functionality
         const SetProduct = {
             selectedProduct: null,
             selectedIwasku: [],
 
             init() {
-                console.log('SetProduct.init() çağrıldı');
                 this.bindEvents();
             },
 
             bindEvents() {
-                console.log('bindEvents çağrıldı');
-                
-                // Ana ürün arama
-                const productSearch = document.getElementById('productSearch');
-                if (productSearch) {
-                    console.log('productSearch bulundu, event listener ekleniyor');
-                    productSearch.addEventListener('input', this.handleProductSearch.bind(this));
-                } else {
-                    console.error('productSearch elementi bulunamadı!');
-                }
-                
-                const clearBtn = document.getElementById('clearSelectedProduct');
-                if (clearBtn) {
-                    clearBtn.addEventListener('click', this.clearSelectedProduct.bind(this));
-                }
+                // Ana ürün arama - ProductController'daki gibi
+                document.getElementById('productSearch').addEventListener('input', (e) => {
+                    this.handleSearch(e.target.value, 'product');
+                });
                 
                 // İwasku arama
-                const iwaskuSearch = document.getElementById('iwaskuSearch');
-                if (iwaskuSearch) {
-                    console.log('iwaskuSearch bulundu, event listener ekleniyor');
-                    iwaskuSearch.addEventListener('input', this.handleIwaskuSearch.bind(this));
-                } else {
-                    console.error('iwaskuSearch elementi bulunamadı!');
-                }
-                
+                document.getElementById('iwaskuSearch').addEventListener('input', (e) => {
+                    this.handleSearch(e.target.value, 'iwasku');
+                });
+
+                // Temizle butonu
+                document.getElementById('clearSelectedProduct').addEventListener('click', () => {
+                    this.clearSelectedProduct();
+                });
+
                 // Form submit
-                const form = document.getElementById('setProductForm');
-                if (form) {
-                    form.addEventListener('submit', this.handleSubmit.bind(this));
-                }
-                
+                document.getElementById('setProductForm').addEventListener('submit', (e) => {
+                    this.handleSubmit(e);
+                });
+
                 // Dış tıklama ile sonuçları gizle
-                document.addEventListener('click', this.handleOutsideClick.bind(this));
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('#productSearch') && !e.target.closest('#productSearchResults')) {
+                        document.getElementById('productSearchResults').style.display = 'none';
+                    }
+                    if (!e.target.closest('#iwaskuSearch') && !e.target.closest('#iwaskuSearchResults')) {
+                        document.getElementById('iwaskuSearchResults').style.display = 'none';
+                    }
+                });
             },
 
-            handleProductSearch(e) {
-                console.log('handleProductSearch çağrıldı, değer:', e.target.value);
-                
-                const query = e.target.value.trim();
-                const resultsContainer = document.getElementById('productSearchResults');
-                
+            handleSearch(query, type) {
                 if (query.length < 2) {
-                    resultsContainer.style.display = 'none';
+                    document.getElementById(type + 'SearchResults').style.display = 'none';
                     return;
                 }
 
-                console.log('Fetch yapılıyor:', window.setProductConfig.endpoints.searchProducts);
+                const endpoint = type === 'product' ? 
+                    window.setProductConfig.endpoints.searchProducts : 
+                    window.setProductConfig.endpoints.searchIwasku;
 
-                fetch(`${window.setProductConfig.endpoints.searchProducts}?q=${encodeURIComponent(query)}`)
-                    .then(response => {
-                        console.log('Response alındı:', response);
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json();
-                    })
+                fetch(`${endpoint}?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
                     .then(data => {
-                        console.log('Data alındı:', data);
-                        this.displayProductResults(data.items || []);
+                        this.displayResults(data.items || [], type);
                     })
                     .catch(error => {
-                        console.error('Ürün arama hatası:', error);
-                        resultsContainer.style.display = 'none';
+                        console.error('Arama hatası:', error);
                     });
             },
 
-            displayProductResults(products) {
-                console.log('displayProductResults çağrıldı, ürün sayısı:', products.length);
+            displayResults(items, type) {
+                const container = document.getElementById(type + 'SearchResults');
                 
-                const resultsContainer = document.getElementById('productSearchResults');
-                
-                if (products.length === 0) {
-                    resultsContainer.innerHTML = '<div class="search-result-item">Ürün bulunamadı</div>';
-                    resultsContainer.style.display = 'block';
+                if (items.length === 0) {
+                    container.innerHTML = '<div style="padding: 0.75rem; color: #6c757d;">Ürün bulunamadı</div>';
+                    container.style.display = 'block';
                     return;
                 }
 
-                const html = products.map(product => `
-                    <div class="search-result-item" onclick="SetProduct.selectProduct(${product.id}, '${product.name.replace(/'/g, "\\'")}', '${product.identifier}', '${product.iwasku}', '${(product.description || '').replace(/'/g, "\\'")}')">
-                        <strong>${product.iwasku}</strong> - ${product.name}
-                        <br><small class="text-muted">ID: ${product.identifier}</small>
-                        ${product.description ? `<br><small class="text-muted">${product.description}</small>` : ''}
-                    </div>
-                `).join('');
+                const html = items.map(item => {
+                    const displayText = `${item.iwasku || item.identifier} - ${item.name}`;
+                    const clickHandler = type === 'product' ? 
+                        `SetProduct.selectProduct(${item.id}, '${this.escapeQuotes(item.name)}', '${item.identifier}', '${item.iwasku || ''}', '${this.escapeQuotes(item.description || '')}')` :
+                        `SetProduct.addIwaskuProduct(${item.id}, '${this.escapeQuotes(item.name)}', '${item.iwasku}', '${item.identifier}')`;
+                        
+                    return `
+                        <div style="padding: 0.75rem; border-bottom: 1px solid #eee; cursor: pointer;" 
+                             onclick="${clickHandler}"
+                             onmouseover="this.style.backgroundColor='#f8f9fa'" 
+                             onmouseout="this.style.backgroundColor='white'">
+                            <strong>${displayText}</strong>
+                            ${item.description ? `<br><small style="color: #6c757d;">${item.description}</small>` : ''}
+                        </div>
+                    `;
+                }).join('');
 
-                console.log('HTML oluşturuldu:', html);
-                resultsContainer.innerHTML = html;
-                resultsContainer.style.display = 'block';
+                container.innerHTML = html;
+                container.style.display = 'block';
             },
 
             selectProduct(id, name, identifier, iwasku, description) {
-                console.log('selectProduct çağrıldı:', id, name, identifier, iwasku);
-                
                 this.selectedProduct = { id, name, identifier, iwasku, description };
                 
-                document.getElementById('productSearch').value = `${iwasku} - ${name}`;
+                document.getElementById('productSearch').value = `${iwasku || identifier} - ${name}`;
                 document.getElementById('selectedProductId').value = id;
                 document.getElementById('productSearchResults').style.display = 'none';
                 
                 const detailsHtml = `
                     <p><strong>ID:</strong> ${id}</p>
-                    <p><strong>İwasku:</strong> ${iwasku}</p>
+                    <p><strong>İwasku:</strong> ${iwasku || 'Yok'}</p>
                     <p><strong>Identifier:</strong> ${identifier}</p>
                     <p><strong>İsim:</strong> ${name}</p>
                     ${description ? `<p><strong>Açıklama:</strong> ${description}</p>` : ''}
@@ -346,52 +206,7 @@
                 this.updateSubmitButton();
             },
 
-            handleIwaskuSearch(e) {
-                console.log('handleIwaskuSearch çağrıldı, değer:', e.target.value);
-                
-                const query = e.target.value.trim();
-                const resultsContainer = document.getElementById('iwaskuSearchResults');
-                
-                if (query.length < 2) {
-                    resultsContainer.style.display = 'none';
-                    return;
-                }
-
-                fetch(`${window.setProductConfig.endpoints.searchIwasku}?q=${encodeURIComponent(query)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('İwasku data:', data);
-                        this.displayIwaskuResults(data.items || []);
-                    })
-                    .catch(error => {
-                        console.error('İwasku arama hatası:', error);
-                        resultsContainer.style.display = 'none';
-                    });
-            },
-
-            displayIwaskuResults(products) {
-                const resultsContainer = document.getElementById('iwaskuSearchResults');
-                
-                if (products.length === 0) {
-                    resultsContainer.innerHTML = '<div class="search-result-item">İwasku ürünü bulunamadı</div>';
-                    resultsContainer.style.display = 'block';
-                    return;
-                }
-
-                const html = products.map(product => `
-                    <div class="search-result-item" onclick="SetProduct.addIwaskuProduct(${product.id}, '${product.name.replace(/'/g, "\\'")}', '${product.iwasku}', '${product.identifier}')">
-                        <strong>${product.iwasku}</strong> - ${product.name}
-                        <br><small class="text-muted">ID: ${product.identifier}</small>
-                    </div>
-                `).join('');
-
-                resultsContainer.innerHTML = html;
-                resultsContainer.style.display = 'block';
-            },
-
             addIwaskuProduct(id, name, iwasku, identifier) {
-                console.log('addIwaskuProduct çağrıldı:', id, name, iwasku);
-                
                 // Zaten eklenmiş mi kontrol et
                 if (this.selectedIwasku.find(item => item.id === id)) {
                     alert('Bu ürün zaten eklenmiş!');
@@ -412,38 +227,33 @@
                 const container = document.getElementById('selectedIwaskuList');
                 
                 if (this.selectedIwasku.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <p style="margin: 0; font-size: 1.1rem;">📭 Henüz İwasku ürünü seçilmedi</p>
-                            <small>Yukarıdaki arama kutusunu kullanarak İwasku ürünleri ekleyin</small>
-                        </div>
-                    `;
+                    container.innerHTML = '<small style="color: #6c757d;">Henüz İwasku ürünü seçilmedi</small>';
                     return;
                 }
 
                 const html = this.selectedIwasku.map((item, index) => `
-                    <div class="iwasku-item">
-                        <div class="iwasku-item-info">
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: white; border: 1px solid #dee2e6; border-radius: 4px; padding: 0.75rem; margin-bottom: 0.5rem;">
+                        <div style="flex: 1;">
                             <strong>${item.iwasku}</strong> - ${item.name}
-                            <br><small class="text-muted">ID: ${item.identifier}</small>
+                            <br><small style="color: #6c757d;">ID: ${item.identifier}</small>
                         </div>
-                        <div class="iwasku-item-quantity">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
                             <label>Adet:</label>
                             <input type="number" 
-                                   class="form-control quantity-input" 
                                    value="${item.quantity}" 
                                    min="1" 
+                                   style="width: 60px; text-align: center; padding: 0.25rem;"
                                    onchange="SetProduct.updateQuantity(${index}, this.value)">
+                            <button type="button" 
+                                    onclick="SetProduct.removeIwaskuProduct(${index})"
+                                    style="background: #dc3545; color: white; border: none; border-radius: 4px; padding: 0.25rem 0.5rem; cursor: pointer;">
+                                🗑️
+                            </button>
                         </div>
-                        <button type="button" class="btn-remove" onclick="SetProduct.removeIwaskuProduct(${index})">
-                            🗑️ Kaldır
-                        </button>
                     </div>
                 `).join('');
 
                 container.innerHTML = html;
-                
-                // Hidden input'u güncelle
                 document.getElementById('iwaskuItemsData').value = JSON.stringify(this.selectedIwasku);
             },
 
@@ -478,21 +288,16 @@
                     return;
                 }
 
-                // Form verilerini güncelle
                 document.getElementById('iwaskuItemsData').value = JSON.stringify(this.selectedIwasku);
             },
 
-            handleOutsideClick(e) {
-                if (!e.target.closest('.search-container')) {
-                    document.getElementById('productSearchResults').style.display = 'none';
-                    document.getElementById('iwaskuSearchResults').style.display = 'none';
-                }
+            escapeQuotes(str) {
+                return str ? str.replace(/'/g, "\\'") : '';
             }
         };
 
         // Sayfa yüklendiğinde başlat
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM yüklendi, SetProduct.init çağrılıyor');
             SetProduct.init();
         });
     </script>

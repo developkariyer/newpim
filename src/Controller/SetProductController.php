@@ -59,22 +59,26 @@ class SetProductController extends AbstractController
             if (strlen($query) < 2) {
                 return new JsonResponse(['items' => []]);
             }
-
-            $product = $this->searchService->findProductByQuery($query);
-            if (!$product) {
-                return new JsonResponse(['items' => []]);
+            $listing = new ProductListing();
+            $listing->setCondition("published = 1 AND (iwasku LIKE ? OR name LIKE ? OR identifier LIKE ?)", 
+                ['%' . $query . '%', '%' . $query . '%', '%' . $query . '%']);
+            $listing->setLimit(10);
+            $results = [];
+            foreach ($listing->getObjects() as $product) {
+                $results[] = [
+                    'id' => $product->getId(),
+                    'name' => $product->getName() ?? '',
+                    'identifier' => $product->getIdentifier() ?? '',
+                    'iwasku' => $product->getIwasku() ?? '',
+                    'description' => $product->getDescription() ?? ''
+                ];
             }
-
-            $productData = [
-                'id' => $product->getId(),
-                'name' => $product->getName(),
-                'identifier' => $product->getIdentifier(),
-                'description' => $product->getDescription()
-            ];
-
-            return new JsonResponse(['items' => [$productData]]);
-
+            return new JsonResponse(['items' => $results]);
         } catch (\Exception $e) {
+            $this->logger->error('Set product search error', [
+                'query' => $query ?? '',
+                'error' => $e->getMessage()
+            ]);
             return new JsonResponse(['error' => $e->getMessage()], 500);
         }
     }
