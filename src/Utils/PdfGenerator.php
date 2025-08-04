@@ -102,7 +102,7 @@ class PdfGenerator
         error_log("Found " . count($eans) . " EAN(s) for product {$product->getIwasku()}, generating labels.");
         $assets = [];
         $eanIndex = 0;
-        foreach ($eans as $ean) {
+        foreach ($eans as $eanObject) {
             if ($eanObject && method_exists($eanObject, 'getEanGTIN') && $eanObject->getGTIN()) {
                 $eanCode = $eanObject->getGTIN();
                 if ($eanIndex === 0) {
