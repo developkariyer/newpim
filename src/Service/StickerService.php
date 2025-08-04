@@ -354,10 +354,10 @@ class StickerService
     private function createStickersForProduct(Product $product): void
     {
         try {
-            // $existingEuStickers = $product->getSticker4x6eu();
-            // if (!$existingEuStickers) {
-            //     $this->createEuSticker($product);
-            // }
+            $existingEuStickers = $product->getSticker4x6eu();
+            if (!$existingEuStickers) {
+                $this->createEuSticker($product);
+            }
             $existingIwaskuStickers = $product->getSticker4x6iwasku();
             if (!$existingIwaskuStickers) {
                 $this->createIwaskuSticker($product);
@@ -376,20 +376,15 @@ class StickerService
     {
         try {
             $filename = "eu_sticker_{$product->getIwasku()}.pdf";
-            $euAssets = PdfGenerator::generate4x6eu($product, $filename);
-            if ($euAssets) {
-                if (!is_array($euAssets)) {
-                    $euAssets = [$euAssets];
-                }
-                $product->setSticker4x6eu($euAssets);
-                $product->save();
-                $this->logger->info('EU sticker created for product', [
-                    'product_id' => $product->getId(),
-                    'iwasku' => $product->getIwasku(),
-                    'asset_count' => count($euAssets),
-                    'filename' => $filename
-                ]);
-            }
+            $euAsset = PdfGenerator::generate4x6eu($product, $filename);
+            $product->setSticker4x6eu($euAssets);
+            $product->save();
+            $this->logger->info('EU sticker created for product', [
+                'product_id' => $product->getId(),
+                'iwasku' => $product->getIwasku(),
+                'filename' => $filename
+            ]);
+        }
         } catch (Exception $e) {
             $this->logger->error('Error creating EU sticker', [
                 'product_id' => $product->getId(),
@@ -404,20 +399,15 @@ class StickerService
     {
         try {
             $filename = "iwasku_sticker_{$product->getIwasku()}.pdf";
-            $iwaskuAssets = PdfGenerator::generate4x6iwasku($product, $filename);
-            if ($iwaskuAssets) {
-                if (!is_array($iwaskuAssets)) {
-                    $iwaskuAssets = [$iwaskuAssets];
-                }
-                $product->setSticker4x6iwasku($iwaskuAssets);
-                $product->save();
-                $this->logger->info('IWASKU sticker created for product', [
-                    'product_id' => $product->getId(),
-                    'iwasku' => $product->getIwasku(),
-                    'asset_count' => count($iwaskuAssets),
-                    'filename' => $filename
-                ]);
-            }
+            $iwaskuAsset = PdfGenerator::generate4x6iwasku($product, $filename);
+            $product->setSticker4x6iwasku($iwaskuAsset);
+            $product->save();
+            $this->logger->info('IWASKU sticker created for product', [
+                'product_id' => $product->getId(),
+                'iwasku' => $product->getIwasku(),
+                'filename' => $filename
+            ]);
+           
         } catch (Exception $e) {
             $this->logger->error('Error creating IWASKU sticker', [
                 'product_id' => $product->getId(),
