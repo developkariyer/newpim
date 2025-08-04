@@ -92,7 +92,7 @@ class PdfGenerator
     /**
      * @throws DuplicateFullPathException|UnknownTypeException
      */
-    public static function generate4x6iwasku(Product $product, $qrfile): Asset\Document
+    public static function generate4x6iwasku(Product $product, $qrfile)
     {
         $eans = $product->getEans();
         if (empty($eans) ||count($eans) === 0) {
