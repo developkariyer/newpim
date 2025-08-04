@@ -150,6 +150,7 @@ class PdfGenerator
         //     error_log("Color object is empty for product {$product->getIwasku()}, using default color.");
         // }
         $variationColor = 'default';
+        print_r($product);
         $text = $product->getProductIdentifier() . " ". $product->getNameEnglish() . "\n";
         $text .= "(". $product->getName() . ")\n";
         $text .= "Size: " . $product->getVariationSize() . "\n";
