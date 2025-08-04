@@ -74,7 +74,7 @@ class ImportCommand extends AbstractCommand
             $this->setProductSetProduct($data);
         }
 
-        $product = Product::getById(68870);
+        $product = Product::getById(75568);
         $asset = PdfGenerator::generate4x6iwasku($product, 'test.pdf');
         //$colorObject = $product->getVariationColor();
         //print_r($colorObject->getColor());
