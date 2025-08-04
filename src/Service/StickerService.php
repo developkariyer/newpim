@@ -98,10 +98,13 @@ class StickerService
                 'error' => $e->getMessage()
             ]);
         }
+        $productCategory = '';
+        $categoryObject = $product->getProductCategory();
+        $productCategory = $categoryObject ? $categoryObject->getCategory() : '';
         return [
             'product_id' => $product->getId(),
             'product_name' => $product->getName() ?? '',
-            'category' => $product->getProductCategory() ?? '',
+            'category' => $productCategory ?? '',
             'image_link' => $imageUrl, 
             'product_identifier' => $product->getProductIdentifier() ?? '',
             'iwasku' => $product->getIwasku() ?? '',
@@ -190,12 +193,15 @@ class StickerService
                 'error' => $e->getMessage()
             ]);
         }
+        $productCategory = '';
+        $categoryObject = $product->getProductCategory();
+        $productCategory = $categoryObject ? $categoryObject->getCategory() : '';
         return [
             'iwasku' => $product->getIwasku() ?? '',
             'dest_id' => $product->getId(),
             'name' => $product->getName() ?? '',
             'productCode' => $product->getProductCode() ?? '',
-            'productCategory' => $product->getProductCategory() ?? '',
+            'productCategory' => $productCategory ?? '',
             'imageUrl' => $imageUrl,
             'variationSize' => $product->getVariationSize() ?? '',
             'variationColor' => $product->getVariationColor() ? $product->getVariationColor()->getColor() : '',
@@ -267,9 +273,12 @@ class StickerService
 
     private function matchesSearchTerm(Product $product, string $searchTerm): bool
     {
+        $productCategory = '';
+        $categoryObject = $product->getProductCategory();
+        $productCategory = $categoryObject ? $categoryObject->getCategory() : '';
         $searchFields = [
             $product->getName(),
-            $product->getProductCategory(),
+            $productCategory,
             $product->getProductIdentifier(),
             $product->getIwasku()
         ];
