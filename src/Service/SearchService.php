@@ -394,9 +394,6 @@ class SearchService
             }
             $variants = [];
             $productVariants = $product->getChildren([Product::OBJECT_TYPE_VARIANT], true);
-            $variantBundleProducts = $this->getVariantBundleProducts($variant);
-            $bundleProductCount = count($variantBundleProducts);
-            $hasBundleProducts = $bundleProductCount > 0;
             foreach ($productVariants as $variant) {
                 $colorObject = $variant->getVariationColor();
                 $colorInfo = $colorObject ? [
@@ -435,6 +432,9 @@ class SearchService
                         }
                     }
                 }
+                $variantBundleProducts = $this->getVariantBundleProducts($variant);
+                $bundleProductCount = count($variantBundleProducts);
+                $hasBundleProducts = $bundleProductCount > 0;
                 $variants[] = [
                     'id' => $variant->getId(),
                     'name' => $variant->getKey(),
