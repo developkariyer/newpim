@@ -449,11 +449,13 @@ class CatalogSystem {
             setSection.style.display = 'none';
             toggleIcon.textContent = '▼';
             toggleBtn.title = 'Set İçeriğini Göster';
+            toggleBtn.setAttribute('data-expanded', 'false');
             console.log(`Set products hidden for variant ${variantId}`);
         } else {
             setSection.style.display = 'block';
             toggleIcon.textContent = '▲';
             toggleBtn.title = 'Set İçeriğini Gizle';
+            toggleBtn.setAttribute('data-expanded', 'true');
             console.log(`Set products shown for variant ${variantId}`);
         }
     }

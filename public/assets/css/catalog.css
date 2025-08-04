@@ -657,6 +657,63 @@ body {
     font-size: 0.75rem;
 }
 
+/* Variant Set Toggle Button - YENİ EKLENEN */
+.variant-set-toggle {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+    min-width: auto;
+    justify-content: center;
+    margin-top: 0.5rem;
+    white-space: nowrap;
+}
+
+.variant-set-toggle:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+}
+
+.variant-set-toggle:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+}
+
+.variant-set-toggle .toggle-icon {
+    font-size: 0.8rem;
+    transition: transform 0.2s ease;
+}
+
+.variant-set-toggle[data-expanded="true"] .toggle-icon {
+    transform: rotate(180deg);
+}
+
+/* Mobile Responsive for Toggle Button */
+@media (max-width: 768px) {
+    .variant-set-toggle {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.7rem;
+        min-width: auto;
+    }
+    
+    .variant-actions {
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .product-content {
