@@ -11,7 +11,7 @@ use Picqer\Barcode\Exceptions\UnknownTypeException;
 use Pimcore\Model\Element\DuplicateFullPathException;
 use setasign\Fpdi\Fpdi;
 use Pimcore\Model\DataObject\Product;
-
+use Pimcore\Model\DataObject\Color;
 use Pimcore\Model\Asset;
 use const PIMCORE_PROJECT_ROOT;
 
@@ -143,14 +143,13 @@ class PdfGenerator
         $pdf->SetXY(2, 12); // Adjusted to place below the IWASKU text
 
         // Prepare text
-        // $colorObject = $product->getVariationColor();
+        $colorObject = $product->getVariationColor();
         // print_r($colorObject);
         
-        // if (empty($colorObject)) {
-        //     error_log("Color object is empty for product {$product->getIwasku()}, using default color.");
-        // }
-        $variationColor = 'default';
-        print_r($product);
+        if (empty($colorObject)) {
+            error_log("Color object is empty for product {$product->getIwasku()}, using default color.");
+        }
+        $variationColor = $colorObject->getColor() ?? 'default';
         $text = $product->getProductIdentifier() . " ". $product->getNameEnglish() . "\n";
         $text .= "(". $product->getName() . ")\n";
         $text .= "Size: " . $product->getVariationSize() . "\n";
