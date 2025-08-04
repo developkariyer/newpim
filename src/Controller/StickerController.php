@@ -98,12 +98,17 @@ class StickerController extends FrontendController
         $offset = ($page - 1) * $limit;
         $searchCondition = '';
         $searchTerm = $_GET['searchTerm'] ?? null;
+        
         if ($searchTerm !== null) {
             $searchTerm = "%" . $searchTerm . "%";
-            $searchCondition = "AND (name LIKE :searchTerm OR productCategory LIKE :searchTerm OR productIdentifier LIKE :searchTerm)";
+            $searchCondition = "AND (name LIKE :searchTerm OR productCategory LIKE :searchTerm OR productIdentifier LIKE :searchTerm OR iwasku LIKE :searchTerm)";
             $offset = null;
         }
+        
+        // Ana ürün bilgilerini getir
         $sql = "SELECT 
+                osp.oo_id,
+                osp.iwasku,
                 osp.productIdentifier,
                 MIN(osp.name) as name,
                 MIN(osp.productCategory) as category,
@@ -112,40 +117,72 @@ class StickerController extends FrontendController
             JOIN object_product osp ON osp.oo_id = org.dest_id
             WHERE org.src_id = :groupId
             " . $searchCondition . " 
-            GROUP BY osp.productIdentifier
+            GROUP BY osp.productIdentifier, osp.iwasku, osp.oo_id
             ORDER BY osp.productIdentifier
         ";
+        
         if ($offset !== null) {
             $sql .= " LIMIT $limit OFFSET $offset";
-        }
-        else {
+        } else {
             $sql .= " LIMIT 10";
         }
+        
         $parameters = ['groupId' => $groupId];
         if ($searchTerm) {
             $parameters['searchTerm'] = $searchTerm;
         }
+        
         $mainProducts = Db::get()->fetchAllAssociative($sql, $parameters);
+        
         foreach ($mainProducts as $mainProduct) {
+            $productId = $mainProduct['oo_id'];
+            $product = Product::getById($productId);
+            
+            if (!$product) {
+                continue;
+            }
+            
+            // EAN bilgilerini al
+            $eans = $product->getEans();
+            $eanList = [];
+            $totalEans = 0;
+            
+            if ($eans && count($eans) > 0) {
+                foreach ($eans as $eanObject) {
+                    if ($eanObject && method_exists($eanObject, 'getGTIN') && $eanObject->getGTIN()) {
+                        $eanList[] = $eanObject->getGTIN();
+                        $totalEans++;
+                    }
+                }
+            }
+            
+            // Sticker durumlarını kontrol et
+            $stickerInfo = $this->checkStickerStatus($product);
+            
             $groupedStickers[$mainProduct['productIdentifier']][] = [
+                'product_id' => $productId,
                 'product_name' => $mainProduct['name'] ?? '',
                 'category' => $mainProduct['category'] ?? '',
                 'image_link' => $mainProduct['image'] ?? '',
-                'product_identifier' => $mainProduct['productIdentifier'] ?? ''
+                'product_identifier' => $mainProduct['productIdentifier'] ?? '',
+                'iwasku' => $mainProduct['iwasku'] ?? '',
+                'ean_count' => $totalEans,
+                'eans' => $eanList,
+                'sticker_status' => $stickerInfo
             ];
         }
+        
+        // Toplam sayıyı hesapla
         $countSql = "SELECT 
                 COUNT(DISTINCT osp.productIdentifier) AS totalCount
             FROM object_relations_gproduct org
             JOIN object_product osp ON osp.oo_id = org.dest_id
-            LEFT JOIN object_relations_product opr 
-                ON opr.src_id = osp.oo_id 
-                AND opr.type = 'asset' 
-                AND opr.fieldname = 'sticker4x6eu'
             WHERE org.src_id = :groupId
-            " . $searchCondition . "ORDER BY osp.productIdentifier";
+            " . $searchCondition;
+            
         $countResult = Db::get()->fetchAssociative($countSql, $parameters);
         $totalProducts = $countResult['totalCount'] ?? 0;
+        
         return new JsonResponse([
             'success' => true,
             'stickers' => $groupedStickers,
@@ -156,6 +193,67 @@ class StickerController extends FrontendController
                 'total_pages' => ceil($totalProducts / $limit)
             ]
         ]);
+    }
+
+    /**
+     * Ürünün sticker durumunu kontrol et
+     */
+    private function checkStickerStatus(Product $product): array
+    {
+        $status = [
+            'has_eu_sticker' => false,
+            'has_iwasku_sticker' => false,
+            'eu_sticker_count' => 0,
+            'iwasku_sticker_count' => 0,
+            'eu_sticker_links' => [],
+            'iwasku_sticker_links' => []
+        ];
+        
+        // EU Sticker kontrolü
+        try {
+            $euStickers = $product->getInheritedField('sticker4x6eu');
+            if ($euStickers) {
+                if (is_array($euStickers)) {
+                    $status['has_eu_sticker'] = count($euStickers) > 0;
+                    $status['eu_sticker_count'] = count($euStickers);
+                    foreach ($euStickers as $sticker) {
+                        if ($sticker instanceof Asset) {
+                            $status['eu_sticker_links'][] = $sticker->getFullPath();
+                        }
+                    }
+                } else if ($euStickers instanceof Asset) {
+                    $status['has_eu_sticker'] = true;
+                    $status['eu_sticker_count'] = 1;
+                    $status['eu_sticker_links'][] = $euStickers->getFullPath();
+                }
+            }
+        } catch (Exception $e) {
+            error_log("EU sticker check failed for product {$product->getIwasku()}: " . $e->getMessage());
+        }
+        
+        // IWASKU Sticker kontrolü
+        try {
+            $iwaskuStickers = $product->getInheritedField('sticker4x6iwasku');
+            if ($iwaskuStickers) {
+                if (is_array($iwaskuStickers)) {
+                    $status['has_iwasku_sticker'] = count($iwaskuStickers) > 0;
+                    $status['iwasku_sticker_count'] = count($iwaskuStickers);
+                    foreach ($iwaskuStickers as $sticker) {
+                        if ($sticker instanceof Asset) {
+                            $status['iwasku_sticker_links'][] = $sticker->getFullPath();
+                        }
+                    }
+                } else if ($iwaskuStickers instanceof Asset) {
+                    $status['has_iwasku_sticker'] = true;
+                    $status['iwasku_sticker_count'] = 1;
+                    $status['iwasku_sticker_links'][] = $iwaskuStickers->getFullPath();
+                }
+            }
+        } catch (Exception $e) {
+            error_log("IWASKU sticker check failed for product {$product->getIwasku()}: " . $e->getMessage());
+        }
+        
+        return $status;
     }
 
     /**
