@@ -495,6 +495,6 @@ class SearchService
                 'customField' => $bundleProduct->getCustomField() ?? ''
             ];
         }
+        return $formattedBundleProducts;
     }
-    return $formattedBundleProducts;
 }
