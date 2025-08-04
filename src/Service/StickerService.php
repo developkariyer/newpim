@@ -89,7 +89,7 @@ class StickerService
             'product_id' => $product->getId(),
             'product_name' => $product->getName() ?? '',
             'category' => $product->getProductCategory() ?? '',
-            'image_link' => $product->getImageUrl() ?? '',
+            'image_link' => $product->getImage()->getFullPath() ?? '',
             'product_identifier' => $product->getProductIdentifier() ?? '',
             'iwasku' => $product->getIwasku() ?? '',
             'ean_count' => $eanInfo['count'],
