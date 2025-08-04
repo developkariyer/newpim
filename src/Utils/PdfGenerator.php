@@ -126,7 +126,7 @@ class PdfGenerator
     /**
      * @throws DuplicateFullPathException
      */
-    public static function generate4x6iwaskuWithoutEan(Product $product, $qrfile): Asset\Document
+    public static function generate4x6iwaskuWithoutEan(Product $product, $qrfile)
     {
         $pdf = new Fpdi('L', 'mm', [60, 40]); // Landscape mode, 60x40 mm page
         $pdf->SetAutoPageBreak(false); // Disable automatic page break
@@ -147,27 +147,28 @@ class PdfGenerator
         if (empty($colorObject)) {
             error_log("Color object is empty for product {$product->getIwasku()}, using default color.");
         }
-        $variationColor = $colorObject->getKey() ?? 'default';
-        $text = $product->getProductIdentifier() . " ". $product->getNameEnglish() . "\n";
-        $text .= "(". $product->getName() . ")\n";
-        $text .= "Size: " . $product->getVariationSize() . "\n";
-        $text .= "Color: " . $variationColor;
+        print_r($colorObject);
+        //$variationColor = $colorObject->getColor() ?? 'default';
+        // $text = $product->getProductIdentifier() . " ". $product->getNameEnglish() . "\n";
+        // $text .= "(". $product->getName() . ")\n";
+        // $text .= "Size: " . $product->getVariationSize() . "\n";
+        // $text .= "Color: " . $variationColor;
 
-        // Adjusted width and height for the MultiCell
-        $pdf->MultiCell(56, 4, Utility::keepSafeChars(Utility::removeTRChars($text)), 0, 'C'); // Left align, adjusted width for proper wrapping
+        // // Adjusted width and height for the MultiCell
+        // $pdf->MultiCell(56, 4, Utility::keepSafeChars(Utility::removeTRChars($text)), 0, 'C'); // Left align, adjusted width for proper wrapping
 
-        // Output PDF to file
-        $pdfFilePath = PIMCORE_PROJECT_ROOT . "/tmp/$qrfile";
-        $pdf->Output($pdfFilePath, 'F');
+        // // Output PDF to file
+        // $pdfFilePath = PIMCORE_PROJECT_ROOT . "/tmp/$qrfile";
+        // $pdf->Output($pdfFilePath, 'F');
 
-        // Save PDF as Pimcore Asset
-        $asset = new Asset\Document();
-        $asset->setFilename($qrfile);
-        $asset->setData(file_get_contents($pdfFilePath));
-        $asset->setParent(Utility::checkSetAssetPath('IWASKU', Utility::checkSetAssetPath('Etiketler'))); // Ensure this folder exists in Pimcore
-        $asset->save();
-        unlink($pdfFilePath); // Clean up the temporary PDF file
-        return $asset;
+        // // Save PDF as Pimcore Asset
+        // $asset = new Asset\Document();
+        // $asset->setFilename($qrfile);
+        // $asset->setData(file_get_contents($pdfFilePath));
+        // $asset->setParent(Utility::checkSetAssetPath('IWASKU', Utility::checkSetAssetPath('Etiketler'))); // Ensure this folder exists in Pimcore
+        // $asset->save();
+        // unlink($pdfFilePath); // Clean up the temporary PDF file
+        // return $asset;
     }
 
     /**
