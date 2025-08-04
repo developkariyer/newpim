@@ -394,6 +394,9 @@ class SearchService
             }
             $variants = [];
             $productVariants = $product->getChildren([Product::OBJECT_TYPE_VARIANT], true);
+            $variantBundleProducts = $this->getVariantBundleProducts($variant);
+            $bundleProductCount = count($variantBundleProducts);
+            $hasBundleProducts = $bundleProductCount > 0;
             foreach ($productVariants as $variant) {
                 $colorObject = $variant->getVariationColor();
                 $colorInfo = $colorObject ? [
@@ -444,6 +447,9 @@ class SearchService
                     'customFieldTitle' => $customTableTitle,
                     'customField' => $variant->getCustomField(),
                     'published' => $variant->getPublished(),
+                    'bundleProducts' => $variantBundleProducts,
+                    'bundleProductCount' => $bundleProductCount,
+                    'hasBundleProducts' => $hasBundleProducts
                 ];
             }
             return $variants;
@@ -453,4 +459,42 @@ class SearchService
         }
     }
 
+    private function getVariantBundleProducts(Product $variant): array
+    {
+        try {
+            $bundleProducts = $variant->getBundleProducts();
+            if (!$bundleProducts || !is_array($bundleProducts)) {
+                return [];
+            }
+            return $this->formatBundleProducts($bundleProducts);
+        } catch (\Exception $e) {
+            error_log('Get variant bundle products error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    private function formatBundleProducts(array $bundleProducts): array
+    {
+        $formattedBundleProducts = [];
+        foreach ($bundleProducts as $bundleProduct) {
+            if (!$bundleProduct) {
+                continue;
+            }
+            $quantity = 1;
+            $colorObject = method_exists($bundleProduct, 'getVariationColor') ? $bundleProduct->getVariationColor() : null;
+            $variationColor = $colorObject ? $colorObject->getColor() : null;
+            $formattedBundleProducts[] = [
+                'id' => $bundleProduct->getId(),
+                'key' => $bundleProduct->getKey() ?? '',
+                'identifier' => $bundleProduct->getProductIdentifier() ?? '',
+                'iwasku' => $bundleProduct->getIwasku() ?? '',
+                'quantity' => $quantity,
+                'published' => $bundleProduct->getPublished() ?? true,
+                'size' => $bundleProduct->getVariationSize() ?? '',
+                'color' => $variationColor,
+                'customField' => $bundleProduct->getCustomField() ?? ''
+            ];
+        }
+    }
+    return $formattedBundleProducts;
 }
