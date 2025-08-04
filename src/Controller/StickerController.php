@@ -101,7 +101,7 @@ class StickerController extends FrontendController
         
         if ($searchTerm !== null) {
             $searchTerm = "%" . $searchTerm . "%";
-            $searchCondition = "AND (name LIKE :searchTerm OR productCategory LIKE :searchTerm OR productIdentifier LIKE :searchTerm OR iwasku LIKE :searchTerm)";
+            $searchCondition = "AND (name LIKE :searchTerm LIKE :searchTerm OR productIdentifier LIKE :searchTerm OR iwasku LIKE :searchTerm)";
             $offset = null;
         }
         
@@ -110,11 +110,9 @@ class StickerController extends FrontendController
                 osp.oo_id,
                 osp.iwasku,
                 osp.productIdentifier,
-                MIN(osp.name) as name,
-                MIN(osp.productCategory) as category,
-                MIN(osp.imageUrl) as image
+                MIN(osp.name) as name
             FROM object_relations_gproduct org
-            JOIN object_store_product osp ON osp.oo_id = org.dest_id
+            JOIN object_query_product osp ON osp.oo_id = org.dest_id
             WHERE org.src_id = :groupId
             " . $searchCondition . " 
             GROUP BY osp.productIdentifier, osp.iwasku, osp.oo_id
