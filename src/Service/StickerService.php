@@ -98,6 +98,43 @@ class StickerService
         ];
     }
 
+    public function getProductDetails(string $productIdentifier, int $groupId): array
+    {
+        try {
+            $group = GroupProduct::getById($groupId);
+            if (!$group) {
+                throw new \InvalidArgumentException("Group with ID {$groupId} not found");
+            }
+            $products = [];
+            $relatedProducts = $group->getProducts();
+            if ($relatedProducts) {
+                foreach ($relatedProducts as $product) {
+                    if ($product instanceof Product && 
+                        $product->getPublished() && 
+                        $product->getProductIdentifier() === $productIdentifier) {
+                        
+                        $productData = $this->formatProductDetailInfo($product);
+                        $products[] = $productData;
+                    }
+                }
+            }
+            return [
+                'success' => true,
+                'products' => $products
+            ];
+        } catch (Exception $e) {
+            $this->logger->error('Error getting product details', [
+                'product_identifier' => $productIdentifier,
+                'group_id' => $groupId,
+                'error' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+
     private function getProductEanInfo(Product $product): array
     {
         $eanList = [];
@@ -121,6 +158,39 @@ class StickerService
         return [
             'count' => $totalEans,
             'list' => $eanList
+        ];
+    }
+
+    private function formatProductDetailInfo(Product $product): array
+    {
+        $eanInfo = $this->getProductEanInfo($product);
+        $stickerLinks = $this->getStickerLinks($product);
+        $imageUrl = '';
+        try {
+            $imageAsset = $product->getImage();
+            if ($imageAsset instanceof Asset) {
+                $imageUrl = $imageAsset->getFullPath();
+            }
+        } catch (Exception $e) {
+            $this->logger->warning('Error getting product image in details', [
+                'product_id' => $product->getId(),
+                'error' => $e->getMessage()
+            ]);
+        }
+        return [
+            'iwasku' => $product->getIwasku() ?? '',
+            'dest_id' => $product->getId(),
+            'name' => $product->getName() ?? '',
+            'productCode' => $product->getProductCode() ?? '',
+            'productCategory' => $product->getProductCategory() ?? '',
+            'imageUrl' => $imageUrl,
+            'variationSize' => $product->getVariationSize() ?? '',
+            'variationColor' => $product->getVariationColor() ? $product->getVariationColor()->getColor() : '',
+            'productIdentifier' => $product->getProductIdentifier() ?? '',
+            'ean_count' => $eanInfo['count'],
+            'eans' => $eanInfo['list'],
+            'sticker_link_eu' => $stickerLinks['eu'],
+            'sticker_link' => $stickerLinks['iwasku']
         ];
     }
 
