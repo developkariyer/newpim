@@ -103,7 +103,7 @@ class PdfGenerator
         $assets = [];
         $eanIndex = 0;
         foreach ($eans as $eanObject) {
-            if ($eanObject && method_exists($eanObject, 'getEanGTIN') && $eanObject->getGTIN()) {
+            if ($eanObject && method_exists($eanObject, 'getGTIN') && $eanObject->getGTIN()) {
                 $eanCode = $eanObject->getGTIN();
                 if ($eanIndex === 0) {
                     $eanQrfile = $qrfile;
