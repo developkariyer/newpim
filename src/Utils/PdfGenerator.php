@@ -95,32 +95,25 @@ class PdfGenerator
     public static function generate4x6iwasku(Product $product, $qrfile)
     {
         $eans = $product->getEans();
-        if (empty($eans) ||count($eans) === 0) {
+        if (empty($eans) || count($eans) === 0) {
             error_log("No EANs found for product {$product->getIwasku()}, generating without EAN.");
-            return [self::generate4x6iwaskuWithoutEan($product, $qrfile)];
+            return self::generate4x6iwaskuWithoutEan($product, $qrfile);
         }
-        error_log("Found " . count($eans) . " EAN(s) for product {$product->getIwasku()}, generating labels.");
-        $assets = [];
-        $eanIndex = 0;
+        
+        error_log("Found " . count($eans) . " EAN(s) for product {$product->getIwasku()}, using first EAN for label.");
+        
+        // İlk EAN'ı al ve tek etiket oluştur
         foreach ($eans as $eanObject) {
             if ($eanObject && method_exists($eanObject, 'getGTIN') && $eanObject->getGTIN()) {
                 $eanCode = $eanObject->getGTIN();
-                if ($eanIndex === 0) {
-                    $eanQrfile = $qrfile;
-                } else {
-                    $eanQrfile = str_replace('.pdf', "_$eanIndex.pdf", $qrfile);
-                }
-                error_log("Generating label for EAN: {$eanCode} with filename: {$eanQrfile}");
-                $asset = self::generate4x6iwaskuWithEan($product, $eanCode, $eanQrfile);
-                $assets[] = $asset;
-                $eanIndex++;
+                error_log("Generating label for first EAN: {$eanCode} with filename: {$qrfile}");
+                return self::generate4x6iwaskuWithEan($product, $eanCode, $qrfile);
             }
         }
-        if (empty($assets)) {
-            error_log("No valid EANs found for product {$product->getIwasku()}, generating without EAN.");
-            return [self::generate4x6iwaskuWithoutEan($product, $qrfile)];
-        }
-        return $assets;
+        
+        // Hiçbir geçerli EAN bulunamazsa EAN'sız oluştur
+        error_log("No valid EANs found for product {$product->getIwasku()}, generating without EAN.");
+        return self::generate4x6iwaskuWithoutEan($product, $qrfile);
     }
 
     /**
