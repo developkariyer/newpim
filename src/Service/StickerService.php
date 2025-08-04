@@ -86,11 +86,23 @@ class StickerService
     {
         $eanInfo = $this->getProductEanInfo($product);
         $stickerStatus = $this->checkStickerStatus($product);
+        $imageUrl = '';
+        try {
+            $imageAsset = $product->getImage();
+            if ($imageAsset instanceof Asset) {
+                $imageUrl = $imageAsset->getFullPath();
+            }
+        } catch (Exception $e) {
+            $this->logger->warning('Error getting product image', [
+                'product_id' => $product->getId(),
+                'error' => $e->getMessage()
+            ]);
+        }
         return [
             'product_id' => $product->getId(),
             'product_name' => $product->getName() ?? '',
             'category' => $product->getProductCategory() ?? '',
-            'image_link' => $product->getImage()->getFullPath() ?? '',
+            'image_link' => $imageUrl, 
             'product_identifier' => $product->getProductIdentifier() ?? '',
             'iwasku' => $product->getIwasku() ?? '',
             'ean_count' => $eanInfo['count'],
