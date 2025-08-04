@@ -528,6 +528,9 @@ class CatalogSystem {
             const isPublished = variant.published !== false; 
             const statusClass = isPublished ? 'variant-status-active' : 'variant-status-inactive';
             const statusText = isPublished ? '✨ Aktif' : '❌ Pasif';
+            const variantSetSection = (variant.bundleProducts && variant.bundleProducts.length > 0) 
+                ? this.createVariantSetProductsSection(variant.bundleProducts)
+                : '';
             return `
                 <div class="variant-row ${isPublished ? '' : 'variant-row-inactive'}">
                     <span class="variant-status ${statusClass}">${statusText}</span>
@@ -537,7 +540,9 @@ class CatalogSystem {
                     <div class="variant-actions">
                         <div class="variant-name">${this.escapeHtml(variant.name || 'Varyant')}</div>
                         ${variant.createdAt ? `<div class="variant-date">📅 ${this.escapeHtml(variant.createdAt)}</div>` : ''}
+                        ${variant.bundleProducts && variant.bundleProducts.length > 0 ? `<div class="variant-set-badge">🎁 ${variant.bundleProducts.length} Set Ürünü</div>` : ''}                      
                     </div>
+                    ${variantSetSection}
                 </div>
             `;
         }).join('');
@@ -549,6 +554,91 @@ class CatalogSystem {
                 </h4>
                 <div class="variants-table">
                     ${variantRows}
+                </div>
+            </div>
+        `;
+    }
+
+    createVariantSetProductsSection(bundleProducts) {
+        console.log('Creating variant set products section with:', bundleProducts);
+        if (!bundleProducts || bundleProducts.length === 0) {
+            return '';
+        }
+        const setProductRows = bundleProducts.map(bundleProduct => {
+            const fields = [];
+            if (bundleProduct.iwasku) {
+                fields.push(`
+                    <div class="variant-set-field iwasku">
+                        <span class="variant-set-field-label">🏷️ IWASKU</span>
+                        <span class="variant-set-field-value">${this.escapeHtml(bundleProduct.iwasku)}</span>
+                    </div>
+                `);
+            }
+            if (bundleProduct.key) {
+                fields.push(`
+                    <div class="variant-set-field name">
+                        <span class="variant-set-field-label">📦 Ürün</span>
+                        <span class="variant-set-field-value">${this.escapeHtml(bundleProduct.key)}</span>
+                    </div>
+                `);
+            }
+            if (bundleProduct.size) {
+                fields.push(`
+                    <div class="variant-set-field size">
+                        <span class="variant-set-field-label">📏 Beden</span>
+                        <span class="variant-set-field-value">${this.escapeHtml(bundleProduct.size)}</span>
+                    </div>
+                `);
+            }
+            if (bundleProduct.color) {
+                fields.push(`
+                    <div class="variant-set-field color">
+                        <span class="variant-set-field-label">🎨 Renk</span>
+                        <span class="variant-set-field-value">${this.escapeHtml(bundleProduct.color)}</span>
+                    </div>
+                `);
+            }
+            if (bundleProduct.customField) {
+                fields.push(`
+                    <div class="variant-set-field custom">
+                        <span class="variant-set-field-label">⚙️ Custom</span>
+                        <span class="variant-set-field-value">${this.escapeHtml(bundleProduct.customField)}</span>
+                    </div>
+                `);  
+            }
+            if (bundleProduct.quantity && bundleProduct.quantity > 1) {
+                fields.push(`
+                    <div class="variant-set-field quantity">
+                        <span class="variant-set-field-label">🔢 Adet</span>
+                        <span class="variant-set-field-value">${bundleProduct.quantity}</span>
+                    </div>
+                `);
+            }
+            const isPublished = bundleProduct.published !== false;
+            const statusClass = isPublished ? 'variant-set-status-active' : 'variant-set-status-inactive';
+            const statusText = isPublished ? '✨ Aktif' : '❌ Pasif';
+            return `
+                <div class="variant-set-product-row ${isPublished ? '' : 'variant-set-product-row-inactive'}">
+                    <span class="variant-set-status ${statusClass}">${statusText}</span>
+                    
+                    <div class="variant-set-product-info">
+                        ${fields.join('')}
+                    </div>
+                    
+                    <div class="variant-set-product-identifier">
+                        ${bundleProduct.identifier ? `<small>ID: ${this.escapeHtml(bundleProduct.identifier)}</small>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+        return `
+            <div class="variant-set-products-section">
+                <h5 class="variant-set-products-title">
+                    🎁 Bu Varyantın Set İçeriği
+                    <span style="font-weight: 400; color: var(--text-secondary); font-size: 0.8rem;">(${bundleProducts.length} ürün)</span>
+                </h5>
+                <div class="variant-set-products-table">
+                    ${setProductRows}
                 </div>
             </div>
         `;
