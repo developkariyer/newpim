@@ -147,7 +147,7 @@ class PdfGenerator
         if (empty($colorObject)) {
             error_log("Color object is empty for product {$product->getIwasku()}, using default color.");
         }
-        $variationColor = $colorObject->getColor() ?? 'default';
+        $variationColor = $colorObject->getKey() ?? 'default';
         $text = $product->getProductIdentifier() . " ". $product->getNameEnglish() . "\n";
         $text .= "(". $product->getName() . ")\n";
         $text .= "Size: " . $product->getVariationSize() . "\n";
