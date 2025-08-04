@@ -48,7 +48,7 @@ class ImportCommand extends AbstractCommand
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        //$data = $this->readDataJsonFile();
+        $data = $this->readDataJsonFile();
 
         if ($input->getOption('products')) {
             $this->importProducts($data);
@@ -74,10 +74,6 @@ class ImportCommand extends AbstractCommand
             $this->setProductSetProduct($data);
         }
 
-        $product = Product::getById(75568);
-        $asset = PdfGenerator::generate4x6iwasku($product, 'test.pdf');
-        //$colorObject = $product->getVariationColor();
-        //print_r($colorObject->getColor());
         return Command::SUCCESS;
     }
 
