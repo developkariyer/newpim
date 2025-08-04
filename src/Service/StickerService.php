@@ -354,10 +354,10 @@ class StickerService
     private function createStickersForProduct(Product $product): void
     {
         try {
-            $existingEuStickers = $product->getSticker4x6eu();
-            if (!$existingEuStickers) {
-                $this->createEuSticker($product);
-            }
+            // $existingEuStickers = $product->getSticker4x6eu();
+            // if (!$existingEuStickers) {
+            //     $this->createEuSticker($product);
+            // }
             $existingIwaskuStickers = $product->getSticker4x6iwasku();
             if (!$existingIwaskuStickers) {
                 $this->createIwaskuSticker($product);
