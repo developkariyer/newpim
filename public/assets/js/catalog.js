@@ -113,11 +113,25 @@ class CatalogSystem {
             });
         }
 
-        // Product row clicks (for expanding variants)
         if (this.elements.productsGrid) {
             this.elements.productsGrid.addEventListener('click', (e) => {
+                if (e.target.closest('.edit-btn')) {
+                    e.stopPropagation(); 
+                    e.preventDefault();
+                    const editBtn = e.target.closest('.edit-btn');
+                    const productId = editBtn.dataset.productId;
+                    this.editProduct(productId);
+                    return false; 
+                }
                 const productRow = e.target.closest('.product-row');
-                if (productRow && !e.target.closest('.variants-section')) {
+                if (productRow && 
+                    !e.target.closest('.variants-section') && 
+                    !e.target.closest('.edit-btn') &&
+                    !e.target.closest('.product-actions') &&
+                    !e.target.closest('.variant-set-products-section') &&
+                    !e.target.closest('.asin-badge') &&
+                    !e.target.closest('.fnsku-badge') &&
+                    !e.target.closest('.ean-badge-inline')) {
                     this.toggleProductExpansion(productRow);
                 }
             });
@@ -488,7 +502,7 @@ class CatalogSystem {
             if (variant.customField) {
                 fields.push(`
                     <div class="variant-field">
-                        <span class="variant-field-label">⚙️ ${this.escapeHtml(variant.customFieldTitle)}</span>
+                        <span class="variant-field-label">⚙️ ${this.escapeHtml(variant.customFieldTitle || 'Custom')}</span>
                         <span class="variant-field-value">${this.escapeHtml(variant.customField)}</span>
                     </div>
                 `);
@@ -520,23 +534,21 @@ class CatalogSystem {
             const isPublished = variant.published !== false; 
             const statusClass = isPublished ? 'variant-status-active' : 'variant-status-inactive';
             const statusText = isPublished ? '✨ Aktif' : '❌ Pasif';
-            const variantSetSection = variant.hasBundleProducts 
+            console.log('Variant:', variant.id, 'Bundle products:', variant.bundleProducts, 'Has bundle:', variant.hasBundleProducts);
+            const variantSetSection = (variant.hasBundleProducts && variant.bundleProducts && variant.bundleProducts.length > 0) 
                 ? this.createVariantSetProductsSection(variant.bundleProducts)
                 : '';
             return `
                 <div class="variant-row ${isPublished ? '' : 'variant-row-inactive'}">
                     <span class="variant-status ${statusClass}">${statusText}</span>
-                    
                     <div class="variant-info">
                         ${fields.join('')}
                     </div>
-                    
                     <div class="variant-actions">
                         <div class="variant-name">${this.escapeHtml(variant.name || 'Varyant')}</div>
                         ${variant.createdAt ? `<div class="variant-date">📅 ${this.escapeHtml(variant.createdAt)}</div>` : ''}
                         ${variant.hasBundleProducts ? `<div class="variant-set-badge">🎁 ${variant.bundleProductCount} Set Ürünü</div>` : ''}
                     </div>
-                    
                     ${variantSetSection}
                 </div>
             `;
@@ -555,8 +567,13 @@ class CatalogSystem {
     }
 
     createVariantSetProductsSection(bundleProducts) {
-        if (!bundleProducts || bundleProducts.length === 0) return '';
+        console.log('Creating variant set products section with:', bundleProducts);
+        if (!bundleProducts || bundleProducts.length === 0) {
+            console.log('No bundle products found');
+            return '';
+        }
         const setProductRows = bundleProducts.map(bundleProduct => {
+            console.log('Processing bundle product:', bundleProduct);
             const fields = [];
             if (bundleProduct.iwasku) {
                 fields.push(`
@@ -566,11 +583,11 @@ class CatalogSystem {
                     </div>
                 `);
             }
-            if (bundleProduct.key) {
+            if (bundleProduct.key || bundleProduct.name) {
                 fields.push(`
                     <div class="variant-set-field name">
                         <span class="variant-set-field-label">📦 Ürün</span>
-                        <span class="variant-set-field-value">${this.escapeHtml(bundleProduct.key)}</span>
+                        <span class="variant-set-field-value">${this.escapeHtml(bundleProduct.key || bundleProduct.name)}</span>
                     </div>
                 `);
             }
@@ -623,6 +640,7 @@ class CatalogSystem {
                 </div>
             `;
         }).join('');
+        console.log('Generated set product rows:', setProductRows);
         return `
             <div class="variant-set-products-section">
                 <h5 class="variant-set-products-title">
