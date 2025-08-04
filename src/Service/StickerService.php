@@ -161,6 +161,7 @@ class StickerService
         ];
     }
 
+    
     private function formatProductDetailInfo(Product $product): array
     {
         $eanInfo = $this->getProductEanInfo($product);
@@ -192,6 +193,45 @@ class StickerService
             'sticker_link_eu' => $stickerLinks['eu'],
             'sticker_link' => $stickerLinks['iwasku']
         ];
+    }
+
+    private function getStickerLinks(Product $product): array
+    {
+        $links = [
+            'eu' => '',
+            'iwasku' => ''
+        ];
+        try {
+            $euStickers = $product->getSticker4x6eu();
+            if ($euStickers) {
+                if (is_array($euStickers) && count($euStickers) > 0) {
+                    $firstSticker = $euStickers[0];
+                    if ($firstSticker instanceof Asset) {
+                        $links['eu'] = $firstSticker->getFullPath();
+                    }
+                } elseif ($euStickers instanceof Asset) {
+                    $links['eu'] = $euStickers->getFullPath();
+                }
+            }
+            $iwaskuStickers = $product->getSticker4x6iwasku();
+            if ($iwaskuStickers) {
+                if (is_array($iwaskuStickers) && count($iwaskuStickers) > 0) {
+                    $firstSticker = $iwaskuStickers[0];
+                    if ($firstSticker instanceof Asset) {
+                        $links['iwasku'] = $firstSticker->getFullPath();
+                    }
+                } elseif ($iwaskuStickers instanceof Asset) {
+                    $links['iwasku'] = $iwaskuStickers->getFullPath();
+                }
+            }
+        } catch (Exception $e) {
+            $this->logger->warning('Error getting sticker links', [
+                'product_id' => $product->getId(),
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return $links;
     }
 
     private function getProductsFromGroup(GroupProduct $group, ?string $searchTerm = null): array
