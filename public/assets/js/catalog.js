@@ -439,9 +439,9 @@ class CatalogSystem {
                 uniqueVariants.push(variant);
                 seenVariantIds.add(variant.id);
             }
-            // if (variant.bundleProducts && variant.bundleProducts.length > 0) {
-            //     console.log(`🎁 Variant ${variant.id} bundle products:`, variant.bundleProducts);
-            // }
+            if (variant.bundleProducts && variant.bundleProducts.length > 0) {
+                console.log(`🎁 Variant ${variant.id} bundle products:`, variant.bundleProducts);
+            }
         });
         const sortedVariants = [...uniqueVariants].sort((a, b) => {
             const sizeA = a.variationSize || '';
