@@ -374,17 +374,13 @@ class CatalogSystem {
             this.showEmptyState();
             return;
         }
-
         const startIndex = isReset ? 0 : this.elements.productsGrid.children.length;
         const productsToRender = this.state.products.slice(startIndex);
-
         const fragment = document.createDocumentFragment();
-
         productsToRender.forEach(product => {
             const productRow = this.createProductRow(product);
             fragment.appendChild(productRow);
         });
-
         this.elements.productsGrid.appendChild(fragment);
         this.hideEmptyState();
     }
@@ -396,18 +392,10 @@ class CatalogSystem {
         row.setAttribute('tabindex', '0');
         row.setAttribute('role', 'button');
         row.setAttribute('aria-expanded', 'false');
-
         const hasVariants = product.hasVariants;
-        const hasBundleProducts = product.hasBundleProducts || (product.bundleProducts && product.bundleProducts.length > 0);
-    
         const variantBadge = hasVariants 
             ? `<span class="variant-badge">✅ ${product.variantCount} Varyant</span>`
             : `<span class="no-variant-badge">➖ Varyant Yok</span>`;
-
-        const setBadge = hasBundleProducts 
-            ? `<span class="set-badge">🎁 ${product.bundleProducts.length} Set Ürünü</span>`
-            : '';
-
         row.innerHTML = `
             <div class="product-content">
                 <div class="product-image">
@@ -429,100 +417,13 @@ class CatalogSystem {
                             <span>Düzenle</span>
                         </button>
                         ${variantBadge}
-                        ${setBadge}
-                        ${(hasVariants || hasBundleProducts) ? '<span class="expand-icon" data-action="expand">▼</span>' : ''}
+                        ${(hasVariants) ? '<span class="expand-icon" data-action="expand">▼</span>' : ''}
                     </div>
                 </div>
             </div>            
             ${hasVariants ? this.createVariantsSection(product.variants) : ''}
-            ${hasBundleProducts ? this.createSetProductsSection(product.bundleProducts) : ''}
         `;
         return row;
-    }
-
-    createSetProductsSection(bundleProducts) {
-        if (!bundleProducts || bundleProducts.length === 0) return '';
-        const setProductRows = bundleProducts.map(bundleProduct => {
-            const fields = [];
-            if (bundleProduct.iwasku) {
-                fields.push(`
-                    <div class="set-field iwasku">
-                        <span class="set-field-label">🏷️ IWASKU</span>
-                        <span class="set-field-value">${this.escapeHtml(bundleProduct.iwasku)}</span>
-                    </div>
-                `);
-            }
-            // Key/Name
-            if (bundleProduct.key) {
-                fields.push(`
-                    <div class="set-field name">
-                        <span class="set-field-label">📦 Ürün</span>
-                        <span class="set-field-value">${this.escapeHtml(bundleProduct.key)}</span>
-                    </div>
-                `);
-            }
-            // Beden
-            if (bundleProduct.size) {
-                fields.push(`
-                    <div class="set-field size">
-                        <span class="set-field-label">📏 Beden</span>
-                        <span class="set-field-value">${this.escapeHtml(bundleProduct.size)}</span>
-                    </div>
-                `);
-            }
-            // Renk
-            if (bundleProduct.color?.name) {
-                fields.push(`
-                    <div class="set-field color">
-                        <span class="set-field-label">🎨 Renk</span>
-                        <span class="set-field-value">${this.escapeHtml(bundleProduct.color)}</span>
-                    </div>
-                `);
-            }
-            // Custom field
-            if (bundleProduct.customField && bundleProduct.customFieldTitle) {
-                fields.push(`
-                    <div class="set-field custom">
-                        <span class="set-field-label">⚙️ Custom</span>
-                        <span class="set-field-value">${this.escapeHtml(bundleProduct.customField)}</span>
-                    </div>
-                `);
-            }
-            // Miktar (1'den fazlaysa göster)
-            if (bundleProduct.quantity && bundleProduct.quantity > 1) {
-                fields.push(`
-                    <div class="set-field quantity">
-                        <span class="set-field-label">🔢 Adet</span>
-                        <span class="set-field-value">${bundleProduct.quantity}</span>
-                    </div>
-                `);
-            }
-            const isPublished = bundleProduct.published !== false;
-            const statusClass = isPublished ? 'set-status-active' : 'set-status-inactive';
-            const statusText = isPublished ? '✨ Aktif' : '❌ Pasif';
-            return `
-                <div class="set-product-row ${isPublished ? '' : 'set-product-row-inactive'}">
-                    <span class="set-status ${statusClass}">${statusText}</span>
-                    <div class="set-product-info">
-                        ${fields.join('')}
-                    </div>
-                    <div class="set-product-identifier">
-                        ${bundleProduct.identifier ? `<small>ID: ${this.escapeHtml(bundleProduct.identifier)}</small>` : ''}
-                    </div>
-                </div>
-            `;
-        }).join('');
-        return `
-            <div class="set-products-section">
-                <h4 class="set-products-title">
-                    🎁 Set İçeriği
-                    <span style="font-weight: 400; color: var(--text-secondary); font-size: 0.85rem;">(${bundleProducts.length} ürün)</span>
-                </h4>
-                <div class="set-products-table">
-                    ${setProductRows}
-                </div>
-            </div>
-        `;
     }
 
     createVariantsSection(variants) {
@@ -538,25 +439,18 @@ class CatalogSystem {
         const sortedVariants = [...uniqueVariants].sort((a, b) => {
             const sizeA = a.variationSize || '';
             const sizeB = b.variationSize || '';
-            
-            // Beden sıralaması
             const sizeOrder = {
                 'XS': 1, 'S': 2, 'M': 3, 'L': 4, 'XL': 5, '2XL': 6, '3XL': 7, '4XL': 8, '5XL': 9,
             };
-            
             const orderA = sizeOrder[sizeA.toUpperCase()] || 999;
             const orderB = sizeOrder[sizeB.toUpperCase()] || 999;
-            
             if (orderA === 999 && orderB === 999) {
                 return sizeA.localeCompare(sizeB, 'tr');
             }
-            
             return orderA - orderB;
         });
-
         const variantRows = sortedVariants.map(variant => {
             const fields = [];
-            
             if (variant.iwasku) {
                 fields.push(`
                     <div class="variant-field iwasku">
@@ -565,7 +459,6 @@ class CatalogSystem {
                     </div>
                 `);
             }
-            
             if (variant.variationSize) {
                 fields.push(`
                     <div class="variant-field size">
@@ -574,7 +467,6 @@ class CatalogSystem {
                     </div>
                 `);
             }
-            
             if (variant.color?.name) {
                 fields.push(`
                     <div class="variant-field color">
@@ -583,7 +475,6 @@ class CatalogSystem {
                     </div>
                 `);
             }
-            
             if (variant.eans && variant.eans.length > 0) {
                 fields.push(`
                     <div class="variant-field eans">
@@ -594,7 +485,6 @@ class CatalogSystem {
                     </div>
                 `);
             }
-            
             if (variant.customField) {
                 fields.push(`
                     <div class="variant-field">
@@ -603,7 +493,6 @@ class CatalogSystem {
                     </div>
                 `);
             }
-
             if (variant.asins && variant.asins.length > 0) {
                 fields.push(`
                     <div class="variant-field asins">
@@ -628,11 +517,12 @@ class CatalogSystem {
                     </div>
                 `);
             }
-
             const isPublished = variant.published !== false; 
             const statusClass = isPublished ? 'variant-status-active' : 'variant-status-inactive';
             const statusText = isPublished ? '✨ Aktif' : '❌ Pasif';
-
+            const variantSetSection = variant.hasBundleProducts 
+                ? this.createVariantSetProductsSection(variant.bundleProducts)
+                : '';
             return `
                 <div class="variant-row ${isPublished ? '' : 'variant-row-inactive'}">
                     <span class="variant-status ${statusClass}">${statusText}</span>
@@ -644,11 +534,13 @@ class CatalogSystem {
                     <div class="variant-actions">
                         <div class="variant-name">${this.escapeHtml(variant.name || 'Varyant')}</div>
                         ${variant.createdAt ? `<div class="variant-date">📅 ${this.escapeHtml(variant.createdAt)}</div>` : ''}
+                        ${variant.hasBundleProducts ? `<div class="variant-set-badge">🎁 ${variant.bundleProductCount} Set Ürünü</div>` : ''}
                     </div>
+                    
+                    ${variantSetSection}
                 </div>
             `;
         }).join('');
-
         return `
             <div class="variants-section">
                 <h4 class="variants-title">
@@ -657,6 +549,88 @@ class CatalogSystem {
                 </h4>
                 <div class="variants-table">
                     ${variantRows}
+                </div>
+            </div>
+        `;
+    }
+
+    createVariantSetProductsSection(bundleProducts) {
+        if (!bundleProducts || bundleProducts.length === 0) return '';
+        const setProductRows = bundleProducts.map(bundleProduct => {
+            const fields = [];
+            if (bundleProduct.iwasku) {
+                fields.push(`
+                    <div class="variant-set-field iwasku">
+                        <span class="variant-set-field-label">🏷️ IWASKU</span>
+                        <span class="variant-set-field-value">${this.escapeHtml(bundleProduct.iwasku)}</span>
+                    </div>
+                `);
+            }
+            if (bundleProduct.key) {
+                fields.push(`
+                    <div class="variant-set-field name">
+                        <span class="variant-set-field-label">📦 Ürün</span>
+                        <span class="variant-set-field-value">${this.escapeHtml(bundleProduct.key)}</span>
+                    </div>
+                `);
+            }
+            if (bundleProduct.size) {
+                fields.push(`
+                    <div class="variant-set-field size">
+                        <span class="variant-set-field-label">📏 Beden</span>
+                        <span class="variant-set-field-value">${this.escapeHtml(bundleProduct.size)}</span>
+                    </div>
+                `);
+            }
+            if (bundleProduct.color) {
+                fields.push(`
+                    <div class="variant-set-field color">
+                        <span class="variant-set-field-label">🎨 Renk</span>
+                        <span class="variant-set-field-value">${this.escapeHtml(bundleProduct.color)}</span>
+                    </div>
+                `);
+            }
+            if (bundleProduct.customField) {
+                fields.push(`
+                    <div class="variant-set-field custom">
+                        <span class="variant-set-field-label">⚙️ Custom</span>
+                        <span class="variant-set-field-value">${this.escapeHtml(bundleProduct.customField)}</span>
+                    </div>
+                `);
+            }
+            if (bundleProduct.quantity && bundleProduct.quantity > 1) {
+                fields.push(`
+                    <div class="variant-set-field quantity">
+                        <span class="variant-set-field-label">🔢 Adet</span>
+                        <span class="variant-set-field-value">${bundleProduct.quantity}</span>
+                    </div>
+                `);
+            }
+            const isPublished = bundleProduct.published !== false;
+            const statusClass = isPublished ? 'variant-set-status-active' : 'variant-set-status-inactive';
+            const statusText = isPublished ? '✨ Aktif' : '❌ Pasif';
+            return `
+                <div class="variant-set-product-row ${isPublished ? '' : 'variant-set-product-row-inactive'}">
+                    <span class="variant-set-status ${statusClass}">${statusText}</span>
+                    
+                    <div class="variant-set-product-info">
+                        ${fields.join('')}
+                    </div>
+                    
+                    <div class="variant-set-product-identifier">
+                        ${bundleProduct.identifier ? `<small>ID: ${this.escapeHtml(bundleProduct.identifier)}</small>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+        return `
+            <div class="variant-set-products-section">
+                <h5 class="variant-set-products-title">
+                    🎁 Bu Varyantın Set İçeriği
+                    <span style="font-weight: 400; color: var(--text-secondary); font-size: 0.8rem;">(${bundleProducts.length} ürün)</span>
+                </h5>
+                <div class="variant-set-products-table">
+                    ${setProductRows}
                 </div>
             </div>
         `;
