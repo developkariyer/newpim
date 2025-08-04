@@ -385,7 +385,7 @@ class StickerService
                 'filename' => $filename
             ]);
         }
-        } catch (Exception $e) {
+        catch (Exception $e) {
             $this->logger->error('Error creating EU sticker', [
                 'product_id' => $product->getId(),
                 'iwasku' => $product->getIwasku(),
