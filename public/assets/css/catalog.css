@@ -454,6 +454,8 @@ body {
 
 .variant-row {
     background: white;
+    flex-direction: column;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 1rem;
@@ -1040,7 +1042,7 @@ html {
     display: flex;
     align-items: center;
     gap: 0.3rem;
-    margin-top: 0.25rem;
+    white-space: nowrap;
 }
 
 .variant-set-toggle:hover {
@@ -1058,14 +1060,13 @@ html {
     transition: transform 0.2s ease;
 }
 
-/* Variant Set Products Section - Başlangıçta gizli */
 .variant-set-products-section {
     background: linear-gradient(135deg, #f8f9ff, #f0f2ff);
-    border: 1px solid #d1d9ff;
-    border-radius: 6px;
-    margin-top: 0.75rem;
+    border-top: 1px solid #d1d9ff;
+    border-left: none; 
+    border-radius: 0; 
+    margin-top: 0; 
     padding: 1rem;
-    border-left: 4px solid #6c63ff;
     animation: slideDown 0.3s ease-out;
 }
 
@@ -1235,13 +1236,15 @@ html {
 @keyframes slideDown {
     from {
         opacity: 0;
-        transform: translateY(-10px);
         max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
     }
     to {
         opacity: 1;
-        transform: translateY(0);
-        max-height: 1000px;
+        max-height: 500px;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
     }
 }
 
@@ -1266,9 +1269,19 @@ html {
         padding: 0.75rem;
     }
     
+    .variant-main-content {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .variant-actions {
+        align-items: flex-start;
+        min-width: unset;
+        width: 100%;
+    }
+    
     .variant-set-toggle {
-        font-size: 0.7rem;
-        padding: 0.3rem 0.6rem;
+        align-self: flex-start;
     }
 }
 
