@@ -600,76 +600,84 @@ class CatalogSystem {
             const fields = [];
             if (bundleProduct.iwasku) {
                 fields.push(`
-                    <div class="variant-set-field iwasku">
-                        <span class="variant-set-field-label">🏷️ IWASKU</span>
-                        <span class="variant-set-field-value">${this.escapeHtml(bundleProduct.iwasku)}</span>
+                    <div class="set-item-field iwasku">
+                        <span class="set-item-field-label">🏷️ IWASKU</span>
+                        <span class="set-item-field-value">${this.escapeHtml(bundleProduct.iwasku)}</span>
                     </div>
                 `);
             }
             if (bundleProduct.key) {
                 fields.push(`
-                    <div class="variant-set-field name">
-                        <span class="variant-set-field-label">📦 Ürün</span>
-                        <span class="variant-set-field-value">${this.escapeHtml(bundleProduct.key)}</span>
+                    <div class="set-item-field name">
+                        <span class="set-item-field-label">📦 Ürün</span>
+                        <span class="set-item-field-value">${this.escapeHtml(bundleProduct.key)}</span>
                     </div>
                 `);
             }
             if (bundleProduct.size) {
                 fields.push(`
-                    <div class="variant-set-field size">
-                        <span class="variant-set-field-label">📏 Beden</span>
-                        <span class="variant-set-field-value">${this.escapeHtml(bundleProduct.size)}</span>
+                    <div class="set-item-field beden">
+                        <span class="set-item-field-label">📏 Beden</span>
+                        <span class="set-item-field-value">${this.escapeHtml(bundleProduct.size)}</span>
                     </div>
                 `);
             }
             if (bundleProduct.color) {
                 fields.push(`
-                    <div class="variant-set-field color">
-                        <span class="variant-set-field-label">🎨 Renk</span>
-                        <span class="variant-set-field-value">${this.escapeHtml(bundleProduct.color)}</span>
+                    <div class="set-item-field renk">
+                        <span class="set-item-field-label">🎨 Renk</span>
+                        <span class="set-item-field-value">${this.escapeHtml(bundleProduct.color)}</span>
                     </div>
                 `);
             }
             if (bundleProduct.customField) {
                 fields.push(`
-                    <div class="variant-set-field custom">
-                        <span class="variant-set-field-label">⚙️ Custom</span>
-                        <span class="variant-set-field-value">${this.escapeHtml(bundleProduct.customField)}</span>
+                    <div class="set-item-field custom">
+                        <span class="set-item-field-label">⚙️ Custom</span>
+                        <span class="set-item-field-value">${this.escapeHtml(bundleProduct.customField)}</span>
                     </div>
                 `);  
             }
             if (bundleProduct.quantity && bundleProduct.quantity > 1) {
                 fields.push(`
-                    <div class="variant-set-field quantity">
-                        <span class="variant-set-field-label">🔢 Adet</span>
-                        <span class="variant-set-field-value">${bundleProduct.quantity}</span>
+                    <div class="set-item-field quantity">
+                        <span class="set-item-field-label">🔢 Adet</span>
+                        <span class="set-item-field-value">${bundleProduct.quantity}</span>
+                    </div>
+                `);
+            }
+            if (bundleProduct.identifier) {
+                fields.push(`
+                    <div class="set-item-field id">
+                        <span class="set-item-field-label">🆔 ID</span>
+                        <span class="set-item-field-value">${this.escapeHtml(bundleProduct.identifier)}</span>
                     </div>
                 `);
             }
             const isPublished = bundleProduct.published !== false;
-            const statusClass = isPublished ? 'variant-set-status-active' : 'variant-set-status-inactive';
+            const statusClass = isPublished ? 'set-item-status-active' : 'set-item-status-inactive';
             const statusText = isPublished ? '✨ Aktif' : '❌ Pasif';
             return `
-                <div class="variant-set-product-row ${isPublished ? '' : 'variant-set-product-row-inactive'}">
-                    <span class="variant-set-status ${statusClass}">${statusText}</span>
+                <div class="set-item-row ${isPublished ? '' : 'set-item-row-inactive'}">
+                    <span class="set-item-status ${statusClass}">${statusText}</span>
                     
-                    <div class="variant-set-product-info">
+                    <div class="set-item-info">
                         ${fields.join('')}
                     </div>
                     
-                    <div class="variant-set-product-identifier">
-                        ${bundleProduct.identifier ? `<small>ID: ${this.escapeHtml(bundleProduct.identifier)}</small>` : ''}
+                    <div class="set-item-actions">
+                        <div class="set-item-name">${this.escapeHtml(bundleProduct.key || 'Set Ürünü')}</div>
                     </div>
                 </div>
             `;
         }).join('');
         return `
-            <div class="variant-set-products-section" id="variant-set-${variantId}" style="display: none;">
-                <h5 class="variant-set-products-title">
-                    📦 Bu Varyantın Set İçeriği
+            <div class="set-section" id="variant-set-${variantId}" style="display: none;">
+                <h5 class="set-title">
+                    Bu Varyantın Set İçeriği
                     <span style="font-weight: 400; color: var(--text-secondary); font-size: 0.8rem;">(${bundleProducts.length} ürün)</span>
                 </h5>
-                <div class="variant-set-products-table">
+                <div class="set-items-table">
                     ${setProductRows}
                 </div>
             </div>
