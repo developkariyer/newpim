@@ -394,9 +394,9 @@ class SearchService
             }
             $variants = [];
             $productVariants = $product->getChildren([Product::OBJECT_TYPE_VARIANT], true);
-            //$variantBundleProducts = $this->getVariantBundleProducts($variant);
-            //$bundleProductCount = count($variantBundleProducts);
-            //$hasBundleProducts = $bundleProductCount > 0;
+            $variantBundleProducts = $this->getVariantBundleProducts($variant);
+            $bundleProductCount = count($variantBundleProducts);
+            $hasBundleProducts = $bundleProductCount > 0;
             foreach ($productVariants as $variant) {
                 $colorObject = $variant->getVariationColor();
                 $colorInfo = $colorObject ? [
@@ -447,9 +447,9 @@ class SearchService
                     'customFieldTitle' => $customTableTitle,
                     'customField' => $variant->getCustomField(),
                     'published' => $variant->getPublished(),
-                    //'bundleProducts' => $variantBundleProducts,
-                    //'bundleProductCount' => $bundleProductCount,
-                    //'hasBundleProducts' => $hasBundleProducts
+                    'bundleProducts' => $variantBundleProducts,
+                    'bundleProductCount' => $bundleProductCount,
+                    'hasBundleProducts' => $hasBundleProducts
                 ];
             }
             return $variants;
