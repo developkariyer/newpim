@@ -264,50 +264,24 @@ class StickerController extends FrontendController
         }
     }
 
+    
     /**
      * @Route("/sticker/add-sticker", name="sticker_new", methods={"POST"})
-     * @param Request $request
-     * @return Response
-     * @throws \Doctrine\DBAL\Exception
      */
     public function addSticker(Request $request): Response
     {
-        $productId = $request->request->get('form_data');
-        $groupId = $request->request->get('group_id');
-        $group = GroupProduct::getById($groupId);
-        $iwasku = Registry::getKey($productId,'asin-to-iwasku');
-        if (empty($iwasku)) {
-            $iwasku = $productId;
-        }
-        if (empty($iwasku)) {
-            $this->addFlash('error', 'HATALI VEYA BOŞ ÜRÜN KODU.');
-            return $this->redirectToRoute('sticker_main_page');
-        }
-        $product = Product::findByField('iwasku',$iwasku);
-        if ($product instanceof Product) {
-            if (!$product->getInheritedField('sticker4x6eu')) {
-                $product->checkSticker4x6eu();
+        try {
+            $productId = $request->request->get('form_data');
+            $groupId = $request->request->get('group_id');
+            $result = $this->stickerService->addStickerToGroup($productId, $groupId);
+            if ($result['success']) {
+                $this->addFlash('success', $result['message']);
+            } else {
+                $this->addFlash('error', $result['message']);
             }
-            if (!$product->getInheritedField('sticker4x6iwasku')) {
-                $product->checkSticker4x6iwasku();
-            }
-            $existingProducts = $group->getProducts();
-            if (!in_array($product, $existingProducts, true)) {
-                $group->setProducts(array_merge($existingProducts, [$product]));
-            }
-            else {
-                $this->addFlash('error', 'Bu ürün zaten bu grupta bulunmaktadır.');
-                return $this->redirectToRoute('sticker_main_page');
-            }
-            try {
-                $group->save();
-            } catch (Exception $e) {
-                $this->addFlash('error: ', $e . ' Etiket eklenirken bir hata oluştu.');
-                return $this->redirectToRoute('sticker_main_page');
-            }
-            $this->addFlash('success', 'Etiket başarıyla eklendi.');
-        } else {
-            $this->addFlash('error', 'Bu Ürün Pimcore\'da Bulunamadı.');
+        } catch (Exception $e) {
+            error_log("AddSticker Controller Error: " . $e->getMessage());
+            $this->addFlash('error', 'Beklenmeyen bir hata oluştu.');
         }
         return $this->redirectToRoute('sticker_main_page');
     }

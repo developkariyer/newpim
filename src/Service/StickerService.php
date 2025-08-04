@@ -7,6 +7,7 @@ use Pimcore\Model\DataObject\GroupProduct;
 use Pimcore\Model\Asset;
 use Psr\Log\LoggerInterface;
 use Exception;
+use App\Utils\PdfGenerator;
 
 class StickerService
 {
@@ -160,7 +161,6 @@ class StickerService
             'list' => $eanList
         ];
     }
-
     
     private function formatProductDetailInfo(Product $product): array
     {
@@ -299,4 +299,133 @@ class StickerService
         }
         return $status;
     }
+
+    // Sticker Add Methods
+    public function addStickerToGroup(string $productId, int $groupId): array
+    {
+        try {
+            $group = GroupProduct::getById($groupId);
+            if (!$group) {
+                return [
+                    'success' => false,
+                    'message' => 'Etiket grubu bulunamadı.'
+                ];
+            }
+            $productListing = new Product\Listing();
+            $productListing->setCondition('iwasku = ?', $productId);
+            $productListing->setLimit(1);
+            $products = $productListing->load();
+            if (count($products) === 0) {
+                return [
+                    'success' => false,
+                    'message' => 'Bu ürün Pimcore\'da bulunamadı.'
+                ];
+            }
+            $product = $products[0];
+            $existingProducts = $group->getProducts() ?? [];
+            if (in_array($product, $existingProducts, true)) {
+                return [
+                    'success' => false,
+                    'message' => 'Bu ürün zaten bu grupta bulunmaktadır.'
+                ];
+            }
+            $this->createStickersForProduct($product);
+            $group->setProducts(array_merge($existingProducts, [$product]));
+            $group->save();
+            return [
+                'success' => true,
+                'message' => 'Etiket başarıyla eklendi ve oluşturuldu.',
+                'product_id' => $product->getId(),
+                'iwasku' => $product->getIwasku()
+            ];
+        } catch (Exception $e) {
+            $this->logger->error('Error adding sticker to group', [
+                'product_id' => $productId,
+                'group_id' => $groupId,
+                'error' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Etiket eklenirken bir hata oluştu: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    private function createStickersForProduct(Product $product): void
+    {
+        try {
+            $existingEuStickers = $product->getSticker4x6eu();
+            if (!$existingEuStickers) {
+                $this->createEuSticker($product);
+            }
+            $existingIwaskuStickers = $product->getSticker4x6iwasku();
+            if (!$existingIwaskuStickers) {
+                $this->createIwaskuSticker($product);
+            }
+        } catch (Exception $e) {
+            $this->logger->error('Error creating stickers for product', [
+                'product_id' => $product->getId(),
+                'iwasku' => $product->getIwasku(),
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
+    private function createEuSticker(Product $product): void
+    {
+        try {
+            $filename = "eu_sticker_{$product->getIwasku()}.pdf";
+            $euAssets = PdfGenerator::generate4x6eu($product, $filename);
+            if ($euAssets) {
+                if (!is_array($euAssets)) {
+                    $euAssets = [$euAssets];
+                }
+                $product->setSticker4x6eu($euAssets);
+                $product->save();
+                $this->logger->info('EU sticker created for product', [
+                    'product_id' => $product->getId(),
+                    'iwasku' => $product->getIwasku(),
+                    'asset_count' => count($euAssets),
+                    'filename' => $filename
+                ]);
+            }
+        } catch (Exception $e) {
+            $this->logger->error('Error creating EU sticker', [
+                'product_id' => $product->getId(),
+                'iwasku' => $product->getIwasku(),
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
+    private function createIwaskuSticker(Product $product): void
+    {
+        try {
+            $filename = "iwasku_sticker_{$product->getIwasku()}.pdf";
+            $iwaskuAssets = PdfGenerator::generate4x6iwasku($product, $filename);
+            if ($iwaskuAssets) {
+                if (!is_array($iwaskuAssets)) {
+                    $iwaskuAssets = [$iwaskuAssets];
+                }
+                $product->setSticker4x6iwasku($iwaskuAssets);
+                $product->save();
+                $this->logger->info('IWASKU sticker created for product', [
+                    'product_id' => $product->getId(),
+                    'iwasku' => $product->getIwasku(),
+                    'asset_count' => count($iwaskuAssets),
+                    'filename' => $filename
+                ]);
+            }
+        } catch (Exception $e) {
+            $this->logger->error('Error creating IWASKU sticker', [
+                'product_id' => $product->getId(),
+                'iwasku' => $product->getIwasku(),
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+    
 }
