@@ -377,7 +377,7 @@ class StickerService
         try {
             $filename = "eu_sticker_{$product->getIwasku()}.pdf";
             $euAsset = PdfGenerator::generate4x6eu($product, $filename);
-            $product->setSticker4x6eu($euAssets);
+            $product->setSticker4x6eu($euAsset);
             $product->save();
             $this->logger->info('EU sticker created for product', [
                 'product_id' => $product->getId(),
