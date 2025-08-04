@@ -100,17 +100,23 @@ class StickerController extends FrontendController
     public function getStickers(int $groupId, Request $request): JsonResponse
     {
         try {
+            error_log("StickerController: Getting stickers for group {$groupId}");
             $params = [
                 'page' => $request->query->getInt('page', 1),
                 'limit' => $request->query->getInt('limit', 5),
                 'searchTerm' => $request->query->get('searchTerm')
             ];
+            error_log("StickerController: Params - " . json_encode($params));
             $result = $this->stickerService->getGroupStickers($groupId, $params);
+            error_log("StickerController: Service result - " . json_encode($result));
             return new JsonResponse([
                 'success' => true,
                 ...$result
             ]);
         } catch (Exception $e) {
+            error_log("StickerController Error: " . $e->getMessage());
+            error_log("StickerController Error Trace: " . $e->getTraceAsString());
+            
             return new JsonResponse([
                 'success' => false,
                 'error' => $e->getMessage()
