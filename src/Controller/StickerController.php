@@ -110,6 +110,7 @@ class StickerController extends FrontendController
                 osp.oo_id,
                 osp.iwasku,
                 osp.productIdentifier,
+                osp.image,
                 MIN(osp.name) as name
             FROM object_relations_gproduct org
             JOIN object_query_product osp ON osp.oo_id = org.dest_id
