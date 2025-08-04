@@ -53,6 +53,11 @@ class PdfGenerator
      */
     public static function generate2x5(string $qrcode, string $qrlink, Product $product, $qrfile): Asset\Document
     {
+        $colorObject = $product->getVariationColor();
+        if (empty($colorObject)) {
+            error_log("Color object is empty for product {$product->getIwasku()}, using default color.");
+        }
+        $variationColor = $colorObject->getColor() ?? 'default';
 
         $pdf = new Fpdi('L', 'mm', [50, 25]);
         $pdf->SetAutoPageBreak(false); // Disable automatic page break
@@ -65,9 +70,9 @@ class PdfGenerator
 
         $pdf->SetFont('Arial', 'B', 8);
         $pdf->SetXY(20, 1);
-        $text = $product->getInheritedField("variationSize");
-        $text .= "\n".$product->getInheritedField("variationColor");
-        $text .= "\n".$product->getInheritedField("productIdentifier")." ".$product->getInheritedField("name");
+        $text = $product->getVariationSize();
+        $text .= "\n".$variationColor;
+        $text .= "\n".$product->getProductIdentifier()." ".$product->getName();
         $pdf->MultiCell(30, 4, Utility::keepSafeChars(Utility::removeTRChars($text)), 0, 'C');
         $pdf->Line(20, 1, 20, 24);
 
@@ -89,12 +94,33 @@ class PdfGenerator
      */
     public static function generate4x6iwasku(Product $product, $qrfile): Asset\Document
     {
-        if (empty($product->getEanGtin())) {
-            error_log("EAN not found for product {$product->getIwasku()}, generating without EAN.");
-            return self::generate4x6iwaskuWithoutEan($product, $qrfile);
+        $eans = $product->getEans();
+        if (empty($eans) ||count($eans) === 0) {
+            error_log("No EANs found for product {$product->getIwasku()}, generating without EAN.");
+            return [self::generate4x6iwaskuWithoutEan($product, $qrfile)];
         }
-        error_log("EAN found for product {$product->getIwasku()}, generating with EAN.");
-        return self::generate4x6iwaskuWithEan($product, $qrfile);
+        error_log("Found " . count($eans) . " EAN(s) for product {$product->getIwasku()}, generating labels.");
+        $assets = [];
+        $eanIndex = 0;
+        foreach ($eans as $ean) {
+            if ($eanObject && method_exists($eanObject, 'getEanGTIN') && $eanObject->getGTIN()) {
+                $eanCode = $eanObject->getGTIN();
+                if ($eanIndex === 0) {
+                    $eanQrfile = $qrfile;
+                } else {
+                    $eanQrfile = str_replace('.pdf', "_$eanIndex.pdf", $qrfile);
+                }
+                error_log("Generating label for EAN: {$eanCode} with filename: {$eanQrfile}");
+                $asset = self::generate4x6iwaskuWithEan($product, $eanCode, $eanQrfile);
+                $assets[] = $asset;
+                $eanIndex++;
+            }
+        }
+        if (empty($assets)) {
+            error_log("No valid EANs found for product {$product->getIwasku()}, generating without EAN.");
+            return [self::generate4x6iwaskuWithoutEan($product, $qrfile)];
+        }
+        return $assets;
     }
 
     /**
@@ -117,10 +143,15 @@ class PdfGenerator
         $pdf->SetXY(2, 12); // Adjusted to place below the IWASKU text
 
         // Prepare text
-        $text = $product->getInheritedField("productIdentifier") . " ". $product->getInheritedField("nameEnglish") . "\n";
-        $text .= "(". $product->getInheritedField("name") . ")\n";
-        $text .= "Size: " . $product->getInheritedField("variationSize") . "\n";
-        $text .= "Color: " . $product->getInheritedField("variationColor");
+        $colorObject = $product->getVariationColor();
+        if (empty($colorObject)) {
+            error_log("Color object is empty for product {$product->getIwasku()}, using default color.");
+        }
+        $variationColor = $colorObject->getColor() ?? 'default';
+        $text = $product->getProductIdentifier() . " ". $product->getNameEnglish() . "\n";
+        $text .= "(". $product->getName() . ")\n";
+        $text .= "Size: " . $product->getVariationSize() . "\n";
+        $text .= "Color: " . $variationColor;
 
         // Adjusted width and height for the MultiCell
         $pdf->MultiCell(56, 4, Utility::keepSafeChars(Utility::removeTRChars($text)), 0, 'C'); // Left align, adjusted width for proper wrapping
@@ -142,11 +173,11 @@ class PdfGenerator
     /**
      * @throws DuplicateFullPathException|UnknownTypeException
      */
-    public static function generate4x6iwaskuWithEan(Product $product, $qrfile): Asset\Document
+    public static function generate4x6iwaskuWithEan(Product $product, string $eanCode, $qrfile): Asset\Document
     {
-        error_log("Generating 4x6 label with EAN for product {$product->getIwasku()} for ean {$product->getEanGtin()}");
-        $ean = $product->getEanGtin();
-        $eanBarcode = self::generateEanBarcode($ean);
+        error_log("Generating 4x6 label with EAN for product {$product->getIwasku()} for ean {$eanCode}");
+        
+        $eanBarcode = self::generateEanBarcode($eanCode);
 
         $pdf = new Fpdi('L', 'mm', [60, 40]); // Landscape mode, 60x40 mm page
         $pdf->SetAutoPageBreak(false); // Disable automatic page break
@@ -154,25 +185,29 @@ class PdfGenerator
         $pdf->SetMargins(0, 0, 0);
         $pdf->SetFont('Arial', 'B', 13);
 
-        // Set position for the IWASKU text
-
-        $pdf->Image($eanBarcode, 32, 2, 26, 8); // EAN barcode image
+        // EAN barcode image
+        $pdf->Image($eanBarcode, 32, 2, 26, 8);
 
         // Set the font and position for the product details (variation size, color, and identifier)
         $pdf->SetFont('Arial', '', 11);
         $pdf->SetXY(0, 2);
-        $pdf->Cell(28, 4, trim($product->getIwasku()), 0, 1, 'L'); // 'C' for center alignment, 1 for moving to the next line
-        $pdf->Cell(28, 4, trim($product->getEanGtin()), 0, 1, 'L'); // 'C' for center alignment, 1 for moving to the next line
+        $pdf->Cell(28, 4, trim($product->getIwasku()), 0, 1, 'L'); // IWASKU
+        $pdf->Cell(28, 4, trim($eanCode), 0, 1, 'L'); // Bu spesifik EAN kodu
 
         $pdf->setXY(2, 13); // Adjusted to place below the IWASKU text
         $pdf->SetFont('Arial', '', 9);
-        $text = $product->getInheritedField("productIdentifier") . " ". $product->getInheritedField("nameEnglish") . "\n";
-        $text .= "(". $product->getInheritedField("name") . ")\n";
-        $text .= "Size: " . $product->getInheritedField("variationSize") . "\n";
-        $text .= "Color: " . $product->getInheritedField("variationColor");
+        $colorObject = $product->getVariationColor();
+        if (empty($colorObject)) {
+            error_log("Color object is empty for product {$product->getIwasku()}, using default color.");
+        }
+        $variationColor = $colorObject->getColor() ?? 'default';
+        $text = $product->getProductIdentifier() . " ". $product->getNameEnglish() . "\n";
+        $text .= "(". $product->getName() . ")\n";
+        $text .= "Size: " . $product->getVariationSize() . "\n";
+        $text .= "Color: " . $variationColor;
 
         // Adjusted width and height for the MultiCell
-        $pdf->MultiCell(56, 4, Utility::keepSafeChars(Utility::removeTRChars($text)), 0, 'C'); // Left align, adjusted width for proper wrapping
+        $pdf->MultiCell(56, 4, Utility::keepSafeChars(Utility::removeTRChars($text)), 0, 'C');
 
         // Output PDF to file
         $pdfFilePath = PIMCORE_PROJECT_ROOT . "/tmp/$qrfile";
@@ -182,9 +217,9 @@ class PdfGenerator
         $asset = new Asset\Document();
         $asset->setFilename($qrfile);
         $asset->setData(file_get_contents($pdfFilePath));
-        $asset->setParent(Utility::checkSetAssetPath('IWASKU', Utility::checkSetAssetPath('Etiketler'))); // Ensure this folder exists in Pimcore
+        $asset->setParent(Utility::checkSetAssetPath('IWASKU', Utility::checkSetAssetPath('Etiketler')));
         $asset->save();
-        //unlink($pdfFilePath); // Clean up the temporary PDF file
+        unlink($pdfFilePath); // Clean up the temporary PDF file
         return $asset;
     }
 
@@ -196,26 +231,38 @@ class PdfGenerator
      */
     public static function generateEanBarcode($ean): string
     {
+        $cleanEan = preg_replace('/[^0-9]/', '', $ean);
+        
+        if (strlen($cleanEan) < 13) {
+            $cleanEan = str_pad($cleanEan, 13, '0', STR_PAD_LEFT);
+        } elseif (strlen($cleanEan) > 13) {
+            $cleanEan = substr($cleanEan, 0, 13);
+        }
+        
+        error_log("Generating barcode for cleaned EAN: {$cleanEan}");
         $generator = new BarcodeGeneratorPNG();
-        $barcodeData = $generator->getBarcode($ean, $generator::TYPE_EAN_13, 2, 300);
-        $rawPath = PIMCORE_PROJECT_ROOT . "/tmp/{$ean}_raw.png";
+        $barcodeData = $generator->getBarcode($cleanEan, $generator::TYPE_EAN_13, 2, 300);
+        $rawPath = PIMCORE_PROJECT_ROOT . "/tmp/{$cleanEan}_raw.png";
         file_put_contents($rawPath, $barcodeData);
+        
         $img = imagecreatefrompng($rawPath);
         $w = imagesx($img);
         $h = imagesy($img);
         $targetHeight = intval($w / 3);
+        
         if ($h > $targetHeight) {
             $cropped = imagecreatetruecolor($w, $targetHeight);
             imagealphablending($cropped, false);
             imagesavealpha($cropped, true);
             imagecopy($cropped, $img, 0, 0, 0, 0, $w, $targetHeight);
-            $finalPath = PIMCORE_PROJECT_ROOT . "/tmp/{$ean}.png";
+            $finalPath = PIMCORE_PROJECT_ROOT . "/tmp/{$cleanEan}.png";
             imagepng($cropped, $finalPath);
             imagedestroy($cropped);
         } else {
-            $finalPath = PIMCORE_PROJECT_ROOT . "/tmp/{$ean}.png";
+            $finalPath = PIMCORE_PROJECT_ROOT . "/tmp/{$cleanEan}.png";
             copy($rawPath, $finalPath);
         }
+        
         imagedestroy($img);
         unlink($rawPath);
         return $finalPath;
@@ -248,67 +295,67 @@ class PdfGenerator
         return $finalPath;
     }
 
-    public static function generate4x6Fnsku(Product $product, $fnsku, $asin, $qrfile): Asset\Document
-    {
-        $pdf = new Fpdi('L', 'mm', [60, 40]);
-        $pdf->SetAutoPageBreak(false);
-        $pdf->AddPage();
-        $pdf->SetMargins(0, 0, 0);
-        $pdf->SetFont('helvetica', '', 6);
-        $fnskuBarcode = self::generateBarcode($fnsku);
-        $asinBarcode = self::generateBarcode($asin);
+    // public static function generate4x6Fnsku(Product $product, $fnsku, $asin, $qrfile): Asset\Document
+    // {
+    //     $pdf = new Fpdi('L', 'mm', [60, 40]);
+    //     $pdf->SetAutoPageBreak(false);
+    //     $pdf->AddPage();
+    //     $pdf->SetMargins(0, 0, 0);
+    //     $pdf->SetFont('helvetica', '', 6);
+    //     $fnskuBarcode = self::generateBarcode($fnsku);
+    //     $asinBarcode = self::generateBarcode($asin);
 
-        $pdf->Image(PIMCORE_PROJECT_ROOT . '/public/custom/factory.png', 2, 2, 8, 8);
-        $pdf->Image(PIMCORE_PROJECT_ROOT . '/public/custom/eurp.png', 2, 11, 8, 4);
-        $pdf->Image(PIMCORE_PROJECT_ROOT . '/public/custom/icons.png', 1, 27, 48, 12);
-        $pdf->Image($asinBarcode, 33, 2, 26, 8);
-        $pdf->Image($fnskuBarcode,33,14,26,8);
+    //     $pdf->Image(PIMCORE_PROJECT_ROOT . '/public/custom/factory.png', 2, 2, 8, 8);
+    //     $pdf->Image(PIMCORE_PROJECT_ROOT . '/public/custom/eurp.png', 2, 11, 8, 4);
+    //     $pdf->Image(PIMCORE_PROJECT_ROOT . '/public/custom/icons.png', 1, 27, 48, 12);
+    //     $pdf->Image($asinBarcode, 33, 2, 26, 8);
+    //     $pdf->Image($fnskuBarcode,33,14,26,8);
 
-        $pdf->SetXY(39, 11);
-        $pdf->MultiCell(56, 2, mb_convert_encoding($asin, 'windows-1254', 'UTF-8'), 0, 'L');
+    //     $pdf->SetXY(39, 11);
+    //     $pdf->MultiCell(56, 2, mb_convert_encoding($asin, 'windows-1254', 'UTF-8'), 0, 'L');
 
-        $pdf->SetXY(39, 23);
-        $pdf->MultiCell(56, 2, mb_convert_encoding($fnsku, 'windows-1254', 'UTF-8'), 0, 'L');
-
-
-        $pdf->SetXY(10, 1.7);
-        $pdf->MultiCell(32, 3, mb_convert_encoding("IWA Concept Ltd.Sti.\nAnkara/Türkiye\niwaconcept.com", 'windows-1254', 'UTF-8'), 0, 'L');
-
-        $pdf->SetXY(10, 11.6);
-        $pdf->Cell(15, 3, mb_convert_encoding("Emre Bedel", 'windows-1254', 'UTF-8'), 0, 0, 'L');
-        $pdf->SetXY(1, 14.5);
-        $pdf->Cell(25, 3, mb_convert_encoding("responsible@iwaconcept.com", 'windows-1254', 'UTF-8'), 0, 0, 'L');
-
-        $pdf->SetXY(1, 18);
-        $pdf->MultiCell(30, 2, mb_convert_encoding("PN: {$product->getInheritedField("iwasku")}\nSN: {$product->getInheritedField("productIdentifier")}", 'windows-1254', 'UTF-8'), 0, 'L');
-
-        $text =  $product->getInheritedField("productIdentifier") ." ";
-        $text .= $product->getInheritedField("variationSize"). " " . $product->getInheritedField("variationColor") ;
-
-        $pdf->SetXY(1, 23);
-        $pdf->MultiCell(56, 2, mb_convert_encoding(Utility::keepSafeChars(Utility::removeTRChars($text)), 'windows-1254', 'UTF-8'), 0, 'L');
-
-        $text2 = $product->getInheritedField("name");
-        $pdf->SetFont('arial', '', 4);
-        $pdf->SetXY(1, 25);
-        $pdf->MultiCell(56, 2, mb_convert_encoding(Utility::keepSafeChars(Utility::removeTRChars($text2)), 'windows-1254', 'UTF-8'), 0, 'L');
+    //     $pdf->SetXY(39, 23);
+    //     $pdf->MultiCell(56, 2, mb_convert_encoding($fnsku, 'windows-1254', 'UTF-8'), 0, 'L');
 
 
-        $pdf->SetFont('arial', 'B', 6);
-        $pdf->SetXY(48, 27);
-        $pdf->MultiCell(12, 3, mb_convert_encoding("Complies\nwith\nGPSD\nGPSR", 'windows-1254', 'UTF-8'), 0, 'C');
+    //     $pdf->SetXY(10, 1.7);
+    //     $pdf->MultiCell(32, 3, mb_convert_encoding("IWA Concept Ltd.Sti.\nAnkara/Türkiye\niwaconcept.com", 'windows-1254', 'UTF-8'), 0, 'L');
 
-        $pdfFilePath = PIMCORE_PROJECT_ROOT . "/tmp/$qrfile";
-        $pdf->Output($pdfFilePath, 'F');
+    //     $pdf->SetXY(10, 11.6);
+    //     $pdf->Cell(15, 3, mb_convert_encoding("Emre Bedel", 'windows-1254', 'UTF-8'), 0, 0, 'L');
+    //     $pdf->SetXY(1, 14.5);
+    //     $pdf->Cell(25, 3, mb_convert_encoding("responsible@iwaconcept.com", 'windows-1254', 'UTF-8'), 0, 0, 'L');
 
-        $asset = new Asset\Document();
-        $asset->setFilename($qrfile);
-        $asset->setData(file_get_contents($pdfFilePath));
-        $asset->setParent(Utility::checkSetAssetPath('FNSKU', Utility::checkSetAssetPath('Etiketler')));
-        $asset->save();
-        unlink($pdfFilePath);
-        return $asset;
-    }
+    //     $pdf->SetXY(1, 18);
+    //     $pdf->MultiCell(30, 2, mb_convert_encoding("PN: {$product->getInheritedField("iwasku")}\nSN: {$product->getInheritedField("productIdentifier")}", 'windows-1254', 'UTF-8'), 0, 'L');
+
+    //     $text =  $product->getInheritedField("productIdentifier") ." ";
+    //     $text .= $product->getInheritedField("variationSize"). " " . $product->getInheritedField("variationColor") ;
+
+    //     $pdf->SetXY(1, 23);
+    //     $pdf->MultiCell(56, 2, mb_convert_encoding(Utility::keepSafeChars(Utility::removeTRChars($text)), 'windows-1254', 'UTF-8'), 0, 'L');
+
+    //     $text2 = $product->getInheritedField("name");
+    //     $pdf->SetFont('arial', '', 4);
+    //     $pdf->SetXY(1, 25);
+    //     $pdf->MultiCell(56, 2, mb_convert_encoding(Utility::keepSafeChars(Utility::removeTRChars($text2)), 'windows-1254', 'UTF-8'), 0, 'L');
+
+
+    //     $pdf->SetFont('arial', 'B', 6);
+    //     $pdf->SetXY(48, 27);
+    //     $pdf->MultiCell(12, 3, mb_convert_encoding("Complies\nwith\nGPSD\nGPSR", 'windows-1254', 'UTF-8'), 0, 'C');
+
+    //     $pdfFilePath = PIMCORE_PROJECT_ROOT . "/tmp/$qrfile";
+    //     $pdf->Output($pdfFilePath, 'F');
+
+    //     $asset = new Asset\Document();
+    //     $asset->setFilename($qrfile);
+    //     $asset->setData(file_get_contents($pdfFilePath));
+    //     $asset->setParent(Utility::checkSetAssetPath('FNSKU', Utility::checkSetAssetPath('Etiketler')));
+    //     $asset->save();
+    //     unlink($pdfFilePath);
+    //     return $asset;
+    // }
 
 
     /**
@@ -336,10 +383,15 @@ class PdfGenerator
         $pdf->Cell(25, 3, mb_convert_encoding("responsible@iwaconcept.com", 'windows-1254', 'UTF-8'), 0, 0, 'L');
 
         $pdf->SetXY(1, 18);
-        $pdf->MultiCell(30, 2, mb_convert_encoding("PN: {$product->getInheritedField("iwasku")}\nSN: {$product->getInheritedField("productIdentifier")}", 'windows-1254', 'UTF-8'), 0, 'L');
+        $pdf->MultiCell(30, 2, mb_convert_encoding("PN: {$product->getIwasku()}\nSN: {$product->getProductIdentifier()}", 'windows-1254', 'UTF-8'), 0, 'L');
     
-        $text =  $product->getInheritedField("productIdentifier") ." ";
-        $text .= $product->getInheritedField("variationSize"). " " . $product->getInheritedField("variationColor") ;
+        $colorObject = $product->getVariationColor();
+        if (empty($colorObject)) {
+            error_log("Color object is empty for product {$product->getIwasku()}, using default color.");
+        }
+        $variationColor = $colorObject->getColor() ?? 'default';
+        $text =  $product->getProductIdentifier() ." ";
+        $text .= $product->getVariationSize(). " " . $variationColor ;
 
         $pdf->SetXY(1, 23);
         $pdf->MultiCell(56, 2, mb_convert_encoding(Utility::keepSafeChars(Utility::removeTRChars($text)), 'windows-1254', 'UTF-8'), 0, 'L');

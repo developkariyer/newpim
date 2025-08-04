@@ -18,6 +18,7 @@ use Pimcore\Model\DataObject\Color;
 use Pimcore\Model\DataObject\Ean;
 use Pimcore\Model\DataObject\Asin;
 use Pimcore\Model\DataObject\Color\Listing as ColorListing;
+use App\Utils\PdfGenerator;
 
 #[AsCommand(
     name: 'app:import',
@@ -47,7 +48,7 @@ class ImportCommand extends AbstractCommand
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $data = $this->readDataJsonFile();
+        //$data = $this->readDataJsonFile();
 
         if ($input->getOption('products')) {
             $this->importProducts($data);
@@ -72,6 +73,9 @@ class ImportCommand extends AbstractCommand
         if ($input->getOption('setProduct')) {
             $this->setProductSetProduct($data);
         }
+
+        $product = Product::getById(68867);
+        $asset = PdfGenerator::generate4x6iwasku($product, 'test.pdf');
 
         return Command::SUCCESS;
     }
