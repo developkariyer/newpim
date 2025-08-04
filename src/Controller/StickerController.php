@@ -114,7 +114,7 @@ class StickerController extends FrontendController
                 MIN(osp.productCategory) as category,
                 MIN(osp.imageUrl) as image
             FROM object_relations_gproduct org
-            JOIN object_product osp ON osp.oo_id = org.dest_id
+            JOIN object_store_product osp ON osp.oo_id = org.dest_id
             WHERE org.src_id = :groupId
             " . $searchCondition . " 
             GROUP BY osp.productIdentifier, osp.iwasku, osp.oo_id
