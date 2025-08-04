@@ -191,6 +191,7 @@ class SearchService
                 }
             }
             $variants = $this->getProductVariants($product, $customTableTitle);
+            $bundleProducts = $this->getBundleProducts($product, $variants);
             $category = $product->getProductCategory();
             $categoryInfo = $category ? [
                 'id' => $category->getId(),
@@ -210,7 +211,10 @@ class SearchService
                 'imageUrl' => $imagePath ? '/var/assets' . $imagePath : null,
                 'variants' => $variants,
                 'variantCount' => count($variants),
-                'hasVariants' => !empty($variants)
+                'hasVariants' => !empty($variants),
+                'bundleProducts' => $bundleProducts,
+                'bundleProductCount' => count($bundleProducts),
+                'hasBundleProducts' => !empty($bundleProducts)
             ];
         } catch (\Exception $e) {
             error_log('Format product error: ' . $e->getMessage());
@@ -227,8 +231,41 @@ class SearchService
                 'variantCount' => 0,
                 'hasVariants' => false,
                 'createdAt' => null,
-                'modifiedAt' => null
+                'modifiedAt' => null,
+                'bundleProducts' => [],
+                'bundleProductCount' => 0,
+                'hasBundleProducts' => false
             ];
+        }
+    }
+
+    private function getBundleProducts(Product $product, array $variants = []): array
+    {
+        try {
+            $bundleProducts = $product->getBundleProducts();
+            if ($bundleProducts && is_array($bundleProducts) && !empty($bundleProducts)) {
+                return $this->formatBundleProductsArray($bundleProducts);
+            }
+            if (empty($variants)) {
+                return [];
+            }
+            $allBundleProducts = [];
+            foreach ($variants as $variantData) {
+                $variant = Product::getById($variantData['id']);
+                if (!$variant) {
+                    continue;
+                }
+                $variantBundleProducts = $variant->getBundleProducts();
+                if ($variantBundleProducts && is_array($variantBundleProducts) && !empty($variantBundleProducts)) {
+                    $formattedVariantBundles = $this->formatBundleProductsArray($variantBundleProducts);
+                    $allBundleProducts = array_merge($allBundleProducts, $formattedVariantBundles);
+                    break;
+                }
+            }
+            return $this->removeDuplicateBundles($allBundleProducts);
+        } catch (\Exception $e) {
+            error_log('Get bundle products error: ' . $e->getMessage());
+            return [];
         }
     }
 
@@ -480,7 +517,6 @@ class SearchService
                         }
                     }
                 }
-                $variantBundleProducts = $this->getVariantBundleProducts($variant);
                 $variants[] = [
                     'id' => $variant->getId(),
                     'name' => $variant->getKey(),
@@ -493,30 +529,11 @@ class SearchService
                     'customFieldTitle' => $customTableTitle,
                     'customField' => $variant->getCustomField(),
                     'published' => $variant->getPublished(),
-                    'bundleProducts' => $variantBundleProducts,
-                    'bundleProductCount' => count($variantBundleProducts),
-                    'hasBundleProducts' => !empty($variantBundleProducts)
                 ];
             }
             return $variants;
         } catch (\Exception $e) {
             error_log('Get product variants error: ' . $e->getMessage());
-            return [];
-        }
-    }
-
-    private function getVariantBundleProducts(Product $variant): array
-    {
-        try {
-            $bundleProducts = $variant->getBundleProducts();
-            if (!$bundleProducts || !is_array($bundleProducts)) {
-                return [];
-            }
-            
-            return $this->formatBundleProductsArray($bundleProducts);
-            
-        } catch (\Exception $e) {
-            error_log('Get variant bundle products error: ' . $e->getMessage());
             return [];
         }
     }
