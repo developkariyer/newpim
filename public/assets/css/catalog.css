@@ -1026,3 +1026,259 @@ html {
         transition-duration: 0.01ms !important;
     }
 }
+
+.variant-set-toggle {
+    background: linear-gradient(135deg, #6c63ff, #5a52d5);
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.25rem;
+}
+
+.variant-set-toggle:hover {
+    background: linear-gradient(135deg, #5a52d5, #4c46b6);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(108, 99, 255, 0.3);
+}
+
+.variant-set-toggle:active {
+    transform: translateY(0);
+}
+
+.variant-set-toggle .toggle-icon {
+    font-size: 0.7rem;
+    transition: transform 0.2s ease;
+}
+
+/* Variant Set Products Section - Başlangıçta gizli */
+.variant-set-products-section {
+    background: linear-gradient(135deg, #f8f9ff, #f0f2ff);
+    border: 1px solid #d1d9ff;
+    border-radius: 6px;
+    margin-top: 0.75rem;
+    padding: 1rem;
+    border-left: 4px solid #6c63ff;
+    animation: slideDown 0.3s ease-out;
+}
+
+.variant-set-products-title {
+    color: #6c63ff;
+    font-size: 0.9rem;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #d1d9ff;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.variant-set-products-table {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Variant Set Product Row */
+.variant-set-product-row {
+    background: white;
+    border: 1px solid #d1d9ff;
+    border-radius: 6px;
+    padding: 0.75rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(108, 99, 255, 0.1);
+}
+
+.variant-set-product-row:hover {
+    box-shadow: 0 3px 8px rgba(108, 99, 255, 0.15);
+    border-color: #a29bfb;
+}
+
+.variant-set-product-row-inactive {
+    opacity: 0.6;
+    background: #fafafa;
+}
+
+/* Variant Set Status */
+.variant-set-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+    min-width: 60px;
+    text-align: center;
+}
+
+.variant-set-status-active {
+    background: linear-gradient(135deg, #e8f5e8, #d4f1d4);
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+.variant-set-status-inactive {
+    background: linear-gradient(135deg, #ffebee, #ffd6d6);
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+}
+
+/* Variant Set Product Info */
+.variant-set-product-info {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.variant-set-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 120px;
+    flex: 0 0 auto;
+}
+
+.variant-set-field-label {
+    font-size: 0.7rem;
+    color: #6c63ff;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.variant-set-field-value {
+    font-size: 0.8rem;
+    color: #333;
+    font-weight: 500;
+    word-break: break-word;
+    line-height: 1.3;
+}
+
+/* Field specific styling */
+.variant-set-field.iwasku .variant-set-field-value {
+    background: linear-gradient(135deg, #f3e5f5, #e8d5eb);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    border: 1px solid #d1c4e9;
+    font-size: 0.75rem;
+}
+
+.variant-set-field.name .variant-set-field-value {
+    background: linear-gradient(135deg, #e3f2fd, #d1e7fd);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #bbdefb;
+    font-weight: 600;
+}
+
+.variant-set-field.size .variant-set-field-value {
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #ffcc02;
+    font-weight: 600;
+    text-align: center;
+    min-width: 50px;
+}
+
+.variant-set-field.color .variant-set-field-value {
+    background: linear-gradient(135deg, #fce4ec, #f8bbd9);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #f48fb1;
+    font-weight: 600;
+}
+
+.variant-set-field.quantity .variant-set-field-value {
+    background: linear-gradient(135deg, #e8f5e8, #d4f1d4);
+    color: #2e7d32;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 40px;
+    border: 1px solid #c8e6c9;
+}
+
+.variant-set-field.custom .variant-set-field-value {
+    background: linear-gradient(135deg, #f3e5ab, #ecd074);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #dcc643;
+    font-weight: 500;
+}
+
+.variant-set-product-identifier {
+    font-size: 0.7rem;
+    color: #666;
+    align-self: flex-end;
+    font-family: 'Courier New', monospace;
+    background: #f5f5f5;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 1000px;
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .variant-set-product-row {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+    
+    .variant-set-product-info {
+        gap: 0.75rem;
+    }
+    
+    .variant-set-field {
+        min-width: 100px;
+        flex: 1 1 45%;
+    }
+    
+    .variant-set-products-section {
+        padding: 0.75rem;
+    }
+    
+    .variant-set-toggle {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.6rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .variant-set-field {
+        flex: 1 1 100%;
+        min-width: unset;
+    }
+    
+    .variant-set-product-info {
+        gap: 0.5rem;
+    }
+}

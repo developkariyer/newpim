@@ -140,6 +140,14 @@ class CatalogSystem {
         // Product row clicks
         if (this.elements.productsGrid) {
             this.elements.productsGrid.addEventListener('click', (e) => {
+                if (e.target.closest('.variant-set-toggle')) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const toggleBtn = e.target.closest('.variant-set-toggle');
+                    const variantId = toggleBtn.dataset.variantId;
+                    this.toggleVariantSetProducts(variantId, toggleBtn);
+                    return false;
+                }
                 if (e.target.closest('.edit-btn')) {
                     e.stopPropagation(); 
                     e.preventDefault();
@@ -152,7 +160,9 @@ class CatalogSystem {
                 if (productRow && 
                     !e.target.closest('.variants-section') && 
                     !e.target.closest('.edit-btn') &&
-                    !e.target.closest('.product-actions')) {
+                    !e.target.closest('.product-actions') &&
+                    !e.target.closest('.variant-set-toggle') &&
+                    !e.target.closest('.variant-set-products-section')) {
                     this.toggleProductExpansion(productRow);
                 }
             });
@@ -430,6 +440,24 @@ class CatalogSystem {
         return row;
     }
 
+    toggleVariantSetProducts(variantId, toggleBtn) {
+        const setSection = document.getElementById(`variant-set-${variantId}`);
+        const toggleIcon = toggleBtn.querySelector('.toggle-icon');
+        if (!setSection) return;
+        const isVisible = setSection.style.display !== 'none';
+        if (isVisible) {
+            setSection.style.display = 'none';
+            toggleIcon.textContent = '▼';
+            toggleBtn.title = 'Set İçeriğini Göster';
+            console.log(`Set products hidden for variant ${variantId}`);
+        } else {
+            setSection.style.display = 'block';
+            toggleIcon.textContent = '▲';
+            toggleBtn.title = 'Set İçeriğini Gizle';
+            console.log(`Set products shown for variant ${variantId}`);
+        }
+    }
+
     createVariantsSection(variants) {
         if (!variants || variants.length === 0) return '';
         const uniqueVariants = [];
@@ -440,15 +468,14 @@ class CatalogSystem {
                 seenVariantIds.add(variant.id);
             }
             if (variant.bundleProducts && variant.bundleProducts.length > 0) {
-                console.log(`🎁 Variant ${variant.id} bundle products:`, variant.bundleProducts);
+                console.log(`📦 Variant ${variant.id} bundle products:`, variant.bundleProducts);
             }
         });
         const sortedVariants = [...uniqueVariants].sort((a, b) => {
             const sizeA = a.variationSize || '';
             const sizeB = b.variationSize || '';
             const sizeOrder = {
-                'XS': 1, 'S': 2, 'M': 3, 'L': 4, 'XL': 5, '2XL': 6, '3XL': 7, '4XL': 8, '5XL': 9, '6XL': 10, '7XL': 11, '8XL': 12, '9XL': 13, '10XL': 14,
-                '11XL': 15, '12XL': 16, '13XL': 17, '14XL': 18, '15XL': 19, '16XL': 20, '17XL': 21, '18XL': 22, '19XL': 23, '20XL': 24,
+                'XS': 1, 'S': 2, 'M': 3, 'L': 4, 'XL': 5, '2XL': 6, '3XL': 7, '4XL': 8, '5XL': 9, '6XL': 10
             };
             const orderA = sizeOrder[sizeA.toUpperCase()] || 999;
             const orderB = sizeOrder[sizeB.toUpperCase()] || 999;
@@ -529,7 +556,7 @@ class CatalogSystem {
             const statusClass = isPublished ? 'variant-status-active' : 'variant-status-inactive';
             const statusText = isPublished ? '✨ Aktif' : '❌ Pasif';
             const variantSetSection = (variant.bundleProducts && variant.bundleProducts.length > 0) 
-                ? this.createVariantSetProductsSection(variant.bundleProducts)
+                ? this.createVariantSetProductsSection(variant.bundleProducts, variant.id)
                 : '';
             return `
                 <div class="variant-row ${isPublished ? '' : 'variant-row-inactive'}">
@@ -540,7 +567,12 @@ class CatalogSystem {
                     <div class="variant-actions">
                         <div class="variant-name">${this.escapeHtml(variant.name || 'Varyant')}</div>
                         ${variant.createdAt ? `<div class="variant-date">📅 ${this.escapeHtml(variant.createdAt)}</div>` : ''}
-                        ${variant.bundleProducts && variant.bundleProducts.length > 0 ? `<div class="variant-set-badge">🎁 ${variant.bundleProducts.length} Set Ürünü</div>` : ''}                      
+                        ${variant.bundleProducts && variant.bundleProducts.length > 0 ? `
+                            <button class="variant-set-toggle" data-variant-id="${variant.id}" title="Set İçeriğini Göster/Gizle">
+                                📦 ${variant.bundleProducts.length} Set Ürünü
+                                <span class="toggle-icon">▼</span>
+                            </button>
+                        ` : ''}
                     </div>
                     ${variantSetSection}
                 </div>
@@ -559,7 +591,7 @@ class CatalogSystem {
         `;
     }
 
-    createVariantSetProductsSection(bundleProducts) {
+    createVariantSetProductsSection(bundleProducts, variantId) {
         console.log('Creating variant set products section with:', bundleProducts);
         if (!bundleProducts || bundleProducts.length === 0) {
             return '';
@@ -632,9 +664,9 @@ class CatalogSystem {
             `;
         }).join('');
         return `
-            <div class="variant-set-products-section">
+            <div class="variant-set-products-section" id="variant-set-${variantId}" style="display: none;">
                 <h5 class="variant-set-products-title">
-                    🎁 Bu Varyantın Set İçeriği
+                    📦 Bu Varyantın Set İçeriği
                     <span style="font-weight: 400; color: var(--text-secondary); font-size: 0.8rem;">(${bundleProducts.length} ürün)</span>
                 </h5>
                 <div class="variant-set-products-table">
