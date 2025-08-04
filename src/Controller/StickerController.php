@@ -17,9 +17,17 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\ExpressionLanguage\Expression;
+use App\Service\StickerService;
 
 class StickerController extends FrontendController
 {
+    private StickerService $stickerService;
+
+    public function __construct(StickerService $stickerService)
+    {
+        $this->stickerService = $stickerService;
+    }
+
     protected function getGroupList(): array
     {
         $gproduct = new GroupProduct\Listing();
@@ -88,110 +96,26 @@ class StickerController extends FrontendController
 
     /**
      * @Route("/sticker/get-stickers/{groupId}", name="get_stickers", methods={"GET"})
-     * @throws \Doctrine\DBAL\Exception
      */
-    public function getStickers(int $groupId): JsonResponse
+    public function getStickers(int $groupId, Request $request): JsonResponse
     {
-        $groupedStickers = [];
-        $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
-        $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 5;
-        $offset = ($page - 1) * $limit;
-        $searchCondition = '';
-        $searchTerm = $_GET['searchTerm'] ?? null;
-        
-        if ($searchTerm !== null) {
-            $searchTerm = "%" . $searchTerm . "%";
-            $searchCondition = "AND (name LIKE :searchTerm LIKE :searchTerm OR productIdentifier LIKE :searchTerm OR iwasku LIKE :searchTerm)";
-            $offset = null;
-        }
-        
-        // Ana ürün bilgilerini getir
-        $sql = "SELECT 
-                osp.oo_id,
-                osp.iwasku,
-                osp.productIdentifier,
-                osp.image,
-                MIN(osp.name) as name
-            FROM object_relations_gproduct org
-            JOIN object_query_product osp ON osp.oo_id = org.dest_id
-            WHERE org.src_id = :groupId
-            " . $searchCondition . " 
-            GROUP BY osp.productIdentifier, osp.iwasku, osp.oo_id
-            ORDER BY osp.productIdentifier
-        ";
-        
-        if ($offset !== null) {
-            $sql .= " LIMIT $limit OFFSET $offset";
-        } else {
-            $sql .= " LIMIT 10";
-        }
-        
-        $parameters = ['groupId' => $groupId];
-        if ($searchTerm) {
-            $parameters['searchTerm'] = $searchTerm;
-        }
-        
-        $mainProducts = Db::get()->fetchAllAssociative($sql, $parameters);
-        
-        foreach ($mainProducts as $mainProduct) {
-            $productId = $mainProduct['oo_id'];
-            $product = Product::getById($productId);
-            
-            if (!$product) {
-                continue;
-            }
-            
-            // EAN bilgilerini al
-            $eans = $product->getEans();
-            $eanList = [];
-            $totalEans = 0;
-            
-            if ($eans && count($eans) > 0) {
-                foreach ($eans as $eanObject) {
-                    if ($eanObject && method_exists($eanObject, 'getGTIN') && $eanObject->getGTIN()) {
-                        $eanList[] = $eanObject->getGTIN();
-                        $totalEans++;
-                    }
-                }
-            }
-            
-            // Sticker durumlarını kontrol et
-            $stickerInfo = $this->checkStickerStatus($product);
-            
-            $groupedStickers[$mainProduct['productIdentifier']][] = [
-                'product_id' => $productId,
-                'product_name' => $mainProduct['name'] ?? '',
-                'category' => $mainProduct['category'] ?? '',
-                'image_link' => $mainProduct['image'] ?? '',
-                'product_identifier' => $mainProduct['productIdentifier'] ?? '',
-                'iwasku' => $mainProduct['iwasku'] ?? '',
-                'ean_count' => $totalEans,
-                'eans' => $eanList,
-                'sticker_status' => $stickerInfo
+        try {
+            $params = [
+                'page' => $request->query->getInt('page', 1),
+                'limit' => $request->query->getInt('limit', 5),
+                'searchTerm' => $request->query->get('searchTerm')
             ];
+            $result = $this->stickerService->getGroupStickers($groupId, $params);
+            return new JsonResponse([
+                'success' => true,
+                ...$result
+            ]);
+        } catch (Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
         }
-        
-        // Toplam sayıyı hesapla
-        $countSql = "SELECT 
-                COUNT(DISTINCT osp.productIdentifier) AS totalCount
-            FROM object_relations_gproduct org
-            JOIN object_product osp ON osp.oo_id = org.dest_id
-            WHERE org.src_id = :groupId
-            " . $searchCondition;
-            
-        $countResult = Db::get()->fetchAssociative($countSql, $parameters);
-        $totalProducts = $countResult['totalCount'] ?? 0;
-        
-        return new JsonResponse([
-            'success' => true,
-            'stickers' => $groupedStickers,
-            'pagination' => [
-                'current_page' => $page,
-                'per_page' => $limit,
-                'total_items' => $totalProducts,
-                'total_pages' => ceil($totalProducts / $limit)
-            ]
-        ]);
     }
 
     /**
