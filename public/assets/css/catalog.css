@@ -454,18 +454,20 @@ body {
 
 .variant-row {
     background: white;
-    flex-direction: column;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    padding: 1rem;
+    margin-bottom: 0.75rem;
     transition: all 0.2s ease;
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 1rem;
-    align-items: center;
-    position: relative;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.variant-row:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: rgba(102, 126, 234, 0.3);
 }
 
 .variant-row::before {
@@ -480,28 +482,31 @@ body {
     transition: opacity 0.3s ease;
 }
 
-.variant-row:hover {
-    transform: translateX(4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    border-color: rgba(102, 126, 234, 0.3);
-}
-
 .variant-row:hover::before {
     opacity: 1;
 }
 
 /* Variant Status Badge */
+.variant-main-content {
+    display: grid;
+    grid-template-columns: auto 1fr auto; /* Status, Info, Actions */
+    gap: 1rem;
+    align-items: center;
+    padding: 1rem;
+}
+
+/* Variant Status */
 .variant-status {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 1rem;
-    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
     white-space: nowrap;
-    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+    min-width: 70px;
+    text-align: center;
+    align-self: flex-start;
 }
 
 .variant-status-active {
@@ -535,9 +540,33 @@ body {
 /* Variant Info - Main Content */
 .variant-info {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 1rem;
     font-size: 0.85rem;
+    flex: 1;
+}
+
+/* Variant Actions - Sağda hizalı */
+.variant-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+    min-width: 150px;
+}
+
+.variant-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    text-align: right;
+    line-height: 1.3;
+}
+
+.variant-date {
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    text-align: right;
 }
 
 .variant-field {
@@ -1063,9 +1092,7 @@ html {
 .variant-set-products-section {
     background: linear-gradient(135deg, #f8f9ff, #f0f2ff);
     border-top: 1px solid #d1d9ff;
-    border-left: none; 
-    border-radius: 0; 
-    margin-top: 0; 
+    margin: 0; /* Margin sıfırla */
     padding: 1rem;
     animation: slideDown 0.3s ease-out;
 }
@@ -1250,28 +1277,10 @@ html {
 
 /* Responsive */
 @media (max-width: 768px) {
-    .variant-set-product-row {
-        flex-direction: column;
-        gap: 0.5rem;
-        padding: 0.5rem;
-    }
-    
-    .variant-set-product-info {
-        gap: 0.75rem;
-    }
-    
-    .variant-set-field {
-        min-width: 100px;
-        flex: 1 1 45%;
-    }
-    
-    .variant-set-products-section {
-        padding: 0.75rem;
-    }
-    
     .variant-main-content {
-        flex-direction: column;
+        grid-template-columns: 1fr; 
         gap: 0.75rem;
+        text-align: left;
     }
     
     .variant-actions {
@@ -1280,18 +1289,27 @@ html {
         width: 100%;
     }
     
+    .variant-name,
+    .variant-date {
+        text-align: left;
+    }
+    
     .variant-set-toggle {
         align-self: flex-start;
+    }
+    
+    .variant-info {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
     }
 }
 
 @media (max-width: 480px) {
-    .variant-set-field {
-        flex: 1 1 100%;
-        min-width: unset;
+    .variant-main-content {
+        padding: 0.75rem;
     }
     
-    .variant-set-product-info {
-        gap: 0.5rem;
+    .variant-set-products-section {
+        padding: 0.75rem;
     }
 }
