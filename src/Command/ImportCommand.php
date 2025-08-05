@@ -108,7 +108,8 @@ class ImportCommand extends AbstractCommand
     
         foreach ($data as $key => $iwaskus) {
             echo 'Processing group: ' . $key . PHP_EOL;
-            $this->findGroupProduct($key);
+            $groupId = $this->findGroupProduct($key);
+            echo 'Group ID: ' . $key . ' - ' . $groupId . PHP_EOL;
             foreach ($iwaskus as $iwasku) {
                 echo 'Processing iwasku: ' . $iwasku . PHP_EOL;
             }
@@ -126,21 +127,20 @@ class ImportCommand extends AbstractCommand
         $groupProduct = $listing->current();
         if (!$groupProduct) {
             echo 'Group product not found with key: ' . $key . PHP_EOL;
-            // $groupProduct = new GroupProduct();
-            // $groupProduct->setKey($key);
-            // $groupProduct->setPublished(true);
-            // try {
-            //     $groupProduct->save();
-            //     echo 'Group product created with key: ' . $key . PHP_EOL;
-            // } catch (\Exception $e) {
-            //     echo 'Failed to create group product with key ' . $key . ': ' . $e->getMessage() . PHP_EOL;
-            //     return null;
-            // }
+            $groupProduct = new GroupProduct();
+            $groupProduct->setKey($key);
+            $groupProduct->setPublished(true);
+            try {
+                $groupProduct->save();
+                echo 'Group product created with key: ' . $key . PHP_EOL;
+            } catch (\Exception $e) {
+                echo 'Failed to create group product with key ' . $key . ': ' . $e->getMessage() . PHP_EOL;
+                return null;
+            }
         } else {
             echo 'Group product found with key: ' . $key . PHP_EOL;
         }
-
-
+        return $groupProduct->getId();
     }
 
     private function transferStickers($data)
