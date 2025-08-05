@@ -133,6 +133,7 @@ class TrendyolConnector
         }
         echo "Loading " . count($cachedListings) . " listings from cache (file age: " . round($fileAge/3600, 1) . " hours)\n";
         $this->saveProduct($cachedListings);
+        return true;
     }
 
     private function saveProduct($listings): void
