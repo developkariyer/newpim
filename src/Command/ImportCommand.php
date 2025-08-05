@@ -20,6 +20,7 @@ use Pimcore\Model\DataObject\Asin;
 use Pimcore\Model\DataObject\Color\Listing as ColorListing;
 use App\Utils\PdfGenerator;
 use App\Service\StickerService;
+use Pimcore\Model\DataObject\GroupProduct;
 
 #[AsCommand(
     name: 'app:import',
@@ -107,11 +108,39 @@ class ImportCommand extends AbstractCommand
     
         foreach ($data as $key => $iwaskus) {
             echo 'Processing group: ' . $key . PHP_EOL;
+            $this->findGroupProduct($key);
             foreach ($iwaskus as $iwasku) {
                 echo 'Processing iwasku: ' . $iwasku . PHP_EOL;
             }
         
         }
+
+    }
+
+    private function findGroupProduct($key)
+    {
+        $listing = new GroupProduct\Listing();
+        $listing->setCondition('key = ?', [$key]);
+        $listing->setLimit(1);
+        $listing->load();
+        $groupProduct = $listing->current();
+        if (!$groupProduct) {
+            echo 'Group product not found with key: ' . $key . PHP_EOL;
+            // $groupProduct = new GroupProduct();
+            // $groupProduct->setKey($key);
+            // $groupProduct->setName($key);
+            // $groupProduct->setPublished(true);
+            // try {
+            //     $groupProduct->save();
+            //     echo 'Group product created with key: ' . $key . PHP_EOL;
+            // } catch (\Exception $e) {
+            //     echo 'Failed to create group product with key ' . $key . ': ' . $e->getMessage() . PHP_EOL;
+            //     return null;
+            // }
+        } else {
+            echo 'Group product found with key: ' . $key . PHP_EOL;
+        }
+
 
     }
 
