@@ -32,7 +32,7 @@ class ImportCommand extends AbstractCommand
 
     public function __construct(
         private AssetManagementService $assetService,
-        private StickerService $stickerServic
+        private StickerService $stickerService
     ) {
         parent::__construct();
     }
@@ -104,18 +104,16 @@ class ImportCommand extends AbstractCommand
             echo 'JSON decode error: ' . json_last_error_msg() . PHP_EOL;
             return null;
         }
-        
-    
         foreach ($data as $key => $iwaskus) {
             echo 'Processing group: ' . $key . PHP_EOL;
             $groupId = $this->findGroupProduct($key);
             echo 'Group ID: ' . $key . ' - ' . $groupId . PHP_EOL;
             foreach ($iwaskus as $iwasku) {
                 echo 'Processing iwasku: ' . $iwasku . PHP_EOL;
+                $result = $this->stickerService->addStickerToGroup($iwasku, $groupId);
+                echo $result['message'] . PHP_EOL;
             }
-        
         }
-
     }
 
     private function findGroupProduct($key)
