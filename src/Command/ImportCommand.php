@@ -46,7 +46,8 @@ class ImportCommand extends AbstractCommand
             ->addOption('connectEan', null, InputOption::VALUE_NONE, 'Connect Product EAN')
             ->addOption('connectAsin', null, InputOption::VALUE_NONE, 'Connect Product ASIN')
             ->addOption('setProduct', null, InputOption::VALUE_NONE, 'Set Product Set')
-            ->addOption('stickers', null, InputOption::VALUE_NONE, 'Transfer Stickers');
+            ->addOption('stickers', null, InputOption::VALUE_NONE, 'Transfer Stickers')
+            ->addOption('groupProducts', null, InputOption::VALUE_NONE, 'Group Products');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -77,33 +78,60 @@ class ImportCommand extends AbstractCommand
             $this->setProductSetProduct($data);
         }
 
+        if ($input->getOption('stickers')) {
+            $this->transferStickers($data);
+        }
+
+        if ($input->getOption('groupProducts')) {
+            $this->groupProducts();
+        }
+
+
         return Command::SUCCESS;
+    }
+
+    private function groupProducts()
+    {
+        $filePath = PIMCORE_PROJECT_ROOT . '/tmp/exportProduct.json';
+        if (!file_exists($filePath)) {
+            echo 'File not found: ' . $filePath . PHP_EOL;
+            return null;
+        }
+        $jsonContent = file_get_contents($filePath);
+        $data = json_decode($jsonContent, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            echo 'JSON decode error: ' . json_last_error_msg() . PHP_EOL;
+            return null;
+        }
+        print_r($data);
+
     }
 
     private function transferStickers($data)
     {
-        foreach ($data as $product) {
-            foreach ($product['variants'] as $variant) {
-                $iwasku = $variant['iwasku'] ?? '';
-                if (empty($iwasku)) {
-                    echo 'Skipping variant with empty iwasku for product ' . $product['identifier'] . PHP_EOL;
-                    continue;
-                }
-                $variantObject = $this->findVariantByIwasku($iwasku);
-                if (!$variantObject) {
-                    echo 'Variant not found for iwasku ' . $iwasku . ', skipping sticker transfer.' . PHP_EOL;
-                    continue;
-                }
-                $sticker4x6eu = $variant['sticker4x6eu'] ?? '';
-                $sticker4x6iwasku = $variant['sticker4x6iwasku'] ?? '';
-                if (empty($sticker4x6eu) || empty($sticker4x6iwasku)) {
-                    echo 'Skipping variant with empty sticker data for iwasku ' . $iwasku . PHP_EOL;
-                    continue;
-                }
+
+        // foreach ($data as $product) {
+        //     foreach ($product['variants'] as $variant) {
+        //         $iwasku = $variant['iwasku'] ?? '';
+        //         if (empty($iwasku)) {
+        //             echo 'Skipping variant with empty iwasku for product ' . $product['identifier'] . PHP_EOL;
+        //             continue;
+        //         }
+        //         $variantObject = $this->findVariantByIwasku($iwasku);
+        //         if (!$variantObject) {
+        //             echo 'Variant not found for iwasku ' . $iwasku . ', skipping sticker transfer.' . PHP_EOL;
+        //             continue;
+        //         }
+        //         $sticker4x6eu = $variant['sticker4x6eu'] ?? '';
+        //         $sticker4x6iwasku = $variant['sticker4x6iwasku'] ?? '';
+        //         if (empty($sticker4x6eu) || empty($sticker4x6iwasku)) {
+        //             echo 'Skipping variant with empty sticker data for iwasku ' . $iwasku . PHP_EOL;
+        //             continue;
+        //         }
 
                 
-            }
-        }
+        //     }
+        // }
     }
 
     private function setProductSetProduct(array $data): void
