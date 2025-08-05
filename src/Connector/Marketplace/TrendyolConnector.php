@@ -133,19 +133,39 @@ class TrendyolConnector
         }
         echo "Loading " . count($cachedListings) . " listings from cache (file age: " . round($fileAge/3600, 1) . " hours)\n";
         $this->saveProduct($cachedListings);
-        return true;
     }
+        return true;
 
     private function saveProduct($listings): void
     {
-        $sqlInsertMarketplaceListing = "INSERT INTO iwa_marketplaces_catalog 
-            (marketplace_key, marketplace_product_unique_id, marketplace_sku, marketplace_price, marketplace_currency, marketplace_stock, status, marketplace_product_url, product_data)
-            VALUES (:marketplace_key, :marketplace_product_unique_id, :marketplace_sku, :marketplace_price, :marketplace_currency, :marketplace_stock, :status, :marketplace_product_url, :product_data)
+        $sqlInsertMarketplaceListing = "
+            INSERT INTO iwa_marketplaces_catalog (
+                marketplace_key, 
+                marketplace_product_unique_id, 
+                marketplace_sku, 
+                marketplace_price, 
+                marketplace_currency, 
+                marketplace_stock, 
+                status, 
+                marketplace_product_url, 
+                product_data
+            ) VALUES (
+                :marketplace_key, 
+                :marketplace_product_unique_id, 
+                :marketplace_sku, 
+                :marketplace_price, 
+                :marketplace_currency, 
+                :marketplace_stock, 
+                :status, 
+                :marketplace_product_url, 
+                :product_data
+            )
             ON DUPLICATE KEY UPDATE 
                 marketplace_price = VALUES(marketplace_price), 
                 marketplace_currency = VALUES(marketplace_currency), 
                 marketplace_stock = VALUES(marketplace_stock), 
-                product_data = VALUES(product_data)";
+                product_data = VALUES(product_data)
+        ";
 
         foreach ($listings as $listing) {
             $marketplaceProductUniqueId = $listing['platformListingId'] ?? '';
@@ -153,10 +173,9 @@ class TrendyolConnector
             $marketplacePrice = $listing['salePrice'] ?? 0;
             $marketplaceCurrency = 'TL';
             $marketplaceStock = $listing['quantity'] ?? 0;
-            $status = $listing['onSale'] ? 1 : 0; // Convert boolean to integer
+            $status = $listing['onSale'] ; 
             $marketplaceProductUrl = $listing['productUrl'] ?? '';
             $productData = json_encode($listing, JSON_PRETTY_PRINT);
-            
             $params = [
                 'marketplace_key' => $this->marketplaceKey,
                 'marketplace_product_unique_id' => $marketplaceProductUniqueId,
