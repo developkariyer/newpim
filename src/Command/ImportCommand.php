@@ -19,6 +19,7 @@ use Pimcore\Model\DataObject\Ean;
 use Pimcore\Model\DataObject\Asin;
 use Pimcore\Model\DataObject\Color\Listing as ColorListing;
 use App\Utils\PdfGenerator;
+use App\Service\StickerService;
 
 #[AsCommand(
     name: 'app:import',
@@ -29,7 +30,8 @@ class ImportCommand extends AbstractCommand
     private const PRODUCTS_MAIN_FOLDER_ID = 1246;
 
     public function __construct(
-        private AssetManagementService $assetService
+        private AssetManagementService $assetService,
+        private StickerService $stickerServic
     ) {
         parent::__construct();
     }
@@ -43,7 +45,8 @@ class ImportCommand extends AbstractCommand
             ->addOption('asins', null, InputOption::VALUE_NONE, 'Target Marketplace Name')
             ->addOption('connectEan', null, InputOption::VALUE_NONE, 'Connect Product EAN')
             ->addOption('connectAsin', null, InputOption::VALUE_NONE, 'Connect Product ASIN')
-            ->addOption('setProduct', null, InputOption::VALUE_NONE, 'Set Product Set');
+            ->addOption('setProduct', null, InputOption::VALUE_NONE, 'Set Product Set')
+            ->addOption('stickers', null, InputOption::VALUE_NONE, 'Transfer Stickers');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -75,6 +78,32 @@ class ImportCommand extends AbstractCommand
         }
 
         return Command::SUCCESS;
+    }
+
+    private function transferStickers($data)
+    {
+        foreach ($data as $product) {
+            foreach ($product['variants'] as $variant) {
+                $iwasku = $variant['iwasku'] ?? '';
+                if (empty($iwasku)) {
+                    echo 'Skipping variant with empty iwasku for product ' . $product['identifier'] . PHP_EOL;
+                    continue;
+                }
+                $variantObject = $this->findVariantByIwasku($iwasku);
+                if (!$variantObject) {
+                    echo 'Variant not found for iwasku ' . $iwasku . ', skipping sticker transfer.' . PHP_EOL;
+                    continue;
+                }
+                $sticker4x6eu = $variant['sticker4x6eu'] ?? '';
+                $sticker4x6iwasku = $variant['sticker4x6iwasku'] ?? '';
+                if (empty($sticker4x6eu) || empty($sticker4x6iwasku)) {
+                    echo 'Skipping variant with empty sticker data for iwasku ' . $iwasku . PHP_EOL;
+                    continue;
+                }
+
+                
+            }
+        }
     }
 
     private function setProductSetProduct(array $data): void
