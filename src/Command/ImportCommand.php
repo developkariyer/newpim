@@ -92,7 +92,7 @@ class ImportCommand extends AbstractCommand
 
     private function groupProducts()
     {
-        $filePath = PIMCORE_PROJECT_ROOT . '/tmp/exportProduct.json';
+        $filePath = PIMCORE_PROJECT_ROOT . '/tmp/groupProduct.json';
         if (!file_exists($filePath)) {
             echo 'File not found: ' . $filePath . PHP_EOL;
             return null;
