@@ -105,8 +105,11 @@ class ImportCommand extends AbstractCommand
         }
         
     
-        foreach ($data as $key => $iwasku) {
-            echo $key . ' => ' . $iwasku . PHP_EOL;
+        foreach ($data as $key => $iwaskus) {
+            echo 'Processing group: ' . $key . PHP_EOL;
+            foreach ($iwaskus as $iwasku) {
+                echo 'Processing iwasku: ' . $iwasku . PHP_EOL;
+            }
         
         }
 
