@@ -90,13 +90,14 @@ class TrendyolConnector
         //     echo "Using cached listings\n";
         //     return;
         // }
+
         $listings = [];
         $listings = $this->getFromTrendyolApi('GET', "product/sellers/" . $this->sellerId . "/products?approved=true", ['page' => 0], 'content', null);
         if (empty($listings)) {
             echo "Failed to download listings\n";
             return;
         }
-
+        
         // temp 
         $this->saveProduct($listings);
 
@@ -136,8 +137,6 @@ class TrendyolConnector
             ]);
             echo "Inserting listing: " . $listing['id'] . "\n";
         }
-
-
     }
 
     public function downloadInventory(): void
