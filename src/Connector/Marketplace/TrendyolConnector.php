@@ -150,12 +150,11 @@ class TrendyolConnector
             $sqlInsertMarketplaceListing = "INSERT INTO iwa_marketplaces_catalog 
                 (marketplace_key, marketplace_product_unique_id, marketplace_sku, marketplace_price, marketplace_currency, marketplace_stock, status, marketplace_product_url, product_data)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                AS new_values
                 ON DUPLICATE KEY UPDATE 
-                    marketplace_price = new_values.marketplace_price, 
-                    marketplace_currency = new_values.marketplace_currency, 
-                    marketplace_stock = new_values.marketplace_stock, 
-                    product_data = new_values.product_data";
+                    marketplace_price = VALUES(marketplace_price), 
+                    marketplace_currency = VALUES(marketplace_currency), 
+                    marketplace_stock = VALUES(marketplace_stock), 
+                    product_data = VALUES(product_data)";
             $params = [
                 $this->marketplaceKey,
                 $marketplaceProductUniqueId,
@@ -172,6 +171,9 @@ class TrendyolConnector
                 echo "Inserted listing: " . ($listing['id'] ?? $marketplaceProductUniqueId) . "\n";
             } catch (\Exception $e) {
                 echo "Error inserting listing: " . $e->getMessage() . "\n";
+                echo "SQL: " . $sqlInsertMarketplaceListing . "\n";
+                echo "Params count: " . count($params) . "\n";
+                print_r($params);
             }
         }
     }
