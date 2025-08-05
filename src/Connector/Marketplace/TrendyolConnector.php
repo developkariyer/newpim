@@ -7,7 +7,6 @@ use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\VariantProduct;
 use Pimcore\Model\Element\DuplicateFullPathException;
 use Random\RandomException;
-
 use App\Utils\Utility;
 use Symfony\Component\HttpClient\ScopingHttpClient;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
@@ -33,6 +32,11 @@ class TrendyolConnector
 
     public function __construct(DatabaseService $databaseService, $marketplaceKey)
     {
+        echo "Marketplace Key: " . $marketplaceKey . "\n";
+        echo "API Key: " . ($_ENV[$marketplaceKey . '_API_KEY'] ?? 'NOT FOUND') . "\n";
+        echo "API Secret: " . ($_ENV[$marketplaceKey . '_API_SECRET'] ?? 'NOT FOUND') . "\n";
+        echo "Seller ID: " . ($_ENV[$marketplaceKey . '_SELLER_ID'] ?? 'NOT FOUND') . "\n";
+        echo "Token: " . ($_ENV[$marketplaceKey . '_TOKEN'] ?? 'NOT FOUND') . "\n";
         $this->databaseService = $databaseService;
         $this->apiKey = $_ENV[$marketplaceKey . '_API_KEY'];
         $this->apiSecret = $_ENV[$marketplaceKey . '_API_SECRET'];
