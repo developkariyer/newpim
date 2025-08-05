@@ -56,6 +56,7 @@ class ExportService
         $response = new StreamedResponse();
         $response->setCallback(function() use ($limit, $offset, $categoryFilter, $searchQuery, $iwaskuFilter, $asinFilter, $brandFilter, $eanFilter) {
             set_time_limit(0);
+            ini_set('memory_limit', '512M');
             echo "\xEF\xBB\xBF"; 
             $output = fopen('php://output', 'w');
             $headers = [
@@ -65,6 +66,10 @@ class ExportService
                 'Varyant Kodu', 'Beden', 'Renk', 'Custom Alan', 'Varyant Durumu', 'Varyant Oluşturma'
             ];
             fputcsv($output, $headers, ';');
+            if (ob_get_level()) {
+                ob_end_flush();
+            }
+            flush();
             $currentOffset = $offset;
             $totalProductsProcessed = 0; 
             $totalRowsWritten = 0;
@@ -77,50 +82,70 @@ class ExportService
                     'chunk_size' => self::EXPORT_CHUNK_SIZE,
                     'total_products_processed' => $totalProductsProcessed
                 ]);
-                $result = $this->searchService->getFilteredProducts(
-                    self::EXPORT_CHUNK_SIZE, 
-                    $currentOffset,          
-                    $categoryFilter, $searchQuery, $iwaskuFilter,
-                    $asinFilter, $brandFilter, $eanFilter
-                );
-                $productsChunk = $result['products'];
-                $chunkCount = count($productsChunk);
-                $this->logger->info('Chunk loaded', [
-                    'chunk_number' => $chunkNumber,
-                    'chunk_count' => $chunkCount,
-                    'total_available' => $result['total'] ?? 'unknown',
-                    'current_offset' => $currentOffset
-                ]);
-                if ($chunkCount > 0) {
-                    foreach ($productsChunk as $product) {
-                        if ($totalProductsProcessed >= $limit) {
-                            $this->logger->info('Reached product limit', [
-                                'limit' => $limit,
-                                'total_processed' => $totalProductsProcessed
-                            ]);
-                            break 2; 
-                        }
-                        if (empty($product['variants'])) {
-                            $row = $this->formatProductRowWithoutVariants($product);
-                            fputcsv($output, $row, ';');
-                            $totalRowsWritten++;
-                        } else {
-                            foreach ($product['variants'] as $index => $variant) {
-                                $row = $this->formatProductRowWithVariant($product, $variant, $index);
+                try {
+                    $result = $this->searchService->getFilteredProducts(
+                        self::EXPORT_CHUNK_SIZE, 
+                        $currentOffset,          
+                        $categoryFilter, $searchQuery, $iwaskuFilter,
+                        $asinFilter, $brandFilter, $eanFilter
+                    );
+                    $productsChunk = $result['products'];
+                    $chunkCount = count($productsChunk);
+                    $this->logger->info('Chunk loaded', [
+                        'chunk_number' => $chunkNumber,
+                        'chunk_count' => $chunkCount,
+                        'total_available' => $result['total'] ?? 'unknown',
+                        'current_offset' => $currentOffset
+                    ]);
+                    if ($chunkCount > 0) {
+                        foreach ($productsChunk as $product) {
+                            if ($totalProductsProcessed >= $limit) {
+                                $this->logger->info('Reached product limit', [
+                                    'limit' => $limit,
+                                    'total_processed' => $totalProductsProcessed
+                                ]);
+                                break 2; 
+                            }
+                            if (empty($product['variants'])) {
+                                $row = $this->formatProductRowWithoutVariants($product);
                                 fputcsv($output, $row, ';');
                                 $totalRowsWritten++;
+                            } else {
+                                foreach ($product['variants'] as $index => $variant) {
+                                    $row = $this->formatProductRowWithVariant($product, $variant, $index);
+                                    fputcsv($output, $row, ';');
+                                    $totalRowsWritten++;
+                                }
+                            }
+                            $totalProductsProcessed++; 
+                            if ($totalProductsProcessed % 10 === 0) {
+                                flush();
                             }
                         }
-                        $totalProductsProcessed++; 
+                        $currentOffset += self::EXPORT_CHUNK_SIZE;
+                        $this->logger->info('Chunk processing completed', [
+                            'chunk_number' => $chunkNumber,
+                            'products_in_chunk' => $chunkCount,
+                            'total_products_processed' => $totalProductsProcessed,
+                            'total_rows_written' => $totalRowsWritten,
+                            'next_offset' => $currentOffset
+                        ]);
+                        flush();
                     }
-                    $currentOffset += self::EXPORT_CHUNK_SIZE;
-                    $this->logger->info('Chunk processing completed', [
+                    if ($chunkCount < self::EXPORT_CHUNK_SIZE) {
+                        $this->logger->info('Last chunk detected (partial chunk)', [
+                            'chunk_count' => $chunkCount,
+                            'expected_chunk_size' => self::EXPORT_CHUNK_SIZE
+                        ]);
+                        break;
+                    }
+                } catch (\Exception $e) {
+                    $this->logger->error('Error processing chunk', [
                         'chunk_number' => $chunkNumber,
-                        'products_in_chunk' => $chunkCount,
-                        'total_products_processed' => $totalProductsProcessed,
-                        'total_rows_written' => $totalRowsWritten,
-                        'next_offset' => $currentOffset
+                        'error' => $e->getMessage(),
+                        'offset' => $currentOffset
                     ]);
+                    break; 
                 }
             } while ($chunkCount === self::EXPORT_CHUNK_SIZE && $totalProductsProcessed < $limit);
             $this->logger->info('Export completed', [
