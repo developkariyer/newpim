@@ -91,24 +91,56 @@ class TrendyolConnector
         //     return;
         // }
 
+        
+        
+        $tmpDir = PIMCORE_PROJECT_ROOT . "/tmp/marketplaces/";
+        $listingsFile = $tmpDir . $this->marketplaceKey . "LISTINGS.json";
+        if ($this->getListingsFromCache($listingsFile)) {
+            echo "Using cached listings\n";
+            return;
+        }
         $listings = [];
         $listings = $this->getFromTrendyolApi('GET', "product/sellers/" . $this->sellerId . "/products?approved=true", ['page' => 0], 'content', null);
         if (empty($listings)) {
             echo "Failed to download listings\n";
             return;
         }
-        
-        // temp 
+        if (!is_dir($tmpDir)) {
+            mkdir($tmpDir, 0755, true);
+        }
+        file_put_contents($listingsFile, json_encode($listings, JSON_PRETTY_PRINT));
+        echo "Downloaded " . count($listings) . " listings\n";
+
         $this->saveProduct($listings);
 
     }
 
+    private function getListingsFromCache($filePath): bool
+    {
+        if (!file_exists($filePath)) {
+            return false;
+        }
+        $fileAge = time() - filemtime($filePath);
+        if ($fileAge > 86400) {
+            echo "Cache is older than 24 hours (" . round($fileAge/3600, 1) . " hours), downloading fresh data\n";
+            return false;
+        }
+        $cachedContent = file_get_contents($filePath);
+        $cachedListings = json_decode($cachedContent, true);
+        if (!$cachedListings || !is_array($cachedListings)) {
+            echo "Invalid cache file, downloading fresh data\n";
+            return false;
+        }
+        echo "Loading " . count($cachedListings) . " listings from cache (file age: " . round($fileAge/3600, 1) . " hours)\n";
+        $this->saveProduct($cachedListings);
+        return true;
+    }
+
     private function saveProduct($listings): void
     {
-        $sqlInsertMarketplaceListing = "INSERT INTO iwa_marketplaces_catalog (marketplace_key, marketplace_product_unique_id,
-                marketplace_sku, marketplace_price, marketplace_currency, marketplace_stock, status, marketplace_product_url, product_data)
-            VALUES (:marketplace_key, :marketplace_product_unique_id, :marketplace_sku, :marketplace_price, :marketplace_currency,
-                :marketplace_stock, :status, :marketplace_product_url, :product_data)
+        $sqlInsertMarketplaceListing = "INSERT INTO iwa_marketplaces_catalog 
+            (marketplace_key, marketplace_product_unique_id, marketplace_sku, marketplace_price, marketplace_currency, marketplace_stock, status, marketplace_product_url, product_data)
+            VALUES (:marketplace_key, :marketplace_product_unique_id, :marketplace_sku, :marketplace_price, :marketplace_currency, :marketplace_stock, :status, :marketplace_product_url, :product_data)
             ON DUPLICATE KEY UPDATE 
                 marketplace_price = VALUES(marketplace_price), 
                 marketplace_currency = VALUES(marketplace_currency), 
@@ -121,10 +153,11 @@ class TrendyolConnector
             $marketplacePrice = $listing['salePrice'] ?? 0;
             $marketplaceCurrency = 'TL';
             $marketplaceStock = $listing['quantity'] ?? 0;
-            $status = $listing['onSale'] ?? false;
+            $status = $listing['onSale'] ? 1 : 0; // Convert boolean to integer
             $marketplaceProductUrl = $listing['productUrl'] ?? '';
             $productData = json_encode($listing, JSON_PRETTY_PRINT);
-            $this->databaseService->executeSql($sqlInsertMarketplaceListing, [
+            
+            $params = [
                 'marketplace_key' => $this->marketplaceKey,
                 'marketplace_product_unique_id' => $marketplaceProductUniqueId,
                 'marketplace_sku' => $marketplaceSku,
@@ -134,8 +167,10 @@ class TrendyolConnector
                 'status' => $status,
                 'marketplace_product_url' => $marketplaceProductUrl,
                 'product_data' => $productData
-            ]);
-            echo "Inserting listing: " . $listing['id'] . "\n";
+            ];
+            
+            $this->databaseService->executeSql($sqlInsertMarketplaceListing, $params);
+            echo "Inserting listing: " . ($listing['id'] ?? 'unknown') . "\n";
         }
     }
 
