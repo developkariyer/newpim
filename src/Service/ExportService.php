@@ -68,8 +68,11 @@ class ExportService
             $currentOffset = $offset;
             $totalProductsProcessed = 0; 
             $totalRowsWritten = 0;
+            $chunkNumber = 0;
             do {
+                $chunkNumber++;
                 $this->logger->info('Processing chunk', [
+                    'chunk_number' => $chunkNumber,
                     'offset' => $currentOffset,
                     'chunk_size' => self::EXPORT_CHUNK_SIZE,
                     'total_products_processed' => $totalProductsProcessed
@@ -83,13 +86,18 @@ class ExportService
                 $productsChunk = $result['products'];
                 $chunkCount = count($productsChunk);
                 $this->logger->info('Chunk loaded', [
+                    'chunk_number' => $chunkNumber,
                     'chunk_count' => $chunkCount,
-                    'total_available' => $result['total'] ?? 'unknown'
+                    'total_available' => $result['total'] ?? 'unknown',
+                    'current_offset' => $currentOffset
                 ]);
                 if ($chunkCount > 0) {
                     foreach ($productsChunk as $product) {
                         if ($totalProductsProcessed >= $limit) {
-                            $this->logger->info('Reached product limit', ['limit' => $limit]);
+                            $this->logger->info('Reached product limit', [
+                                'limit' => $limit,
+                                'total_processed' => $totalProductsProcessed
+                            ]);
                             break 2; 
                         }
                         if (empty($product['variants'])) {
@@ -105,10 +113,18 @@ class ExportService
                         }
                         $totalProductsProcessed++; 
                     }
-                    $currentOffset += $chunkCount;
+                    $currentOffset += self::EXPORT_CHUNK_SIZE;
+                    $this->logger->info('Chunk processing completed', [
+                        'chunk_number' => $chunkNumber,
+                        'products_in_chunk' => $chunkCount,
+                        'total_products_processed' => $totalProductsProcessed,
+                        'total_rows_written' => $totalRowsWritten,
+                        'next_offset' => $currentOffset
+                    ]);
                 }
             } while ($chunkCount === self::EXPORT_CHUNK_SIZE && $totalProductsProcessed < $limit);
             $this->logger->info('Export completed', [
+                'total_chunks_processed' => $chunkNumber,
                 'total_products_processed' => $totalProductsProcessed,
                 'total_rows_written' => $totalRowsWritten,
                 'final_offset' => $currentOffset
