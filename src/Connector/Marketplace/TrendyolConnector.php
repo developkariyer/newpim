@@ -17,6 +17,7 @@ use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use App\Service\DatabaseService;
+use Pimcore\Db;
 
 class TrendyolConnector
 {
@@ -138,43 +139,41 @@ class TrendyolConnector
 
     private function saveProduct($listings): void
     {
+        $sqlInsertMarketplaceListing = "INSERT INTO iwa_marketplaces_catalog 
+            (marketplace_key, marketplace_product_unique_id, marketplace_sku, marketplace_price, marketplace_currency, marketplace_stock, status, marketplace_product_url, product_data)
+            VALUES (:marketplace_key, :marketplace_product_unique_id, :marketplace_sku, :marketplace_price, :marketplace_currency, :marketplace_stock, :status, :marketplace_product_url, :product_data)
+            ON DUPLICATE KEY UPDATE 
+                marketplace_price = VALUES(marketplace_price), 
+                marketplace_currency = VALUES(marketplace_currency), 
+                marketplace_stock = VALUES(marketplace_stock), 
+                product_data = VALUES(product_data)";
+
         foreach ($listings as $listing) {
             $marketplaceProductUniqueId = $listing['platformListingId'] ?? '';
             $marketplaceSku = $listing['barcode'] ?? '';
             $marketplacePrice = $listing['salePrice'] ?? 0;
             $marketplaceCurrency = 'TL';
             $marketplaceStock = $listing['quantity'] ?? 0;
-            $status = ($listing['onSale'] ?? false) ? 1 : 0; 
+            $status = $listing['onSale'] ; 
             $marketplaceProductUrl = $listing['productUrl'] ?? '';
             $productData = json_encode($listing, JSON_PRETTY_PRINT);
-            $sqlInsertMarketplaceListing = "INSERT INTO iwa_marketplaces_catalog 
-                (marketplace_key, marketplace_product_unique_id, marketplace_sku, marketplace_price, marketplace_currency, marketplace_stock, status, marketplace_product_url, product_data)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE 
-                    marketplace_price = VALUES(marketplace_price), 
-                    marketplace_currency = VALUES(marketplace_currency), 
-                    marketplace_stock = VALUES(marketplace_stock), 
-                    product_data = VALUES(product_data)";
+            
             $params = [
-                $this->marketplaceKey,
-                $marketplaceProductUniqueId,
-                $marketplaceSku,
-                $marketplacePrice,
-                $marketplaceCurrency,
-                $marketplaceStock,
-                $status,
-                $marketplaceProductUrl,
-                $productData
+                'marketplace_key' => $this->marketplaceKey,
+                'marketplace_product_unique_id' => $marketplaceProductUniqueId,
+                'marketplace_sku' => $marketplaceSku,
+                'marketplace_price' => $marketplacePrice,
+                'marketplace_currency' => $marketplaceCurrency,
+                'marketplace_stock' => $marketplaceStock,
+                'status' => $status,
+                'marketplace_product_url' => $marketplaceProductUrl,
+                'product_data' => $productData
             ];
-            try {
-                $this->databaseService->executeSql($sqlInsertMarketplaceListing, $params);
-                echo "Inserted listing: " . ($listing['id'] ?? $marketplaceProductUniqueId) . "\n";
-            } catch (\Exception $e) {
-                echo "Error inserting listing: " . $e->getMessage() . "\n";
-                echo "SQL: " . $sqlInsertMarketplaceListing . "\n";
-                echo "Params count: " . count($params) . "\n";
-                print_r($params);
-            }
+            $db = Db::get();
+            $stmt = $db->prepare($sqlInsertMarketplaceListing);
+            $stmt->executeStatement($params);
+           // $this->databaseService->executeSql($sqlInsertMarketplaceListing, $params);
+            echo "Inserting listing: " . ($listing['id'] ?? 'unknown') . "\n";
         }
     }
 
