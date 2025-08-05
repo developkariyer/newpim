@@ -22,11 +22,11 @@ use App\Service\DatabaseService;
 class TrendyolConnector
 {
 
-    private string $apiKey;
-    private string $apiSecret;
-    private string $sellerId;
-    private string $token;
-    private string $marketplaceKey;
+    private $apiKey;
+    private $apiSecret;
+    private $sellerId;
+    private $token;
+    private $marketplaceKey;
     public HttpClientInterface $httpClient;
     public DatabaseService $databaseService;
     
