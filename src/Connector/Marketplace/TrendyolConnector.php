@@ -167,7 +167,7 @@ class TrendyolConnector
                 'marketplace_product_url' => $marketplaceProductUrl,
                 'product_data' => $productData
             ];
-            Utility::executeSql($sqlInsertMarketplaceListing, $params);
+            $this->databaseService->executeSql($sqlInsertMarketplaceListing, $params);
             echo "Inserting listing: " . ($listing['id'] ?? 'unknown') . "\n";
         }
     }
