@@ -134,50 +134,41 @@ class TrendyolConnector
         echo "Loading " . count($cachedListings) . " listings from cache (file age: " . round($fileAge/3600, 1) . " hours)\n";
         $this->saveProduct($cachedListings);
     }
+        return true;
 
     private function saveProduct($listings): void
     {
-        $sqlInsertMarketplaceListing = <<<SQL
-            INSERT INTO iwa_marketplaces_catalog (
-                marketplace_key,
-                marketplace_product_unique_id,
-                marketplace_sku,
-                marketplace_price,
-                marketplace_currency,
-                marketplace_stock,
-                status,
-                marketplace_product_url,
-                product_data
-            ) VALUES (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?
-            )
+        $sqlInsertMarketplaceListing = "INSERT INTO iwa_marketplaces_catalog 
+            (marketplace_key, marketplace_product_unique_id, marketplace_sku, marketplace_price, marketplace_currency, marketplace_stock, status, marketplace_product_url, product_data)
+            VALUES (:marketplace_key, :marketplace_product_unique_id, :marketplace_sku, :marketplace_price, :marketplace_currency, :marketplace_stock, :status, :marketplace_product_url, :product_data)
             ON DUPLICATE KEY UPDATE 
-                marketplace_price = VALUES(marketplace_price),
-                marketplace_currency = VALUES(marketplace_currency),
-                marketplace_stock = VALUES(marketplace_stock),
-                product_data = VALUES(product_data)
-        SQL;
+                marketplace_price = VALUES(marketplace_price), 
+                marketplace_currency = VALUES(marketplace_currency), 
+                marketplace_stock = VALUES(marketplace_stock), 
+                product_data = VALUES(product_data)";
+
         foreach ($listings as $listing) {
             $marketplaceProductUniqueId = $listing['platformListingId'] ?? '';
             $marketplaceSku = $listing['barcode'] ?? '';
             $marketplacePrice = $listing['salePrice'] ?? 0;
             $marketplaceCurrency = 'TL';
             $marketplaceStock = $listing['quantity'] ?? 0;
-            $status = $listing['onSale'] ?? 0;
+            $status = $listing['onSale'] ; 
             $marketplaceProductUrl = $listing['productUrl'] ?? '';
             $productData = json_encode($listing, JSON_PRETTY_PRINT);
+            
             $params = [
-                $this->marketplaceKey,
-                $marketplaceProductUniqueId,
-                $marketplaceSku,
-                $marketplacePrice,
-                $marketplaceCurrency,
-                $marketplaceStock,
-                $status,
-                $marketplaceProductUrl,
-                $productData
+                'marketplace_key' => $this->marketplaceKey,
+                'marketplace_product_unique_id' => $marketplaceProductUniqueId,
+                'marketplace_sku' => $marketplaceSku,
+                'marketplace_price' => $marketplacePrice,
+                'marketplace_currency' => $marketplaceCurrency,
+                'marketplace_stock' => $marketplaceStock,
+                'status' => $status,
+                'marketplace_product_url' => $marketplaceProductUrl,
+                'product_data' => $productData
             ];
-            $this->databaseService->executeSql($sqlInsertMarketplaceListing, $params);
+            Utility::executeSql($sqlInsertMarketplaceListing, $params);
             echo "Inserting listing: " . ($listing['id'] ?? 'unknown') . "\n";
         }
     }
