@@ -137,34 +137,34 @@ class TrendyolConnector
 
     private function saveProduct($listings): void
     {
-    $sqlInsertMarketplaceListing = <<<SQL
-        INSERT INTO iwa_marketplaces_catalog (
-            marketplace_key,
-            marketplace_product_unique_id,
-            marketplace_sku,
-            marketplace_price,
-            marketplace_currency,
-            marketplace_stock,
-            status,
-            marketplace_product_url,
-            product_data
-        ) VALUES (
-            :marketplace_key,
-            :marketplace_product_unique_id,
-            :marketplace_sku,
-            :marketplace_price,
-            :marketplace_currency,
-            :marketplace_stock,
-            :status,
-            :marketplace_product_url,
-            :product_data
-        )
-        ON DUPLICATE KEY UPDATE 
-            marketplace_price = VALUES(marketplace_price),
-            marketplace_currency = VALUES(marketplace_currency),
-            marketplace_stock = VALUES(marketplace_stock),
-            product_data = VALUES(product_data)
-        SQL;
+        $sqlInsertMarketplaceListing = <<<SQL
+            INSERT INTO iwa_marketplaces_catalog (
+                marketplace_key,
+                marketplace_product_unique_id,
+                marketplace_sku,
+                marketplace_price,
+                marketplace_currency,
+                marketplace_stock,
+                status,
+                marketplace_product_url,
+                product_data
+            ) VALUES (
+                :marketplace_key,
+                :marketplace_product_unique_id,
+                :marketplace_sku,
+                :marketplace_price,
+                :marketplace_currency,
+                :marketplace_stock,
+                :status,
+                :marketplace_product_url,
+                :product_data
+            )
+            ON DUPLICATE KEY UPDATE 
+                marketplace_price = VALUES(marketplace_price),
+                marketplace_currency = VALUES(marketplace_currency),
+                marketplace_stock = VALUES(marketplace_stock),
+                product_data = VALUES(product_data)
+            SQL;
 
         foreach ($listings as $listing) {
             $marketplaceProductUniqueId = $listing['platformListingId'] ?? '';
