@@ -138,14 +138,6 @@ class TrendyolConnector
 
     private function saveProduct($listings): void
     {
-        $sqlInsertMarketplaceListing = "INSERT INTO iwa_marketplaces_catalog 
-            (marketplace_key, marketplace_product_unique_id, marketplace_sku, marketplace_price, marketplace_currency, marketplace_stock, status, marketplace_product_url, product_data)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE 
-                marketplace_price = VALUES(marketplace_price), 
-                marketplace_currency = VALUES(marketplace_currency), 
-                marketplace_stock = VALUES(marketplace_stock), 
-                product_data = VALUES(product_data)";
         foreach ($listings as $listing) {
             $marketplaceProductUniqueId = $listing['platformListingId'] ?? '';
             $marketplaceSku = $listing['barcode'] ?? '';
@@ -155,6 +147,15 @@ class TrendyolConnector
             $status = ($listing['onSale'] ?? false) ? 1 : 0; 
             $marketplaceProductUrl = $listing['productUrl'] ?? '';
             $productData = json_encode($listing, JSON_PRETTY_PRINT);
+            $sqlInsertMarketplaceListing = "INSERT INTO iwa_marketplaces_catalog 
+                (marketplace_key, marketplace_product_unique_id, marketplace_sku, marketplace_price, marketplace_currency, marketplace_stock, status, marketplace_product_url, product_data)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                AS new_values
+                ON DUPLICATE KEY UPDATE 
+                    marketplace_price = new_values.marketplace_price, 
+                    marketplace_currency = new_values.marketplace_currency, 
+                    marketplace_stock = new_values.marketplace_stock, 
+                    product_data = new_values.product_data";
             $params = [
                 $this->marketplaceKey,
                 $marketplaceProductUniqueId,
