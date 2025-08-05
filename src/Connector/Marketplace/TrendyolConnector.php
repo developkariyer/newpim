@@ -32,11 +32,6 @@ class TrendyolConnector
 
     public function __construct(DatabaseService $databaseService, $marketplaceKey)
     {
-        echo "Marketplace Key: " . $marketplaceKey . "\n";
-        echo "API Key: " . ($_ENV[$marketplaceKey . '_API_KEY'] ?? 'NOT FOUND') . "\n";
-        echo "API Secret: " . ($_ENV[$marketplaceKey . '_API_SECRET'] ?? 'NOT FOUND') . "\n";
-        echo "Seller ID: " . ($_ENV[$marketplaceKey . '_SELLER_ID'] ?? 'NOT FOUND') . "\n";
-        echo "Token: " . ($_ENV[$marketplaceKey . '_TOKEN'] ?? 'NOT FOUND') . "\n";
         $this->databaseService = $databaseService;
         $this->apiKey = $_ENV[$marketplaceKey . '_API_KEY'];
         $this->apiSecret = $_ENV[$marketplaceKey . '_API_SECRET'];
@@ -129,7 +124,7 @@ class TrendyolConnector
             $marketplaceProductUrl = $listing['productUrl'] ?? '';
             $productData = json_encode($listing, JSON_PRETTY_PRINT);
             $this->databaseService->executeSql($sqlInsertMarketplaceListing, [
-                'marketplace_key' => $this->$marketplaceKey,
+                'marketplace_key' => $this->marketplaceKey,
                 'marketplace_product_unique_id' => $marketplaceProductUniqueId,
                 'marketplace_sku' => $marketplaceSku,
                 'marketplace_price' => $marketplacePrice,
