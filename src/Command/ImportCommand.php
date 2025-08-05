@@ -120,7 +120,7 @@ class ImportCommand extends AbstractCommand
     private function findGroupProduct($key)
     {
         $listing = new GroupProduct\Listing();
-        $listing->setCondition('key = ?', [$key]);
+        $listing->setCondition('`key` = ?', [$key]);
         $listing->setLimit(1);
         $listing->load();
         $groupProduct = $listing->current();
@@ -128,7 +128,6 @@ class ImportCommand extends AbstractCommand
             echo 'Group product not found with key: ' . $key . PHP_EOL;
             // $groupProduct = new GroupProduct();
             // $groupProduct->setKey($key);
-            // $groupProduct->setName($key);
             // $groupProduct->setPublished(true);
             // try {
             //     $groupProduct->save();
