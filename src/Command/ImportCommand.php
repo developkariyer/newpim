@@ -103,7 +103,12 @@ class ImportCommand extends AbstractCommand
             echo 'JSON decode error: ' . json_last_error_msg() . PHP_EOL;
             return null;
         }
-        print_r($data);
+        
+    
+        foreach ($data as $key => $iwasku) {
+            echo $key . ' => ' . $iwasku . PHP_EOL;
+        
+        }
 
     }
 
