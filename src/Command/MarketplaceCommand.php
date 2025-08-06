@@ -39,7 +39,7 @@ class MarketplaceCommand extends Command
         //     //     $this->connectors[] = new ShopifyConnector($marketplace);
         //     // }
         // }
-        $marketplace = Marketplace::getById(30);
+        $marketplace = Marketplace::getById(1501);
         if ($marketplace) {
             $this->connectors[] = new TrendyolConnector($marketplace);
         }
