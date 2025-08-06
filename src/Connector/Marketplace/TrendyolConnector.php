@@ -81,7 +81,7 @@ class TrendyolConnector extends MarketplaceConnectorAbstract
      * @throws DecodingExceptionInterface
      * @throws ClientExceptionInterface|RandomException
      */
-    public function download(): void
+    public function download(bool $forceDownload = false): void
     {
         // if (!$forceDownload && $this->getListingsFromCache()) {
         //     echo "Using cached listings\n";
