@@ -3,7 +3,6 @@
 namespace App\Connector\Marketplace;
 
 use Pimcore\Model\DataObject\Marketplace;
-use Pimcore\Model\DataObject\VariantProduct;
 
 interface MarketplaceConnectorInterface
 {
@@ -38,33 +37,25 @@ interface MarketplaceConnectorInterface
      */
     public function downloadReturns(): void;
 
-    /**
-     * Add/update Pimcore VariantProduct objects for marketplace listings
-     * @param $updateFlag
-     * @param $importFlag
-     * @return void
-     */
-    public function import($updateFlag, $importFlag): void;
 
     /**
      * Set the inventory of a listing through the marketplace API
-     * @param VariantProduct $listing
+     *
      * @param int $targetValue
      * @param $sku
      * @param $country
      * @return void
      */
-    public function setInventory(VariantProduct $listing, int $targetValue, $sku = null, $country = null): void;
+    public function setInventory(int $targetValue, $sku = null, $country = null): void;
 
     /**
      * Set the price of a listing through the marketplace API
-     * @param VariantProduct $listing
      * @param string $targetPrice
      * @param $targetCurrency
      * @param $sku
      * @param $country
      * @return void
      */
-    public function setPrice(VariantProduct $listing,string $targetPrice, $targetCurrency = null, $sku = null, $country = null): void;
+    public function setPrice(string $targetPrice, $targetCurrency = null, $sku = null, $country = null): void;
 
 }
