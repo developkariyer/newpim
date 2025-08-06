@@ -138,10 +138,10 @@ class TrendyolConnector
     {
         $sqlTest = "
             INSERT INTO iwa_test (test_value)
-            VALUES (?)
+            VALUES (:test_value)
         ";
         $this->databaseService->executeSql($sqlTest, [
-            'Test Value'
+            'test_value' => 'Test Value'
         ]);
         echo "Test query executed successfully\n";
 
