@@ -25,7 +25,7 @@ class MarketplaceCommand extends Command
 
     public function __construct()
     {
-        // parent::__construct();
+        parent::__construct();
         // $marketplaceListingObject = new Marketplace\Listing();
         // $marketplaces = $marketplaceListingObject->load();
         // if (empty($marketplaces)) {
