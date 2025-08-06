@@ -239,7 +239,7 @@ class ShopifyConnector  extends MarketplaceConnectorAbstract
                 $marketplaceProductUniqueId = basename($variant['id'] ?? '') ?: '';
                 $marketplaceSku = $variant['sku']  ?? '';
                 $marketplacePrice = $variant['price'] ?? 0;
-                $marketplaceCurrency = ($this->marketplace->getCurrency() === 'TL') ? 'TRY' : ($this->marketplace->getCurrency() ?? 'TRY');
+                $marketplaceCurrency = $this->marketplace->getCurrency() ?? 'TL';
                 $marketplaceStock = $variant['inventoryQuantity'] ?? 0;
                 $variantStatus = $variant['status'] ?? $product['status'] ?? 'ACTIVE';
                 $status = ($variantStatus === 'ACTIVE') ? 1 : 0;
@@ -260,6 +260,7 @@ class ShopifyConnector  extends MarketplaceConnectorAbstract
                     '$marketplaceStock', '$status', '$marketplaceProductUrl', '$escapedProductData')
                     ON DUPLICATE KEY UPDATE
                         marketplace_price = VALUES(marketplace_price),
+                        marketplace_currency = VALUES(marketplace_currency),
                         marketplace_stock = VALUES(marketplace_stock),
                         status = VALUES(status),
                         marketplace_product_url = VALUES(marketplace_product_url),
