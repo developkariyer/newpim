@@ -356,10 +356,7 @@ class CatalogSystem {
         
         const listingsHtml = listings.map(listing => {
             const statusColor = this.getMarketplaceStatusColor(listing.status);
-            const marketplaceIcon = this.getMarketplaceIcon(listing.marketplace_key);
-            const marketplaceName = this.getMarketplaceName(listing.marketplace_key);
             const statusLabel = this.getStatusLabel(listing.status);
-            const formattedPrice = this.formatPrice(listing.marketplace_price, listing.marketplace_currency);
             const lastUpdated = listing.last_updated ? new Date(listing.last_updated).toLocaleString('tr-TR') : '';
             
             return `
@@ -367,9 +364,8 @@ class CatalogSystem {
                     <div class="row align-items-center">
                         <div class="col-md-3">
                             <div class="d-flex align-items-center">
-                                <span class="marketplace-icon me-2">${marketplaceIcon}</span>
                                 <div>
-                                    <h6 class="mb-0">${this.escapeHtml(marketplaceName)}</h6>
+                                    <h6 class="mb-0">${this.escapeHtml(listing.marketplace_key)}</h6>
                                     <small class="text-muted">SKU: ${this.escapeHtml(listing.marketplace_sku)}</small>
                                 </div>
                             </div>
@@ -385,7 +381,7 @@ class CatalogSystem {
                         
                         <div class="col-md-2">
                             <div class="text-center">
-                                <strong class="text-success">${this.escapeHtml(formattedPrice)}</strong>
+                                <strong class="text-success">${this.escapeHtml(listing.marketplace_price + ' ' + listing.marketplace_currency)}</strong>
                             </div>
                         </div>
                         
@@ -458,42 +454,15 @@ class CatalogSystem {
         return icons[marketplaceKey] || '🏪';
     }
     
-    getMarketplaceName(marketplaceKey) {
-        const names = {
-            'amazon_tr': 'Amazon Türkiye',
-            'amazon_de': 'Amazon Almanya',
-            'amazon_us': 'Amazon ABD',
-            'trendyol': 'Trendyol',
-            'hepsiburada': 'Hepsiburada',
-            'n11': 'N11',
-            'gittigidiyor': 'GittiGidiyor',
-            'ciceksepeti': 'ÇiçekSepeti'
-        };
-        return names[marketplaceKey] || marketplaceKey.charAt(0).toUpperCase() + marketplaceKey.slice(1);
-    }
-    
     getStatusLabel(status) {
         if (status === null || status === undefined) return 'Bilinmiyor';
         const statusStr = String(status);
         const labels = {
             '0': 'Pasif',
-            '1': 'Aktif',
-            'active': 'Aktif',
-            'inactive': 'Pasif',
-            'pending': 'Beklemede',
-            'error': 'Hata',
-            'out_of_stock': 'Stok Yok'
+            '1': 'Aktif'
         };
         
         return labels[statusStr] || `Durum: ${statusStr}`;
-    }
-    
-    formatPrice(price, currency) {
-        if (!price) return '-';
-        return new Intl.NumberFormat('tr-TR', {
-            style: 'currency',
-            currency: currency || 'TRY'
-        }).format(parseFloat(price));
     }
 
     toggleAdvancedPanel() {
