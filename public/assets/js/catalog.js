@@ -274,18 +274,23 @@ class CatalogSystem {
     async showMarketplaceListings(sku) {
         try {
             console.log('🔍 Marketplace listings requested for SKU:', sku);
+            const modalElement = document.getElementById('marketplaceModal');
+            if (!modalElement) {
+                console.error('🚨 Marketplace modal not found in DOM!');
+                this.showError('Pazaryeri modal\'ı bulunamadı.');
+                return;
+            }
             const skuElement = document.getElementById('marketplaceSku');
             if (skuElement) {
                 skuElement.textContent = `(SKU: ${sku})`;
             }
-            const modal = new bootstrap.Modal(document.getElementById('marketplaceModal'));
+            const modal = new bootstrap.Modal(modalElement);
             modal.show();
             this.showMarketplaceLoading();
             const url = `/catalog/api/marketplace-listings/${encodeURIComponent(sku)}`;
             console.log('🌐 Fetching URL:', url);
             const response = await fetch(url);
             console.log('📡 Response status:', response.status);
-            console.log('📡 Response headers:', response.headers);
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
@@ -305,25 +310,41 @@ class CatalogSystem {
     }
     
     showMarketplaceLoading() {
-        document.getElementById('marketplaceLoadingSpinner').style.display = 'block';
-        document.getElementById('marketplaceContent').style.display = 'none';
-        document.getElementById('marketplaceError').style.display = 'none';
+        const loadingSpinner = document.getElementById('marketplaceLoadingSpinner');
+        const content = document.getElementById('marketplaceContent');
+        const error = document.getElementById('marketplaceError');
+        
+        if (loadingSpinner) loadingSpinner.style.display = 'block';
+        if (content) content.style.display = 'none';
+        if (error) error.style.display = 'none';
     }
     
     showMarketplaceError() {
-        document.getElementById('marketplaceLoadingSpinner').style.display = 'none';
-        document.getElementById('marketplaceContent').style.display = 'none';
-        document.getElementById('marketplaceError').style.display = 'block';
+        const loadingSpinner = document.getElementById('marketplaceLoadingSpinner');
+        const content = document.getElementById('marketplaceContent');
+        const error = document.getElementById('marketplaceError');
+        
+        if (loadingSpinner) loadingSpinner.style.display = 'none';
+        if (content) content.style.display = 'none';
+        if (error) error.style.display = 'block';
     }
     
     renderMarketplaceListings(listings) {
         const container = document.getElementById('marketplaceListings');
         const emptyState = document.getElementById('marketplaceEmpty');
+        const loadingSpinner = document.getElementById('marketplaceLoadingSpinner');
+        const content = document.getElementById('marketplaceContent');
+        const error = document.getElementById('marketplaceError');
         
         // Hide loading
-        document.getElementById('marketplaceLoadingSpinner').style.display = 'none';
-        document.getElementById('marketplaceContent').style.display = 'block';
-        document.getElementById('marketplaceError').style.display = 'none';
+        if (loadingSpinner) loadingSpinner.style.display = 'none';
+        if (content) content.style.display = 'block';
+        if (error) error.style.display = 'none';
+        
+        if (!container || !emptyState) {
+            console.error('🚨 Marketplace modal elements not found!');
+            return;
+        }
         
         if (!listings || listings.length === 0) {
             container.innerHTML = '';
