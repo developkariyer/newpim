@@ -20,8 +20,6 @@ class DatabaseService
     public function executeSql(string $sql, array $params = [])
     {
         try {
-            print_r($sql);
-            print_r($params);
             $db = Db::get();
             $stmt = $db->prepare($sql);
             $stmt->executeStatement($params);
