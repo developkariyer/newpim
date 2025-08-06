@@ -3,6 +3,7 @@
 namespace App\Command;
 
 use App\Connector\Marketplace\TrendyolConnector;
+use App\Connector\Marketplace\ShopifyConnector;
 use App\Service\DatabaseService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
