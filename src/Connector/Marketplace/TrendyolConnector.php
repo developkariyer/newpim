@@ -119,7 +119,6 @@ class TrendyolConnector extends MarketplaceConnectorAbstract
             $marketplaceProductUrl = $listing['productUrl'] ?? '';
             $productData = json_encode($listing, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
             $escapedProductData = addslashes($productData);
-
             $sqlInsertMarketplaceListing = "INSERT INTO iwa_marketplaces_catalog 
                 (marketplace_key, marketplace_product_unique_id, marketplace_sku, marketplace_price, marketplace_currency, marketplace_stock, 
                 status, marketplace_product_url, product_data)
