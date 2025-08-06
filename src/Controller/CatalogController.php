@@ -18,6 +18,7 @@ use Pimcore\Model\DataObject\Ean\Listing as EanListing;
 use App\Service\SearchService;
 use App\Service\ExportService;
 use Psr\Log\LoggerInterface;
+use Pimcore\Db;
 
 #[Route('/catalog')]
 class CatalogController extends AbstractController
@@ -143,6 +144,45 @@ class CatalogController extends AbstractController
                 'products' => [],
                 'total' => 0,
                 'hasMore' => false
+            ], 500);
+        }
+    }
+
+    #[Route('/api/marketplace-listings/{sku}', name: 'catalog_api_marketplace_listings', methods: ['GET'])]
+    public function getMarketplaceListings(string $sku): JsonResponse
+    {
+        try {
+            $db = Db::get();
+            $sql = "SELECT 
+                        marketplace_key, 
+                        marketplace_sku, 
+                        marketplace_price, 
+                        marketplace_currency, 
+                        marketplace_stock, 
+                        status, 
+                        marketplace_product_url,
+                        last_updated
+                    FROM iwa_marketplaces_catalog 
+                    WHERE marketplace_sku = ? 
+                    ORDER BY marketplace_key ASC";
+            $listings = $db->fetchAllAssociative($sql, [$sku]);
+            return new JsonResponse([
+                'success' => true,
+                'sku' => $sku,
+                'listings' => $listings,
+                'total' => count($listings)
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error('Marketplace listings error', [
+                'sku' => $sku,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Pazaryeri bilgileri yüklenirken hata oluştu.',
+                'listings' => [],
+                'total' => 0
             ], 500);
         }
     }
