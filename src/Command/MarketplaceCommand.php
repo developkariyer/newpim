@@ -35,9 +35,9 @@ class MarketplaceCommand extends Command
             if ($marketplace->getMarketplaceType() === 'Trendyol') {
                 $this->connectors[] = new TrendyolConnector($marketplace);
             }   
-            if ($marketplace->getMarketplaceType() === 'Shopify') {
-                $this->connectors[] = new ShopifyConnector($marketplace);
-            }
+            // if ($marketplace->getMarketplaceType() === 'Shopify') {
+            //     $this->connectors[] = new ShopifyConnector($marketplace);
+            // }
         }
     }
 
