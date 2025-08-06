@@ -26,22 +26,18 @@ class MarketplaceCommand extends Command
     public function __construct()
     {
         parent::__construct();
-        // $marketplaceListingObject = new Marketplace\Listing();
-        // $marketplaces = $marketplaceListingObject->load();
-        // if (empty($marketplaces)) {
-        //     throw new \Exception('No marketplaces found. Please create a marketplace first.');
-        // }
-        // foreach ($marketplaces as $marketplace) {
-        //     if ($marketplace->getMarketplaceType() === 'Trendyol') {
-        //         $this->connectors[] = new TrendyolConnector($marketplace);
-        //     }   
-        //     // if ($marketplace->getMarketplaceType() === 'Shopify') {
-        //     //     $this->connectors[] = new ShopifyConnector($marketplace);
-        //     // }
-        // }
-        $marketplace = Marketplace::getById(1501);
-        if ($marketplace) {
-            $this->connectors[] = new TrendyolConnector($marketplace);
+        $marketplaceListingObject = new Marketplace\Listing();
+        $marketplaces = $marketplaceListingObject->load();
+        if (empty($marketplaces)) {
+            throw new \Exception('No marketplaces found. Please create a marketplace first.');
+        }
+        foreach ($marketplaces as $marketplace) {
+            if ($marketplace->getMarketplaceType() === 'Trendyol') {
+                $this->connectors[] = new TrendyolConnector($marketplace);
+            }   
+            // if ($marketplace->getMarketplaceType() === 'Shopify') {
+            //     $this->connectors[] = new ShopifyConnector($marketplace);
+            // }
         }
     }
 
