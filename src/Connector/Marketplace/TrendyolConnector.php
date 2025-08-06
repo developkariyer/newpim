@@ -149,13 +149,20 @@ class TrendyolConnector
             $marketplaceStock = $listing['quantity'] ?? 0;
             $status = $listing['onSale'] ; 
             $marketplaceProductUrl = $listing['productUrl'] ?? '';
-            $productData = json_encode($listing, JSON_PRETTY_PRINT);
-
+            $productData = json_encode($listing, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        
             $sqlInsertMarketplaceListing = "INSERT INTO iwa_marketplaces_catalog 
                 (marketplace_key, marketplace_product_unique_id, marketplace_sku, marketplace_price, marketplace_currency, marketplace_stock, 
                 status, marketplace_product_url, product_data)
                 VALUES ('$this->marketplaceKey', '$marketplaceProductUniqueId', '$marketplaceSku', '$marketplacePrice', '$marketplaceCurrency',
-                '$marketplaceStock', '$status', '$marketplaceProductUrl', '$productData')";
+                '$marketplaceStock', '$status', '$marketplaceProductUrl', '$productData')
+                ON DUPLICATE KEY UPDATE
+                    marketplace_price = VALUES(marketplace_price),
+                    marketplace_stock = VALUES(marketplace_stock),
+                    status = VALUES(status),
+                    marketplace_product_url = VALUES(marketplace_product_url),
+                    product_data = VALUES(product_data)
+                ";
             $params = [
                 'marketplace_key' => $this->marketplaceKey,
                 'marketplace_product_unique_id' => $marketplaceProductUniqueId,
