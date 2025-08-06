@@ -42,8 +42,8 @@ class MarketplaceCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         
-
-        $this->trendyolConnector->download();
+        $this->shopifyConnector->download();
+        //$this->trendyolConnector->download();
         return Command::SUCCESS;
     }
 
