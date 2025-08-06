@@ -328,7 +328,7 @@ class ShopifyConnector  extends MarketplaceConnectorAbstract
      * @throws ClientExceptionInterface
      * @throws Exception
      */
-    public function setSku(VariantProduct $listing, string $sku): void // not tested
+    public function setSku(string $sku): void // not tested
     {
         
     }
@@ -341,7 +341,7 @@ class ShopifyConnector  extends MarketplaceConnectorAbstract
      * @throws ClientExceptionInterface
      * @throws Exception
      */
-    public function setInventory(VariantProduct $listing, int $targetValue, $sku = null, $country = null, $locationId = null): void // not tested
+    public function setInventory(int $targetValue, $sku = null, $country = null, $locationId = null): void // not tested
     {
         
     }
@@ -354,7 +354,7 @@ class ShopifyConnector  extends MarketplaceConnectorAbstract
      * @throws Exception
      * @throws RandomException
      */
-    public function setPrice(VariantProduct $listing, string $targetPrice, $targetCurrency = null, $sku = null, $country = null): void // not tested
+    public function setPrice(string $targetPrice, $targetCurrency = null, $sku = null, $country = null): void // not tested
     {
         
     }
@@ -363,7 +363,7 @@ class ShopifyConnector  extends MarketplaceConnectorAbstract
      * @throws Exception
      * @throws RandomException
      */
-    public function setBarcode(VariantProduct $listing, string $barcode): void //not tested
+    public function setBarcode(string $barcode): void //not tested
     {
         
     }
