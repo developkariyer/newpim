@@ -351,14 +351,11 @@ class CatalogSystem {
             emptyState.style.display = 'block';
             return;
         }
-        
         emptyState.style.display = 'none';
-        
         const listingsHtml = listings.map(listing => {
             const statusColor = this.getMarketplaceStatusColor(listing.status);
             const statusLabel = this.getStatusLabel(listing.status);
             const lastUpdated = listing.last_updated ? new Date(listing.last_updated).toLocaleString('tr-TR') : '';
-            
             return `
                 <div class="marketplace-listing-card mb-3 border rounded p-3">
                     <div class="row align-items-center">

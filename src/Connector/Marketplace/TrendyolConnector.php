@@ -19,24 +19,22 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 use App\Service\DatabaseService;
 use Pimcore\Db;
 
-class TrendyolConnector
+class TrendyolConnector extends MarketplaceConnectorAbstract
 {
 
     private $apiKey;
     private $apiSecret;
     private $sellerId;
     private $token;
-    private $marketplaceKey;
-    public HttpClientInterface $httpClient;
+    public static string $marketplaceType = 'Trendyol';
     
-    public function __construct(private DatabaseService $databaseService, $marketplaceKey)
+    public function __construct(private DatabaseService $databaseService, $marketplace)
     {
+        parent::__construct($marketplace);
         $this->apiKey = $_ENV[$marketplaceKey . '_API_KEY'];
         $this->apiSecret = $_ENV[$marketplaceKey . '_API_SECRET'];
         $this->sellerId = $_ENV[$marketplaceKey . '_SELLER_ID'];
         $this->token = $_ENV[$marketplaceKey . '_TOKEN'] ?? '';
-        $this->marketplaceKey = $marketplaceKey;
-        $this->httpClient = HttpClient::create();
     }
 
     /**
@@ -88,50 +86,18 @@ class TrendyolConnector
         //     echo "Using cached listings\n";
         //     return;
         // }
-
         
-        
-        $tmpDir = PIMCORE_PROJECT_ROOT . "/tmp/marketplaces/";
-        $listingsFile = $tmpDir . $this->marketplaceKey . "LISTINGS.json";
-        if ($this->getListingsFromCache($listingsFile)) {
+        if (!$forceDownload && $this->getListingsFromCache()) {
             echo "Using cached listings\n";
             return;
         }
-        $listings = [];
-        $listings = $this->getFromTrendyolApi('GET', "product/sellers/" . $this->sellerId . "/products?approved=true", ['page' => 0], 'content', null);
-        if (empty($listings)) {
+        $this->listings = $this->getFromTrendyolApi('GET', "product/sellers/" . $this->sellerId . "/products?approved=true", ['page' => 0], 'content', null);
+        if (empty($this->listings)) {
             echo "Failed to download listings\n";
             return;
         }
-        if (!is_dir($tmpDir)) {
-            mkdir($tmpDir, 0755, true);
-        }
-        file_put_contents($listingsFile, json_encode($listings, JSON_PRETTY_PRINT));
-        echo "Downloaded " . count($listings) . " listings\n";
-
-        $this->saveProduct($listings);
-
-    }
-
-    private function getListingsFromCache($filePath): bool
-    {
-        if (!file_exists($filePath)) {
-            return false;
-        }
-        $fileAge = time() - filemtime($filePath);
-        if ($fileAge > 86400) {
-            echo "Cache is older than 24 hours (" . round($fileAge/3600, 1) . " hours), downloading fresh data\n";
-            return false;
-        }
-        $cachedContent = file_get_contents($filePath);
-        $cachedListings = json_decode($cachedContent, true);
-        if (!$cachedListings || !is_array($cachedListings)) {
-            echo "Invalid cache file, downloading fresh data\n";
-            return false;
-        }
-        echo "Loading " . count($cachedListings) . " listings from cache (file age: " . round($fileAge/3600, 1) . " hours)\n";
-        $this->saveProduct($cachedListings);
-        return true;
+        $this->putListingsToCache();
+        $this->saveProduct($this->listings);
     }
 
     private function saveProduct($listings): void
