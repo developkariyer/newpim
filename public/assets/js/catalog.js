@@ -273,36 +273,33 @@ class CatalogSystem {
 
     async showMarketplaceListings(sku) {
         try {
-            // Update modal title
+            console.log('🔍 Marketplace listings requested for SKU:', sku);
             const skuElement = document.getElementById('marketplaceSku');
             if (skuElement) {
                 skuElement.textContent = `(SKU: ${sku})`;
             }
-            
-            // Show modal
             const modal = new bootstrap.Modal(document.getElementById('marketplaceModal'));
             modal.show();
-            
-            // Show loading state
             this.showMarketplaceLoading();
-            
-            // Fetch marketplace listings
-            const response = await fetch(`/catalog/api/marketplace-listings/${encodeURIComponent(sku)}`);
-            
+            const url = `/catalog/api/marketplace-listings/${encodeURIComponent(sku)}`;
+            console.log('🌐 Fetching URL:', url);
+            const response = await fetch(url);
+            console.log('📡 Response status:', response.status);
+            console.log('📡 Response headers:', response.headers);
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
-            
             const data = await response.json();
-            
+            console.log('📦 API Response:', data);
             if (data.success) {
+                console.log('✅ Listings received:', data.listings);
                 this.renderMarketplaceListings(data.listings);
             } else {
+                console.error('❌ API returned error:', data.message);
                 throw new Error(data.message || 'API error');
             }
-            
         } catch (error) {
-            console.error('Marketplace listings failed:', error);
+            console.error('💥 Marketplace listings failed:', error);
             this.showMarketplaceError();
         }
     }
