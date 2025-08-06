@@ -26,7 +26,6 @@ class TrendyolConnector extends MarketplaceConnectorAbstract
     private $sellerId;
     private $token;
     public static string $marketplaceType = 'Trendyol';
-    private $marketplaceKey;
     
     public function __construct($marketplace)
     {
