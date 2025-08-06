@@ -10,6 +10,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Pimcore\Model\DataObject\Marketplace;
 use Pimcore\Db;
 
 
@@ -21,10 +22,11 @@ class MarketplaceCommand extends Command
 {
     private TrendyolConnector $trendyolConnector;
 
-    public function __construct(DatabaseService $databaseService)
+    public function __construct()
     {
         parent::__construct();
-        $this->trendyolConnector = new TrendyolConnector($databaseService, 'TrendyolIwa');
+        $marketplace = Marketplace::getById(30);
+        $this->trendyolConnector = new TrendyolConnector($marketplace);
     }
 
     // protected function configure(): void

@@ -26,11 +26,13 @@ class TrendyolConnector extends MarketplaceConnectorAbstract
     private $sellerId;
     private $token;
     public static string $marketplaceType = 'Trendyol';
+    private $marketplaceKey;
     
-    public function __construct( $marketplace)
+    public function __construct($marketplace)
     {
         parent::__construct($marketplace);
-        $this->databaseService = \Pimcore::getContainer()->get(DatabaseService::class); 
+        $this->databaseService = \Pimcore::getContainer()->get(DatabaseService::class);
+        $this->marketplaceKey = $marketplace->getKey(); 
         $this->apiKey = $_ENV[$marketplaceKey . '_API_KEY'];
         $this->apiSecret = $_ENV[$marketplaceKey . '_API_SECRET'];
         $this->sellerId = $_ENV[$marketplaceKey . '_SELLER_ID'];
