@@ -203,6 +203,7 @@ class ShopifyConnector  extends MarketplaceConnectorAbstract
         GRAPHQL;
         echo "GraphQL download\n";
         if ($this->getListingsFromCache()) {
+            $this->saveProduct($this->listings);
             echo "Using cached listings\n";
             return;
         }
