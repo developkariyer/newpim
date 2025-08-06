@@ -36,6 +36,12 @@ class TrendyolConnector extends MarketplaceConnectorAbstract
         $this->apiSecret = $_ENV[$this->marketplaceKey . '_API_SECRET'] ?? '';
         $this->sellerId = $_ENV[$this->marketplaceKey . '_SELLER_ID'] ?? '';
         $this->token = $_ENV[$this->marketplaceKey . '_TOKEN'] ?? '';
+
+        echo "Using API Key: " . $this->apiKey . "\n";
+        echo "Using API Secret: " . $this->apiSecret . "\n";
+        echo "Using Seller ID: " . $this->sellerId . "\n";
+        echo "Using Token: " . $this->token . "\n";
+
     }
 
     /**
