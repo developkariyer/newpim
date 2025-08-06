@@ -147,35 +147,38 @@ class TrendyolConnector
             $marketplacePrice = $listing['salePrice'] ?? 0;
             $marketplaceCurrency = 'TL';
             $marketplaceStock = $listing['quantity'] ?? 0;
-            $status = $listing['onSale'] ; 
+            $status = ($listing['onSale'] ?? false) ? 1 : 0; 
             $marketplaceProductUrl = $listing['productUrl'] ?? '';
+            
             $productData = json_encode($listing, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        
-            $sqlInsertMarketplaceListing = "INSERT INTO iwa_marketplaces_catalog 
-                (marketplace_key, marketplace_product_unique_id, marketplace_sku, marketplace_price, marketplace_currency, marketplace_stock, 
-                status, marketplace_product_url, product_data)
-                VALUES ('$this->marketplaceKey', '$marketplaceProductUniqueId', '$marketplaceSku', '$marketplacePrice', '$marketplaceCurrency',
-                '$marketplaceStock', '$status', '$marketplaceProductUrl', '$productData')
-                ON DUPLICATE KEY UPDATE
-                    marketplace_price = VALUES(marketplace_price),
-                    marketplace_stock = VALUES(marketplace_stock),
-                    status = VALUES(status),
-                    marketplace_product_url = VALUES(marketplace_product_url),
-                    product_data = VALUES(product_data)
-                ";
-            $params = [
-                'marketplace_key' => $this->marketplaceKey,
-                'marketplace_product_unique_id' => $marketplaceProductUniqueId,
-                'marketplace_sku' => $marketplaceSku,
-                'marketplace_price' => $marketplacePrice,
-                'marketplace_currency' => $marketplaceCurrency,
-                'marketplace_stock' => $marketplaceStock,
-                'status' => $status,
-                'marketplace_product_url' => $marketplaceProductUrl,
-                'product_data' => $productData
-            ];
-            $this->databaseService->executeSql($sqlInsertMarketplaceListing);
-            echo "Inserting listing: " . ($listing['id'] ?? 'unknown') . "\n";
+            
+            try {
+                $sql = "INSERT INTO iwa_marketplaces_catalog 
+                    (marketplace_key, marketplace_product_unique_id, marketplace_sku, marketplace_price, marketplace_currency, marketplace_stock, status, marketplace_product_url, product_data)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE 
+                        marketplace_price = VALUES(marketplace_price), 
+                        marketplace_currency = VALUES(marketplace_currency), 
+                        marketplace_stock = VALUES(marketplace_stock), 
+                        product_data = VALUES(product_data)";
+                
+                $params = [
+                    $this->marketplaceKey,
+                    $marketplaceProductUniqueId,
+                    $marketplaceSku,
+                    $marketplacePrice,
+                    $marketplaceCurrency,
+                    $marketplaceStock,
+                    $status,
+                    $marketplaceProductUrl,
+                    $productData 
+                ];
+                $db->executeStatement($sql, $params);
+                echo "Inserted listing: " . ($listing['id'] ?? $marketplaceProductUniqueId) . "\n";
+            } catch (\Exception $e) {
+                echo "Error inserting listing: " . $e->getMessage() . "\n";
+                echo "Listing ID: " . ($listing['id'] ?? 'unknown') . "\n";
+            }
         }
     }
 
