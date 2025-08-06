@@ -156,6 +156,14 @@ class CatalogSystem {
                     this.editProduct(productId);
                     return false; 
                 }
+                if (e.target.closest('.marketplace-btn')) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const marketplaceBtn = e.target.closest('.marketplace-btn');
+                    const sku = marketplaceBtn.dataset.sku;
+                    this.showMarketplaceListings(sku);
+                    return false;
+                }
                 const productRow = e.target.closest('.product-row');
                 if (productRow && 
                     !e.target.closest('.variants-section') && 
@@ -261,6 +269,205 @@ class CatalogSystem {
             this.hideLoading();
             this.showError('Ürün düzenleme sayfasına yönlendirilemedi.');
         }
+    }
+
+    async showMarketplaceListings(sku) {
+        try {
+            // Update modal title
+            const skuElement = document.getElementById('marketplaceSku');
+            if (skuElement) {
+                skuElement.textContent = `(SKU: ${sku})`;
+            }
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('marketplaceModal'));
+            modal.show();
+            
+            // Show loading state
+            this.showMarketplaceLoading();
+            
+            // Fetch marketplace listings
+            const response = await fetch(`/catalog/api/marketplace-listings/${encodeURIComponent(sku)}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.renderMarketplaceListings(data.listings);
+            } else {
+                throw new Error(data.message || 'API error');
+            }
+            
+        } catch (error) {
+            console.error('Marketplace listings failed:', error);
+            this.showMarketplaceError();
+        }
+    }
+    
+    showMarketplaceLoading() {
+        document.getElementById('marketplaceLoadingSpinner').style.display = 'block';
+        document.getElementById('marketplaceContent').style.display = 'none';
+        document.getElementById('marketplaceError').style.display = 'none';
+    }
+    
+    showMarketplaceError() {
+        document.getElementById('marketplaceLoadingSpinner').style.display = 'none';
+        document.getElementById('marketplaceContent').style.display = 'none';
+        document.getElementById('marketplaceError').style.display = 'block';
+    }
+    
+    renderMarketplaceListings(listings) {
+        const container = document.getElementById('marketplaceListings');
+        const emptyState = document.getElementById('marketplaceEmpty');
+        
+        // Hide loading
+        document.getElementById('marketplaceLoadingSpinner').style.display = 'none';
+        document.getElementById('marketplaceContent').style.display = 'block';
+        document.getElementById('marketplaceError').style.display = 'none';
+        
+        if (!listings || listings.length === 0) {
+            container.innerHTML = '';
+            emptyState.style.display = 'block';
+            return;
+        }
+        
+        emptyState.style.display = 'none';
+        
+        const listingsHtml = listings.map(listing => {
+            const statusColor = this.getMarketplaceStatusColor(listing.status);
+            const marketplaceIcon = this.getMarketplaceIcon(listing.marketplace_key);
+            const marketplaceName = this.getMarketplaceName(listing.marketplace_key);
+            const statusLabel = this.getStatusLabel(listing.status);
+            const formattedPrice = this.formatPrice(listing.marketplace_price, listing.marketplace_currency);
+            const lastUpdated = listing.last_updated ? new Date(listing.last_updated).toLocaleString('tr-TR') : '';
+            
+            return `
+                <div class="marketplace-listing-card mb-3 border rounded p-3">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <span class="marketplace-icon me-2">${marketplaceIcon}</span>
+                                <div>
+                                    <h6 class="mb-0">${this.escapeHtml(marketplaceName)}</h6>
+                                    <small class="text-muted">SKU: ${this.escapeHtml(listing.marketplace_sku)}</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <span class="badge" style="background-color: ${statusColor};">
+                                    ${this.escapeHtml(statusLabel)}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <strong class="text-success">${this.escapeHtml(formattedPrice)}</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <span class="badge ${listing.marketplace_stock > 0 ? 'bg-success' : 'bg-warning'}">
+                                    ${listing.marketplace_stock} adet
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="text-end">
+                                ${listing.marketplace_product_url ? `
+                                    <a href="${this.escapeHtml(listing.marketplace_product_url)}" 
+                                       target="_blank" 
+                                       class="btn btn-sm btn-outline-primary me-2">
+                                        <i class="fas fa-external-link-alt"></i> Görüntüle
+                                    </a>
+                                ` : ''}
+                                
+                                <div class="small text-muted mt-1">
+                                    ${lastUpdated ? `Son güncelleme: ${lastUpdated}` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        container.innerHTML = `
+            <div class="marketplace-listings">
+                <div class="mb-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i>
+                        Toplam ${listings.length} pazaryerinde listeleniyor
+                    </small>
+                </div>
+                ${listingsHtml}
+            </div>
+        `;
+    }
+    
+    getMarketplaceStatusColor(status) {
+        const colors = {
+            'active': '#28a745',
+            'inactive': '#6c757d', 
+            'pending': '#ffc107',
+            'error': '#dc3545',
+            'out_of_stock': '#fd7e14'
+        };
+        return colors[status] || '#6c757d';
+    }
+    
+    getMarketplaceIcon(marketplaceKey) {
+        const icons = {
+            'amazon_tr': '🛒',
+            'amazon_de': '🛒', 
+            'amazon_us': '🛒',
+            'trendyol': '🛍️',
+            'hepsiburada': '🏪',
+            'n11': '🏬',
+            'gittigidiyor': '🛍️',
+            'ciceksepeti': '🌸'
+        };
+        return icons[marketplaceKey] || '🏪';
+    }
+    
+    getMarketplaceName(marketplaceKey) {
+        const names = {
+            'amazon_tr': 'Amazon Türkiye',
+            'amazon_de': 'Amazon Almanya',
+            'amazon_us': 'Amazon ABD',
+            'trendyol': 'Trendyol',
+            'hepsiburada': 'Hepsiburada',
+            'n11': 'N11',
+            'gittigidiyor': 'GittiGidiyor',
+            'ciceksepeti': 'ÇiçekSepeti'
+        };
+        return names[marketplaceKey] || marketplaceKey.charAt(0).toUpperCase() + marketplaceKey.slice(1);
+    }
+    
+    getStatusLabel(status) {
+        const labels = {
+            'active': 'Aktif',
+            'inactive': 'Pasif',
+            'pending': 'Beklemede',
+            'error': 'Hata',
+            'out_of_stock': 'Stok Yok'
+        };
+        return labels[status] || status.charAt(0).toUpperCase() + status.slice(1);
+    }
+    
+    formatPrice(price, currency) {
+        if (!price) return '-';
+        return new Intl.NumberFormat('tr-TR', {
+            style: 'currency',
+            currency: currency || 'TRY'
+        }).format(parseFloat(price));
     }
 
     toggleAdvancedPanel() {
@@ -569,12 +776,24 @@ class CatalogSystem {
                     <div class="variant-actions">
                         <div class="variant-name">${this.escapeHtml(variant.name || 'Varyant')}</div>
                         ${variant.createdAt ? `<div class="variant-date">📅 ${this.escapeHtml(variant.createdAt)}</div>` : ''}
-                        ${variant.bundleProducts && variant.bundleProducts.length > 0 ? `
-                            <button class="variant-set-toggle" data-variant-id="${variant.id}" title="Set İçeriğini Göster/Gizle">
-                                📦 ${variant.bundleProducts.length} Set Ürünü
-                                <span class="toggle-icon">▼</span>
-                            </button>
-                        ` : ''}
+                        <div class="variant-buttons mt-2">
+                            ${variant.iwasku ? `
+                                <button class="marketplace-btn btn btn-sm btn-outline-info" 
+                                        data-sku="${this.escapeHtml(variant.iwasku)}"
+                                        title="Pazaryeri Bilgilerini Görüntüle">
+                                    <i class="fas fa-store"></i> Pazaryeri
+                                </button>
+                            ` : ''}
+                            
+                            ${variant.bundleProducts && variant.bundleProducts.length > 0 ? `
+                                <button class="variant-set-toggle btn btn-sm btn-outline-secondary" 
+                                        data-variant-id="${variant.id}" 
+                                        title="Set İçeriğini Göster/Gizle">
+                                    📦 ${variant.bundleProducts.length} Set Ürünü
+                                    <span class="toggle-icon">▼</span>
+                                </button>
+                            ` : ''}
+                        </div>
                     </div>
                     ${variantSetSection}
                 </div>

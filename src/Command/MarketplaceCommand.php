@@ -36,24 +36,9 @@ class MarketplaceCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $sku = "IAS0210V0BMM";
-        $db = Db::get();
-        $sql = "SELECT 
-                    marketplace_key, 
-                    marketplace_sku, 
-                    marketplace_price, 
-                    marketplace_currency, 
-                    marketplace_stock, 
-                    status, 
-                    marketplace_product_url,
-                    last_updated
-                FROM iwa_marketplaces_catalog 
-                WHERE marketplace_sku = ? 
-                ORDER BY marketplace_key ASC";
-        $listings = $db->fetchAllAssociative($sql, [$sku]);
-        print_r($listings);
+        
 
-        ///$this->trendyolConnector->download();
+        $this->trendyolConnector->download();
         return Command::SUCCESS;
     }
 
