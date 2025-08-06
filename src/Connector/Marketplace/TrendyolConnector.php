@@ -33,10 +33,29 @@ class TrendyolConnector extends MarketplaceConnectorAbstract
         parent::__construct($marketplace);
         $this->databaseService = \Pimcore::getContainer()->get(DatabaseService::class);
         $this->marketplaceKey = $marketplace->getKey(); 
-        $this->apiKey = $_ENV[$marketplaceKey . '_API_KEY'];
-        $this->apiSecret = $_ENV[$marketplaceKey . '_API_SECRET'];
-        $this->sellerId = $_ENV[$marketplaceKey . '_SELLER_ID'];
-        $this->token = $_ENV[$marketplaceKey . '_TOKEN'] ?? '';
+        echo "=== TrendyolConnector Debug ===\n";
+        echo "Marketplace Key: " . $this->marketplaceKey . "\n";
+        echo "Environment Variables:\n";
+        echo "  {$this->marketplaceKey}_API_KEY: " . ($_ENV[$this->marketplaceKey . '_API_KEY'] ?? 'NOT SET') . "\n";
+        echo "  {$this->marketplaceKey}_API_SECRET: " . ($_ENV[$this->marketplaceKey . '_API_SECRET'] ?? 'NOT SET') . "\n";
+        echo "  {$this->marketplaceKey}_SELLER_ID: " . ($_ENV[$this->marketplaceKey . '_SELLER_ID'] ?? 'NOT SET') . "\n";
+        echo "  {$this->marketplaceKey}_TOKEN: " . ($_ENV[$this->marketplaceKey . '_TOKEN'] ?? 'NOT SET') . "\n";
+        echo "==============================\n";
+        
+        $this->apiKey = $_ENV[$this->marketplaceKey . '_API_KEY'] ?? '';
+        $this->apiSecret = $_ENV[$this->marketplaceKey . '_API_SECRET'] ?? '';
+        $this->sellerId = $_ENV[$this->marketplaceKey . '_SELLER_ID'] ?? '';
+        $this->token = $_ENV[$this->marketplaceKey . '_TOKEN'] ?? '';
+        
+        // Debug: Set edilen değerleri yazdır
+        echo "Set Values:\n";
+        echo "  API Key: " . $this->apiKey . "\n";
+        echo "  API Secret: " . $this->apiSecret . "\n";
+        echo "  Seller ID: " . $this->sellerId . "\n";
+        echo "  Token: " . $this->token . "\n";
+        echo "==============================\n\n";
+
+
     }
 
     /**
