@@ -136,13 +136,13 @@ class TrendyolConnector
 
     private function saveProduct($listings): void
     {
-        $sqlTe            INSERT INTO iwa_test (test_value)
+        $sqlTest = "
+            INSERT INTO iwa_test (test_value)
             VALUES (?)
         ";
         $this->databaseService->executeSql($sqlTest, [
             'Test Value'
-        ]);st = "
-
+        ]);
         echo "Test query executed successfully\n";
 
 
