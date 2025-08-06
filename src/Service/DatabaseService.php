@@ -20,9 +20,11 @@ class DatabaseService
     public function executeSql(string $sql, array $params = [])
     {
         try {
+            print_r($sql);
+            print_r($params);
             $db = Db::get();
-           // $stmt = $db->prepare($sql);
-            $stmt->executeStatement($sql, $params);
+            $stmt = $db->prepare($sql);
+            $stmt->executeStatement($params);
         } catch (\Exception $e) {
             $this->logger->error("[" . __METHOD__ . "] ❌ SQL Execution Error: {$e->getMessage()}", [
                 'sql' => $sql,
