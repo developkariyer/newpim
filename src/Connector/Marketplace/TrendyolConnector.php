@@ -136,10 +136,9 @@ class TrendyolConnector
 
     private function saveProduct($listings): void
     {
-        $sqlTest = "
-            INSERT INTO iwa_test (`test_value`)
-            VALUES (:test_value)
-        ";
+        $sqlTest = file_get_contents(PIMCORE_PROJECT_ROOT . '/src/Connector/Marketplace/test.sql');
+        printf("Executing test query: %s\n", $sqlTest);
+
         $this->databaseService->executeSql($sqlTest, [
             'test_value' => 'Test Value'
         ]);
