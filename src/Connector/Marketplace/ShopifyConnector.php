@@ -240,7 +240,7 @@ class ShopifyConnector  extends MarketplaceConnectorAbstract
                 $marketplaceProductUniqueId = basename($variant['id'] ?? '') ?: '';
                 $marketplaceSku = $variant['sku']  ?? '';
                 $marketplacePrice = $variant['price'] ?? 0;
-                $marketplaceCurrency = $this->marketplace->getCurrency() ?? 'TL';
+                $marketplaceCurrency = basename($this->marketplace->getCurrency()) ?? 'TL';
                 $marketplaceStock = $variant['inventoryQuantity'] ?? 0;
                 $variantStatus = $variant['status'] ?? $product['status'] ?? 'ACTIVE';
                 $status = ($variantStatus === 'ACTIVE') ? 1 : 0;
