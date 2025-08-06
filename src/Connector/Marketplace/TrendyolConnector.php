@@ -4,7 +4,6 @@ namespace App\Connector\Marketplace;
 
 use Doctrine\DBAL\Exception;
 use Pimcore\Model\DataObject\Product;
-use Pimcore\Model\DataObject\VariantProduct;
 use Pimcore\Model\Element\DuplicateFullPathException;
 use Random\RandomException;
 use App\Utils\Utility;
@@ -219,62 +218,62 @@ class TrendyolConnector extends MarketplaceConnectorAbstract
      */
     public function downloadOrders(): void
     {
-        $now = time();
-        $now = strtotime(date('Y-m-d 00:00:00', $now));
-        try {
-            $sqlLastUpdatedAt = "
-                SELECT COALESCE(DATE_FORMAT(FROM_UNIXTIME(MAX(json_extract(json, '$.lastModifiedDate') / 1000)), '%Y-%m-%d'),DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 3 MONTH), '%Y-%m-%d')) AS lastUpdatedAt
-                FROM iwa_marketplace_orders
-                WHERE marketplace_id = :marketplace_id
-                LIMIT 1;
-            ";
-            $result = Utility::fetchFromSql($sqlLastUpdatedAt, [
-                'marketplace_id' => $this->marketplace->getId()
-            ]);
-            $lastUpdatedAt = $result[0]['lastUpdatedAt'];
-        } catch (\Exception $e) {
-            echo "Error: " . $e->getMessage() . "\n";
-        }
-        echo "Last Updated At: $lastUpdatedAt\n";
-        if ($lastUpdatedAt) {
-            $lastUpdatedAtTimestamp = strtotime($lastUpdatedAt);
-            $threeMonthsAgo = strtotime('-3 months', $now);
-            $startDate = max($lastUpdatedAtTimestamp, $threeMonthsAgo); 
-        } else {
-            $startDate = strtotime('-3 months');
-        }
-        $endDate = min(strtotime('+2 weeks', $startDate), $now);
-        $allOrders = [];
-        do {
-            echo "Date Range: " . date('Y-m-d', $startDate) . " - " . date('Y-m-d', $endDate) . "\n";
-            echo "-----------------------------\n";
-            $query = [
-                'page' => 0,
-                'size' => 200,
-                'startDate' => $startDate * 1000,
-                'endDate' => $endDate *1000
-            ];
-            $orders = $this->getFromTrendyolApi('GET', "order/sellers/" . $this->sellerId . "/orders" , $query, 'content');
-            $allOrders = array_merge($allOrders, $orders);
-            $startDate = $endDate;
-            $endDate = min(strtotime('+2 weeks', $startDate), $now);
-            if ($startDate >= $now) {
-                break;
-            }
-        } while ($startDate < strtotime('now'));
+        // $now = time();
+        // $now = strtotime(date('Y-m-d 00:00:00', $now));
+        // try {
+        //     $sqlLastUpdatedAt = "
+        //         SELECT COALESCE(DATE_FORMAT(FROM_UNIXTIME(MAX(json_extract(json, '$.lastModifiedDate') / 1000)), '%Y-%m-%d'),DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 3 MONTH), '%Y-%m-%d')) AS lastUpdatedAt
+        //         FROM iwa_marketplace_orders
+        //         WHERE marketplace_id = :marketplace_id
+        //         LIMIT 1;
+        //     ";
+        //     $result = Utility::fetchFromSql($sqlLastUpdatedAt, [
+        //         'marketplace_id' => $this->marketplace->getId()
+        //     ]);
+        //     $lastUpdatedAt = $result[0]['lastUpdatedAt'];
+        // } catch (\Exception $e) {
+        //     echo "Error: " . $e->getMessage() . "\n";
+        // }
+        // echo "Last Updated At: $lastUpdatedAt\n";
+        // if ($lastUpdatedAt) {
+        //     $lastUpdatedAtTimestamp = strtotime($lastUpdatedAt);
+        //     $threeMonthsAgo = strtotime('-3 months', $now);
+        //     $startDate = max($lastUpdatedAtTimestamp, $threeMonthsAgo); 
+        // } else {
+        //     $startDate = strtotime('-3 months');
+        // }
+        // $endDate = min(strtotime('+2 weeks', $startDate), $now);
+        // $allOrders = [];
+        // do {
+        //     echo "Date Range: " . date('Y-m-d', $startDate) . " - " . date('Y-m-d', $endDate) . "\n";
+        //     echo "-----------------------------\n";
+        //     $query = [
+        //         'page' => 0,
+        //         'size' => 200,
+        //         'startDate' => $startDate * 1000,
+        //         'endDate' => $endDate *1000
+        //     ];
+        //     $orders = $this->getFromTrendyolApi('GET', "order/sellers/" . $this->sellerId . "/orders" , $query, 'content');
+        //     $allOrders = array_merge($allOrders, $orders);
+        //     $startDate = $endDate;
+        //     $endDate = min(strtotime('+2 weeks', $startDate), $now);
+        //     if ($startDate >= $now) {
+        //         break;
+        //     }
+        // } while ($startDate < strtotime('now'));
 
-        foreach ($allOrders as $order) {
-            $sqlInsertMarketplaceOrder = "
-                            INSERT INTO iwa_marketplace_orders (marketplace_id, order_id, json) 
-                            VALUES (:marketplace_id, :order_id, :json) ON DUPLICATE KEY UPDATE json = VALUES(json)";
-            Utility::executeSql($sqlInsertMarketplaceOrder, [
-                'marketplace_id' => $this->marketplace->getId(),
-                'order_id' => $order['orderNumber'],
-                'json' => json_encode($order)
-            ]);
+        // foreach ($allOrders as $order) {
+        //     $sqlInsertMarketplaceOrder = "
+        //                     INSERT INTO iwa_marketplace_orders (marketplace_id, order_id, json) 
+        //                     VALUES (:marketplace_id, :order_id, :json) ON DUPLICATE KEY UPDATE json = VALUES(json)";
+        //     Utility::executeSql($sqlInsertMarketplaceOrder, [
+        //         'marketplace_id' => $this->marketplace->getId(),
+        //         'order_id' => $order['orderNumber'],
+        //         'json' => json_encode($order)
+        //     ]);
 
-        }
-        echo "Orders downloaded\n";
+        // }
+        // echo "Orders downloaded\n";
     }
 
     private function getAttributes($attributes): string
@@ -307,44 +306,44 @@ class TrendyolConnector extends MarketplaceConnectorAbstract
      */
     public function import($updateFlag, $importFlag): void
     {
-        if (empty($this->listings)) {
-            echo "Nothing to import\n";
-        }
-        $marketplaceFolder = Utility::checkSetPath(
-            Utility::sanitizeVariable($this->marketplace->getKey(), 190),
-            Utility::checkSetPath('Pazaryerleri')
-        );
-        $total = count($this->listings);
-        $index = 0;
-        foreach ($this->listings as $listing) {
-            echo "($index/$total) Processing Listing {$listing['barcode']}:{$listing['title']} ...";
-            $path = Utility::sanitizeVariable($listing['categoryName'] ?? 'Tasnif-Edilmemiş');
-            $parent = Utility::checkSetPath($path, $marketplaceFolder);
-            if ($listing['productMainId']) {
-                $parent = Utility::checkSetPath(Utility::sanitizeVariable($listing['productMainId']), $parent);
-            }
-            VariantProduct::addUpdateVariant(
-                variant: [
-                    'imageUrl' => Utility::getCachedImage($listing['images'][0]['url'] ?? ''),
-                    'urlLink' => $this->getUrlLink($listing['productUrl'] ?? ''),
-                    'salePrice' => $listing['salePrice'] ?? 0,
-                    'saleCurrency' => $this->marketplace->getCurrency(),
-                    'title' => $listing['title'] ?? '',
-                    'attributes' => $this->getAttributes($listing['attributes']),
-                    'quantity' => $listing['quantity'] ?? 0,
-                    'uniqueMarketplaceId' => $listing['id'] ?? '',
-                    'apiResponseJson' => json_encode($listing, JSON_PRETTY_PRINT),
-                    'published' => $this->getPublished($listing),
-                    'sku' => $listing['barcode'] ?? '',
-                ],
-                importFlag: $importFlag,
-                updateFlag: $updateFlag,
-                marketplace: $this->marketplace,
-                parent: $parent
-            );
-            echo "OK\n";
-            $index++;
-        }
+        // if (empty($this->listings)) {
+        //     echo "Nothing to import\n";
+        // }
+        // $marketplaceFolder = Utility::checkSetPath(
+        //     Utility::sanitizeVariable($this->marketplace->getKey(), 190),
+        //     Utility::checkSetPath('Pazaryerleri')
+        // );
+        // $total = count($this->listings);
+        // $index = 0;
+        // foreach ($this->listings as $listing) {
+        //     echo "($index/$total) Processing Listing {$listing['barcode']}:{$listing['title']} ...";
+        //     $path = Utility::sanitizeVariable($listing['categoryName'] ?? 'Tasnif-Edilmemiş');
+        //     $parent = Utility::checkSetPath($path, $marketplaceFolder);
+        //     if ($listing['productMainId']) {
+        //         $parent = Utility::checkSetPath(Utility::sanitizeVariable($listing['productMainId']), $parent);
+        //     }
+        //     VariantProduct::addUpdateVariant(
+        //         variant: [
+        //             'imageUrl' => Utility::getCachedImage($listing['images'][0]['url'] ?? ''),
+        //             'urlLink' => $this->getUrlLink($listing['productUrl'] ?? ''),
+        //             'salePrice' => $listing['salePrice'] ?? 0,
+        //             'saleCurrency' => $this->marketplace->getCurrency(),
+        //             'title' => $listing['title'] ?? '',
+        //             'attributes' => $this->getAttributes($listing['attributes']),
+        //             'quantity' => $listing['quantity'] ?? 0,
+        //             'uniqueMarketplaceId' => $listing['id'] ?? '',
+        //             'apiResponseJson' => json_encode($listing, JSON_PRETTY_PRINT),
+        //             'published' => $this->getPublished($listing),
+        //             'sku' => $listing['barcode'] ?? '',
+        //         ],
+        //         importFlag: $importFlag,
+        //         updateFlag: $updateFlag,
+        //         marketplace: $this->marketplace,
+        //         parent: $parent
+        //     );
+        //     echo "OK\n";
+        //     $index++;
+        // }
     }
 
     /**
@@ -356,36 +355,9 @@ class TrendyolConnector extends MarketplaceConnectorAbstract
      * @throws Exception
      * @throws RandomException
      */
-    public function setInventory(VariantProduct $listing, int $targetValue, $sku = null, $country = null): void // 15 dakika boyunca aynı isteği tekrarlı olarak atamazsınız!
+    public function setInventory(int $targetValue, $sku = null, $country = null): void 
     {
-        if ($targetValue > 20000) {
-            echo "Error: Quantity cannot be more than 20000\n";
-            return;
-        }
-        if ($targetValue < 0) {
-            echo "Error: Quantity cannot be less than 0\n";
-            return;
-        }
-        $barcode = json_decode($listing->jsonRead('apiResponseJson'), true)['barcode'];
-        if ($barcode === null) {
-            echo "Error: Barcode is missing\n";
-            return;
-        }
-        $request = [
-            'items' => [
-                [
-                    'barcode' => $barcode,
-                    'quantity' => $targetValue
-                ]
-            ]
-        ];
-        $response = $this->getFromTrendyolApi('POST', "inventory/sellers/" . $this->sellerId . "/products/price-and-inventory", [], null, $request);
-        $combinedData = [
-            'inventory' => $response,
-            'batchRequestResult' => $this->getBatchRequestResult($response['batchRequestId']),
-        ];
-        $filename = "SETINVENTORY_{$barcode}.json";
-        $this->putToCache($filename, ['request' => $request, 'response' => $combinedData]);
+        
     }
 
     /**
@@ -396,40 +368,9 @@ class TrendyolConnector extends MarketplaceConnectorAbstract
      * @throws ServerExceptionInterface
      * @throws Exception|RandomException
      */
-    public function setPrice(VariantProduct $listing, string $targetPrice, $targetCurrency = null, $sku = null, $country = null): void
+    public function setPrice(string $targetPrice, $targetCurrency = null, $sku = null, $country = null): void
     {
-        if (empty($targetPrice)) {
-            echo "Error: Price cannot be null\n";
-            return;
-        }
-        if (empty($targetCurrency)) {
-            $targetCurrency = $listing->getSaleCurrency();
-        }
-        $finalPrice = $this->convertCurrency($targetPrice, $targetCurrency, $listing->getSaleCurrency());
-        if (empty($finalPrice)) {
-            echo "Error: Currency conversion failed\n";
-            return;
-        }
-        $barcode = json_decode($listing->jsonRead('apiResponseJson'), true)['barcode'];
-        if ($barcode === null) {
-            echo "Error: Barcode is missing\n";
-            return;
-        }
-        $request = [
-            'items' => [
-                [
-                    'barcode' => $barcode,
-                    'salePrice' => $finalPrice
-                ]
-            ]
-        ];
-        $response = $this->getFromTrendyolApi('POST', "inventory/sellers/" . $this->sellerId . "/products/price-and-inventory", [], null, $request);
-        $combinedData = [
-            'price' => $response,
-            'batchRequestResult' => $this->getBatchRequestResult($response['batchRequestId']),
-        ];
-        $filename = "SETPRICE_{$barcode}.json";
-        $this->putToCache($filename, ['request' => $request, 'response' => $combinedData]);
+        
     }
 
     /**
