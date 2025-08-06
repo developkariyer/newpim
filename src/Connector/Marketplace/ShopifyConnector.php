@@ -274,8 +274,6 @@ class ShopifyConnector  extends MarketplaceConnectorAbstract
         }
     }
 
-
-
     /**
      * @throws TransportExceptionInterface
      * @throws ServerExceptionInterface
