@@ -28,12 +28,9 @@ class TrendyolConnector
     private $token;
     private $marketplaceKey;
     public HttpClientInterface $httpClient;
-    public DatabaseService $databaseService;
     
-
-    public function __construct(DatabaseService $databaseService, $marketplaceKey)
+    public function __construct(private DatabaseService $databaseService, $marketplaceKey)
     {
-        $this->databaseService = $databaseService;
         $this->apiKey = $_ENV[$marketplaceKey . '_API_KEY'];
         $this->apiSecret = $_ENV[$marketplaceKey . '_API_SECRET'];
         $this->sellerId = $_ENV[$marketplaceKey . '_SELLER_ID'];
