@@ -21,12 +21,14 @@ use Pimcore\Db;
 class MarketplaceCommand extends Command
 {
     private TrendyolConnector $trendyolConnector;
+    private ShopifyConnector $shopifyConnector;
 
     public function __construct()
     {
         parent::__construct();
-        $marketplace = Marketplace::getById(30);
-        $this->trendyolConnector = new TrendyolConnector($marketplace);
+        $marketplace = Marketplace::getById(1495);
+        //$this->trendyolConnector = new TrendyolConnector($marketplace);
+        $this->shopifyConnector = new ShopifyConnector($marketplace);
     }
 
     // protected function configure(): void
