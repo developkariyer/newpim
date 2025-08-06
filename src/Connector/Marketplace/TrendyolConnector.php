@@ -137,7 +137,7 @@ class TrendyolConnector
     private function saveProduct($listings): void
     {
         $sqlTest = "
-            INSERT INTO iwa_test (test_value)
+            INSERT INTO `iwa_test` (test_value)
             VALUES (:test_value)
         ";
         $this->databaseService->executeSql($sqlTest, [
