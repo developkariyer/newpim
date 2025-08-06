@@ -225,50 +225,53 @@ class ShopifyConnector  extends MarketplaceConnectorAbstract
 
     private function saveProduct($listings): void
     {
-        $sqlInsertMarketplaceListing = "INSERT INTO iwa_marketplaces_catalog 
-            (marketplace_key, marketplace_product_unique_id, marketplace_sku, marketplace_price, marketplace_currency, marketplace_stock, status, marketplace_product_url, product_data)
-            VALUES (:marketplace_key, :marketplace_product_unique_id, :marketplace_sku, :marketplace_price, :marketplace_currency, :marketplace_stock, :status, :marketplace_product_url, :product_data)
-            ";
-
-        foreach ($listings['products']['variants'] as $listing) {
-            $marketplaceProductUniqueId = basename($listing['nodes']['id']) ?? '';
-            $marketplaceSku = $listing['nodes']['barcode'] ?? '';
-            $marketplacePrice = $listing['nodes']['price'] ?? 0;
-            $marketplaceCurrency = $this->marketplace->getCurrency() ?? 'TL';
-            $marketplaceStock = $listing['nodes']['inventoryQuantity'] ?? 0;
-            $status = (($listing['status'] ?? 'ACTIVE') === 'ACTIVE') ? 1 : 0;
-            $marketplaceProductUrl = $this->marketplace->getMarketplaceUrl().'products/'.($listing['handle'] ?? '').'/?variant='.($listing['nodes']['id'] ?? '');
-            $productData = json_encode($listing['nodes'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-            $escapedProductData = addslashes($productData);
-            $sqlInsertMarketplaceListing = "INSERT INTO iwa_marketplaces_catalog 
-                (marketplace_key, marketplace_product_unique_id, marketplace_sku, marketplace_price, marketplace_currency, marketplace_stock, 
-                status, marketplace_product_url, product_data)
-                VALUES ('$this->marketplaceKey', '$marketplaceProductUniqueId', '$marketplaceSku', '$marketplacePrice', '$marketplaceCurrency',
-                '$marketplaceStock', '$status', '$marketplaceProductUrl', '$escapedProductData')
-                ON DUPLICATE KEY UPDATE
-                    marketplace_price = VALUES(marketplace_price),
-                    marketplace_stock = VALUES(marketplace_stock),
-                    status = VALUES(status),
-                    marketplace_product_url = VALUES(marketplace_product_url),
-                    product_data = VALUES(product_data)
-                ";
-            // $params = [
-            //     'marketplace_key' => $this->marketplaceKey,
-            //     'marketplace_product_unique_id' => $marketplaceProductUniqueId,
-            //     'marketplace_sku' => $marketplaceSku,
-            //     'marketplace_price' => $marketplacePrice,
-            //     'marketplace_currency' => $marketplaceCurrency,
-            //     'marketplace_stock' => $marketplaceStock,
-            //     'status' => $status,
-            //     'marketplace_product_url' => $marketplaceProductUrl,
-            //     'product_data' => $productData
-            // ];
-            $this->databaseService->executeSql($sqlInsertMarketplaceListing);
-            echo "Inserting listing: " . ($listing['id'] ?? 'unknown') . "\n";
+        if (!isset($listings['products']) || !is_array($listings['products'])) {
+            echo "No products data found in listings\n";
+            echo "Listings structure: " . json_encode(array_keys($listings)) . "\n";
+            return;
+        }
+        echo "Found " . count($listings['products']) . " products\n";
+        foreach ($listings['products'] as $product) {
+            $variants = null;
+            if (isset($product['variants']['nodes'])) {
+                $variants = $product['variants']['nodes'];
+            } elseif (isset($product['variants']) && is_array($product['variants'])) {
+                $variants = $product['variants'];
+            } else {
+                echo "No variants found for product: " . ($product['title'] ?? 'unknown') . "\n";
+                echo "Product structure: " . json_encode(array_keys($product)) . "\n";
+                continue;
+            }
+            if (!is_array($variants) || empty($variants)) {
+                echo "Variants is not an array or empty for product: " . ($product['title'] ?? 'unknown') . "\n";
+                continue;
+            }
+            echo "Processing " . count($variants) . " variants for product: " . ($product['title'] ?? 'unknown') . "\n";
+            foreach ($variants as $variant) {
+                $variantStatus = $variant['status'] ?? $product['status'] ?? 'ACTIVE';
+                $status = ($variantStatus === 'ACTIVE') ? 1 : 0;
+                $listingData = [
+                    'marketplace_product_unique_id' => basename($variant['id'] ?? '') ?: '',
+                    'marketplace_sku' => $variant['barcode'] ?? $variant['sku'] ?? '',
+                    'marketplace_price' => $variant['price'] ?? 0,
+                    'marketplace_currency' => ($this->marketplace->getCurrency() === 'TL') ? 'TRY' : ($this->marketplace->getCurrency() ?? 'TRY'),
+                    'marketplace_stock' => $variant['inventoryQuantity'] ?? 0,
+                    'status' => $status,
+                    'marketplace_product_url' => $this->marketplace->getMarketplaceUrl() . 'products/' . ($product['handle'] ?? '') . '/?variant=' . basename($variant['id'] ?? ''),
+                    'product_data' => json_encode([
+                        'variant' => $variant,
+                        'product_info' => [
+                            'title' => $product['title'] ?? '',
+                            'handle' => $product['handle'] ?? '',
+                            'status' => $product['status'] ?? ''
+                        ]
+                    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                ];
+                $this->saveMarketplaceListing($listingData);
+                echo "Inserted listing: " . ($variant['id'] ?? 'unknown') . " - SKU: " . ($variant['barcode'] ?? $variant['sku'] ?? 'no-sku') . "\n";
+            }
         }
     }
-
-
 
     /**
      * @throws TransportExceptionInterface
