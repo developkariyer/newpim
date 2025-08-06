@@ -21,8 +21,8 @@ class DatabaseService
     {
         try {
             $db = Db::get();
-            $stmt = $db->prepare($sql);
-            $stmt->execute($params);
+           // $stmt = $db->prepare($sql);
+            $stmt->executeStatement($sql, $params);
         } catch (\Exception $e) {
             $this->logger->error("[" . __METHOD__ . "] ❌ SQL Execution Error: {$e->getMessage()}", [
                 'sql' => $sql,
