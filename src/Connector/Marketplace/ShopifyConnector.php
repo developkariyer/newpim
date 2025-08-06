@@ -237,7 +237,7 @@ class ShopifyConnector  extends MarketplaceConnectorAbstract
             }
             foreach ($product['variants']['nodes'] as $variant) {
                 $marketplaceProductUniqueId = basename($variant['id'] ?? '') ?: '';
-                $marketplaceSku = $variant['barcode'] ?? $variant['sku'] ?? '';
+                $marketplaceSku = $variant['sku']  ?? '';
                 $marketplacePrice = $variant['price'] ?? 0;
                 $marketplaceCurrency = ($this->marketplace->getCurrency() === 'TL') ? 'TRY' : ($this->marketplace->getCurrency() ?? 'TRY');
                 $marketplaceStock = $variant['inventoryQuantity'] ?? 0;
