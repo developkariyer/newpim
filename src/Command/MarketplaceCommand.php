@@ -21,15 +21,24 @@ use Pimcore\Db;
 )]
 class MarketplaceCommand extends Command
 {
-    private TrendyolConnector $trendyolConnector;
-    private ShopifyConnector $shopifyConnector;
+    private array $connectors = [];
 
     public function __construct()
     {
         parent::__construct();
-        $marketplace = Marketplace::getById(1495);
-        //$this->trendyolConnector = new TrendyolConnector($marketplace);
-        $this->shopifyConnector = new ShopifyConnector($marketplace);
+        $marketplaceListingObject = Marketplace\Listing();
+        $marketplaces = $marketplaceListingObject->load();
+        if (empty($marketplaces)) {
+            throw new \Exception('No marketplaces found. Please create a marketplace first.');
+        }
+         foreach ($marketplaces as $marketplace) {
+            if ($marketplace->getMarketplaceType() === 'Trendyol') {
+                $this->connectors[] = new TrendyolConnector($marketplace);
+            }   
+            if ($marketplace->getMarketplaceType() === 'Shopify') {
+                $this->connectors[] = new ShopifyConnector($marketplace);
+            }
+        }
     }
 
     // protected function configure(): void
@@ -41,9 +50,11 @@ class MarketplaceCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        
-        $this->shopifyConnector->download();
-        //$this->trendyolConnector->download();
+        foreach ($this->connectors as $connector) {
+            echo "Starting sync for " . get_class($connector) . "\n";
+            $connector->download();
+            echo "Completed sync for " . get_class($connector) . "\n\n";
+        }
         return Command::SUCCESS;
     }
 
