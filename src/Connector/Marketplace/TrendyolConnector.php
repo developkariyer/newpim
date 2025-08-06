@@ -173,7 +173,7 @@ class TrendyolConnector
                     $marketplaceProductUrl,
                     $productData 
                 ];
-                $db->executeStatement($sql, $params);
+                $this->databaseService->executeSql($sql, $params);
                 echo "Inserted listing: " . ($listing['id'] ?? $marketplaceProductUniqueId) . "\n";
             } catch (\Exception $e) {
                 echo "Error inserting listing: " . $e->getMessage() . "\n";
