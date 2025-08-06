@@ -431,14 +431,17 @@ class CatalogSystem {
     }
     
     getMarketplaceStatusColor(status) {
+        const statusStr = String(status);
         const colors = {
+            '0': '#6c757d',    
+            '1': '#28a745',    
             'active': '#28a745',
             'inactive': '#6c757d', 
             'pending': '#ffc107',
             'error': '#dc3545',
             'out_of_stock': '#fd7e14'
         };
-        return colors[status] || '#6c757d';
+        return colors[statusStr] || '#6c757d';
     }
     
     getMarketplaceIcon(marketplaceKey) {
@@ -470,14 +473,19 @@ class CatalogSystem {
     }
     
     getStatusLabel(status) {
+        if (status === null || status === undefined) return 'Bilinmiyor';
+        const statusStr = String(status);
         const labels = {
+            '0': 'Pasif',
+            '1': 'Aktif',
             'active': 'Aktif',
             'inactive': 'Pasif',
             'pending': 'Beklemede',
             'error': 'Hata',
             'out_of_stock': 'Stok Yok'
         };
-        return labels[status] || status.charAt(0).toUpperCase() + status.slice(1);
+        
+        return labels[statusStr] || `Durum: ${statusStr}`;
     }
     
     formatPrice(price, currency) {
