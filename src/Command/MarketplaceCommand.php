@@ -26,12 +26,12 @@ class MarketplaceCommand extends Command
     public function __construct()
     {
         parent::__construct();
-        $marketplaceListingObject = Marketplace\Listing();
+        $marketplaceListingObject = new Marketplace\Listing();
         $marketplaces = $marketplaceListingObject->load();
         if (empty($marketplaces)) {
             throw new \Exception('No marketplaces found. Please create a marketplace first.');
         }
-         foreach ($marketplaces as $marketplace) {
+        foreach ($marketplaces as $marketplace) {
             if ($marketplace->getMarketplaceType() === 'Trendyol') {
                 $this->connectors[] = new TrendyolConnector($marketplace);
             }   
@@ -40,13 +40,6 @@ class MarketplaceCommand extends Command
             }
         }
     }
-
-    // protected function configure(): void
-    // {
-    //     $this
-    //         ->addOption('action', 'a', InputOption::VALUE_REQUIRED, 'Yapılacak işlem (download, orders, returns, inventory)', 'download')
-    //         ->setHelp('Bu komut Trendyol API\'sinden verileri çeker ve veritabanına kaydeder.');
-    // }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
