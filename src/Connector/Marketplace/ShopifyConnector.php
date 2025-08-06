@@ -237,7 +237,7 @@ class ShopifyConnector  extends MarketplaceConnectorAbstract
             $marketplaceCurrency = $this->marketplace->getCurrency() ?? 'TL';
             $marketplaceStock = $listing['nodes']['inventoryQuantity'] ?? 0;
             $status = (($listing['status'] ?? 'ACTIVE') === 'ACTIVE') ? 1 : 0;
-            $marketplaceProductUrl = $this->marketplace->getMarketplaceUrl().'products/'.($listing['handle'] ?? '').'/?variant='.($listing['nodes']['id'] ?? ''));
+            $marketplaceProductUrl = $this->marketplace->getMarketplaceUrl().'products/'.($listing['handle'] ?? '').'/?variant='.($listing['nodes']['id'] ?? '');
             $productData = json_encode($listing['nodes'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
             $escapedProductData = addslashes($productData);
             $sqlInsertMarketplaceListing = "INSERT INTO iwa_marketplaces_catalog 
