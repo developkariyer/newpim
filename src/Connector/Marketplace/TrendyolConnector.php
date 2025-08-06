@@ -36,12 +36,6 @@ class TrendyolConnector extends MarketplaceConnectorAbstract
         $this->apiSecret = $_ENV[$this->marketplaceKey . '_API_SECRET'] ?? '';
         $this->sellerId = $_ENV[$this->marketplaceKey . '_SELLER_ID'] ?? '';
         $this->token = $_ENV[$this->marketplaceKey . '_TOKEN'] ?? '';
-
-        echo "Using API Key: " . $this->apiKey . "\n";
-        echo "Using API Secret: " . $this->apiSecret . "\n";
-        echo "Using Seller ID: " . $this->sellerId . "\n";
-        echo "Using Token: " . $this->token . "\n";
-
     }
 
     /**
@@ -89,12 +83,8 @@ class TrendyolConnector extends MarketplaceConnectorAbstract
      */
     public function download(bool $forceDownload = false): void
     {
-        // if (!$forceDownload && $this->getListingsFromCache()) {
-        //     echo "Using cached listings\n";
-        //     return;
-        // }
-        
         if (!$forceDownload && $this->getListingsFromCache()) {
+            $this->saveProduct($this->listings);
             echo "Using cached listings\n";
             return;
         }
