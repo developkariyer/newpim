@@ -378,7 +378,7 @@ class CatalogSystem {
                         
                         <div class="col-md-2">
                             <div class="text-center">
-                                <strong class="text-success">${this.escapeHtml(listing.marketplace_price + ' ' + listing.marketplace_currency)}</strong>
+                                <strong class="text-success">${this.formatPrice(listing.marketplace_price, listing.marketplace_currency)}</strong>
                             </div>
                         </div>
                         
@@ -421,6 +421,15 @@ class CatalogSystem {
                 ${listingsHtml}
             </div>
         `;
+    }
+
+    formatPrice(price, currency) {
+        if (!price) return '-';
+        let currencyCode = currency || 'TRY';
+        if (currencyCode.includes('/')) {
+            currencyCode = currencyCode.split('/').pop(); 
+        }
+        return `${parseFloat(price).toFixed(2)} ${currencyCode}`;
     }
     
     getMarketplaceStatusColor(status) {
